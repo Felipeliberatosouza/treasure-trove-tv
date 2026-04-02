@@ -1,16 +1,47 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useState } from "react";
+import Navbar from "@/components/Navbar";
+import HeroBanner from "@/components/HeroBanner";
+import VideoCarousel from "@/components/VideoCarousel";
+import PricingSection from "@/components/PricingSection";
+import Footer from "@/components/Footer";
+import AuthModal from "@/components/AuthModal";
+import { categories, getVideosByCategory, videos } from "@/data/courses";
 
-// IMPORTANT: Fully REPLACE this with your own code
-const PlaceholderIndex = () => {
-  // PLACEHOLDER: Replace this entire return statement with the user's app.
-  // The inline background color is intentionally not part of the design system.
+const Index = () => {
+  const [authOpen, setAuthOpen] = useState(false);
+
+  const handleVideoClick = (id: string) => {
+    console.log("Video clicked:", id);
+    // Will navigate to video detail page later
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center" style={{ backgroundColor: '#fcfbf8' }}>
-      <img data-lovable-blank-page-placeholder="REMOVE_THIS" src="/placeholder.svg" alt="Your app will live here!" />
+    <div className="min-h-screen bg-background">
+      <Navbar onLoginClick={() => setAuthOpen(true)} />
+      <HeroBanner onVideoClick={handleVideoClick} />
+
+      <div className="space-y-12 py-12">
+        <VideoCarousel
+          title="🔥 Mais Populares"
+          videos={videos}
+          onVideoClick={handleVideoClick}
+        />
+
+        {categories.map((category) => (
+          <VideoCarousel
+            key={category}
+            title={category}
+            videos={getVideosByCategory(category)}
+            onVideoClick={handleVideoClick}
+          />
+        ))}
+      </div>
+
+      <PricingSection />
+      <Footer />
+      <AuthModal isOpen={authOpen} onClose={() => setAuthOpen(false)} />
     </div>
   );
 };
-
-const Index = PlaceholderIndex;
 
 export default Index;

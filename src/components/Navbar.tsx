@@ -1,14 +1,19 @@
 import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Search, User, Menu, X } from "lucide-react";
+import { Search, User, Menu, X, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
 
-interface NavbarProps {
-  onLoginClick: () => void;
-}
-
-const Navbar = ({ onLoginClick }: NavbarProps) => {
+const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { user, role, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/");
+  };
 
   return (
     <motion.nav
@@ -17,18 +22,15 @@ const Navbar = ({ onLoginClick }: NavbarProps) => {
       className="fixed top-0 z-50 w-full border-b border-border/50 bg-background/80 backdrop-blur-xl"
     >
       <div className="flex items-center justify-between px-6 py-3 md:px-12 lg:px-20">
-        <h1 className="font-display text-xl font-bold text-gradient">
+        <Link to="/" className="font-display text-xl font-bold text-gradient">
           StudyFlix
-        </h1>
+        </Link>
 
         <div className="hidden items-center gap-6 md:flex">
-          <a href="#" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
+          <Link to="/" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
             Catálogo
-          </a>
-          <a href="#" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
-            Categorias
-          </a>
-          <a href="#" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
+          </Link>
+          <a href="#pricing" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
             Preços
           </a>
         </div>
@@ -37,9 +39,24 @@ const Navbar = ({ onLoginClick }: NavbarProps) => {
           <button className="rounded-full p-2 transition-colors hover:bg-secondary">
             <Search className="h-5 w-5 text-muted-foreground" />
           </button>
-          <Button size="sm" onClick={onLoginClick} className="hidden gap-2 font-display md:flex">
-            <User className="h-4 w-4" /> Entrar
-          </Button>
+
+          {user ? (
+            <div className="hidden items-center gap-3 md:flex">
+              <span className="text-xs text-muted-foreground capitalize">
+                {role === "teacher" ? "📚 Professor" : "🎓 Aluno"}
+              </span>
+              <Button size="sm" variant="secondary" onClick={handleSignOut} className="gap-2 font-display">
+                <LogOut className="h-4 w-4" /> Sair
+              </Button>
+            </div>
+          ) : (
+            <Link to="/login" className="hidden md:block">
+              <Button size="sm" className="gap-2 font-display">
+                <User className="h-4 w-4" /> Entrar
+              </Button>
+            </Link>
+          )}
+
           <button
             className="rounded-full p-2 md:hidden"
             onClick={() => setMobileOpen(!mobileOpen)}
@@ -56,12 +73,28 @@ const Navbar = ({ onLoginClick }: NavbarProps) => {
           className="border-t border-border bg-background px-6 py-4 md:hidden"
         >
           <div className="flex flex-col gap-3">
-            <a href="#" className="text-sm text-muted-foreground">Catálogo</a>
-            <a href="#" className="text-sm text-muted-foreground">Categorias</a>
-            <a href="#" className="text-sm text-muted-foreground">Preços</a>
-            <Button size="sm" onClick={onLoginClick} className="gap-2 font-display">
-              <User className="h-4 w-4" /> Entrar
-            </Button>
+            <Link to="/" className="text-sm text-muted-foreground" onClick={() => setMobileOpen(false)}>
+              Catálogo
+            </Link>
+            <a href="#pricing" className="text-sm text-muted-foreground" onClick={() => setMobileOpen(false)}>
+              Preços
+            </a>
+            {user ? (
+              <>
+                <span className="text-xs text-muted-foreground capitalize">
+                  {role === "teacher" ? "📚 Professor" : "🎓 Aluno"}
+                </span>
+                <Button size="sm" variant="secondary" onClick={handleSignOut} className="gap-2 font-display">
+                  <LogOut className="h-4 w-4" /> Sair
+                </Button>
+              </>
+            ) : (
+              <Link to="/login" onClick={() => setMobileOpen(false)}>
+                <Button size="sm" className="gap-2 font-display w-full">
+                  <User className="h-4 w-4" /> Entrar
+                </Button>
+              </Link>
+            )}
           </div>
         </motion.div>
       )}

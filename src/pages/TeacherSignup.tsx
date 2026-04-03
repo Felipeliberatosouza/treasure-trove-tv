@@ -1,0 +1,147 @@
+import { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { motion } from "framer-motion";
+import { Mail, Lock, User, Eye, EyeOff, BookOpen, ArrowLeft, Briefcase } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+
+const TeacherSignup = () => {
+  const navigate = useNavigate();
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [bio, setBio] = useState("");
+  const [expertise, setExpertise] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim() || !email.trim() || !password.trim()) {
+      toast.error("Preencha todos os campos obrigatórios");
+      return;
+    }
+    if (password.length < 6) {
+      toast.error("A senha deve ter pelo menos 6 caracteres");
+      return;
+    }
+
+    setLoading(true);
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { name, role: "teacher", bio, expertise_area: expertise },
+        emailRedirectTo: window.location.origin,
+      },
+    });
+
+    if (error) {
+      toast.error(error.message);
+    } else {
+      // Update profile with bio and expertise after signup
+      toast.success("Conta criada! Verifique seu e-mail para confirmar.");
+      navigate("/login");
+    }
+    setLoading(false);
+  };
+
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-background px-4 py-12">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="w-full max-w-md space-y-8"
+      >
+        <Link to="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
+          <ArrowLeft className="h-4 w-4" /> Voltar
+        </Link>
+
+        <div className="text-center space-y-2">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-accent/10">
+            <BookOpen className="h-7 w-7 text-accent" />
+          </div>
+          <h1 className="font-display text-2xl font-bold">Cadastro de Professor</h1>
+          <p className="text-sm text-muted-foreground">
+            Crie sua conta para disponibilizar seus cursos
+          </p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="relative">
+            <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Nome completo *"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="pl-10 bg-secondary border-border"
+            />
+          </div>
+          <div className="relative">
+            <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              type="email"
+              placeholder="E-mail *"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="pl-10 bg-secondary border-border"
+            />
+          </div>
+          <div className="relative">
+            <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              type={showPassword ? "text" : "password"}
+              placeholder="Senha (mín. 6 caracteres) *"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="pl-10 pr-10 bg-secondary border-border"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+            >
+              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
+          <div className="relative">
+            <Briefcase className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Área de especialização"
+              value={expertise}
+              onChange={(e) => setExpertise(e.target.value)}
+              className="pl-10 bg-secondary border-border"
+            />
+          </div>
+          <Textarea
+            placeholder="Bio — Conte sobre você e sua experiência"
+            value={bio}
+            onChange={(e) => setBio(e.target.value)}
+            className="min-h-[100px] bg-secondary border-border"
+          />
+          <Button className="w-full font-display font-semibold" size="lg" disabled={loading}>
+            {loading ? "Criando..." : "Criar Conta de Professor"}
+          </Button>
+        </form>
+
+        <p className="text-center text-sm text-muted-foreground">
+          Já tem uma conta?{" "}
+          <Link to="/login" className="font-medium text-primary hover:underline">
+            Entrar
+          </Link>
+        </p>
+        <p className="text-center text-sm text-muted-foreground">
+          É aluno?{" "}
+          <Link to="/signup/student" className="font-medium text-primary hover:underline">
+            Cadastre-se como aluno
+          </Link>
+        </p>
+      </motion.div>
+    </div>
+  );
+};
+
+export default TeacherSignup;

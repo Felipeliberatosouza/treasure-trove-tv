@@ -7,9 +7,10 @@ interface VideoCarouselProps {
   title: string;
   videos: Video[];
   onVideoClick: (id: string) => void;
+  ratings?: Record<string, { average: number; count: number }>;
 }
 
-const VideoCarousel = ({ title, videos, onVideoClick }: VideoCarouselProps) => {
+const VideoCarousel = ({ title, videos, onVideoClick, ratings }: VideoCarouselProps) => {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const scroll = (direction: "left" | "right") => {
@@ -45,7 +46,13 @@ const VideoCarousel = ({ title, videos, onVideoClick }: VideoCarouselProps) => {
         className="scrollbar-hide flex gap-4 overflow-x-auto px-6 pb-4 md:px-12 lg:px-20"
       >
         {videos.map((video, i) => (
-          <VideoCard key={video.id} video={video} index={i} onClick={onVideoClick} />
+          <VideoCard
+            key={video.id}
+            video={video}
+            index={i}
+            onClick={onVideoClick}
+            rating={ratings?.[video.id]}
+          />
         ))}
       </div>
     </section>

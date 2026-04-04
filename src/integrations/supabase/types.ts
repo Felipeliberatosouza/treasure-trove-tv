@@ -68,6 +68,7 @@ export type Database = {
           created_at: string
           description: string | null
           id: string
+          price: number | null
           published: boolean | null
           teacher_id: string
           thumbnail_url: string | null
@@ -80,6 +81,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          price?: number | null
           published?: boolean | null
           teacher_id: string
           thumbnail_url?: string | null
@@ -92,6 +94,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          price?: number | null
           published?: boolean | null
           teacher_id?: string
           thumbnail_url?: string | null
@@ -107,6 +110,7 @@ export type Database = {
           created_at: string
           description: string | null
           id: string
+          price: number | null
           published: boolean | null
           teacher_id: string
           thumbnail_url: string | null
@@ -119,6 +123,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          price?: number | null
           published?: boolean | null
           teacher_id: string
           thumbnail_url?: string | null
@@ -131,6 +136,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          price?: number | null
           published?: boolean | null
           teacher_id?: string
           thumbnail_url?: string | null
@@ -193,6 +199,75 @@ export type Database = {
           created_at?: string
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      video_purchases: {
+        Row: {
+          amount: number
+          content_id: string
+          content_type: string
+          created_at: string
+          id: string
+          payment_status: string
+          stripe_payment_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          content_id: string
+          content_type: string
+          created_at?: string
+          id?: string
+          payment_status?: string
+          stripe_payment_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          content_id?: string
+          content_type?: string
+          created_at?: string
+          id?: string
+          payment_status?: string
+          stripe_payment_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      video_ratings: {
+        Row: {
+          comment: string | null
+          content_id: string
+          content_type: string
+          created_at: string
+          id: string
+          rating: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          comment?: string | null
+          content_id: string
+          content_type: string
+          created_at?: string
+          id?: string
+          rating: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          comment?: string | null
+          content_id?: string
+          content_type?: string
+          created_at?: string
+          id?: string
+          rating?: number
+          updated_at?: string
           user_id?: string
         }
         Relationships: []

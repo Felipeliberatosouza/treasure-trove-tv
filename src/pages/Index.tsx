@@ -1,13 +1,25 @@
+import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import HeroBanner from "@/components/HeroBanner";
 import VideoCarousel from "@/components/VideoCarousel";
 import PricingSection from "@/components/PricingSection";
 import Footer from "@/components/Footer";
-import { categories, getVideosByCategory, videos } from "@/data/courses";
+import VideoDetailModal from "@/components/VideoDetailModal";
+import { categories, getVideosByCategory, videos, getVideoById } from "@/data/courses";
+import { useVideoRatings } from "@/hooks/useVideoRatings";
+import type { Video } from "@/data/courses";
 
 const Index = () => {
+  const [selectedVideo, setSelectedVideo] = useState<Video | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const ratings = useVideoRatings(videos.map((v) => v.id));
+
   const handleVideoClick = (id: string) => {
-    console.log("Video clicked:", id);
+    const video = getVideoById(id);
+    if (video) {
+      setSelectedVideo(video);
+      setModalOpen(true);
+    }
   };
 
   return (
@@ -20,6 +32,7 @@ const Index = () => {
           title="🔥 Mais Populares"
           videos={videos}
           onVideoClick={handleVideoClick}
+          ratings={ratings}
         />
 
         {categories.map((category) => (
@@ -28,6 +41,7 @@ const Index = () => {
             title={category}
             videos={getVideosByCategory(category)}
             onVideoClick={handleVideoClick}
+            ratings={ratings}
           />
         ))}
       </div>
@@ -36,6 +50,12 @@ const Index = () => {
         <PricingSection />
       </div>
       <Footer />
+
+      <VideoDetailModal
+        video={selectedVideo}
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+      />
     </div>
   );
 };

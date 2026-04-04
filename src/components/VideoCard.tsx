@@ -1,14 +1,15 @@
 import { motion } from "framer-motion";
-import { Play, Clock, BookOpen } from "lucide-react";
+import { Play, Clock, BookOpen, Star } from "lucide-react";
 import type { Video } from "@/data/courses";
 
 interface VideoCardProps {
   video: Video;
   index: number;
   onClick: (id: string) => void;
+  rating?: { average: number; count: number };
 }
 
-const VideoCard = ({ video, index, onClick }: VideoCardProps) => {
+const VideoCard = ({ video, index, onClick, rating }: VideoCardProps) => {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -49,9 +50,18 @@ const VideoCard = ({ video, index, onClick }: VideoCardProps) => {
               {video.duration}
             </span>
           </div>
-          <span className="inline-block rounded-full bg-secondary px-2 py-0.5 text-[10px] font-medium text-secondary-foreground">
-            {video.level}
-          </span>
+          <div className="flex items-center justify-between">
+            <span className="inline-block rounded-full bg-secondary px-2 py-0.5 text-[10px] font-medium text-secondary-foreground">
+              {video.level}
+            </span>
+            {rating && rating.count > 0 && (
+              <div className="flex items-center gap-1">
+                <Star className="h-3 w-3 fill-accent text-accent" />
+                <span className="text-xs font-medium">{rating.average.toFixed(1)}</span>
+                <span className="text-[10px] text-muted-foreground">({rating.count})</span>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </motion.div>

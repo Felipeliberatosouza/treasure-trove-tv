@@ -8,6 +8,8 @@ import Index from "./pages/Index.tsx";
 import Login from "./pages/Login.tsx";
 import StudentSignup from "./pages/StudentSignup.tsx";
 import TeacherSignup from "./pages/TeacherSignup.tsx";
+import StudentDashboard from "./pages/StudentDashboard.tsx";
+import TeacherDashboard from "./pages/TeacherDashboard.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -24,6 +26,8 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/signup/student" element={<StudentSignup />} />
             <Route path="/signup/teacher" element={<TeacherSignup />} />
+            <Route path="/dashboard/student" element={<StudentDashboard />} />
+            <Route path="/dashboard/teacher" element={<TeacherDashboard />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

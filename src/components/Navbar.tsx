@@ -1,19 +1,14 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Search, User, Menu, X, LogOut } from "lucide-react";
+import { Search, User, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
+import UserMenu from "@/components/UserMenu";
 
 const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { user, role, signOut } = useAuth();
-  const navigate = useNavigate();
-
-  const handleSignOut = async () => {
-    await signOut();
-    navigate("/");
-  };
+  const { user } = useAuth();
 
   return (
     <motion.nav
@@ -40,22 +35,17 @@ const Navbar = () => {
             <Search className="h-5 w-5 text-muted-foreground" />
           </button>
 
-          {user ? (
-            <div className="hidden items-center gap-3 md:flex">
-              <span className="text-xs text-muted-foreground capitalize">
-                {role === "teacher" ? "📚 Professor" : "🎓 Aluno"}
-              </span>
-              <Button size="sm" variant="secondary" onClick={handleSignOut} className="gap-2 font-display">
-                <LogOut className="h-4 w-4" /> Sair
-              </Button>
-            </div>
-          ) : (
-            <Link to="/login" className="hidden md:block">
-              <Button size="sm" className="gap-2 font-display">
-                <User className="h-4 w-4" /> Entrar
-              </Button>
-            </Link>
-          )}
+          <div className="hidden md:block">
+            {user ? (
+              <UserMenu />
+            ) : (
+              <Link to="/login">
+                <Button size="sm" className="gap-2 font-display">
+                  <User className="h-4 w-4" /> Entrar
+                </Button>
+              </Link>
+            )}
+          </div>
 
           <button
             className="rounded-full p-2 md:hidden"
@@ -80,14 +70,7 @@ const Navbar = () => {
               Preços
             </a>
             {user ? (
-              <>
-                <span className="text-xs text-muted-foreground capitalize">
-                  {role === "teacher" ? "📚 Professor" : "🎓 Aluno"}
-                </span>
-                <Button size="sm" variant="secondary" onClick={handleSignOut} className="gap-2 font-display">
-                  <LogOut className="h-4 w-4" /> Sair
-                </Button>
-              </>
+              <UserMenu />
             ) : (
               <Link to="/login" onClick={() => setMobileOpen(false)}>
                 <Button size="sm" className="gap-2 font-display w-full">

@@ -8,6 +8,8 @@ import Index from "./pages/Index.tsx";
 import Login from "./pages/Login.tsx";
 import StudentSignup from "./pages/StudentSignup.tsx";
 import TeacherSignup from "./pages/TeacherSignup.tsx";
+import StudentDashboard from "./pages/StudentDashboard.tsx";
+import TeacherDashboard from "./pages/TeacherDashboard.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();

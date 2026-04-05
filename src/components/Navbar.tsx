@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import logo from "@/assets/logo.png";
 import { motion } from "framer-motion";
 import { Search, User, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -18,8 +17,8 @@ const Navbar = () => {
       className="fixed top-0 z-50 w-full border-b border-border/50 bg-background/80 backdrop-blur-xl"
     >
       <div className="flex items-center justify-between px-6 py-3 md:px-12 lg:px-20">
-        <Link to="/" className="flex items-center gap-2">
-          <img src={logo} alt="Revisão Fácil" className="h-20 md:h-24" />
+        <Link to="/" className="font-display text-xl font-bold text-gradient">
+          Revisão Fácil
         </Link>
 
         <div className="hidden items-center gap-6 md:flex">

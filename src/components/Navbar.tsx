@@ -19,7 +19,7 @@ const Navbar = () => {
     >
       <div className="flex items-center justify-between px-6 py-3 md:px-12 lg:px-20">
         <Link to="/" className="flex items-center gap-2">
-          <img src={logo} alt="Revisão Fácil" className="h-8" />
+          <img src={logo} alt="Revisão Fácil" className="h-10 md:h-12" />
         </Link>
 
         <div className="hidden items-center gap-6 md:flex">

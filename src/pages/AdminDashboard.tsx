@@ -1,0 +1,74 @@
+import { useState } from "react";
+import { motion } from "framer-motion";
+import { ArrowLeft, Users, Video, DollarSign, Shield } from "lucide-react";
+import { Link, Navigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import Navbar from "@/components/Navbar";
+import AdminUsersTab from "@/components/admin/AdminUsersTab";
+import AdminContentTab from "@/components/admin/AdminContentTab";
+import AdminPaymentsTab from "@/components/admin/AdminPaymentsTab";
+
+const tabs = [
+  { id: "users", label: "Usuários", icon: Users },
+  { id: "content", label: "Conteúdos", icon: Video },
+  { id: "payments", label: "Pagamentos", icon: DollarSign },
+] as const;
+
+type TabId = (typeof tabs)[number]["id"];
+
+const AdminDashboard = () => {
+  const [activeTab, setActiveTab] = useState<TabId>("users");
+  const { role, loading } = useAuth();
+
+  if (loading) return <div className="min-h-screen bg-background flex items-center justify-center text-muted-foreground">Carregando...</div>;
+  if (role !== "admin") return <Navigate to="/" replace />;
+
+  return (
+    <div className="min-h-screen bg-background">
+      <Navbar />
+      <div className="mx-auto max-w-6xl px-4 pt-24 pb-12">
+        <Link to="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6">
+          <ArrowLeft className="h-4 w-4" /> Voltar
+        </Link>
+
+        <div className="flex items-center gap-3 mb-1">
+          <Shield className="h-6 w-6 text-primary" />
+          <h1 className="font-display text-2xl font-bold">Painel Administrativo</h1>
+        </div>
+        <p className="text-sm text-muted-foreground mb-8">Gerencie usuários, conteúdos e pagamentos da plataforma.</p>
+
+        <div className="flex gap-6 flex-col md:flex-row">
+          <nav className="flex md:flex-col gap-1 overflow-x-auto md:overflow-visible md:w-56 shrink-0 scrollbar-hide">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-2 whitespace-nowrap rounded-lg px-3 py-2 text-sm transition-colors ${
+                  activeTab === tab.id
+                    ? "bg-primary text-primary-foreground font-medium"
+                    : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                }`}
+              >
+                <tab.icon className="h-4 w-4" />
+                {tab.label}
+              </button>
+            ))}
+          </nav>
+
+          <motion.div
+            key={activeTab}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex-1 rounded-xl border border-border bg-card p-6 overflow-x-auto"
+          >
+            {activeTab === "users" && <AdminUsersTab />}
+            {activeTab === "content" && <AdminContentTab />}
+            {activeTab === "payments" && <AdminPaymentsTab />}
+          </motion.div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default AdminDashboard;

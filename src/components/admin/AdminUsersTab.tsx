@@ -1,0 +1,169 @@
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Search, Trash2, UserCog } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+
+interface UserWithRole {
+  user_id: string;
+  name: string;
+  email: string;
+  role: string;
+  created_at: string;
+}
+
+const AdminUsersTab = () => {
+  const [users, setUsers] = useState<UserWithRole[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [filterRole, setFilterRole] = useState("all");
+  const { toast } = useToast();
+
+  const fetchUsers = async () => {
+    setLoading(true);
+    const { data: profiles } = await supabase.from("profiles").select("user_id, name, email, created_at");
+    const { data: roles } = await supabase.from("user_roles").select("user_id, role");
+
+    if (profiles && roles) {
+      const roleMap = new Map(roles.map((r) => [r.user_id, r.role]));
+      const merged = profiles.map((p) => ({
+        ...p,
+        role: roleMap.get(p.user_id) || "student",
+      }));
+      setUsers(merged);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchUsers(); }, []);
+
+  const handleRoleChange = async (userId: string, newRole: string) => {
+    const { error } = await supabase
+      .from("user_roles")
+      .update({ role: newRole as "student" | "teacher" | "admin" })
+      .eq("user_id", userId);
+
+    if (error) {
+      toast({ title: "Erro", description: "Não foi possível alterar o papel.", variant: "destructive" });
+    } else {
+      toast({ title: "Sucesso", description: "Papel do usuário atualizado." });
+      fetchUsers();
+    }
+  };
+
+  const handleDelete = async (userId: string) => {
+    if (!confirm("Tem certeza que deseja remover este usuário? Esta ação não pode ser desfeita.")) return;
+    
+    const { error } = await supabase.from("profiles").delete().eq("user_id", userId);
+    if (error) {
+      toast({ title: "Erro", description: "Não foi possível remover o usuário.", variant: "destructive" });
+    } else {
+      toast({ title: "Removido", description: "Perfil do usuário removido." });
+      fetchUsers();
+    }
+  };
+
+  const filtered = users.filter((u) => {
+    const matchSearch = u.name.toLowerCase().includes(search.toLowerCase()) || u.email.toLowerCase().includes(search.toLowerCase());
+    const matchRole = filterRole === "all" || u.role === filterRole;
+    return matchSearch && matchRole;
+  });
+
+  const roleBadge = (role: string) => {
+    const variants: Record<string, string> = {
+      admin: "bg-destructive/20 text-destructive border-destructive/30",
+      teacher: "bg-primary/20 text-primary border-primary/30",
+      student: "bg-accent/20 text-accent border-accent/30",
+    };
+    const labels: Record<string, string> = { admin: "Admin", teacher: "Professor", student: "Aluno" };
+    return <Badge variant="outline" className={variants[role] || ""}>{labels[role] || role}</Badge>;
+  };
+
+  return (
+    <div>
+      <h2 className="font-display text-lg font-semibold mb-4 flex items-center gap-2">
+        <UserCog className="h-5 w-5" /> Gestão de Usuários
+      </h2>
+
+      <div className="flex flex-col sm:flex-row gap-3 mb-4">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input placeholder="Buscar por nome ou email..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+        </div>
+        <Select value={filterRole} onValueChange={setFilterRole}>
+          <SelectTrigger className="w-[160px]">
+            <SelectValue placeholder="Filtrar papel" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos</SelectItem>
+            <SelectItem value="student">Alunos</SelectItem>
+            <SelectItem value="teacher">Professores</SelectItem>
+            <SelectItem value="admin">Admins</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <p className="text-xs text-muted-foreground mb-2">{filtered.length} usuário(s) encontrado(s)</p>
+
+      {loading ? (
+        <p className="text-sm text-muted-foreground">Carregando...</p>
+      ) : (
+        <div className="rounded-lg border border-border overflow-hidden">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Nome</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Papel</TableHead>
+                <TableHead>Cadastro</TableHead>
+                <TableHead className="text-right">Ações</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filtered.map((u) => (
+                <TableRow key={u.user_id}>
+                  <TableCell className="font-medium">{u.name}</TableCell>
+                  <TableCell className="text-muted-foreground">{u.email}</TableCell>
+                  <TableCell>{roleBadge(u.role)}</TableCell>
+                  <TableCell className="text-muted-foreground text-xs">
+                    {new Date(u.created_at).toLocaleDateString("pt-BR")}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end gap-2">
+                      <Select value={u.role} onValueChange={(val) => handleRoleChange(u.user_id, val)}>
+                        <SelectTrigger className="w-[120px] h-8 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="student">Aluno</SelectItem>
+                          <SelectItem value="teacher">Professor</SelectItem>
+                          <SelectItem value="admin">Admin</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => handleDelete(u.user_id)}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+              {filtered.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                    Nenhum usuário encontrado.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default AdminUsersTab;

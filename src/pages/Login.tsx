@@ -45,7 +45,7 @@ const Login = () => {
         </Link>
 
         <div className="text-center space-y-2">
-          <h1 className="font-display text-3xl font-bold text-gradient">StudyFlix</h1>
+          <img src={logo} alt="Revisão Fácil" className="h-10 mx-auto" />
           <p className="text-sm text-muted-foreground">Entre para continuar aprendendo</p>
         </div>
 

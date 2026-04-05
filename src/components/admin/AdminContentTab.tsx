@@ -1,0 +1,224 @@
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Search, CheckCircle, XCircle, Video, FileText, DollarSign } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+
+interface ContentItem {
+  id: string;
+  title: string;
+  description: string | null;
+  published: boolean | null;
+  admin_approved: boolean | null;
+  platform_percentage: number | null;
+  teacher_id: string;
+  teacher_name?: string;
+  type: "lesson" | "exam_solution";
+  created_at: string;
+  price: number | null;
+}
+
+const AdminContentTab = () => {
+  const [items, setItems] = useState<ContentItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [filterType, setFilterType] = useState("all");
+  const { toast } = useToast();
+
+  const fetchContent = async () => {
+    setLoading(true);
+    const [lessonsRes, examsRes, profilesRes] = await Promise.all([
+      supabase.from("lessons").select("id, title, description, published, admin_approved, platform_percentage, teacher_id, created_at, price"),
+      supabase.from("exam_solutions").select("id, title, description, published, admin_approved, platform_percentage, teacher_id, created_at, price"),
+      supabase.from("profiles").select("user_id, name"),
+    ]);
+
+    const profileMap = new Map((profilesRes.data || []).map((p) => [p.user_id, p.name]));
+
+    const lessons: ContentItem[] = (lessonsRes.data || []).map((l) => ({
+      ...l,
+      type: "lesson" as const,
+      teacher_name: profileMap.get(l.teacher_id) || "Desconhecido",
+    }));
+
+    const exams: ContentItem[] = (examsRes.data || []).map((e) => ({
+      ...e,
+      type: "exam_solution" as const,
+      teacher_name: profileMap.get(e.teacher_id) || "Desconhecido",
+    }));
+
+    setItems([...lessons, ...exams].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchContent(); }, []);
+
+  const handleApprove = async (item: ContentItem, approve: boolean) => {
+    const table = item.type === "lesson" ? "lessons" : "exam_solutions";
+    const { error } = await supabase
+      .from(table)
+      .update({ admin_approved: approve })
+      .eq("id", item.id);
+
+    if (error) {
+      toast({ title: "Erro", description: "Falha ao atualizar status.", variant: "destructive" });
+    } else {
+      toast({ title: approve ? "Aprovado" : "Rejeitado", description: `"${item.title}" foi ${approve ? "aprovado" : "rejeitado"}.` });
+      fetchContent();
+    }
+  };
+
+  const handlePercentageChange = async (item: ContentItem, percentage: number) => {
+    const table = item.type === "lesson" ? "lessons" : "exam_solutions";
+    const { error } = await supabase
+      .from(table)
+      .update({ platform_percentage: percentage })
+      .eq("id", item.id);
+
+    if (error) {
+      toast({ title: "Erro", description: "Falha ao atualizar percentual.", variant: "destructive" });
+    } else {
+      toast({ title: "Atualizado", description: `Percentual da plataforma: ${percentage}%` });
+      fetchContent();
+    }
+  };
+
+  const filtered = items.filter((i) => {
+    const matchSearch = i.title.toLowerCase().includes(search.toLowerCase()) || (i.teacher_name || "").toLowerCase().includes(search.toLowerCase());
+    const matchStatus = filterStatus === "all" 
+      || (filterStatus === "pending" && i.published && !i.admin_approved)
+      || (filterStatus === "approved" && i.admin_approved)
+      || (filterStatus === "draft" && !i.published);
+    const matchType = filterType === "all" || filterType === i.type;
+    return matchSearch && matchStatus && matchType;
+  });
+
+  const pendingCount = items.filter((i) => i.published && !i.admin_approved).length;
+
+  return (
+    <div>
+      <h2 className="font-display text-lg font-semibold mb-1 flex items-center gap-2">
+        <Video className="h-5 w-5" /> Moderação de Conteúdo
+      </h2>
+      {pendingCount > 0 && (
+        <p className="text-sm text-accent font-medium mb-4">{pendingCount} conteúdo(s) aguardando aprovação</p>
+      )}
+
+      <div className="flex flex-col sm:flex-row gap-3 mb-4">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input placeholder="Buscar por título ou professor..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+        </div>
+        <Select value={filterStatus} onValueChange={setFilterStatus}>
+          <SelectTrigger className="w-[160px]">
+            <SelectValue placeholder="Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos</SelectItem>
+            <SelectItem value="pending">Pendentes</SelectItem>
+            <SelectItem value="approved">Aprovados</SelectItem>
+            <SelectItem value="draft">Rascunho</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={filterType} onValueChange={setFilterType}>
+          <SelectTrigger className="w-[160px]">
+            <SelectValue placeholder="Tipo" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos</SelectItem>
+            <SelectItem value="lesson">Aulas</SelectItem>
+            <SelectItem value="exam_solution">Resoluções</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {loading ? (
+        <p className="text-sm text-muted-foreground">Carregando...</p>
+      ) : (
+        <div className="rounded-lg border border-border overflow-hidden">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Título</TableHead>
+                <TableHead>Professor</TableHead>
+                <TableHead>Tipo</TableHead>
+                <TableHead>Preço</TableHead>
+                <TableHead>% Plataforma</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Ações</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filtered.map((item) => (
+                <TableRow key={`${item.type}-${item.id}`}>
+                  <TableCell className="font-medium max-w-[200px] truncate">{item.title}</TableCell>
+                  <TableCell className="text-muted-foreground text-sm">{item.teacher_name}</TableCell>
+                  <TableCell>
+                    <Badge variant="outline" className={item.type === "lesson" ? "border-primary/30 text-primary" : "border-accent/30 text-accent"}>
+                      {item.type === "lesson" ? <><Video className="h-3 w-3 mr-1" />Aula</> : <><FileText className="h-3 w-3 mr-1" />Resolução</>}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-sm">
+                    {item.price ? `R$ ${Number(item.price).toFixed(2)}` : "Grátis"}
+                  </TableCell>
+                  <TableCell>
+                    <Select
+                      value={String(item.platform_percentage || 30)}
+                      onValueChange={(val) => handlePercentageChange(item, Number(val))}
+                    >
+                      <SelectTrigger className="w-[80px] h-8 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {[10, 15, 20, 25, 30, 35, 40, 50].map((p) => (
+                          <SelectItem key={p} value={String(p)}>{p}%</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </TableCell>
+                  <TableCell>
+                    {!item.published ? (
+                      <Badge variant="outline" className="text-muted-foreground">Rascunho</Badge>
+                    ) : item.admin_approved ? (
+                      <Badge variant="outline" className="border-green-500/30 text-green-500">Aprovado</Badge>
+                    ) : (
+                      <Badge variant="outline" className="border-accent/30 text-accent">Pendente</Badge>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end gap-1">
+                      {item.published && !item.admin_approved && (
+                        <Button size="sm" variant="ghost" className="h-8 text-green-500 hover:text-green-400" onClick={() => handleApprove(item, true)}>
+                          <CheckCircle className="h-4 w-4 mr-1" /> Aprovar
+                        </Button>
+                      )}
+                      {item.admin_approved && (
+                        <Button size="sm" variant="ghost" className="h-8 text-destructive hover:text-destructive" onClick={() => handleApprove(item, false)}>
+                          <XCircle className="h-4 w-4 mr-1" /> Revogar
+                        </Button>
+                      )}
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+              {filtered.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                    Nenhum conteúdo encontrado.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default AdminContentTab;

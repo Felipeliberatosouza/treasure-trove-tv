@@ -64,10 +64,12 @@ export type Database = {
       }
       exam_solutions: {
         Row: {
+          admin_approved: boolean | null
           carousel_cover_url: string | null
           created_at: string
           description: string | null
           id: string
+          platform_percentage: number | null
           price: number | null
           published: boolean | null
           teacher_id: string
@@ -77,10 +79,12 @@ export type Database = {
           video_url: string | null
         }
         Insert: {
+          admin_approved?: boolean | null
           carousel_cover_url?: string | null
           created_at?: string
           description?: string | null
           id?: string
+          platform_percentage?: number | null
           price?: number | null
           published?: boolean | null
           teacher_id: string
@@ -90,10 +94,12 @@ export type Database = {
           video_url?: string | null
         }
         Update: {
+          admin_approved?: boolean | null
           carousel_cover_url?: string | null
           created_at?: string
           description?: string | null
           id?: string
+          platform_percentage?: number | null
           price?: number | null
           published?: boolean | null
           teacher_id?: string
@@ -106,10 +112,12 @@ export type Database = {
       }
       lessons: {
         Row: {
+          admin_approved: boolean | null
           carousel_cover_url: string | null
           created_at: string
           description: string | null
           id: string
+          platform_percentage: number | null
           price: number | null
           published: boolean | null
           teacher_id: string
@@ -119,10 +127,12 @@ export type Database = {
           video_url: string | null
         }
         Insert: {
+          admin_approved?: boolean | null
           carousel_cover_url?: string | null
           created_at?: string
           description?: string | null
           id?: string
+          platform_percentage?: number | null
           price?: number | null
           published?: boolean | null
           teacher_id: string
@@ -132,10 +142,12 @@ export type Database = {
           video_url?: string | null
         }
         Update: {
+          admin_approved?: boolean | null
           carousel_cover_url?: string | null
           created_at?: string
           description?: string | null
           id?: string
+          platform_percentage?: number | null
           price?: number | null
           published?: boolean | null
           teacher_id?: string
@@ -179,6 +191,57 @@ export type Database = {
           name?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      teacher_payments: {
+        Row: {
+          avg_rating: number | null
+          created_at: string
+          gross_amount: number
+          id: string
+          net_amount: number
+          notes: string | null
+          payment_type: string
+          period_end: string
+          period_start: string
+          platform_fee: number
+          status: string
+          teacher_id: string
+          total_views: number | null
+          updated_at: string
+        }
+        Insert: {
+          avg_rating?: number | null
+          created_at?: string
+          gross_amount?: number
+          id?: string
+          net_amount?: number
+          notes?: string | null
+          payment_type?: string
+          period_end: string
+          period_start: string
+          platform_fee?: number
+          status?: string
+          teacher_id: string
+          total_views?: number | null
+          updated_at?: string
+        }
+        Update: {
+          avg_rating?: number | null
+          created_at?: string
+          gross_amount?: number
+          id?: string
+          net_amount?: number
+          notes?: string | null
+          payment_type?: string
+          period_end?: string
+          period_start?: string
+          platform_fee?: number
+          status?: string
+          teacher_id?: string
+          total_views?: number | null
+          updated_at?: string
         }
         Relationships: []
       }
@@ -272,6 +335,30 @@ export type Database = {
         }
         Relationships: []
       }
+      video_views: {
+        Row: {
+          content_id: string
+          content_type: string
+          id: string
+          user_id: string
+          viewed_at: string
+        }
+        Insert: {
+          content_id: string
+          content_type: string
+          id?: string
+          user_id: string
+          viewed_at?: string
+        }
+        Update: {
+          content_id?: string
+          content_type?: string
+          id?: string
+          user_id?: string
+          viewed_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -290,7 +377,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "student" | "teacher"
+      app_role: "student" | "teacher" | "admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -418,7 +505,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["student", "teacher"],
+      app_role: ["student", "teacher", "admin"],
     },
   },
 } as const

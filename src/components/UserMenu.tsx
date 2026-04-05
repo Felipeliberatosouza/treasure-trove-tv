@@ -20,7 +20,7 @@ const UserMenu = () => {
   if (!user) return null;
 
   const firstName = profile?.name?.split(" ")[0] || user.email?.split("@")[0] || "Usuário";
-  const dashboardPath = role === "teacher" ? "/dashboard/teacher" : "/dashboard/student";
+  const dashboardPath = role === "admin" ? "/dashboard/admin" : role === "teacher" ? "/dashboard/teacher" : "/dashboard/student";
 
   const handleSignOut = async () => {
     setOpen(false);

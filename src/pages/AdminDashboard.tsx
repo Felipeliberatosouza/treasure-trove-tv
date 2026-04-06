@@ -19,7 +19,7 @@ const tabs = [
 type TabId = (typeof tabs)[number]["id"];
 
 const AdminDashboard = () => {
-  const [activeTab, setActiveTab] = useState<TabId>("users");
+  const [activeTab, setActiveTab] = useState<TabId>("overview");
   const { role, loading } = useAuth();
 
   if (loading) return <div className="min-h-screen bg-background flex items-center justify-center text-muted-foreground">Carregando...</div>;
@@ -63,6 +63,7 @@ const AdminDashboard = () => {
             animate={{ opacity: 1, y: 0 }}
             className="flex-1 rounded-xl border border-border bg-card p-6 overflow-x-auto"
           >
+            {activeTab === "overview" && <AdminOverviewTab />}
             {activeTab === "users" && <AdminUsersTab />}
             {activeTab === "content" && <AdminContentTab />}
             {activeTab === "payments" && <AdminPaymentsTab />}

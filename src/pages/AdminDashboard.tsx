@@ -1,14 +1,16 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Users, Video, DollarSign, Shield } from "lucide-react";
+import { ArrowLeft, Users, Video, DollarSign, Shield, LayoutDashboard } from "lucide-react";
 import { Link, Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
+import AdminOverviewTab from "@/components/admin/AdminOverviewTab";
 import AdminUsersTab from "@/components/admin/AdminUsersTab";
 import AdminContentTab from "@/components/admin/AdminContentTab";
 import AdminPaymentsTab from "@/components/admin/AdminPaymentsTab";
 
 const tabs = [
+  { id: "overview", label: "Visão Geral", icon: LayoutDashboard },
   { id: "users", label: "Usuários", icon: Users },
   { id: "content", label: "Conteúdos", icon: Video },
   { id: "payments", label: "Pagamentos", icon: DollarSign },

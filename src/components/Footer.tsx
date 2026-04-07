@@ -3,7 +3,7 @@ const Footer = () => (
     <div className="mx-auto flex max-w-6xl flex-col items-center gap-6 md:flex-row md:justify-between">
       <span className="font-display text-lg font-bold text-gradient">Revisão Fácil</span>
       <div className="flex gap-6 text-sm text-muted-foreground">
-        <a href="#" className="hover:text-foreground transition-colors">Sobre</a>
+        <a href="/sobre" className="hover:text-foreground transition-colors">Sobre</a>
         <a href="/termos" className="hover:text-foreground transition-colors">Termos</a>
         <a href="/privacidade" className="hover:text-foreground transition-colors">Privacidade</a>
         <a href="#" className="hover:text-foreground transition-colors">Contato</a>

@@ -12,6 +12,7 @@ import StudentDashboard from "./pages/StudentDashboard.tsx";
 import TeacherDashboard from "./pages/TeacherDashboard.tsx";
 import AdminDashboard from "./pages/AdminDashboard.tsx";
 import NotFound from "./pages/NotFound.tsx";
+import PrivacyPolicy from "./pages/PrivacyPolicy.tsx";
 import CookieConsent from "./components/CookieConsent.tsx";
 
 const queryClient = new QueryClient();

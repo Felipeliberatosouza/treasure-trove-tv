@@ -27,7 +27,7 @@ const CookieConsent = () => {
           <div className="mx-auto flex max-w-4xl flex-col items-center gap-3 sm:flex-row sm:justify-between">
             <p className="text-sm text-muted-foreground text-center sm:text-left">
               Utilizamos cookies para melhorar sua experiência. Ao continuar navegando, você concorda com nossa{" "}
-              <a href="#" className="underline hover:text-foreground transition-colors">
+              <a href="/privacidade" className="underline hover:text-foreground transition-colors">
                 Política de Privacidade
               </a>.
             </p>

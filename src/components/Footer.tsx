@@ -4,7 +4,7 @@ const Footer = () => (
       <span className="font-display text-lg font-bold text-gradient">Revisão Fácil</span>
       <div className="flex gap-6 text-sm text-muted-foreground">
         <a href="#" className="hover:text-foreground transition-colors">Sobre</a>
-        <a href="#" className="hover:text-foreground transition-colors">Termos</a>
+        <a href="/termos" className="hover:text-foreground transition-colors">Termos</a>
         <a href="/privacidade" className="hover:text-foreground transition-colors">Privacidade</a>
         <a href="#" className="hover:text-foreground transition-colors">Contato</a>
       </div>

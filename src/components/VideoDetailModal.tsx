@@ -254,10 +254,6 @@ const VideoDetailModal = ({ video, open, onClose }: VideoDetailModalProps) => {
   );
 };
 
-// Helper to get trial settings text — simplified inline
-function trialSettings() {
-  return null; // handled by the hook
-}
 
 export const RatingStars = ({ value, size = 4 }: { value: number; size?: number }) => (
   <div className="flex gap-0.5">

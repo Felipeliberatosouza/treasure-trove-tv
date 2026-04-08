@@ -5,11 +5,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Mail, MapPin, Clock } from "lucide-react";
+import { Mail, MapPin, Clock, Phone } from "lucide-react";
+import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 
 const Contact = () => {
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", subject: "", message: "" });
+  const { data: contact } = usePlatformSettings("contact");
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -52,6 +54,10 @@ const Contact = () => {
     setForm({ name: "", email: "", subject: "", message: "" });
   };
 
+  const displayEmail = contact?.email || "contato@revisaofacil.com";
+  const displayPhone = contact?.phone;
+  const displayAddress = contact?.address || "Brasil";
+
   return (
     <div className="min-h-screen bg-background text-foreground px-6 py-12 md:px-16 lg:px-32">
       <div className="mx-auto max-w-4xl space-y-10">
@@ -92,16 +98,25 @@ const Contact = () => {
                 <Mail className="h-5 w-5 text-primary mt-0.5" />
                 <div>
                   <p className="text-sm font-medium">E-mail</p>
-                  <a href="mailto:contato@revisaofacil.com" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                    contato@revisaofacil.com
+                  <a href={`mailto:${displayEmail}`} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                    {displayEmail}
                   </a>
                 </div>
               </div>
+              {displayPhone && (
+                <div className="flex items-start gap-3">
+                  <Phone className="h-5 w-5 text-primary mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium">Telefone</p>
+                    <p className="text-sm text-muted-foreground">{displayPhone}</p>
+                  </div>
+                </div>
+              )}
               <div className="flex items-start gap-3">
                 <MapPin className="h-5 w-5 text-primary mt-0.5" />
                 <div>
                   <p className="text-sm font-medium">Localização</p>
-                  <p className="text-sm text-muted-foreground">Brasil</p>
+                  <p className="text-sm text-muted-foreground">{displayAddress}</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
@@ -111,6 +126,25 @@ const Contact = () => {
                   <p className="text-sm text-muted-foreground">Segunda a Sexta, 9h às 18h</p>
                 </div>
               </div>
+              {(contact?.instagram || contact?.youtube || contact?.facebook || contact?.twitter) && (
+                <div className="pt-3 border-t border-border space-y-2">
+                  <p className="text-sm font-medium">Redes Sociais</p>
+                  <div className="flex flex-wrap gap-3">
+                    {contact.instagram && (
+                      <a href={`https://instagram.com/${contact.instagram.replace("@", "")}`} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline">Instagram</a>
+                    )}
+                    {contact.youtube && (
+                      <a href={contact.youtube} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline">YouTube</a>
+                    )}
+                    {contact.facebook && (
+                      <a href={contact.facebook} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline">Facebook</a>
+                    )}
+                    {contact.twitter && (
+                      <a href={`https://x.com/${contact.twitter.replace("@", "")}`} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline">X</a>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

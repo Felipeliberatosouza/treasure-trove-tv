@@ -26,6 +26,7 @@ export interface HeroBannerSettings {
   subtitle: string;
   cta_text: string;
   cta_link: string;
+  banner_image_url?: string;
 }
 
 export interface FeaturedVideosSettings {

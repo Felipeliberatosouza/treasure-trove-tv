@@ -12,12 +12,13 @@ const HeroBanner = ({ onVideoClick }: { onVideoClick: (id: string) => void }) =>
   const title = heroBannerSettings?.title || featured.title;
   const subtitle = heroBannerSettings?.subtitle || featured.description;
   const ctaText = heroBannerSettings?.cta_text || "Assistir Agora";
+  const bannerImage = heroBannerSettings?.banner_image_url || heroBanner;
 
   return (
     <section className="relative h-[85vh] min-h-[500px] w-full overflow-hidden">
       <div className="absolute inset-0">
         <img
-          src={heroBanner}
+          src={bannerImage}
           alt="Banner principal"
           className="h-full w-full object-cover"
         />

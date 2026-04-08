@@ -70,6 +70,7 @@ type SettingsMap = {
   featured_videos: FeaturedVideosSettings;
   subscription_plans: SubscriptionPlansSettings;
   video_pricing: VideoPricingSettings;
+  free_trial: FreeTrialSettings;
   about_us: PageContentSettings;
   terms_of_use: PageContentSettings;
   privacy_policy: PageContentSettings;

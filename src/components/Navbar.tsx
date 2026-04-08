@@ -8,11 +8,32 @@ import UserMenu from "@/components/UserMenu";
 import { useAllPlatformSettings } from "@/hooks/usePlatformSettings";
 import type { BrandingSettings } from "@/hooks/usePlatformSettings";
 
+const publicMenuItems = [
+  { label: "Assine a Revisão Fácil", href: "#pricing" },
+  { label: "Revisões", href: "/revisoes" },
+  { label: "Resumos", href: "/resumos" },
+  { label: "Simulados", href: "/simulados" },
+  { label: "Top Questões de Provas", href: "/top-questoes" },
+  { label: "Minhas Colinhas", href: "/colinhas" },
+];
+
+const loggedMenuItems = [
+  { label: "Minhas Revisões", href: "/minhas-revisoes" },
+  { label: "Meus Resumos", href: "/meus-resumos" },
+  { label: "Meus Simulados", href: "/meus-simulados" },
+  { label: "Minhas Top Questões de Provas", href: "/minhas-top-questoes" },
+  { label: "Minhas Colinhas", href: "/minhas-colinhas" },
+  { label: "Minhas Dúvidas", href: "/minhas-duvidas" },
+  { label: "Minhas Aulas Agendadas", href: "/minhas-aulas-agendadas" },
+];
+
 const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { user } = useAuth();
   const { settings } = useAllPlatformSettings();
   const branding = settings.branding as BrandingSettings | undefined;
+
+  const menuItems = user ? loggedMenuItems : publicMenuItems;
 
   return (
     <motion.nav
@@ -31,13 +52,18 @@ const Navbar = () => {
           )}
         </Link>
 
-        <div className="hidden items-center gap-6 md:flex">
-          <Link to="/" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
-            Catálogo
-          </Link>
-          <a href="#pricing" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
-            Preços
-          </a>
+        <div className="hidden items-center gap-5 md:flex">
+          {menuItems.map((item) =>
+            item.href.startsWith("#") ? (
+              <a key={item.label} href={item.href} className="text-sm text-muted-foreground transition-colors hover:text-foreground whitespace-nowrap">
+                {item.label}
+              </a>
+            ) : (
+              <Link key={item.label} to={item.href} className="text-sm text-muted-foreground transition-colors hover:text-foreground whitespace-nowrap">
+                {item.label}
+              </Link>
+            )
+          )}
         </div>
 
         <div className="flex items-center gap-3">
@@ -73,12 +99,17 @@ const Navbar = () => {
           className="border-t border-border bg-background px-6 py-4 md:hidden"
         >
           <div className="flex flex-col gap-3">
-            <Link to="/" className="text-sm text-muted-foreground" onClick={() => setMobileOpen(false)}>
-              Catálogo
-            </Link>
-            <a href="#pricing" className="text-sm text-muted-foreground" onClick={() => setMobileOpen(false)}>
-              Preços
-            </a>
+            {menuItems.map((item) =>
+              item.href.startsWith("#") ? (
+                <a key={item.label} href={item.href} className="text-sm text-muted-foreground" onClick={() => setMobileOpen(false)}>
+                  {item.label}
+                </a>
+              ) : (
+                <Link key={item.label} to={item.href} className="text-sm text-muted-foreground" onClick={() => setMobileOpen(false)}>
+                  {item.label}
+                </Link>
+              )
+            )}
             {user ? (
               <UserMenu />
             ) : (

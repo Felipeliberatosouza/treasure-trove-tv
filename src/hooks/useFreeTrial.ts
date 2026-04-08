@@ -4,18 +4,14 @@ import { useAuth } from "@/contexts/AuthContext";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 
 export interface TrialStatus {
-  /** Whether the user has an active, non-expired trial */
   hasActiveTrial: boolean;
-  /** Whether the free trial feature is enabled globally */
   trialEnabled: boolean;
-  /** Days remaining (only relevant for days-based trials) */
   daysRemaining: number;
-  /** Videos remaining (only relevant for videos-based trials) */
   videosRemaining: number;
-  /** Trial type configured by admin */
   trialType: "days" | "videos";
-  /** Whether data is still loading */
   loading: boolean;
+  /** Exact expiry date for days-based trials */
+  expiresAt: Date | null;
 }
 
 export function useFreeTrial() {

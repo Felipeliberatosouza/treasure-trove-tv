@@ -4,18 +4,14 @@ import { useAuth } from "@/contexts/AuthContext";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 
 export interface TrialStatus {
-  /** Whether the user has an active, non-expired trial */
   hasActiveTrial: boolean;
-  /** Whether the free trial feature is enabled globally */
   trialEnabled: boolean;
-  /** Days remaining (only relevant for days-based trials) */
   daysRemaining: number;
-  /** Videos remaining (only relevant for videos-based trials) */
   videosRemaining: number;
-  /** Trial type configured by admin */
   trialType: "days" | "videos";
-  /** Whether data is still loading */
   loading: boolean;
+  /** Exact expiry date for days-based trials */
+  expiresAt: Date | null;
 }
 
 export function useFreeTrial() {
@@ -77,6 +73,7 @@ export function useFreeTrial() {
   let hasActiveTrial = false;
   let daysRemaining = 0;
   let videosRemaining = 0;
+  let expiresAt: Date | null = null;
 
   if (trialRow && trialRow.active) {
     if (trialRow.trial_type === "days") {
@@ -85,6 +82,7 @@ export function useFreeTrial() {
       const elapsed = (now - started) / (1000 * 60 * 60 * 24);
       daysRemaining = Math.max(0, Math.ceil(trialRow.trial_days - elapsed));
       hasActiveTrial = daysRemaining > 0;
+      expiresAt = new Date(started + trialRow.trial_days * 24 * 60 * 60 * 1000);
     } else {
       videosRemaining = Math.max(0, trialRow.trial_videos - (trialRow.videos_watched || 0));
       hasActiveTrial = videosRemaining > 0;
@@ -98,6 +96,7 @@ export function useFreeTrial() {
     videosRemaining,
     trialType,
     loading: loading || settingsLoading,
+    expiresAt,
   };
 
   return { ...status, startTrial, recordVideoWatch, trialRow, refetch: fetchTrial };

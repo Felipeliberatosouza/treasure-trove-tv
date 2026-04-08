@@ -5,12 +5,45 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useFreeTrial } from "@/hooks/useFreeTrial";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+
+function useCountdown(expiresAt: Date | null) {
+  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+
+  useEffect(() => {
+    if (!expiresAt) return;
+    const calc = () => {
+      const diff = Math.max(0, expiresAt.getTime() - Date.now());
+      setTimeLeft({
+        days: Math.floor(diff / (1000 * 60 * 60 * 24)),
+        hours: Math.floor((diff / (1000 * 60 * 60)) % 24),
+        minutes: Math.floor((diff / (1000 * 60)) % 60),
+        seconds: Math.floor((diff / 1000) % 60),
+      });
+    };
+    calc();
+    const id = setInterval(calc, 1000);
+    return () => clearInterval(id);
+  }, [expiresAt]);
+
+  return timeLeft;
+}
+
+const CountdownUnit = ({ value, label }: { value: number; label: string }) => (
+  <div className="flex flex-col items-center">
+    <span className="font-display text-lg font-bold text-primary tabular-nums leading-none">
+      {String(value).padStart(2, "0")}
+    </span>
+    <span className="text-[10px] text-muted-foreground uppercase tracking-wide">{label}</span>
+  </div>
+);
 
 const FreeTrialBanner = () => {
   const { user } = useAuth();
   const trial = useFreeTrial();
   const [starting, setStarting] = useState(false);
+
+  const countdown = useCountdown(trial.expiresAt);
 
   // Don't render if trial feature is disabled or still loading
   if (trial.loading || !trial.trialEnabled) return null;
@@ -44,17 +77,26 @@ const FreeTrialBanner = () => {
               </div>
               <div>
                 <p className="font-display text-sm font-bold text-foreground">Teste Grátis Ativo</p>
-                <p className="text-xs text-muted-foreground">
-                  {trial.trialType === "days" ? (
-                    <span className="flex items-center gap-1">
-                      <Clock className="h-3 w-3" /> {trial.daysRemaining} dia(s) restante(s)
-                    </span>
-                  ) : (
+                {trial.trialType === "days" ? (
+                  <div className="flex items-center gap-2 mt-1">
+                    <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                    <div className="flex items-center gap-1.5">
+                      <CountdownUnit value={countdown.days} label="dias" />
+                      <span className="text-muted-foreground font-bold text-xs">:</span>
+                      <CountdownUnit value={countdown.hours} label="hrs" />
+                      <span className="text-muted-foreground font-bold text-xs">:</span>
+                      <CountdownUnit value={countdown.minutes} label="min" />
+                      <span className="text-muted-foreground font-bold text-xs">:</span>
+                      <CountdownUnit value={countdown.seconds} label="seg" />
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground mt-1">
                     <span className="flex items-center gap-1">
                       <Play className="h-3 w-3" /> {trial.videosRemaining} vídeo(s) restante(s)
                     </span>
-                  )}
-                </p>
+                  </p>
+                )}
               </div>
             </div>
             <Button size="sm" className="gap-2 font-display font-semibold" asChild>

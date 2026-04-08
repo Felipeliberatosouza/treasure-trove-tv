@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Settings, Palette, Phone, FileText, Star, CreditCard, DollarSign, Layout } from "lucide-react";
+import { Settings, Palette, Phone, FileText, Star, CreditCard, DollarSign, Layout, Gift } from "lucide-react";
 import SettingsBranding from "./settings/SettingsBranding";
 import SettingsContact from "./settings/SettingsContact";
 import SettingsPages from "./settings/SettingsPages";
@@ -7,6 +7,7 @@ import SettingsHeroBanner from "./settings/SettingsHeroBanner";
 import SettingsFeaturedVideos from "./settings/SettingsFeaturedVideos";
 import SettingsSubscriptionPlans from "./settings/SettingsSubscriptionPlans";
 import SettingsVideoPricing from "./settings/SettingsVideoPricing";
+import SettingsFreeTrial from "./settings/SettingsFreeTrial";
 
 const sections = [
   { id: "branding", label: "Identidade Visual", icon: Palette },

@@ -100,6 +100,7 @@ export function useFreeTrial() {
     videosRemaining,
     trialType,
     loading: loading || settingsLoading,
+    expiresAt,
   };
 
   return { ...status, startTrial, recordVideoWatch, trialRow, refetch: fetchTrial };

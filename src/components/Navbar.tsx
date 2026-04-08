@@ -11,6 +11,8 @@ import type { BrandingSettings } from "@/hooks/usePlatformSettings";
 const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { user } = useAuth();
+  const { settings } = useAllPlatformSettings();
+  const branding = settings.branding as BrandingSettings | undefined;
 
   return (
     <motion.nav

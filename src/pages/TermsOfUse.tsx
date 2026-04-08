@@ -1,5 +1,7 @@
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import { Skeleton } from "@/components/ui/skeleton";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 
 const fallbackHtml = `<p>Última atualização: 7 de abril de 2026</p>
 <h2>1. Aceitação dos Termos</h2>
@@ -11,7 +13,9 @@ const TermsOfUse = () => {
   const { data, loading } = usePlatformSettings("terms_of_use");
 
   return (
-    <div className="min-h-screen bg-background text-foreground px-6 py-12 md:px-16 lg:px-32">
+    <div className="min-h-screen bg-background text-foreground flex flex-col">
+      <Navbar />
+      <div className="flex-1 px-6 pt-24 pb-12 md:px-16 lg:px-32">
       <div className="mx-auto max-w-3xl space-y-8">
         <h1 className="font-display text-3xl font-bold text-gradient">Termos de Uso</h1>
 
@@ -34,6 +38,8 @@ const TermsOfUse = () => {
           <a href="/" className="text-sm text-primary hover:underline transition-colors">← Voltar para a página inicial</a>
         </div>
       </div>
+      </div>
+      <Footer />
     </div>
   );
 };

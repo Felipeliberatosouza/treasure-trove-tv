@@ -1,6 +1,8 @@
 import { BookOpen, Users, Star, Target } from "lucide-react";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import { Skeleton } from "@/components/ui/skeleton";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 
 const fallbackContent = `Acreditamos que a educação de qualidade deve ser acessível a todos. A Revisão Fácil nasceu para transformar a forma como alunos estudam e professores ensinam.`;
 
@@ -8,7 +10,9 @@ const AboutUs = () => {
   const { data, loading } = usePlatformSettings("about_us");
 
   return (
-    <div className="min-h-screen bg-background text-foreground px-6 py-12 md:px-16 lg:px-32">
+    <div className="min-h-screen bg-background text-foreground flex flex-col">
+      <Navbar />
+      <div className="flex-1 px-6 pt-24 pb-12 md:px-16 lg:px-32">
       <div className="mx-auto max-w-3xl space-y-10">
         <div className="space-y-3">
           <h1 className="font-display text-3xl font-bold text-gradient">Sobre a Revisão Fácil</h1>
@@ -61,6 +65,8 @@ const AboutUs = () => {
           <a href="/" className="text-sm text-primary hover:underline transition-colors">← Voltar para a página inicial</a>
         </div>
       </div>
+      </div>
+      <Footer />
     </div>
   );
 };

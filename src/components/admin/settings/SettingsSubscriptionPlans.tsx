@@ -18,7 +18,7 @@ const SettingsSubscriptionPlans = () => {
 
   const updatePlan = (index: number, field: keyof SubscriptionPlan, value: unknown) => {
     const updated = [...plans];
-    (updated[index] as Record<string, unknown>)[field] = value;
+    (updated[index] as unknown as Record<string, unknown>)[field] = value;
     setPlans(updated);
   };
 

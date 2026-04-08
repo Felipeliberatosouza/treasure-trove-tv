@@ -93,7 +93,7 @@ export function usePlatformSettings<K extends keyof SettingsMap>(key: K) {
   const update = useCallback(async (value: SettingsMap[K]) => {
     const { error } = await supabase
       .from("platform_settings")
-      .update({ value: value as unknown as Record<string, unknown> })
+      .update({ value: JSON.parse(JSON.stringify(value)) })
       .eq("key", key);
 
     if (error) {

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import HeroBanner from "@/components/HeroBanner";
+import FreeTrialBanner from "@/components/FreeTrialBanner";
 import VideoCarousel from "@/components/VideoCarousel";
 import PricingSection from "@/components/PricingSection";
 import Footer from "@/components/Footer";

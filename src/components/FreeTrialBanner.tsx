@@ -43,6 +43,8 @@ const FreeTrialBanner = () => {
   const trial = useFreeTrial();
   const [starting, setStarting] = useState(false);
 
+  const countdown = useCountdown(trial.expiresAt);
+
   // Don't render if trial feature is disabled or still loading
   if (trial.loading || !trial.trialEnabled) return null;
 

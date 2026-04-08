@@ -55,6 +55,7 @@ const AdminSettingsTab = () => {
       {activeSection === "featured" && <SettingsFeaturedVideos />}
       {activeSection === "plans" && <SettingsSubscriptionPlans />}
       {activeSection === "pricing" && <SettingsVideoPricing />}
+      {activeSection === "trial" && <SettingsFreeTrial />}
     </div>
   );
 };

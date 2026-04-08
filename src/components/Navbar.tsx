@@ -5,10 +5,14 @@ import { Search, User, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import UserMenu from "@/components/UserMenu";
+import { useAllPlatformSettings } from "@/hooks/usePlatformSettings";
+import type { BrandingSettings } from "@/hooks/usePlatformSettings";
 
 const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { user } = useAuth();
+  const { settings } = useAllPlatformSettings();
+  const branding = settings.branding as BrandingSettings | undefined;
 
   return (
     <motion.nav
@@ -17,8 +21,14 @@ const Navbar = () => {
       className="fixed top-0 z-50 w-full border-b border-border/50 bg-background/80 backdrop-blur-xl"
     >
       <div className="flex items-center justify-between px-6 py-3 md:px-12 lg:px-20">
-        <Link to="/" className="font-display text-xl font-bold text-gradient">
-          Revisão Fácil
+        <Link to="/" className="flex items-center gap-2">
+          {branding?.logo_url ? (
+            <img src={branding.logo_url} alt={branding.platform_name || "Logo"} className="h-8 max-w-[160px] object-contain" />
+          ) : (
+            <span className="font-display text-xl font-bold text-gradient">
+              {branding?.platform_name || "Revisão Fácil"}
+            </span>
+          )}
         </Link>
 
         <div className="hidden items-center gap-6 md:flex">

@@ -71,17 +71,15 @@ const Navbar = () => {
             <Search className="h-5 w-5 text-muted-foreground" />
           </button>
 
-          <div className="hidden md:block">
-            {user ? (
-              <UserMenu />
-            ) : (
-              <Link to="/login">
-                <Button size="sm" className="gap-2 font-display">
-                  <User className="h-4 w-4" /> Entrar
-                </Button>
-              </Link>
-            )}
-          </div>
+          {user ? (
+            <UserMenu />
+          ) : (
+            <Link to="/login" className="hidden md:block">
+              <Button size="sm" className="gap-2 font-display">
+                <User className="h-4 w-4" /> Entrar
+              </Button>
+            </Link>
+          )}
 
           <button
             className="rounded-full p-2 md:hidden"
@@ -110,9 +108,7 @@ const Navbar = () => {
                 </Link>
               )
             )}
-            {user ? (
-              <UserMenu />
-            ) : (
+            {!user && (
               <Link to="/login" onClick={() => setMobileOpen(false)}>
                 <Button size="sm" className="gap-2 font-display w-full">
                   <User className="h-4 w-4" /> Entrar

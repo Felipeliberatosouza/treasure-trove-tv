@@ -237,11 +237,7 @@ const VideoDetailModal = ({ video, open, onClose }: VideoDetailModalProps) => {
                 variant="outline"
               >
                 <Gift className="h-4 w-4" />
-                {startingTrial ? "Ativando..." : `Iniciar Teste Grátis${
-                  trial.trialType === "days"
-                    ? ` (${trial.trialEnabled ? trialSettings()?.trial_days ?? 7 : 7} dias)`
-                    : ` (${trial.trialEnabled ? trialSettings()?.trial_videos ?? 5 : 5} vídeos)`
-                }`}
+                {startingTrial ? "Ativando..." : "Iniciar Teste Grátis"}
               </Button>
             )}
 

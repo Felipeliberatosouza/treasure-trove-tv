@@ -8,9 +8,10 @@ interface VideoCarouselProps {
   videos: Video[];
   onVideoClick: (id: string) => void;
   ratings?: Record<string, { average: number; count: number }>;
+  showTrialBadge?: boolean;
 }
 
-const VideoCarousel = ({ title, videos, onVideoClick, ratings }: VideoCarouselProps) => {
+const VideoCarousel = ({ title, videos, onVideoClick, ratings, showTrialBadge }: VideoCarouselProps) => {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const scroll = (direction: "left" | "right") => {
@@ -47,12 +48,13 @@ const VideoCarousel = ({ title, videos, onVideoClick, ratings }: VideoCarouselPr
       >
         {videos.map((video, i) => (
           <VideoCard
-            key={video.id}
-            video={video}
-            index={i}
-            onClick={onVideoClick}
-            rating={ratings?.[video.id]}
-          />
+              key={video.id}
+              video={video}
+              index={i}
+              onClick={onVideoClick}
+              rating={ratings?.[video.id]}
+              showTrialBadge={showTrialBadge}
+            />
         ))}
       </div>
     </section>

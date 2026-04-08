@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Play, Clock, BookOpen, Star } from "lucide-react";
+import { Play, Clock, BookOpen, Star, Gift } from "lucide-react";
 import type { Video } from "@/data/courses";
 
 interface VideoCardProps {
@@ -7,9 +7,10 @@ interface VideoCardProps {
   index: number;
   onClick: (id: string) => void;
   rating?: { average: number; count: number };
+  showTrialBadge?: boolean;
 }
 
-const VideoCard = ({ video, index, onClick, rating }: VideoCardProps) => {
+const VideoCard = ({ video, index, onClick, rating, showTrialBadge }: VideoCardProps) => {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -34,6 +35,11 @@ const VideoCard = ({ video, index, onClick, rating }: VideoCardProps) => {
           <div className="absolute bottom-2 right-2 rounded bg-background/80 px-2 py-0.5 text-xs font-medium backdrop-blur-sm">
             {video.duration}
           </div>
+          {showTrialBadge && (
+            <div className="absolute top-2 left-2 flex items-center gap-1 rounded-full bg-accent px-2 py-0.5 text-[10px] font-bold text-accent-foreground shadow-md">
+              <Gift className="h-3 w-3" /> TESTE GRÁTIS
+            </div>
+          )}
         </div>
         <div className="space-y-2 p-4">
           <h3 className="font-display text-sm font-semibold leading-tight line-clamp-2">

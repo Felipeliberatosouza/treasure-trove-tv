@@ -1,12 +1,15 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { usePlatformSettings, BrandingSettings } from "@/hooks/usePlatformSettings";
+import { useStorageUpload } from "@/hooks/useStorageUpload";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Save } from "lucide-react";
+import { Save, Upload, X, Image } from "lucide-react";
 
 const SettingsBranding = () => {
   const { data, loading, update } = usePlatformSettings("branding");
+  const { upload, uploading } = useStorageUpload("platform-assets");
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState<BrandingSettings>({
     platform_name: "", slogan: "", logo_url: "",
     primary_color: "#6366f1", secondary_color: "#8b5cf6", accent_color: "#f59e0b",
@@ -14,6 +17,15 @@ const SettingsBranding = () => {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => { if (data) setForm(data); }, [data]);
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const ext = file.name.split(".").pop();
+    const path = `logo/logo-${Date.now()}.${ext}`;
+    const url = await upload(file, path);
+    if (url) setForm((prev) => ({ ...prev, logo_url: url }));
+  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -33,10 +45,48 @@ const SettingsBranding = () => {
         <Label>Slogan</Label>
         <Input value={form.slogan} onChange={(e) => setForm({ ...form, slogan: e.target.value })} />
       </div>
-      <div>
-        <Label>URL do Logotipo</Label>
-        <Input value={form.logo_url} onChange={(e) => setForm({ ...form, logo_url: e.target.value })} placeholder="https://..." />
+
+      {/* Logo upload */}
+      <div className="space-y-2">
+        <Label>Logotipo</Label>
+        {form.logo_url && (
+          <div className="relative inline-block rounded-lg border border-border bg-muted/30 p-2">
+            <img src={form.logo_url} alt="Logo" className="h-16 max-w-[200px] object-contain" />
+            <button
+              onClick={() => setForm({ ...form, logo_url: "" })}
+              className="absolute -right-2 -top-2 rounded-full bg-destructive p-1 text-destructive-foreground hover:opacity-80"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </div>
+        )}
+        <div className="flex gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={uploading}
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <Upload className="h-4 w-4 mr-1" />
+            {uploading ? "Enviando..." : "Enviar Imagem"}
+          </Button>
+          <Input
+            value={form.logo_url}
+            onChange={(e) => setForm({ ...form, logo_url: e.target.value })}
+            placeholder="ou cole uma URL..."
+            className="flex-1 text-xs"
+          />
+        </div>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handleLogoUpload}
+        />
       </div>
+
       <div className="grid grid-cols-3 gap-3">
         <div>
           <Label>Cor Primária</Label>

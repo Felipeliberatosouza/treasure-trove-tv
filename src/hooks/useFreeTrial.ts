@@ -77,6 +77,7 @@ export function useFreeTrial() {
   let hasActiveTrial = false;
   let daysRemaining = 0;
   let videosRemaining = 0;
+  let expiresAt: Date | null = null;
 
   if (trialRow && trialRow.active) {
     if (trialRow.trial_type === "days") {
@@ -85,6 +86,7 @@ export function useFreeTrial() {
       const elapsed = (now - started) / (1000 * 60 * 60 * 24);
       daysRemaining = Math.max(0, Math.ceil(trialRow.trial_days - elapsed));
       hasActiveTrial = daysRemaining > 0;
+      expiresAt = new Date(started + trialRow.trial_days * 24 * 60 * 60 * 1000);
     } else {
       videosRemaining = Math.max(0, trialRow.trial_videos - (trialRow.videos_watched || 0));
       hasActiveTrial = videosRemaining > 0;

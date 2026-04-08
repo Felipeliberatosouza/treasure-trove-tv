@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Star, Play, ShoppingCart, Zap, Clock, BookOpen } from "lucide-react";
+import { Star, Play, ShoppingCart, Zap, Clock, BookOpen, Gift, AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useFreeTrial } from "@/hooks/useFreeTrial";
 import { toast } from "sonner";
 import type { Video } from "@/data/courses";
 
@@ -21,10 +22,12 @@ interface RatingData {
 
 const VideoDetailModal = ({ video, open, onClose }: VideoDetailModalProps) => {
   const { user } = useAuth();
+  const trial = useFreeTrial();
   const [rating, setRating] = useState(0);
   const [hoveredStar, setHoveredStar] = useState(0);
   const [ratingData, setRatingData] = useState<RatingData>({ average: 0, count: 0, userRating: null });
   const [submitting, setSubmitting] = useState(false);
+  const [startingTrial, setStartingTrial] = useState(false);
 
   useEffect(() => {
     if (video && open) {
@@ -34,7 +37,6 @@ const VideoDetailModal = ({ video, open, onClose }: VideoDetailModalProps) => {
 
   const fetchRatings = async () => {
     if (!video) return;
-
     const { data: ratings } = await supabase
       .from("video_ratings")
       .select("rating, user_id")
@@ -53,10 +55,7 @@ const VideoDetailModal = ({ video, open, onClose }: VideoDetailModalProps) => {
   };
 
   const handleRate = async (value: number) => {
-    if (!user) {
-      toast.error("Faça login para avaliar.");
-      return;
-    }
+    if (!user) { toast.error("Faça login para avaliar."); return; }
     if (!video) return;
     setSubmitting(true);
     setRating(value);
@@ -84,6 +83,36 @@ const VideoDetailModal = ({ video, open, onClose }: VideoDetailModalProps) => {
     setSubmitting(false);
   };
 
+  const handleStartTrial = async () => {
+    if (!user) { toast.error("Faça login para iniciar o teste grátis."); return; }
+    setStartingTrial(true);
+    const ok = await trial.startTrial();
+    if (ok) {
+      toast.success("Teste grátis ativado! Aproveite.");
+    } else {
+      toast.error("Não foi possível iniciar o teste grátis.");
+    }
+    setStartingTrial(false);
+  };
+
+  const handleWatchVideo = async () => {
+    if (!user || !video) return;
+
+    // If user is on a video-based trial, record the watch
+    if (trial.hasActiveTrial && trial.trialType === "videos") {
+      await trial.recordVideoWatch();
+    }
+
+    // Record view
+    await supabase.from("video_views").insert({
+      user_id: user.id,
+      content_type: "lesson",
+      content_id: video.id,
+    });
+
+    toast.success("Reproduzindo vídeo...");
+  };
+
   const handleBuyUnit = () => {
     toast.info("Compra unitária será integrada com Stripe em breve.");
   };
@@ -95,6 +124,11 @@ const VideoDetailModal = ({ video, open, onClose }: VideoDetailModalProps) => {
   };
 
   if (!video) return null;
+
+  // Determine access: user has active trial OR has purchased (future) OR has subscription (future)
+  const canWatch = trial.hasActiveTrial;
+  const trialExpired = trial.trialRow && !trial.hasActiveTrial;
+  const canStartTrial = trial.trialEnabled && !trial.trialRow && user;
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
@@ -123,6 +157,31 @@ const VideoDetailModal = ({ video, open, onClose }: VideoDetailModalProps) => {
             <span className="rounded-full bg-secondary px-2 py-0.5 text-secondary-foreground">{video.level}</span>
           </div>
 
+          {/* Trial status banner */}
+          {user && !trial.loading && (
+            <>
+              {trial.hasActiveTrial && (
+                <div className="flex items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 p-3">
+                  <Gift className="h-4 w-4 text-primary shrink-0" />
+                  <span className="text-sm text-foreground">
+                    {trial.trialType === "days"
+                      ? `Teste grátis ativo — ${trial.daysRemaining} dia(s) restante(s)`
+                      : `Teste grátis ativo — ${trial.videosRemaining} vídeo(s) restante(s)`}
+                  </span>
+                </div>
+              )}
+
+              {trialExpired && (
+                <div className="flex items-center gap-2 rounded-lg border border-destructive/20 bg-destructive/5 p-3">
+                  <AlertTriangle className="h-4 w-4 text-destructive shrink-0" />
+                  <span className="text-sm text-foreground">
+                    Seu teste grátis expirou. Assine para continuar assistindo.
+                  </span>
+                </div>
+              )}
+            </>
+          )}
+
           {/* Rating display */}
           <div className="space-y-2">
             <div className="flex items-center gap-2">
@@ -131,7 +190,6 @@ const VideoDetailModal = ({ video, open, onClose }: VideoDetailModalProps) => {
               <span className="text-xs text-muted-foreground">({ratingData.count} avaliações)</span>
             </div>
 
-            {/* User rating */}
             {user && (
               <div className="flex items-center gap-2">
                 <span className="text-xs text-muted-foreground">Sua nota:</span>
@@ -159,11 +217,32 @@ const VideoDetailModal = ({ video, open, onClose }: VideoDetailModalProps) => {
             )}
           </div>
 
-          {/* Purchase options */}
+          {/* Access options */}
           <div className="space-y-3 rounded-xl border border-border bg-secondary/30 p-4">
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Opções de acesso</p>
+
+            {/* Watch button if user has active trial */}
+            {canWatch && (
+              <Button onClick={handleWatchVideo} className="w-full gap-2 font-display font-semibold" variant="default">
+                <Play className="h-4 w-4" /> Assistir (Teste Grátis)
+              </Button>
+            )}
+
+            {/* Start free trial button */}
+            {canStartTrial && (
+              <Button
+                onClick={handleStartTrial}
+                disabled={startingTrial}
+                className="w-full gap-2 font-display font-semibold"
+                variant="outline"
+              >
+                <Gift className="h-4 w-4" />
+                {startingTrial ? "Ativando..." : "Iniciar Teste Grátis"}
+              </Button>
+            )}
+
             <Button onClick={handleSubscribe} className="w-full gap-2 font-display font-semibold">
-              <Zap className="h-4 w-4" /> Assinar — R$ 49/mês (acesso total)
+              <Zap className="h-4 w-4" /> Assinar — acesso total
             </Button>
             <Button onClick={handleBuyUnit} variant="outline" className="w-full gap-2 font-display font-semibold">
               <ShoppingCart className="h-4 w-4" /> Comprar este vídeo — R$ 19,90
@@ -174,6 +253,7 @@ const VideoDetailModal = ({ video, open, onClose }: VideoDetailModalProps) => {
     </Dialog>
   );
 };
+
 
 export const RatingStars = ({ value, size = 4 }: { value: number; size?: number }) => (
   <div className="flex gap-0.5">

@@ -140,6 +140,45 @@ export type Database = {
         }
         Relationships: []
       }
+      free_trials: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          started_at: string
+          trial_days: number
+          trial_type: string
+          trial_videos: number
+          updated_at: string
+          user_id: string
+          videos_watched: number
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          started_at?: string
+          trial_days?: number
+          trial_type?: string
+          trial_videos?: number
+          updated_at?: string
+          user_id: string
+          videos_watched?: number
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          started_at?: string
+          trial_days?: number
+          trial_type?: string
+          trial_videos?: number
+          updated_at?: string
+          user_id?: string
+          videos_watched?: number
+        }
+        Relationships: []
+      }
       lessons: {
         Row: {
           admin_approved: boolean | null

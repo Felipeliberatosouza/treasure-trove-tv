@@ -5,6 +5,8 @@ import { Search, User, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import UserMenu from "@/components/UserMenu";
+import { useAllPlatformSettings } from "@/hooks/usePlatformSettings";
+import type { BrandingSettings } from "@/hooks/usePlatformSettings";
 
 const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);

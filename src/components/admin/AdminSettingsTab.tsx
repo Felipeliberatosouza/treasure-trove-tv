@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Settings, Palette, Phone, FileText, Star, CreditCard, DollarSign, Layout } from "lucide-react";
+import { Settings, Palette, Phone, FileText, Star, CreditCard, DollarSign, Layout, Gift } from "lucide-react";
 import SettingsBranding from "./settings/SettingsBranding";
 import SettingsContact from "./settings/SettingsContact";
 import SettingsPages from "./settings/SettingsPages";
@@ -7,6 +7,7 @@ import SettingsHeroBanner from "./settings/SettingsHeroBanner";
 import SettingsFeaturedVideos from "./settings/SettingsFeaturedVideos";
 import SettingsSubscriptionPlans from "./settings/SettingsSubscriptionPlans";
 import SettingsVideoPricing from "./settings/SettingsVideoPricing";
+import SettingsFreeTrial from "./settings/SettingsFreeTrial";
 
 const sections = [
   { id: "branding", label: "Identidade Visual", icon: Palette },
@@ -16,6 +17,7 @@ const sections = [
   { id: "featured", label: "Vídeos em Destaque", icon: Star },
   { id: "plans", label: "Planos de Assinatura", icon: CreditCard },
   { id: "pricing", label: "Preços de Vídeos", icon: DollarSign },
+  { id: "trial", label: "Teste Grátis", icon: Gift },
 ] as const;
 
 type SectionId = (typeof sections)[number]["id"];
@@ -53,6 +55,7 @@ const AdminSettingsTab = () => {
       {activeSection === "featured" && <SettingsFeaturedVideos />}
       {activeSection === "plans" && <SettingsSubscriptionPlans />}
       {activeSection === "pricing" && <SettingsVideoPricing />}
+      {activeSection === "trial" && <SettingsFreeTrial />}
     </div>
   );
 };

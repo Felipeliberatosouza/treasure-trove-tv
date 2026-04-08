@@ -17,6 +17,7 @@ const sections = [
   { id: "featured", label: "Vídeos em Destaque", icon: Star },
   { id: "plans", label: "Planos de Assinatura", icon: CreditCard },
   { id: "pricing", label: "Preços de Vídeos", icon: DollarSign },
+  { id: "trial", label: "Teste Grátis", icon: Gift },
 ] as const;
 
 type SectionId = (typeof sections)[number]["id"];

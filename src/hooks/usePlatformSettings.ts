@@ -52,6 +52,13 @@ export interface VideoPricingSettings {
   allow_free_content: boolean;
 }
 
+export interface FreeTrialSettings {
+  enabled: boolean;
+  trial_type: "days" | "videos";
+  trial_days: number;
+  trial_videos: number;
+}
+
 export interface PageContentSettings {
   content: string;
 }

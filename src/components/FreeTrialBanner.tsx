@@ -5,7 +5,38 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useFreeTrial } from "@/hooks/useFreeTrial";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+
+function useCountdown(expiresAt: Date | null) {
+  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+
+  useEffect(() => {
+    if (!expiresAt) return;
+    const calc = () => {
+      const diff = Math.max(0, expiresAt.getTime() - Date.now());
+      setTimeLeft({
+        days: Math.floor(diff / (1000 * 60 * 60 * 24)),
+        hours: Math.floor((diff / (1000 * 60 * 60)) % 24),
+        minutes: Math.floor((diff / (1000 * 60)) % 60),
+        seconds: Math.floor((diff / 1000) % 60),
+      });
+    };
+    calc();
+    const id = setInterval(calc, 1000);
+    return () => clearInterval(id);
+  }, [expiresAt]);
+
+  return timeLeft;
+}
+
+const CountdownUnit = ({ value, label }: { value: number; label: string }) => (
+  <div className="flex flex-col items-center">
+    <span className="font-display text-lg font-bold text-primary tabular-nums leading-none">
+      {String(value).padStart(2, "0")}
+    </span>
+    <span className="text-[10px] text-muted-foreground uppercase tracking-wide">{label}</span>
+  </div>
+);
 
 const FreeTrialBanner = () => {
   const { user } = useAuth();

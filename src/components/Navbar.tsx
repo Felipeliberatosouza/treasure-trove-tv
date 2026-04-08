@@ -108,9 +108,7 @@ const Navbar = () => {
                 </Link>
               )
             )}
-            {user ? (
-              <UserMenu />
-            ) : (
+            {!user && (
               <Link to="/login" onClick={() => setMobileOpen(false)}>
                 <Button size="sm" className="gap-2 font-display w-full">
                   <User className="h-4 w-4" /> Entrar

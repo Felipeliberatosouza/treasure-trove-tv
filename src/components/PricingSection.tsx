@@ -1,11 +1,32 @@
 import { motion } from "framer-motion";
 import { Check, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { usePlatformSettings } from "@/hooks/usePlatformSettings";
+import type { SubscriptionPlan } from "@/hooks/usePlatformSettings";
+
+const defaultPlans: SubscriptionPlan[] = [
+  {
+    name: "PLANO PREMIUM",
+    price: 49,
+    features: [
+      "Acesso a todos os cursos",
+      "Novos cursos toda semana",
+      "Certificados de conclusão",
+      "Suporte prioritário",
+      "Acesso offline no app",
+      "Comunidade exclusiva",
+    ],
+    highlighted: true,
+  },
+];
 
 const PricingSection = () => {
+  const { data } = usePlatformSettings("subscription_plans");
+  const plans = data?.plans?.length ? data.plans : defaultPlans;
+
   return (
     <section className="px-6 py-20 md:px-12 lg:px-20">
-      <div className="mx-auto max-w-4xl text-center">
+      <div className="mx-auto max-w-5xl text-center">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -20,48 +41,50 @@ const PricingSection = () => {
           </p>
         </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.2 }}
-          className="relative mx-auto mt-12 max-w-sm overflow-hidden rounded-2xl border border-primary/30 bg-card p-8"
-          style={{ boxShadow: "var(--shadow-glow)" }}
-        >
-          <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-primary/10 blur-3xl" />
-          <div className="relative space-y-6">
-            <div className="flex items-center justify-center gap-2">
-              <Zap className="h-5 w-5 text-accent" />
-              <span className="text-sm font-semibold text-accent">PLANO PREMIUM</span>
-            </div>
-            <div className="flex items-baseline justify-center gap-1">
-              <span className="text-muted-foreground">R$</span>
-              <span className="font-display text-5xl font-bold">49</span>
-              <span className="text-muted-foreground">/mês</span>
-            </div>
-            <ul className="space-y-3 text-left text-sm">
-              {[
-                "Acesso a todos os cursos",
-                "Novos cursos toda semana",
-                "Certificados de conclusão",
-                "Suporte prioritário",
-                "Acesso offline no app",
-                "Comunidade exclusiva",
-              ].map((item) => (
-                <li key={item} className="flex items-center gap-3">
-                  <Check className="h-4 w-4 shrink-0 text-primary" />
-                  <span className="text-muted-foreground">{item}</span>
-                </li>
-              ))}
-            </ul>
-            <Button size="lg" className="w-full font-display font-semibold">
-              Começar Agora
-            </Button>
-            <p className="text-xs text-muted-foreground">
-              Cancele quando quiser. Sem compromisso.
-            </p>
-          </div>
-        </motion.div>
+        <div className={`mt-12 grid gap-6 ${plans.length === 1 ? "max-w-sm mx-auto" : plans.length === 2 ? "max-w-2xl mx-auto md:grid-cols-2" : "md:grid-cols-3"}`}>
+          {plans.map((plan, idx) => (
+            <motion.div
+              key={idx}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: idx * 0.1 }}
+              className={`relative overflow-hidden rounded-2xl border bg-card p-8 ${
+                plan.highlighted ? "border-primary/30" : "border-border"
+              }`}
+              style={plan.highlighted ? { boxShadow: "var(--shadow-glow)" } : undefined}
+            >
+              {plan.highlighted && (
+                <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-primary/10 blur-3xl" />
+              )}
+              <div className="relative space-y-6">
+                <div className="flex items-center justify-center gap-2">
+                  <Zap className="h-5 w-5 text-accent" />
+                  <span className="text-sm font-semibold text-accent">{plan.name}</span>
+                </div>
+                <div className="flex items-baseline justify-center gap-1">
+                  <span className="text-muted-foreground">R$</span>
+                  <span className="font-display text-5xl font-bold">{plan.price}</span>
+                  <span className="text-muted-foreground">/mês</span>
+                </div>
+                <ul className="space-y-3 text-left text-sm">
+                  {plan.features.map((item) => (
+                    <li key={item} className="flex items-center gap-3">
+                      <Check className="h-4 w-4 shrink-0 text-primary" />
+                      <span className="text-muted-foreground">{item}</span>
+                    </li>
+                  ))}
+                </ul>
+                <Button size="lg" className="w-full font-display font-semibold">
+                  Começar Agora
+                </Button>
+                <p className="text-xs text-muted-foreground">
+                  Cancele quando quiser. Sem compromisso.
+                </p>
+              </div>
+            </motion.div>
+          ))}
+        </div>
       </div>
     </section>
   );

@@ -2,10 +2,16 @@ import { motion } from "framer-motion";
 import { Play, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getFeaturedVideo } from "@/data/courses";
+import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import heroBanner from "@/assets/hero-banner.jpg";
 
 const HeroBanner = ({ onVideoClick }: { onVideoClick: (id: string) => void }) => {
   const featured = getFeaturedVideo();
+  const { data: heroBannerSettings } = usePlatformSettings("hero_banner");
+
+  const title = heroBannerSettings?.title || featured.title;
+  const subtitle = heroBannerSettings?.subtitle || featured.description;
+  const ctaText = heroBannerSettings?.cta_text || "Assistir Agora";
 
   return (
     <section className="relative h-[85vh] min-h-[500px] w-full overflow-hidden">
@@ -30,10 +36,10 @@ const HeroBanner = ({ onVideoClick }: { onVideoClick: (id: string) => void }) =>
             Em destaque
           </span>
           <h1 className="font-display text-3xl font-bold leading-tight md:text-5xl lg:text-6xl">
-            {featured.title}
+            {title}
           </h1>
           <p className="text-sm text-muted-foreground md:text-base max-w-lg leading-relaxed">
-            {featured.description}
+            {subtitle}
           </p>
           <div className="flex items-center gap-3 text-sm text-muted-foreground">
             <span>{featured.lessons} aulas</span>
@@ -48,7 +54,7 @@ const HeroBanner = ({ onVideoClick }: { onVideoClick: (id: string) => void }) =>
               className="gap-2 font-display font-semibold"
               onClick={() => onVideoClick(featured.id)}
             >
-              <Play className="h-5 w-5" /> Assistir Agora
+              <Play className="h-5 w-5" /> {ctaText}
             </Button>
             <Button
               size="lg"

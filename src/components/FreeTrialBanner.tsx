@@ -77,17 +77,26 @@ const FreeTrialBanner = () => {
               </div>
               <div>
                 <p className="font-display text-sm font-bold text-foreground">Teste Grátis Ativo</p>
-                <p className="text-xs text-muted-foreground">
-                  {trial.trialType === "days" ? (
-                    <span className="flex items-center gap-1">
-                      <Clock className="h-3 w-3" /> {trial.daysRemaining} dia(s) restante(s)
-                    </span>
-                  ) : (
+                {trial.trialType === "days" ? (
+                  <div className="flex items-center gap-2 mt-1">
+                    <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                    <div className="flex items-center gap-1.5">
+                      <CountdownUnit value={countdown.days} label="dias" />
+                      <span className="text-muted-foreground font-bold text-xs">:</span>
+                      <CountdownUnit value={countdown.hours} label="hrs" />
+                      <span className="text-muted-foreground font-bold text-xs">:</span>
+                      <CountdownUnit value={countdown.minutes} label="min" />
+                      <span className="text-muted-foreground font-bold text-xs">:</span>
+                      <CountdownUnit value={countdown.seconds} label="seg" />
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground mt-1">
                     <span className="flex items-center gap-1">
                       <Play className="h-3 w-3" /> {trial.videosRemaining} vídeo(s) restante(s)
                     </span>
-                  )}
-                </p>
+                  </p>
+                )}
               </div>
             </div>
             <Button size="sm" className="gap-2 font-display font-semibold" asChild>

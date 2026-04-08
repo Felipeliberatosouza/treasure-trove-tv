@@ -27,6 +27,7 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
       <HeroBanner onVideoClick={handleVideoClick} />
+      <FreeTrialBanner />
 
       <div className="space-y-12 py-12">
         <VideoCarousel

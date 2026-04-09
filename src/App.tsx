@@ -68,6 +68,7 @@ const App = () => (
             <Route path="/minhas-colinhas" element={<MinhasColinhas />} />
             <Route path="/minhas-duvidas" element={<MinhasDuvidas />} />
             <Route path="/minhas-aulas-agendadas" element={<MinhasAulasAgendadas />} />
+            <Route path="/video/:id" element={<VideoPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <CookieConsent />

@@ -16,6 +16,18 @@ import PrivacyPolicy from "./pages/PrivacyPolicy.tsx";
 import TermsOfUse from "./pages/TermsOfUse.tsx";
 import AboutUs from "./pages/AboutUs.tsx";
 import Contact from "./pages/Contact.tsx";
+import Revisoes from "./pages/Revisoes.tsx";
+import Resumos from "./pages/Resumos.tsx";
+import Simulados from "./pages/Simulados.tsx";
+import TopQuestoes from "./pages/TopQuestoes.tsx";
+import Colinhas from "./pages/Colinhas.tsx";
+import MinhasRevisoes from "./pages/MinhasRevisoes.tsx";
+import MeusResumos from "./pages/MeusResumos.tsx";
+import MeusSimulados from "./pages/MeusSimulados.tsx";
+import MinhasTopQuestoes from "./pages/MinhasTopQuestoes.tsx";
+import MinhasColinhas from "./pages/MinhasColinhas.tsx";
+import MinhasDuvidas from "./pages/MinhasDuvidas.tsx";
+import MinhasAulasAgendadas from "./pages/MinhasAulasAgendadas.tsx";
 import CookieConsent from "./components/CookieConsent.tsx";
 
 const queryClient = new QueryClient();
@@ -39,7 +51,18 @@ const App = () => (
             <Route path="/termos" element={<TermsOfUse />} />
             <Route path="/sobre" element={<AboutUs />} />
             <Route path="/contato" element={<Contact />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="/revisoes" element={<Revisoes />} />
+            <Route path="/resumos" element={<Resumos />} />
+            <Route path="/simulados" element={<Simulados />} />
+            <Route path="/top-questoes" element={<TopQuestoes />} />
+            <Route path="/colinhas" element={<Colinhas />} />
+            <Route path="/minhas-revisoes" element={<MinhasRevisoes />} />
+            <Route path="/meus-resumos" element={<MeusResumos />} />
+            <Route path="/meus-simulados" element={<MeusSimulados />} />
+            <Route path="/minhas-top-questoes" element={<MinhasTopQuestoes />} />
+            <Route path="/minhas-colinhas" element={<MinhasColinhas />} />
+            <Route path="/minhas-duvidas" element={<MinhasDuvidas />} />
+            <Route path="/minhas-aulas-agendadas" element={<MinhasAulasAgendadas />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <CookieConsent />

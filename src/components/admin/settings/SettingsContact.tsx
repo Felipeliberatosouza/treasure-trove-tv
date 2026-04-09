@@ -8,7 +8,7 @@ import { Save } from "lucide-react";
 const SettingsContact = () => {
   const { data, loading, update } = usePlatformSettings("contact");
   const [form, setForm] = useState<ContactSettings>({
-    email: "", phone: "", address: "", instagram: "", youtube: "", facebook: "", twitter: "", tiktok: "", linkedin: "", whatsapp: "",
+    email: "", phone: "", address: "", instagram: "", youtube: "", facebook: "", twitter: "", tiktok: "", linkedin: "", whatsapp: "", whatsapp_message: "",
   });
   const [saving, setSaving] = useState(false);
 

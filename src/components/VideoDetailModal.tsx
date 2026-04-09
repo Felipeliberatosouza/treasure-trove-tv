@@ -142,53 +142,11 @@ const VideoDetailModal = ({ video, open, onClose }: VideoDetailModalProps) => {
     setStartingTrial(false);
   };
 
-  const handleWatchVideo = async () => {
-    if (!user || !video) return;
-
-    // If user is on a video-based trial, record the watch
-    if (trial.hasActiveTrial && trial.trialType === "videos") {
-      await trial.recordVideoWatch();
-    }
-
-    // Create a view record and get its ID for progress tracking
-    const { data, error } = await supabase
-      .from("video_views")
-      .insert({
-        user_id: user.id,
-        content_type: "lesson",
-        content_id: video.id,
-        watch_percentage: 0,
-      })
-      .select("id")
-      .single();
-
-    if (error) {
-      console.error("Error creating video view:", error);
-      toast.error("Erro ao iniciar visualização.");
-      return;
-    }
-
-    if (data) {
-      setViewId(data.id);
-    }
-
+  const handleReplayVideo = () => {
     setIsWatching(true);
-  };
-
-  const handleProgressMilestone = useCallback((pct: number) => {
-    if (pct >= 70) {
-      setHasWatched70(true);
+    if (user && video) {
+      startViewTracking(video.id);
     }
-  }, []);
-
-  const handleBuyUnit = () => {
-    toast.info("Compra unitária será integrada com Stripe em breve.");
-  };
-
-  const handleSubscribe = () => {
-    const el = document.getElementById("pricing");
-    onClose();
-    setTimeout(() => el?.scrollIntoView({ behavior: "smooth" }), 300);
   };
 
   if (!video) return null;

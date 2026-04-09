@@ -37,9 +37,12 @@ const SettingsCourseAreas = () => {
   };
 
   const handleToggle = async (area: CourseArea, field: "active" | "show_on_homepage") => {
+    const updatePayload = field === "active"
+      ? { active: !area.active }
+      : { show_on_homepage: !area.show_on_homepage };
     const { error } = await supabase
       .from("course_areas")
-      .update({ [field]: !area[field] })
+      .update(updatePayload)
       .eq("id", area.id);
 
     if (error) {

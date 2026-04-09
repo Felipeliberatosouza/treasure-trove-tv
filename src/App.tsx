@@ -32,6 +32,7 @@ import ForgotPassword from "./pages/ForgotPassword.tsx";
 import ResetPassword from "./pages/ResetPassword.tsx";
 import VideoPage from "./pages/VideoPage.tsx";
 import CookieConsent from "./components/CookieConsent.tsx";
+import DynamicBranding from "./components/DynamicBranding.tsx";
 
 const queryClient = new QueryClient();
 

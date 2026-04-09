@@ -176,7 +176,7 @@ const VideoDetailModal = ({ video, open, onClose }: VideoDetailModalProps) => {
         {/* Video area: player or thumbnail */}
         {isWatching ? (
           <VideoPlayer
-            videoUrl={DEMO_VIDEO_URL}
+            videoUrl={video.videoUrl || DEMO_VIDEO_URL}
             contentId={video.id}
             contentType="lesson"
             viewId={viewId}

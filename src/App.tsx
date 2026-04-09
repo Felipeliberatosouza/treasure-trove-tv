@@ -72,6 +72,7 @@ const App = () => (
             <Route path="/video/:id" element={<VideoPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
+          <DynamicBranding />
           <CookieConsent />
         </AuthProvider>
       </BrowserRouter>

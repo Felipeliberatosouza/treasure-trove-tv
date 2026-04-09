@@ -30,6 +30,7 @@ import MinhasDuvidas from "./pages/MinhasDuvidas.tsx";
 import MinhasAulasAgendadas from "./pages/MinhasAulasAgendadas.tsx";
 import ForgotPassword from "./pages/ForgotPassword.tsx";
 import ResetPassword from "./pages/ResetPassword.tsx";
+import VideoPage from "./pages/VideoPage.tsx";
 import CookieConsent from "./components/CookieConsent.tsx";
 
 const queryClient = new QueryClient();

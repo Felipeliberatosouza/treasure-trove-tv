@@ -51,7 +51,18 @@ const App = () => (
             <Route path="/termos" element={<TermsOfUse />} />
             <Route path="/sobre" element={<AboutUs />} />
             <Route path="/contato" element={<Contact />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="/revisoes" element={<Revisoes />} />
+            <Route path="/resumos" element={<Resumos />} />
+            <Route path="/simulados" element={<Simulados />} />
+            <Route path="/top-questoes" element={<TopQuestoes />} />
+            <Route path="/colinhas" element={<Colinhas />} />
+            <Route path="/minhas-revisoes" element={<MinhasRevisoes />} />
+            <Route path="/meus-resumos" element={<MeusResumos />} />
+            <Route path="/meus-simulados" element={<MeusSimulados />} />
+            <Route path="/minhas-top-questoes" element={<MinhasTopQuestoes />} />
+            <Route path="/minhas-colinhas" element={<MinhasColinhas />} />
+            <Route path="/minhas-duvidas" element={<MinhasDuvidas />} />
+            <Route path="/minhas-aulas-agendadas" element={<MinhasAulasAgendadas />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <CookieConsent />

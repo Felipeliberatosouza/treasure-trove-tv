@@ -12,6 +12,9 @@ interface VideoPlayerProps {
   viewId: string | null;
   onProgressMilestone?: (percentage: number) => void;
   poster?: string;
+  /** If set, pauses video at this percentage and fires onPreviewLimitReached */
+  previewLimit?: number;
+  onPreviewLimitReached?: () => void;
 }
 
 const VideoPlayer = ({
@@ -21,6 +24,8 @@ const VideoPlayer = ({
   viewId,
   onProgressMilestone,
   poster,
+  previewLimit,
+  onPreviewLimitReached,
 }: VideoPlayerProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -76,8 +81,17 @@ const VideoPlayer = ({
   const handleTimeUpdate = () => {
     const video = videoRef.current;
     if (!video || !video.duration) return;
+    const pct = (video.currentTime / video.duration) * 100;
     setCurrentTime(video.currentTime);
-    setPercentage((video.currentTime / video.duration) * 100);
+    setPercentage(pct);
+
+    // Enforce preview limit
+    if (previewLimit && pct >= previewLimit) {
+      video.pause();
+      video.currentTime = (previewLimit / 100) * video.duration;
+      setIsPlaying(false);
+      onPreviewLimitReached?.();
+    }
   };
 
   const handleLoadedMetadata = () => {

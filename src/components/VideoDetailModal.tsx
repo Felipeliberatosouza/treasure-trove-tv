@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Star, Play, ShoppingCart, Zap, Clock, BookOpen, Gift, AlertTriangle } from "lucide-react";
+import { Star, Play, ShoppingCart, Zap, Clock, BookOpen, Gift, AlertTriangle, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFreeTrial } from "@/hooks/useFreeTrial";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 import VideoPlayer from "@/components/VideoPlayer";
 import type { Video } from "@/data/courses";
 
@@ -21,12 +22,12 @@ interface RatingData {
   userRating: number | null;
 }
 
-// Fallback demo video for courses without a videoUrl
 const DEMO_VIDEO_URL = "/demo-course.mp4";
 
 const VideoDetailModal = ({ video, open, onClose }: VideoDetailModalProps) => {
   const { user } = useAuth();
   const trial = useFreeTrial();
+  const navigate = useNavigate();
   const [rating, setRating] = useState(0);
   const [hoveredStar, setHoveredStar] = useState(0);
   const [ratingData, setRatingData] = useState<RatingData>({ average: 0, count: 0, userRating: null });
@@ -35,19 +36,59 @@ const VideoDetailModal = ({ video, open, onClose }: VideoDetailModalProps) => {
   const [hasWatched70, setHasWatched70] = useState(false);
   const [isWatching, setIsWatching] = useState(false);
   const [viewId, setViewId] = useState<string | null>(null);
+  const [showPaywall, setShowPaywall] = useState(false);
+  const [hasFullAccess, setHasFullAccess] = useState(false);
+
+  // Check if user has full access (subscription, purchase, or active trial)
+  useEffect(() => {
+    if (!video || !open) return;
+
+    const checkAccess = async () => {
+      if (!user) {
+        setHasFullAccess(false);
+        return;
+      }
+
+      // Check active trial
+      if (trial.hasActiveTrial) {
+        setHasFullAccess(true);
+        return;
+      }
+
+      // Check unit purchase
+      const { data: purchase } = await supabase
+        .from("video_purchases")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("content_id", video.id)
+        .eq("payment_status", "completed")
+        .limit(1);
+
+      if (purchase && purchase.length > 0) {
+        setHasFullAccess(true);
+        return;
+      }
+
+      // TODO: check subscription status when Stripe is integrated
+      setHasFullAccess(false);
+    };
+
+    checkAccess();
+  }, [video, open, user, trial.hasActiveTrial]);
 
   useEffect(() => {
     if (video && open) {
       fetchRatings();
       checkWatchProgress();
       setViewId(null);
-      // Auto-start video playback when modal opens
+      setShowPaywall(false);
       setIsWatching(true);
       if (user) {
         startViewTracking(video.id);
       }
     } else {
       setIsWatching(false);
+      setShowPaywall(false);
     }
   }, [video, open, user]);
 
@@ -131,11 +172,17 @@ const VideoDetailModal = ({ video, open, onClose }: VideoDetailModalProps) => {
   };
 
   const handleStartTrial = async () => {
-    if (!user) { toast.error("Faça login para iniciar o teste grátis."); return; }
+    if (!user) {
+      onClose();
+      navigate("/login");
+      return;
+    }
     setStartingTrial(true);
     const ok = await trial.startTrial();
     if (ok) {
       toast.success("Teste grátis ativado! Aproveite.");
+      setShowPaywall(false);
+      setHasFullAccess(true);
     } else {
       toast.error("Não foi possível iniciar o teste grátis.");
     }
@@ -144,6 +191,7 @@ const VideoDetailModal = ({ video, open, onClose }: VideoDetailModalProps) => {
 
   const handleReplayVideo = () => {
     setIsWatching(true);
+    setShowPaywall(false);
     if (user && video) {
       startViewTracking(video.id);
     }
@@ -155,47 +203,110 @@ const VideoDetailModal = ({ video, open, onClose }: VideoDetailModalProps) => {
     }
   }, []);
 
+  const handlePreviewLimitReached = useCallback(() => {
+    setShowPaywall(true);
+  }, []);
+
   const handleBuyUnit = () => {
+    if (!user) {
+      onClose();
+      navigate("/login");
+      return;
+    }
     toast.info("Compra unitária será integrada com Stripe em breve.");
   };
 
   const handleSubscribe = () => {
+    if (!user) {
+      onClose();
+      navigate("/login");
+      return;
+    }
     const el = document.getElementById("pricing");
     onClose();
     setTimeout(() => el?.scrollIntoView({ behavior: "smooth" }), 300);
   };
 
+  const handleGoToSignup = () => {
+    onClose();
+    navigate("/cadastro-aluno");
+  };
+
   if (!video) return null;
 
   const trialExpired = trial.trialRow && !trial.hasActiveTrial;
-  const canStartTrial = trial.trialEnabled && !trial.trialRow && user;
+  const canStartTrial = trial.trialEnabled && !trial.trialRow;
+  const previewLimit = hasFullAccess ? undefined : 20;
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-w-lg gap-0 overflow-hidden p-0 border-border bg-card">
-        {/* Video area: always show player when watching */}
-        {isWatching ? (
-          <VideoPlayer
-            videoUrl={video.videoUrl || DEMO_VIDEO_URL}
-            contentId={video.id}
-            contentType="lesson"
-            viewId={viewId}
-            onProgressMilestone={handleProgressMilestone}
-            poster={video.thumbnail}
-          />
-        ) : (
-          <div
-            className="relative aspect-video w-full overflow-hidden cursor-pointer"
-            onClick={handleReplayVideo}
-          >
-            <img src={video.thumbnail} alt={video.title} className="h-full w-full object-cover" />
-            <div className="absolute inset-0 flex items-center justify-center bg-background/30">
-              <div className="rounded-full bg-primary p-4">
-                <Play className="h-6 w-6 text-primary-foreground" fill="currentColor" />
+        {/* Video area */}
+        <div className="relative">
+          {isWatching ? (
+            <VideoPlayer
+              videoUrl={video.videoUrl || DEMO_VIDEO_URL}
+              contentId={video.id}
+              contentType="lesson"
+              viewId={viewId}
+              onProgressMilestone={handleProgressMilestone}
+              poster={video.thumbnail}
+              previewLimit={previewLimit}
+              onPreviewLimitReached={handlePreviewLimitReached}
+            />
+          ) : (
+            <div
+              className="relative aspect-video w-full overflow-hidden cursor-pointer"
+              onClick={handleReplayVideo}
+            >
+              <img src={video.thumbnail} alt={video.title} className="h-full w-full object-cover" />
+              <div className="absolute inset-0 flex items-center justify-center bg-background/30">
+                <div className="rounded-full bg-primary p-4">
+                  <Play className="h-6 w-6 text-primary-foreground" fill="currentColor" />
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
+
+          {/* Paywall overlay at 20% */}
+          {showPaywall && (
+            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-background/90 backdrop-blur-sm p-6 text-center">
+              <div className="rounded-full bg-primary/10 p-3 mb-3">
+                <Lock className="h-8 w-8 text-primary" />
+              </div>
+              <h3 className="text-lg font-display font-bold text-foreground mb-1">
+                Prévia encerrada
+              </h3>
+              <p className="text-sm text-muted-foreground mb-4 max-w-xs">
+                Você assistiu a prévia gratuita de 20%. Para continuar, escolha uma das opções abaixo:
+              </p>
+              <div className="flex flex-col gap-2 w-full max-w-xs">
+                {!user && (
+                  <Button onClick={handleGoToSignup} className="w-full gap-2 font-display font-semibold">
+                    Criar conta gratuita
+                  </Button>
+                )}
+                {canStartTrial && (
+                  <Button
+                    onClick={handleStartTrial}
+                    disabled={startingTrial}
+                    variant={user ? "default" : "outline"}
+                    className="w-full gap-2 font-display font-semibold"
+                  >
+                    <Gift className="h-4 w-4" />
+                    {startingTrial ? "Ativando..." : "Iniciar Teste Grátis"}
+                  </Button>
+                )}
+                <Button onClick={handleSubscribe} variant={!user || canStartTrial ? "outline" : "default"} className="w-full gap-2 font-display font-semibold">
+                  <Zap className="h-4 w-4" /> Assinar — acesso total
+                </Button>
+                <Button onClick={handleBuyUnit} variant="outline" className="w-full gap-2 font-display font-semibold">
+                  <ShoppingCart className="h-4 w-4" /> Comprar este vídeo — R$ 19,90
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
 
         <div className="space-y-5 p-6">
           <DialogHeader>
@@ -281,9 +392,11 @@ const VideoDetailModal = ({ video, open, onClose }: VideoDetailModalProps) => {
           <div className="space-y-3 rounded-xl border border-border bg-secondary/30 p-4">
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Opções de acesso</p>
 
-            {isWatching && (
+            {isWatching && !showPaywall && (
               <div className="text-center text-xs text-muted-foreground py-1">
-                🎬 Reproduzindo — assista 70% para poder avaliar
+                {hasFullAccess
+                  ? "🎬 Reproduzindo — assista 70% para poder avaliar"
+                  : "🎬 Prévia gratuita — até 20% do vídeo"}
               </div>
             )}
 

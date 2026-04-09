@@ -9,11 +9,12 @@ import { useState, useEffect } from "react";
 
 function useCountdown(expiresAt: Date | null) {
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+  const expiresMs = expiresAt?.getTime() ?? null;
 
   useEffect(() => {
-    if (!expiresAt) return;
+    if (expiresMs === null) return;
     const calc = () => {
-      const diff = Math.max(0, expiresAt.getTime() - Date.now());
+      const diff = Math.max(0, expiresMs - Date.now());
       setTimeLeft({
         days: Math.floor(diff / (1000 * 60 * 60 * 24)),
         hours: Math.floor((diff / (1000 * 60 * 60)) % 24),
@@ -24,7 +25,7 @@ function useCountdown(expiresAt: Date | null) {
     calc();
     const id = setInterval(calc, 1000);
     return () => clearInterval(id);
-  }, [expiresAt]);
+  }, [expiresMs]);
 
   return timeLeft;
 }

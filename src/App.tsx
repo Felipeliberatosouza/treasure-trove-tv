@@ -28,6 +28,8 @@ import MinhasTopQuestoes from "./pages/MinhasTopQuestoes.tsx";
 import MinhasColinhas from "./pages/MinhasColinhas.tsx";
 import MinhasDuvidas from "./pages/MinhasDuvidas.tsx";
 import MinhasAulasAgendadas from "./pages/MinhasAulasAgendadas.tsx";
+import ForgotPassword from "./pages/ForgotPassword.tsx";
+import ResetPassword from "./pages/ResetPassword.tsx";
 import CookieConsent from "./components/CookieConsent.tsx";
 
 const queryClient = new QueryClient();
@@ -44,6 +46,8 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/signup/student" element={<StudentSignup />} />
             <Route path="/signup/teacher" element={<TeacherSignup />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/dashboard/student" element={<StudentDashboard />} />
             <Route path="/dashboard/teacher" element={<TeacherDashboard />} />
             <Route path="/dashboard/admin" element={<AdminDashboard />} />

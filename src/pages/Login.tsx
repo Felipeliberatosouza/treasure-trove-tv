@@ -114,6 +114,11 @@ const Login = () => {
           <Button className="w-full font-display font-semibold" size="lg" disabled={loading}>
             {loading ? "Entrando..." : "Entrar"}
           </Button>
+          <div className="text-right">
+            <Link to="/forgot-password" className="text-xs text-primary hover:underline">
+              Esqueci minha senha
+            </Link>
+          </div>
         </form>
 
         <div className="space-y-3 text-center text-sm text-muted-foreground">

@@ -5,7 +5,7 @@ import FreeTrialBanner from "@/components/FreeTrialBanner";
 import VideoCarousel from "@/components/VideoCarousel";
 import PricingSection from "@/components/PricingSection";
 import Footer from "@/components/Footer";
-import { categories, getVideosByCategory, videos } from "@/data/courses";
+import { videos } from "@/data/courses";
 import { useVideoRatings } from "@/hooks/useVideoRatings";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import { useHomepageAreas } from "@/hooks/useCourseAreas";
@@ -84,17 +84,6 @@ const Index = () => {
             />
           ) : null
         )}
-
-        {categories.map((category) => (
-          <VideoCarousel
-            key={category}
-            title={category}
-            videos={getVideosByCategory(category)}
-            onVideoClick={handleVideoClick}
-            ratings={ratings}
-            showTrialBadge={showTrialBadge}
-          />
-        ))}
       </div>
 
       <div id="pricing">

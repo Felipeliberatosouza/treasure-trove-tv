@@ -84,17 +84,6 @@ const Index = () => {
             />
           ) : null
         )}
-
-        {categories.map((category) => (
-          <VideoCarousel
-            key={category}
-            title={category}
-            videos={getVideosByCategory(category)}
-            onVideoClick={handleVideoClick}
-            ratings={ratings}
-            showTrialBadge={showTrialBadge}
-          />
-        ))}
       </div>
 
       <div id="pricing">

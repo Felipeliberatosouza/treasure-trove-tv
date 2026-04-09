@@ -145,6 +145,10 @@ const StudentSignup = () => {
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           </div>
+          <div>
+            <label className="text-sm text-muted-foreground mb-1 block">Áreas de interesse (opcional)</label>
+            <AreaSelector selected={selectedAreas} onChange={setSelectedAreas} max={3} />
+          </div>
           <Button className="w-full font-display font-semibold" size="lg" disabled={loading}>
             {loading ? "Criando..." : "Criar Conta de Aluno"}
           </Button>

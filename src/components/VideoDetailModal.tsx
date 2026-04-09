@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Star, Play, ShoppingCart, Zap, Clock, BookOpen, Gift, AlertTriangle } from "lucide-react";
@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFreeTrial } from "@/hooks/useFreeTrial";
 import { toast } from "sonner";
+import VideoPlayer from "@/components/VideoPlayer";
 import type { Video } from "@/data/courses";
 
 interface VideoDetailModalProps {
@@ -20,6 +21,9 @@ interface RatingData {
   userRating: number | null;
 }
 
+// Demo video for static course data (replace with real URLs from DB)
+const DEMO_VIDEO_URL = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
+
 const VideoDetailModal = ({ video, open, onClose }: VideoDetailModalProps) => {
   const { user } = useAuth();
   const trial = useFreeTrial();
@@ -29,11 +33,15 @@ const VideoDetailModal = ({ video, open, onClose }: VideoDetailModalProps) => {
   const [submitting, setSubmitting] = useState(false);
   const [startingTrial, setStartingTrial] = useState(false);
   const [hasWatched70, setHasWatched70] = useState(false);
+  const [isWatching, setIsWatching] = useState(false);
+  const [viewId, setViewId] = useState<string | null>(null);
 
   useEffect(() => {
     if (video && open) {
       fetchRatings();
       checkWatchProgress();
+      setIsWatching(false);
+      setViewId(null);
     }
   }, [video, open, user]);
 
@@ -121,15 +129,30 @@ const VideoDetailModal = ({ video, open, onClose }: VideoDetailModalProps) => {
       await trial.recordVideoWatch();
     }
 
-    // Record view
-    await supabase.from("video_views").insert({
-      user_id: user.id,
-      content_type: "lesson",
-      content_id: video.id,
-    });
+    // Create a view record and get its ID for progress tracking
+    const { data } = await supabase
+      .from("video_views")
+      .insert({
+        user_id: user.id,
+        content_type: "lesson",
+        content_id: video.id,
+        watch_percentage: 0,
+      })
+      .select("id")
+      .single();
 
-    toast.success("Reproduzindo vídeo...");
+    if (data) {
+      setViewId(data.id);
+    }
+
+    setIsWatching(true);
   };
+
+  const handleProgressMilestone = useCallback((pct: number) => {
+    if (pct >= 70) {
+      setHasWatched70(true);
+    }
+  }, []);
 
   const handleBuyUnit = () => {
     toast.info("Compra unitária será integrada com Stripe em breve.");
@@ -143,7 +166,6 @@ const VideoDetailModal = ({ video, open, onClose }: VideoDetailModalProps) => {
 
   if (!video) return null;
 
-  // Determine access: user has active trial OR has purchased (future) OR has subscription (future)
   const canWatch = trial.hasActiveTrial;
   const trialExpired = trial.trialRow && !trial.hasActiveTrial;
   const canStartTrial = trial.trialEnabled && !trial.trialRow && user;
@@ -151,14 +173,26 @@ const VideoDetailModal = ({ video, open, onClose }: VideoDetailModalProps) => {
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-w-lg gap-0 overflow-hidden p-0 border-border bg-card">
-        <div className="relative aspect-video w-full overflow-hidden">
-          <img src={video.thumbnail} alt={video.title} className="h-full w-full object-cover" />
-          <div className="absolute inset-0 flex items-center justify-center bg-background/30">
-            <div className="rounded-full bg-primary p-4">
-              <Play className="h-6 w-6 text-primary-foreground" fill="currentColor" />
+        {/* Video area: player or thumbnail */}
+        {isWatching ? (
+          <VideoPlayer
+            videoUrl={DEMO_VIDEO_URL}
+            contentId={video.id}
+            contentType="lesson"
+            viewId={viewId}
+            onProgressMilestone={handleProgressMilestone}
+            poster={video.thumbnail}
+          />
+        ) : (
+          <div className="relative aspect-video w-full overflow-hidden">
+            <img src={video.thumbnail} alt={video.title} className="h-full w-full object-cover" />
+            <div className="absolute inset-0 flex items-center justify-center bg-background/30">
+              <div className="rounded-full bg-primary p-4">
+                <Play className="h-6 w-6 text-primary-foreground" fill="currentColor" />
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         <div className="space-y-5 p-6">
           <DialogHeader>
@@ -244,14 +278,18 @@ const VideoDetailModal = ({ video, open, onClose }: VideoDetailModalProps) => {
           <div className="space-y-3 rounded-xl border border-border bg-secondary/30 p-4">
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Opções de acesso</p>
 
-            {/* Watch button if user has active trial */}
-            {canWatch && (
+            {canWatch && !isWatching && (
               <Button onClick={handleWatchVideo} className="w-full gap-2 font-display font-semibold" variant="default">
                 <Play className="h-4 w-4" /> Assistir (Teste Grátis)
               </Button>
             )}
 
-            {/* Start free trial button */}
+            {canWatch && isWatching && (
+              <div className="text-center text-xs text-muted-foreground py-1">
+                🎬 Reproduzindo — assista 70% para poder avaliar
+              </div>
+            )}
+
             {canStartTrial && (
               <Button
                 onClick={handleStartTrial}

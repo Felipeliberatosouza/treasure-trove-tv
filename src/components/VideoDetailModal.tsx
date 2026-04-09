@@ -28,12 +28,30 @@ const VideoDetailModal = ({ video, open, onClose }: VideoDetailModalProps) => {
   const [ratingData, setRatingData] = useState<RatingData>({ average: 0, count: 0, userRating: null });
   const [submitting, setSubmitting] = useState(false);
   const [startingTrial, setStartingTrial] = useState(false);
+  const [hasWatched70, setHasWatched70] = useState(false);
 
   useEffect(() => {
     if (video && open) {
       fetchRatings();
+      checkWatchProgress();
     }
   }, [video, open, user]);
+
+  const checkWatchProgress = async () => {
+    if (!video || !user) {
+      setHasWatched70(false);
+      return;
+    }
+    const { data } = await supabase
+      .from("video_views")
+      .select("watch_percentage")
+      .eq("user_id", user.id)
+      .eq("content_type", "lesson")
+      .eq("content_id", video.id)
+      .gte("watch_percentage", 70)
+      .limit(1);
+    setHasWatched70(!!(data && data.length > 0));
+  };
 
   const fetchRatings = async () => {
     if (!video) return;

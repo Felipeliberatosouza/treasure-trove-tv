@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { toast } from "sonner";
+import AreaSelector from "@/components/AreaSelector";
 
 const StudentSignup = () => {
   const navigate = useNavigate();
@@ -14,6 +15,7 @@ const StudentSignup = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [selectedAreas, setSelectedAreas] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -28,11 +30,11 @@ const StudentSignup = () => {
     }
 
     setLoading(true);
-    const { error } = await supabase.auth.signUp({
+    const { data: signUpData, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: { name, role: "student" },
+        data: { name, role: "student", areas: selectedAreas },
         emailRedirectTo: window.location.origin,
       },
     });
@@ -40,6 +42,13 @@ const StudentSignup = () => {
     if (error) {
       toast.error(error.message);
     } else {
+      // Save areas to profile if signup succeeded
+      if (signUpData?.user && selectedAreas.length > 0) {
+        await supabase
+          .from("profiles")
+          .update({ areas: selectedAreas })
+          .eq("user_id", signUpData.user.id);
+      }
       toast.success("Conta criada! Verifique seu e-mail para confirmar.");
       navigate("/login");
     }
@@ -135,6 +144,10 @@ const StudentSignup = () => {
             >
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
+          </div>
+          <div>
+            <label className="text-sm text-muted-foreground mb-1 block">Áreas de interesse (opcional)</label>
+            <AreaSelector selected={selectedAreas} onChange={setSelectedAreas} max={3} />
           </div>
           <Button className="w-full font-display font-semibold" size="lg" disabled={loading}>
             {loading ? "Criando..." : "Criar Conta de Aluno"}

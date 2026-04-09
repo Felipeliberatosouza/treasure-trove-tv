@@ -44,6 +44,39 @@ export type Database = {
         }
         Relationships: []
       }
+      course_areas: {
+        Row: {
+          active: boolean
+          created_at: string
+          icon: string | null
+          id: string
+          name: string
+          show_on_homepage: boolean
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          icon?: string | null
+          id?: string
+          name: string
+          show_on_homepage?: boolean
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          icon?: string | null
+          id?: string
+          name?: string
+          show_on_homepage?: boolean
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       courses: {
         Row: {
           category: string | null
@@ -95,6 +128,7 @@ export type Database = {
       exam_solutions: {
         Row: {
           admin_approved: boolean | null
+          areas: string[] | null
           carousel_cover_url: string | null
           created_at: string
           description: string | null
@@ -110,6 +144,7 @@ export type Database = {
         }
         Insert: {
           admin_approved?: boolean | null
+          areas?: string[] | null
           carousel_cover_url?: string | null
           created_at?: string
           description?: string | null
@@ -125,6 +160,7 @@ export type Database = {
         }
         Update: {
           admin_approved?: boolean | null
+          areas?: string[] | null
           carousel_cover_url?: string | null
           created_at?: string
           description?: string | null
@@ -182,6 +218,7 @@ export type Database = {
       lessons: {
         Row: {
           admin_approved: boolean | null
+          areas: string[] | null
           carousel_cover_url: string | null
           created_at: string
           description: string | null
@@ -197,6 +234,7 @@ export type Database = {
         }
         Insert: {
           admin_approved?: boolean | null
+          areas?: string[] | null
           carousel_cover_url?: string | null
           created_at?: string
           description?: string | null
@@ -212,6 +250,7 @@ export type Database = {
         }
         Update: {
           admin_approved?: boolean | null
+          areas?: string[] | null
           carousel_cover_url?: string | null
           created_at?: string
           description?: string | null
@@ -250,6 +289,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          areas: string[] | null
           avatar_url: string | null
           bio: string | null
           created_at: string
@@ -261,6 +301,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          areas?: string[] | null
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
@@ -272,6 +313,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          areas?: string[] | null
           avatar_url?: string | null
           bio?: string | null
           created_at?: string

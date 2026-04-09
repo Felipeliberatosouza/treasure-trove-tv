@@ -6,6 +6,7 @@ import { Upload, X, Image, Video } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import AreaSelector from "@/components/AreaSelector";
 
 interface ContentFormProps {
   table: "lessons" | "exam_solutions";
@@ -17,6 +18,7 @@ const ContentForm = ({ table, onSaved, onCancel }: ContentFormProps) => {
   const { user } = useAuth();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [selectedAreas, setSelectedAreas] = useState<string[]>([]);
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [carouselFile, setCarouselFile] = useState<File | null>(null);
   const [videoFile, setVideoFile] = useState<File | null>(null);
@@ -56,6 +58,7 @@ const ContentForm = ({ table, onSaved, onCancel }: ContentFormProps) => {
         thumbnail_url,
         carousel_cover_url,
         video_url,
+        areas: selectedAreas,
       });
 
       if (error) throw error;
@@ -74,6 +77,11 @@ const ContentForm = ({ table, onSaved, onCancel }: ContentFormProps) => {
           {table === "lessons" ? "Nome da aula" : "Nome do conteúdo"}
         </label>
         <Input value={title} onChange={(e) => setTitle(e.target.value)} className="bg-secondary" />
+      </div>
+
+      <div>
+        <label className="text-sm text-muted-foreground mb-1 block">Áreas do conteúdo</label>
+        <AreaSelector selected={selectedAreas} onChange={setSelectedAreas} max={3} />
       </div>
 
       <div>

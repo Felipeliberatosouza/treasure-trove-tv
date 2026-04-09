@@ -208,7 +208,7 @@ const VideoDetailModal = ({ video, open, onClose }: VideoDetailModalProps) => {
               <span className="text-xs text-muted-foreground">({ratingData.count} avaliações)</span>
             </div>
 
-            {user && (
+            {user && hasWatched70 && (
               <div className="flex items-center gap-2">
                 <span className="text-xs text-muted-foreground">Sua nota:</span>
                 <div className="flex gap-0.5">
@@ -232,6 +232,11 @@ const VideoDetailModal = ({ video, open, onClose }: VideoDetailModalProps) => {
                   ))}
                 </div>
               </div>
+            )}
+            {user && !hasWatched70 && (
+              <p className="text-xs text-muted-foreground italic">
+                Assista pelo menos 70% do vídeo para poder avaliar.
+              </p>
             )}
           </div>
 

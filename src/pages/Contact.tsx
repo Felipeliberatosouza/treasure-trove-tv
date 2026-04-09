@@ -123,7 +123,7 @@ const Contact = () => {
                 <Clock className="h-5 w-5 text-primary mt-0.5" />
                 <div>
                   <p className="text-sm font-medium">Horário de Atendimento</p>
-                  <p className="text-sm text-muted-foreground">Segunda a Sexta, 9h às 18h</p>
+                  <p className="text-sm text-muted-foreground">{contact?.whatsapp_hours || "Segunda a Sexta, 9h às 18h"}</p>
                 </div>
               </div>
               {(contact?.instagram || contact?.youtube || contact?.facebook || contact?.twitter || contact?.tiktok || contact?.linkedin || contact?.whatsapp) && (

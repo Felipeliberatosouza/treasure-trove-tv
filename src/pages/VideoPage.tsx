@@ -207,7 +207,7 @@ const VideoPage = () => {
                 <div className="flex flex-col items-center w-full max-w-xs my-auto">
                   <div className="rounded-full bg-primary/10 p-2 sm:p-3 mb-2 sm:mb-3"><Lock className="h-6 w-6 sm:h-8 sm:w-8 text-primary" /></div>
                   <h3 className="text-base sm:text-lg font-display font-bold text-foreground mb-1">Prévia encerrada</h3>
-                  <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4">Você assistiu a prévia gratuita de 20%. Para continuar, escolha uma das opções abaixo:</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4">Você assistiu a prévia gratuita! Gostou do vídeo? Para continuar, escolha uma das opções abaixo:</p>
                   <div className="flex flex-col gap-1.5 sm:gap-2 w-full">
                     {!user && <Button onClick={handleGoToSignup} size="sm" className="w-full gap-2 font-display font-semibold text-xs sm:text-sm">Criar conta gratuita</Button>}
                     {canStartTrial && (

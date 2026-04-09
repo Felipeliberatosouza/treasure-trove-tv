@@ -24,6 +24,8 @@ const VideoPlayer = ({
   viewId,
   onProgressMilestone,
   poster,
+  previewLimit,
+  onPreviewLimitReached,
 }: VideoPlayerProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);

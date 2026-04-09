@@ -130,7 +130,7 @@ const VideoDetailModal = ({ video, open, onClose }: VideoDetailModalProps) => {
     }
 
     // Create a view record and get its ID for progress tracking
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("video_views")
       .insert({
         user_id: user.id,
@@ -140,6 +140,12 @@ const VideoDetailModal = ({ video, open, onClose }: VideoDetailModalProps) => {
       })
       .select("id")
       .single();
+
+    if (error) {
+      console.error("Error creating video view:", error);
+      toast.error("Erro ao iniciar visualização.");
+      return;
+    }
 
     if (data) {
       setViewId(data.id);

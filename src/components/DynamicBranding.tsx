@@ -35,6 +35,7 @@ const DynamicBranding = () => {
       primary_color?: string;
       secondary_color?: string;
       accent_color?: string;
+      background_color?: string;
     } | undefined;
 
     if (!branding) return;
@@ -63,6 +64,14 @@ const DynamicBranding = () => {
       const hsl = hexToHSL(branding.accent_color);
       if (hsl) {
         root.style.setProperty("--accent", hsl);
+      }
+    }
+
+    if (branding.background_color) {
+      const hsl = hexToHSL(branding.background_color);
+      if (hsl) {
+        root.style.setProperty("--background", hsl);
+        root.style.setProperty("--sidebar-background", hsl);
       }
     }
   }, [settings, loading]);

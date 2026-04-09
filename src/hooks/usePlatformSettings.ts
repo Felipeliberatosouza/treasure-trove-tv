@@ -9,6 +9,7 @@ export interface BrandingSettings {
   primary_color: string;
   secondary_color: string;
   accent_color: string;
+  background_color: string;
 }
 
 export interface ContactSettings {

@@ -24,6 +24,7 @@ export interface ContactSettings {
   linkedin: string;
   whatsapp: string;
   whatsapp_message: string;
+  whatsapp_hours: string;
 }
 
 export interface HeroBannerSettings {

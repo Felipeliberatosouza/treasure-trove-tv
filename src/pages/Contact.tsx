@@ -187,6 +187,7 @@ const Contact = () => {
           <a href="/" className="text-sm text-primary hover:underline transition-colors">← Voltar para a página inicial</a>
         </div>
       </div>
+      </div>
       <Footer />
     </div>
   );

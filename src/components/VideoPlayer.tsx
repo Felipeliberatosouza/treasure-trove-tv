@@ -12,6 +12,9 @@ interface VideoPlayerProps {
   viewId: string | null;
   onProgressMilestone?: (percentage: number) => void;
   poster?: string;
+  /** If set, pauses video at this percentage and fires onPreviewLimitReached */
+  previewLimit?: number;
+  onPreviewLimitReached?: () => void;
 }
 
 const VideoPlayer = ({

@@ -86,6 +86,10 @@ const SettingsContact = () => {
           </Label>
           <Input value={form.whatsapp || ""} onChange={(e) => setForm({ ...form, whatsapp: e.target.value })} placeholder="5511999999999 (apenas números com DDD)" />
         </div>
+        <div className="col-span-2">
+          <Label>Mensagem Automática do WhatsApp</Label>
+          <Input value={form.whatsapp_message || ""} onChange={(e) => setForm({ ...form, whatsapp_message: e.target.value })} placeholder="Olá! Gostaria de mais informações sobre os cursos." />
+        </div>
       </div>
       <Button onClick={handleSave} disabled={saving}>
         <Save className="h-4 w-4 mr-2" /> {saving ? "Salvando..." : "Salvar Alterações"}

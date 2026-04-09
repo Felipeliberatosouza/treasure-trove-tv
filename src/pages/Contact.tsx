@@ -61,9 +61,9 @@ const Contact = () => {
   const displayAddress = contact?.address || "Brasil";
 
   return (
-    <>
+    <div className="min-h-screen bg-background text-foreground flex flex-col">
       <Navbar />
-      <div className="min-h-screen bg-background text-foreground px-6 py-12 md:px-16 lg:px-32">
+      <div className="flex-1 px-6 pt-24 pb-12 md:px-16 lg:px-32">
       <div className="mx-auto max-w-4xl space-y-10">
         <div className="space-y-3">
           <h1 className="font-display text-3xl font-bold text-gradient">Contato</h1>
@@ -187,9 +187,9 @@ const Contact = () => {
           <a href="/" className="text-sm text-primary hover:underline transition-colors">← Voltar para a página inicial</a>
         </div>
       </div>
-    </div>
+      </div>
       <Footer />
-    </>
+    </div>
   );
 };
 

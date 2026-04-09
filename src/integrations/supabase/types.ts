@@ -432,6 +432,7 @@ export type Database = {
           id: string
           user_id: string
           viewed_at: string
+          watch_percentage: number
         }
         Insert: {
           content_id: string
@@ -439,6 +440,7 @@ export type Database = {
           id?: string
           user_id: string
           viewed_at?: string
+          watch_percentage?: number
         }
         Update: {
           content_id?: string
@@ -446,6 +448,7 @@ export type Database = {
           id?: string
           user_id?: string
           viewed_at?: string
+          watch_percentage?: number
         }
         Relationships: []
       }

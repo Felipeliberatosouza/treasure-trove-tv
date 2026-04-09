@@ -5,6 +5,7 @@ import FreeTrialBanner from "@/components/FreeTrialBanner";
 import VideoCarousel from "@/components/VideoCarousel";
 import PricingSection from "@/components/PricingSection";
 import Footer from "@/components/Footer";
+import WhatsAppFloat from "@/components/WhatsAppFloat";
 import { videos } from "@/data/courses";
 import { useVideoRatings } from "@/hooks/useVideoRatings";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
@@ -90,6 +91,7 @@ const Index = () => {
         <PricingSection />
       </div>
       <Footer />
+      <WhatsAppFloat />
     </div>
   );
 };

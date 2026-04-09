@@ -20,6 +20,9 @@ export interface ContactSettings {
   youtube: string;
   facebook: string;
   twitter: string;
+  tiktok: string;
+  linkedin: string;
+  whatsapp: string;
 }
 
 export interface HeroBannerSettings {

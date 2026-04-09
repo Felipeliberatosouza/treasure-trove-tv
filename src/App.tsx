@@ -16,6 +16,18 @@ import PrivacyPolicy from "./pages/PrivacyPolicy.tsx";
 import TermsOfUse from "./pages/TermsOfUse.tsx";
 import AboutUs from "./pages/AboutUs.tsx";
 import Contact from "./pages/Contact.tsx";
+import Revisoes from "./pages/Revisoes.tsx";
+import Resumos from "./pages/Resumos.tsx";
+import Simulados from "./pages/Simulados.tsx";
+import TopQuestoes from "./pages/TopQuestoes.tsx";
+import Colinhas from "./pages/Colinhas.tsx";
+import MinhasRevisoes from "./pages/MinhasRevisoes.tsx";
+import MeusResumos from "./pages/MeusResumos.tsx";
+import MeusSimulados from "./pages/MeusSimulados.tsx";
+import MinhasTopQuestoes from "./pages/MinhasTopQuestoes.tsx";
+import MinhasColinhas from "./pages/MinhasColinhas.tsx";
+import MinhasDuvidas from "./pages/MinhasDuvidas.tsx";
+import MinhasAulasAgendadas from "./pages/MinhasAulasAgendadas.tsx";
 import CookieConsent from "./components/CookieConsent.tsx";
 
 const queryClient = new QueryClient();

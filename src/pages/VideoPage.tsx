@@ -203,23 +203,25 @@ const VideoPage = () => {
             )}
 
             {showPaywall && (
-              <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-background/90 backdrop-blur-sm p-6 text-center">
-                <div className="rounded-full bg-primary/10 p-3 mb-3"><Lock className="h-8 w-8 text-primary" /></div>
-                <h3 className="text-lg font-display font-bold text-foreground mb-1">Prévia encerrada</h3>
-                <p className="text-sm text-muted-foreground mb-4 max-w-xs">Você assistiu a prévia gratuita de 20%. Para continuar, escolha uma das opções abaixo:</p>
-                <div className="flex flex-col gap-2 w-full max-w-xs">
-                  {!user && <Button onClick={handleGoToSignup} className="w-full gap-2 font-display font-semibold">Criar conta gratuita</Button>}
-                  {canStartTrial && (
-                    <Button onClick={handleStartTrial} disabled={startingTrial} variant={user ? "default" : "outline"} className="w-full gap-2 font-display font-semibold">
-                      <Gift className="h-4 w-4" /> {startingTrial ? "Ativando..." : "Iniciar Teste Grátis"}
+              <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-background/90 backdrop-blur-sm p-4 sm:p-6 text-center overflow-y-auto">
+                <div className="flex flex-col items-center w-full max-w-xs my-auto">
+                  <div className="rounded-full bg-primary/10 p-2 sm:p-3 mb-2 sm:mb-3"><Lock className="h-6 w-6 sm:h-8 sm:w-8 text-primary" /></div>
+                  <h3 className="text-base sm:text-lg font-display font-bold text-foreground mb-1">Prévia encerrada</h3>
+                  <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4">Você assistiu a prévia gratuita de 20%. Para continuar, escolha uma das opções abaixo:</p>
+                  <div className="flex flex-col gap-1.5 sm:gap-2 w-full">
+                    {!user && <Button onClick={handleGoToSignup} size="sm" className="w-full gap-2 font-display font-semibold text-xs sm:text-sm">Criar conta gratuita</Button>}
+                    {canStartTrial && (
+                      <Button onClick={handleStartTrial} disabled={startingTrial} variant={user ? "default" : "outline"} size="sm" className="w-full gap-2 font-display font-semibold text-xs sm:text-sm">
+                        <Gift className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> {startingTrial ? "Ativando..." : "Iniciar Teste Grátis"}
+                      </Button>
+                    )}
+                    <Button onClick={handleSubscribe} variant={!user || canStartTrial ? "outline" : "default"} size="sm" className="w-full gap-2 font-display font-semibold text-xs sm:text-sm">
+                      <Zap className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> Assinar — acesso total
                     </Button>
-                  )}
-                  <Button onClick={handleSubscribe} variant={!user || canStartTrial ? "outline" : "default"} className="w-full gap-2 font-display font-semibold">
-                    <Zap className="h-4 w-4" /> Assinar — acesso total
-                  </Button>
-                  <Button onClick={handleBuyUnit} variant="outline" className="w-full gap-2 font-display font-semibold">
-                    <ShoppingCart className="h-4 w-4" /> Comprar este vídeo — R$ 19,90
-                  </Button>
+                    <Button onClick={handleBuyUnit} variant="outline" size="sm" className="w-full gap-2 font-display font-semibold text-xs sm:text-sm">
+                      <ShoppingCart className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> Comprar este vídeo — R$ 19,90
+                    </Button>
+                  </div>
                 </div>
               </div>
             )}

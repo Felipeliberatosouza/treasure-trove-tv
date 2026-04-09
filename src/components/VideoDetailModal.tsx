@@ -22,7 +22,7 @@ interface RatingData {
 }
 
 // Fallback demo video for courses without a videoUrl
-const DEMO_VIDEO_URL = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
+const DEMO_VIDEO_URL = "/demo-course.mp4";
 
 const VideoDetailModal = ({ video, open, onClose }: VideoDetailModalProps) => {
   const { user } = useAuth();

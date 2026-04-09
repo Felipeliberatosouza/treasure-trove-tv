@@ -9,6 +9,7 @@ export interface Video {
   lessons: number;
   level: "Iniciante" | "Intermediário" | "Avançado";
   featured?: boolean;
+  videoUrl?: string;
 }
 
 export const videos: Video[] = [
@@ -23,6 +24,7 @@ export const videos: Video[] = [
     lessons: 180,
     level: "Iniciante",
     featured: true,
+    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
   },
   {
     id: "2",

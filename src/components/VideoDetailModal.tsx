@@ -40,10 +40,31 @@ const VideoDetailModal = ({ video, open, onClose }: VideoDetailModalProps) => {
     if (video && open) {
       fetchRatings();
       checkWatchProgress();
-      setIsWatching(false);
       setViewId(null);
+      // Auto-start video playback when modal opens
+      setIsWatching(true);
+      if (user) {
+        startViewTracking(video.id);
+      }
+    } else {
+      setIsWatching(false);
     }
   }, [video, open, user]);
+
+  const startViewTracking = async (contentId: string) => {
+    if (!user) return;
+    const { data } = await supabase
+      .from("video_views")
+      .insert({
+        user_id: user.id,
+        content_type: "lesson",
+        content_id: contentId,
+        watch_percentage: 0,
+      })
+      .select("id")
+      .single();
+    if (data) setViewId(data.id);
+  };
 
   const checkWatchProgress = async () => {
     if (!video || !user) {
@@ -121,37 +142,11 @@ const VideoDetailModal = ({ video, open, onClose }: VideoDetailModalProps) => {
     setStartingTrial(false);
   };
 
-  const handleWatchVideo = async () => {
-    if (!user || !video) return;
-
-    // If user is on a video-based trial, record the watch
-    if (trial.hasActiveTrial && trial.trialType === "videos") {
-      await trial.recordVideoWatch();
-    }
-
-    // Create a view record and get its ID for progress tracking
-    const { data, error } = await supabase
-      .from("video_views")
-      .insert({
-        user_id: user.id,
-        content_type: "lesson",
-        content_id: video.id,
-        watch_percentage: 0,
-      })
-      .select("id")
-      .single();
-
-    if (error) {
-      console.error("Error creating video view:", error);
-      toast.error("Erro ao iniciar visualização.");
-      return;
-    }
-
-    if (data) {
-      setViewId(data.id);
-    }
-
+  const handleReplayVideo = () => {
     setIsWatching(true);
+    if (user && video) {
+      startViewTracking(video.id);
+    }
   };
 
   const handleProgressMilestone = useCallback((pct: number) => {
@@ -172,14 +167,13 @@ const VideoDetailModal = ({ video, open, onClose }: VideoDetailModalProps) => {
 
   if (!video) return null;
 
-  const canWatch = trial.hasActiveTrial;
   const trialExpired = trial.trialRow && !trial.hasActiveTrial;
   const canStartTrial = trial.trialEnabled && !trial.trialRow && user;
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-w-lg gap-0 overflow-hidden p-0 border-border bg-card">
-        {/* Video area: player or thumbnail */}
+        {/* Video area: always show player when watching */}
         {isWatching ? (
           <VideoPlayer
             videoUrl={video.videoUrl || DEMO_VIDEO_URL}
@@ -190,7 +184,10 @@ const VideoDetailModal = ({ video, open, onClose }: VideoDetailModalProps) => {
             poster={video.thumbnail}
           />
         ) : (
-          <div className="relative aspect-video w-full overflow-hidden">
+          <div
+            className="relative aspect-video w-full overflow-hidden cursor-pointer"
+            onClick={handleReplayVideo}
+          >
             <img src={video.thumbnail} alt={video.title} className="h-full w-full object-cover" />
             <div className="absolute inset-0 flex items-center justify-center bg-background/30">
               <div className="rounded-full bg-primary p-4">
@@ -284,13 +281,7 @@ const VideoDetailModal = ({ video, open, onClose }: VideoDetailModalProps) => {
           <div className="space-y-3 rounded-xl border border-border bg-secondary/30 p-4">
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Opções de acesso</p>
 
-            {canWatch && !isWatching && (
-              <Button onClick={handleWatchVideo} className="w-full gap-2 font-display font-semibold" variant="default">
-                <Play className="h-4 w-4" /> Assistir (Teste Grátis)
-              </Button>
-            )}
-
-            {canWatch && isWatching && (
+            {isWatching && (
               <div className="text-center text-xs text-muted-foreground py-1">
                 🎬 Reproduzindo — assista 70% para poder avaliar
               </div>

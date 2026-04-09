@@ -13,6 +13,7 @@ const SettingsBranding = () => {
   const [form, setForm] = useState<BrandingSettings>({
     platform_name: "", slogan: "", logo_url: "",
     primary_color: "#6366f1", secondary_color: "#8b5cf6", accent_color: "#f59e0b",
+    background_color: "#09090f",
   });
   const [saving, setSaving] = useState(false);
 
@@ -87,7 +88,7 @@ const SettingsBranding = () => {
         />
       </div>
 
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 gap-3">
         <div>
           <Label>Cor Primária</Label>
           <div className="flex items-center gap-2">
@@ -107,6 +108,13 @@ const SettingsBranding = () => {
           <div className="flex items-center gap-2">
             <input type="color" value={form.accent_color} onChange={(e) => setForm({ ...form, accent_color: e.target.value })} className="w-10 h-10 rounded cursor-pointer border-0" />
             <Input value={form.accent_color} onChange={(e) => setForm({ ...form, accent_color: e.target.value })} className="flex-1" />
+          </div>
+        </div>
+        <div>
+          <Label>Plano de Fundo</Label>
+          <div className="flex items-center gap-2">
+            <input type="color" value={form.background_color} onChange={(e) => setForm({ ...form, background_color: e.target.value })} className="w-10 h-10 rounded cursor-pointer border-0" />
+            <Input value={form.background_color} onChange={(e) => setForm({ ...form, background_color: e.target.value })} className="flex-1" />
           </div>
         </div>
       </div>

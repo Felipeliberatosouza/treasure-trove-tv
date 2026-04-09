@@ -91,6 +91,7 @@ const Index = () => {
         <PricingSection />
       </div>
       <Footer />
+      <WhatsAppFloat />
     </div>
   );
 };

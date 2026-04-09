@@ -42,6 +42,13 @@ const StudentSignup = () => {
     if (error) {
       toast.error(error.message);
     } else {
+      // Save areas to profile if signup succeeded
+      if (signUpData?.user && selectedAreas.length > 0) {
+        await supabase
+          .from("profiles")
+          .update({ areas: selectedAreas })
+          .eq("user_id", signUpData.user.id);
+      }
       toast.success("Conta criada! Verifique seu e-mail para confirmar.");
       navigate("/login");
     }

@@ -30,6 +30,7 @@ import MinhasDuvidas from "./pages/MinhasDuvidas.tsx";
 import MinhasAulasAgendadas from "./pages/MinhasAulasAgendadas.tsx";
 import ForgotPassword from "./pages/ForgotPassword.tsx";
 import ResetPassword from "./pages/ResetPassword.tsx";
+import VideoPage from "./pages/VideoPage.tsx";
 import CookieConsent from "./components/CookieConsent.tsx";
 
 const queryClient = new QueryClient();
@@ -67,6 +68,7 @@ const App = () => (
             <Route path="/minhas-colinhas" element={<MinhasColinhas />} />
             <Route path="/minhas-duvidas" element={<MinhasDuvidas />} />
             <Route path="/minhas-aulas-agendadas" element={<MinhasAulasAgendadas />} />
+            <Route path="/video/:id" element={<VideoPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <CookieConsent />

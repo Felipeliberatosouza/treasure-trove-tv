@@ -1,29 +1,22 @@
-import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import HeroBanner from "@/components/HeroBanner";
 import FreeTrialBanner from "@/components/FreeTrialBanner";
 import VideoCarousel from "@/components/VideoCarousel";
 import PricingSection from "@/components/PricingSection";
 import Footer from "@/components/Footer";
-import VideoDetailModal from "@/components/VideoDetailModal";
-import { categories, getVideosByCategory, videos, getVideoById } from "@/data/courses";
+import { categories, getVideosByCategory, videos } from "@/data/courses";
 import { useVideoRatings } from "@/hooks/useVideoRatings";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
-import type { Video } from "@/data/courses";
+import { useNavigate } from "react-router-dom";
 
 const Index = () => {
-  const [selectedVideo, setSelectedVideo] = useState<Video | null>(null);
-  const [modalOpen, setModalOpen] = useState(false);
+  const navigate = useNavigate();
   const ratings = useVideoRatings(videos.map((v) => v.id));
   const { data: trialSettings } = usePlatformSettings("free_trial");
   const showTrialBadge = trialSettings?.enabled ?? false;
 
   const handleVideoClick = (id: string) => {
-    const video = getVideoById(id);
-    if (video) {
-      setSelectedVideo(video);
-      setModalOpen(true);
-    }
+    navigate(`/video/${id}`);
   };
 
   return (
@@ -57,12 +50,6 @@ const Index = () => {
         <PricingSection />
       </div>
       <Footer />
-
-      <VideoDetailModal
-        video={selectedVideo}
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
-      />
     </div>
   );
 };

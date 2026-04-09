@@ -40,10 +40,31 @@ const VideoDetailModal = ({ video, open, onClose }: VideoDetailModalProps) => {
     if (video && open) {
       fetchRatings();
       checkWatchProgress();
-      setIsWatching(false);
       setViewId(null);
+      // Auto-start video playback when modal opens
+      setIsWatching(true);
+      if (user) {
+        startViewTracking(video.id);
+      }
+    } else {
+      setIsWatching(false);
     }
   }, [video, open, user]);
+
+  const startViewTracking = async (contentId: string) => {
+    if (!user) return;
+    const { data } = await supabase
+      .from("video_views")
+      .insert({
+        user_id: user.id,
+        content_type: "lesson",
+        content_id: contentId,
+        watch_percentage: 0,
+      })
+      .select("id")
+      .single();
+    if (data) setViewId(data.id);
+  };
 
   const checkWatchProgress = async () => {
     if (!video || !user) {

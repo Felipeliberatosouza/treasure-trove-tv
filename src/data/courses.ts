@@ -14,7 +14,7 @@ export interface Video {
 
 export const videos: Video[] = [
   {
-    id: "1",
+    id: "a0000000-0000-0000-0000-000000000001",
     title: "Dominando React do Zero ao Avançado",
     description: "Aprenda React desde os fundamentos até técnicas avançadas como hooks customizados, Context API e otimização de performance.",
     thumbnail: "https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=600&h=340&fit=crop",
@@ -27,7 +27,7 @@ export const videos: Video[] = [
     videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
   },
   {
-    id: "2",
+    id: "a0000000-0000-0000-0000-000000000002",
     title: "Python para Data Science",
     description: "Domine Python aplicado à ciência de dados com pandas, numpy, matplotlib e machine learning.",
     thumbnail: "https://images.unsplash.com/photo-1526379095098-d400fd0bf935?w=600&h=340&fit=crop",
@@ -38,7 +38,7 @@ export const videos: Video[] = [
     level: "Intermediário",
   },
   {
-    id: "3",
+    id: "a0000000-0000-0000-0000-000000000003",
     title: "UI/UX Design Completo",
     description: "Aprenda design de interfaces e experiência do usuário com Figma, princípios de design e prototipagem.",
     thumbnail: "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=600&h=340&fit=crop",
@@ -49,7 +49,7 @@ export const videos: Video[] = [
     level: "Iniciante",
   },
   {
-    id: "4",
+    id: "a0000000-0000-0000-0000-000000000004",
     title: "Node.js e APIs RESTful",
     description: "Construa APIs robustas com Node.js, Express, MongoDB e autenticação JWT.",
     thumbnail: "https://images.unsplash.com/photo-1627398242454-45a1465c2479?w=600&h=340&fit=crop",
@@ -60,7 +60,7 @@ export const videos: Video[] = [
     level: "Intermediário",
   },
   {
-    id: "5",
+    id: "a0000000-0000-0000-0000-000000000005",
     title: "Marketing Digital Estratégico",
     description: "Estratégias completas de marketing digital incluindo SEO, redes sociais, e-mail marketing e funil de vendas.",
     thumbnail: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=600&h=340&fit=crop",
@@ -71,7 +71,7 @@ export const videos: Video[] = [
     level: "Iniciante",
   },
   {
-    id: "6",
+    id: "a0000000-0000-0000-0000-000000000006",
     title: "Machine Learning na Prática",
     description: "Algoritmos de ML com scikit-learn, TensorFlow e projetos reais de classificação e regressão.",
     thumbnail: "https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=600&h=340&fit=crop",
@@ -82,7 +82,7 @@ export const videos: Video[] = [
     level: "Avançado",
   },
   {
-    id: "7",
+    id: "a0000000-0000-0000-0000-000000000007",
     title: "Fotografia Profissional",
     description: "Técnicas avançadas de fotografia, iluminação, composição e edição com Lightroom e Photoshop.",
     thumbnail: "https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=600&h=340&fit=crop",
@@ -93,7 +93,7 @@ export const videos: Video[] = [
     level: "Intermediário",
   },
   {
-    id: "8",
+    id: "a0000000-0000-0000-0000-000000000008",
     title: "DevOps e Cloud Computing",
     description: "Docker, Kubernetes, AWS, CI/CD pipelines e infraestrutura como código.",
     thumbnail: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=600&h=340&fit=crop",

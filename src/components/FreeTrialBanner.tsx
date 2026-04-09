@@ -7,24 +7,61 @@ import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
 
+const EMPTY_COUNTDOWN = { days: 0, hours: 0, minutes: 0, seconds: 0 };
+
 function useCountdown(expiresAt: Date | null) {
-  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+  const [timeLeft, setTimeLeft] = useState(EMPTY_COUNTDOWN);
   const expiresMs = expiresAt?.getTime() ?? null;
 
   useEffect(() => {
-    if (expiresMs === null) return;
+    if (expiresMs === null) {
+      setTimeLeft((prev) =>
+        prev.days === 0 && prev.hours === 0 && prev.minutes === 0 && prev.seconds === 0
+          ? prev
+          : EMPTY_COUNTDOWN,
+      );
+      return;
+    }
+
+    let intervalId: number | null = null;
+
     const calc = () => {
-      const diff = Math.max(0, expiresMs - Date.now());
-      setTimeLeft({
+      const diff = expiresMs - Date.now();
+
+      if (diff <= 0) {
+        setTimeLeft((prev) =>
+          prev.days === 0 && prev.hours === 0 && prev.minutes === 0 && prev.seconds === 0
+            ? prev
+            : EMPTY_COUNTDOWN,
+        );
+
+        if (intervalId !== null) window.clearInterval(intervalId);
+        return;
+      }
+
+      const nextTimeLeft = {
         days: Math.floor(diff / (1000 * 60 * 60 * 24)),
         hours: Math.floor((diff / (1000 * 60 * 60)) % 24),
         minutes: Math.floor((diff / (1000 * 60)) % 60),
         seconds: Math.floor((diff / 1000) % 60),
-      });
+      };
+
+      setTimeLeft((prev) =>
+        prev.days === nextTimeLeft.days &&
+        prev.hours === nextTimeLeft.hours &&
+        prev.minutes === nextTimeLeft.minutes &&
+        prev.seconds === nextTimeLeft.seconds
+          ? prev
+          : nextTimeLeft,
+      );
     };
+
     calc();
-    const id = setInterval(calc, 1000);
-    return () => clearInterval(id);
+    intervalId = window.setInterval(calc, 1000);
+
+    return () => {
+      if (intervalId !== null) window.clearInterval(intervalId);
+    };
   }, [expiresMs]);
 
   return timeLeft;
@@ -44,7 +81,7 @@ const FreeTrialBanner = () => {
   const trial = useFreeTrial();
   const [starting, setStarting] = useState(false);
 
-  const countdown = useCountdown(trial.expiresAt);
+  const countdown = useCountdown(trial.hasActiveTrial ? trial.expiresAt : null);
 
   // Don't render if trial feature is disabled or still loading
   if (trial.loading || !trial.trialEnabled) return null;

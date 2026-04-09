@@ -24,7 +24,7 @@ export const videos: Video[] = [
     lessons: 180,
     level: "Iniciante",
     featured: true,
-    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+    videoUrl: "/demo-course.mp4",
   },
   {
     id: "a0000000-0000-0000-0000-000000000002",

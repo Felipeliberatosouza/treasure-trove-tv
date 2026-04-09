@@ -81,8 +81,17 @@ const VideoPlayer = ({
   const handleTimeUpdate = () => {
     const video = videoRef.current;
     if (!video || !video.duration) return;
+    const pct = (video.currentTime / video.duration) * 100;
     setCurrentTime(video.currentTime);
-    setPercentage((video.currentTime / video.duration) * 100);
+    setPercentage(pct);
+
+    // Enforce preview limit
+    if (previewLimit && pct >= previewLimit) {
+      video.pause();
+      video.currentTime = (previewLimit / 100) * video.duration;
+      setIsPlaying(false);
+      onPreviewLimitReached?.();
+    }
   };
 
   const handleLoadedMetadata = () => {

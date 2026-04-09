@@ -21,7 +21,7 @@ interface RatingData {
   userRating: number | null;
 }
 
-// Demo video for static course data (replace with real URLs from DB)
+// Fallback demo video for courses without a videoUrl
 const DEMO_VIDEO_URL = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
 
 const VideoDetailModal = ({ video, open, onClose }: VideoDetailModalProps) => {
@@ -176,7 +176,7 @@ const VideoDetailModal = ({ video, open, onClose }: VideoDetailModalProps) => {
         {/* Video area: player or thumbnail */}
         {isWatching ? (
           <VideoPlayer
-            videoUrl={DEMO_VIDEO_URL}
+            videoUrl={video.videoUrl || DEMO_VIDEO_URL}
             contentId={video.id}
             contentType="lesson"
             viewId={viewId}

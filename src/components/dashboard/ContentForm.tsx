@@ -6,6 +6,7 @@ import { Upload, X, Image, Video } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import AreaSelector from "@/components/AreaSelector";
 
 interface ContentFormProps {
   table: "lessons" | "exam_solutions";
@@ -17,6 +18,7 @@ const ContentForm = ({ table, onSaved, onCancel }: ContentFormProps) => {
   const { user } = useAuth();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [selectedAreas, setSelectedAreas] = useState<string[]>([]);
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [carouselFile, setCarouselFile] = useState<File | null>(null);
   const [videoFile, setVideoFile] = useState<File | null>(null);
@@ -56,6 +58,7 @@ const ContentForm = ({ table, onSaved, onCancel }: ContentFormProps) => {
         thumbnail_url,
         carousel_cover_url,
         video_url,
+        areas: selectedAreas,
       });
 
       if (error) throw error;

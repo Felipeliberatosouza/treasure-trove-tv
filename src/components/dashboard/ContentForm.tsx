@@ -80,6 +80,11 @@ const ContentForm = ({ table, onSaved, onCancel }: ContentFormProps) => {
       </div>
 
       <div>
+        <label className="text-sm text-muted-foreground mb-1 block">Áreas do conteúdo</label>
+        <AreaSelector selected={selectedAreas} onChange={setSelectedAreas} max={3} />
+      </div>
+
+      <div>
         <label className="text-sm text-muted-foreground mb-1 block">Descrição</label>
         <Textarea value={description} onChange={(e) => setDescription(e.target.value)} className="bg-secondary" rows={3} />
       </div>

@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { toast } from "sonner";
+import AreaSelector from "@/components/AreaSelector";
 
 const StudentSignup = () => {
   const navigate = useNavigate();
@@ -14,6 +15,7 @@ const StudentSignup = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [selectedAreas, setSelectedAreas] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -28,11 +30,11 @@ const StudentSignup = () => {
     }
 
     setLoading(true);
-    const { error } = await supabase.auth.signUp({
+    const { data: signUpData, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: { name, role: "student" },
+        data: { name, role: "student", areas: selectedAreas },
         emailRedirectTo: window.location.origin,
       },
     });

@@ -74,7 +74,7 @@ const Navbar = () => {
           {user ? (
             <UserMenu />
           ) : (
-            <Link to="/login" className="hidden md:block">
+            <Link to="/login">
               <Button size="sm" className="gap-2 font-display">
                 <User className="h-4 w-4" /> Entrar
               </Button>

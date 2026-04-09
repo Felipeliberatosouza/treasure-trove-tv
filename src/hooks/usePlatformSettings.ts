@@ -23,6 +23,7 @@ export interface ContactSettings {
   tiktok: string;
   linkedin: string;
   whatsapp: string;
+  whatsapp_message: string;
 }
 
 export interface HeroBannerSettings {

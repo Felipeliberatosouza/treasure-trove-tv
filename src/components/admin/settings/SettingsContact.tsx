@@ -8,7 +8,7 @@ import { Save } from "lucide-react";
 const SettingsContact = () => {
   const { data, loading, update } = usePlatformSettings("contact");
   const [form, setForm] = useState<ContactSettings>({
-    email: "", phone: "", address: "", instagram: "", youtube: "", facebook: "", twitter: "", tiktok: "", linkedin: "", whatsapp: "",
+    email: "", phone: "", address: "", instagram: "", youtube: "", facebook: "", twitter: "", tiktok: "", linkedin: "", whatsapp: "", whatsapp_message: "",
   });
   const [saving, setSaving] = useState(false);
 
@@ -85,6 +85,10 @@ const SettingsContact = () => {
             WhatsApp
           </Label>
           <Input value={form.whatsapp || ""} onChange={(e) => setForm({ ...form, whatsapp: e.target.value })} placeholder="5511999999999 (apenas números com DDD)" />
+        </div>
+        <div className="col-span-2">
+          <Label>Mensagem Automática do WhatsApp</Label>
+          <Input value={form.whatsapp_message || ""} onChange={(e) => setForm({ ...form, whatsapp_message: e.target.value })} placeholder="Olá! Gostaria de mais informações sobre os cursos." />
         </div>
       </div>
       <Button onClick={handleSave} disabled={saving}>

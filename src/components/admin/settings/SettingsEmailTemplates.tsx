@@ -24,18 +24,21 @@ const TEMPLATE_LABELS: Record<string, string> = {
   email_confirmation: "Confirmação de E-mail",
   welcome: "Boas-vindas",
   phone_verification: "Verificação por Celular",
+  birthday: "Feliz Aniversário",
 };
 
 const TEMPLATE_DESCRIPTIONS: Record<string, string> = {
   email_confirmation: "Enviado após verificação do celular, contém link de confirmação de cadastro.",
   welcome: "Enviado após o usuário confirmar o cadastro pelo link de e-mail.",
   phone_verification: "Mensagem com código de verificação enviada por SMS/WhatsApp.",
+  birthday: "Enviado automaticamente no dia do aniversário do usuário (diariamente às 8h).",
 };
 
 const TEMPLATE_VARS: Record<string, string[]> = {
   email_confirmation: ["{{name}}", "{{confirmation_link}}"],
   welcome: ["{{name}}", "{{login_link}}"],
   phone_verification: ["{{name}}", "{{code}}", "{{channel}}"],
+  birthday: ["{{name}}", "{{login_link}}"],
 };
 
 const SettingsEmailTemplates = () => {

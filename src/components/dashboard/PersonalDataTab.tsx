@@ -25,6 +25,10 @@ const PersonalDataTab = () => {
 
   const handleSave = async () => {
     if (!user) return;
+    if (!birthDate) {
+      toast.error("A data de nascimento é obrigatória");
+      return;
+    }
     setSaving(true);
     const { error } = await supabase
       .from("profiles")

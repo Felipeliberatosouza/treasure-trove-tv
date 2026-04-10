@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Mail, Lock, User, Eye, EyeOff, GraduationCap, ArrowLeft, CalendarDays } from "lucide-react";
+import { Mail, Lock, User, Eye, EyeOff, GraduationCap, ArrowLeft, CalendarDays, Camera } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,7 +18,18 @@ const StudentSignup = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [birthDate, setBirthDate] = useState("");
   const [selectedAreas, setSelectedAreas] = useState<string[]>([]);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
+
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setAvatarFile(file);
+      setAvatarPreview(URL.createObjectURL(file));
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,6 +55,16 @@ const StudentSignup = () => {
     if (error) {
       toast.error(translateAuthError(error.message));
     } else {
+      // Upload avatar if provided
+      if (signUpData?.user && avatarFile) {
+        const ext = avatarFile.name.split(".").pop();
+        const path = `${signUpData.user.id}/${Date.now()}.${ext}`;
+        const { error: uploadErr } = await supabase.storage.from("avatars").upload(path, avatarFile);
+        if (!uploadErr) {
+          const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
+          await supabase.from("profiles").update({ avatar_url: urlData.publicUrl }).eq("user_id", signUpData.user.id);
+        }
+      }
       // Save areas to profile if signup succeeded
       if (signUpData?.user && selectedAreas.length > 0) {
         await supabase
@@ -111,6 +132,22 @@ const StudentSignup = () => {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Avatar upload */}
+          <div className="flex justify-center">
+            <button
+              type="button"
+              onClick={() => avatarInputRef.current?.click()}
+              className="relative h-20 w-20 rounded-full bg-secondary border-2 border-dashed border-border hover:border-primary/50 transition-colors flex items-center justify-center overflow-hidden"
+            >
+              {avatarPreview ? (
+                <img src={avatarPreview} alt="Avatar" className="h-full w-full object-cover" />
+              ) : (
+                <Camera className="h-6 w-6 text-muted-foreground" />
+              )}
+            </button>
+            <input ref={avatarInputRef} type="file" accept="image/*" onChange={handleAvatarChange} className="hidden" />
+          </div>
+          <p className="text-center text-xs text-muted-foreground -mt-2">Adicionar foto</p>
           <div className="relative">
             <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input

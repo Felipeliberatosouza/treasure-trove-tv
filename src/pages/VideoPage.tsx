@@ -35,6 +35,7 @@ const VideoPage = () => {
   const [viewId, setViewId] = useState<string | null>(null);
   const [showPaywall, setShowPaywall] = useState(false);
   const [hasFullAccess, setHasFullAccess] = useState(false);
+  const [teacherProfile, setTeacherProfile] = useState<{ name: string; avatar_url: string | null } | null>(null);
 
   useEffect(() => {
     if (!video) return;
@@ -53,6 +54,30 @@ const VideoPage = () => {
     };
     checkAccess();
   }, [video, user, trial.hasActiveTrial]);
+
+  // Fetch teacher profile from DB
+  useEffect(() => {
+    if (!video) return;
+    const fetchTeacher = async () => {
+      // Try to find teacher by matching lesson/exam in DB
+      const { data: lesson } = await supabase
+        .from("lessons")
+        .select("teacher_id")
+        .eq("id", video.id)
+        .limit(1)
+        .maybeSingle();
+      const teacherId = lesson?.teacher_id;
+      if (teacherId) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("name, avatar_url")
+          .eq("user_id", teacherId)
+          .maybeSingle();
+        if (profile) setTeacherProfile(profile);
+      }
+    };
+    fetchTeacher();
+  }, [video]);
 
   useEffect(() => {
     if (video) {
@@ -186,12 +211,18 @@ const VideoPage = () => {
           {/* Title, teacher and description above video */}
           <div className="mb-4 space-y-2">
             <div className="flex items-center gap-2.5">
-              <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                <span className="text-sm font-bold text-primary">{video.instructor?.charAt(0) || "P"}</span>
+              <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0 overflow-hidden">
+                {teacherProfile?.avatar_url ? (
+                  <img src={teacherProfile.avatar_url} alt={teacherProfile.name} className="h-full w-full object-cover" />
+                ) : (
+                  <span className="text-sm font-bold text-primary">
+                    {(teacherProfile?.name || video.instructor)?.charAt(0) || "P"}
+                  </span>
+                )}
               </div>
               <div className="min-w-0">
                 <h1 className="font-display text-xl sm:text-2xl font-bold leading-tight text-foreground truncate">{video.title}</h1>
-                <span className="text-xs text-muted-foreground">{video.instructor}</span>
+                <span className="text-xs text-muted-foreground">{teacherProfile?.name || video.instructor}</span>
               </div>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed">{video.description}</p>

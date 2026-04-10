@@ -41,7 +41,7 @@ const StudentSignup = () => {
     });
 
     if (error) {
-      toast.error(error.message);
+      toast.error(translateAuthError(error.message));
     } else {
       // Save areas to profile if signup succeeded
       if (signUpData?.user && selectedAreas.length > 0) {

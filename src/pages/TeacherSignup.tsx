@@ -45,7 +45,7 @@ const TeacherSignup = () => {
     });
 
     if (error) {
-      toast.error(error.message);
+      toast.error(translateAuthError(error.message));
     } else {
       // Update profile with bio and expertise after signup
       toast.success("Conta criada! Verifique seu e-mail para confirmar.");

@@ -15,6 +15,8 @@ interface VideoPlayerProps {
   /** If set, pauses video at this percentage and fires onPreviewLimitReached */
   previewLimit?: number;
   onPreviewLimitReached?: () => void;
+  /** Logo URL for watermark overlay */
+  logoUrl?: string;
 }
 
 const VideoPlayer = ({

@@ -7,8 +7,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useCourseAreas } from "@/hooks/useCourseAreas";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 
 const PersonalDataTab = () => {
   const { user, profile, role, refreshProfile } = useAuth();

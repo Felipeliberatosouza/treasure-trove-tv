@@ -70,7 +70,7 @@ const VideoPage = () => {
       if (teacherId) {
         const { data: profile } = await supabase
           .from("profiles")
-          .select("name, avatar_url")
+          .select("name, avatar_url, slug")
           .eq("user_id", teacherId)
           .maybeSingle();
         if (profile) setTeacherProfile(profile);

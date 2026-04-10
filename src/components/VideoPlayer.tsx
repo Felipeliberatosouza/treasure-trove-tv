@@ -264,6 +264,13 @@ const VideoPlayer = ({
         </div>
       </div>
 
+      {/* Logo watermark */}
+      {logoUrl && (
+        <div className="absolute top-2 left-2 z-10 pointer-events-none">
+          <img src={logoUrl} alt="Logo" className="h-6 sm:h-8 w-auto opacity-60" />
+        </div>
+      )}
+
       {/* Progress milestone indicator */}
       {maxPercentage >= 70 && (
         <div className="absolute top-2 right-2 rounded-full bg-primary/90 px-2 py-0.5 text-[10px] font-semibold text-primary-foreground">

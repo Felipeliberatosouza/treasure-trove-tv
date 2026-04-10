@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, User, Lock, Video, FileText, DollarSign } from "lucide-react";
+import { ArrowLeft, User, Lock, Video, FileText, DollarSign, HelpCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
@@ -8,12 +8,14 @@ import PersonalDataTab from "@/components/dashboard/PersonalDataTab";
 import LoginDataTab from "@/components/dashboard/LoginDataTab";
 import LessonsTab from "@/components/dashboard/LessonsTab";
 import ExamSolutionsTab from "@/components/dashboard/ExamSolutionsTab";
+import TeacherDoubtsTab from "@/components/dashboard/TeacherDoubtsTab";
 
 const tabs = [
   { id: "personal", label: "Dados Pessoais", icon: User },
   { id: "login", label: "Dados de Login", icon: Lock },
   { id: "lessons", label: "Minhas Aulas", icon: Video },
   { id: "exams", label: "Resoluções de Provas", icon: FileText },
+  { id: "doubts", label: "Dúvidas de Alunos", icon: HelpCircle },
   { id: "sales", label: "Vendas e Recebimentos", icon: DollarSign },
 ] as const;
 
@@ -62,6 +64,7 @@ const TeacherDashboard = () => {
             {activeTab === "login" && <LoginDataTab />}
             {activeTab === "lessons" && <LessonsTab />}
             {activeTab === "exams" && <ExamSolutionsTab />}
+            {activeTab === "doubts" && <TeacherDoubtsTab />}
             {activeTab === "sales" && (
               <div>
                 <h2 className="font-display text-lg font-semibold mb-4">Vendas e Recebimentos</h2>

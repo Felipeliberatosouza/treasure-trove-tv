@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { translateAuthError } from "@/lib/translateAuthError";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
@@ -25,7 +26,7 @@ const ForgotPassword = () => {
     });
 
     if (error) {
-      toast.error("Erro ao enviar e-mail de recuperação");
+      toast.error(translateAuthError(error.message));
     } else {
       setSent(true);
       toast.success("E-mail de recuperação enviado!");

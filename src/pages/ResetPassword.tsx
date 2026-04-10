@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { translateAuthError } from "@/lib/translateAuthError";
 
 const ResetPassword = () => {
   const navigate = useNavigate();
@@ -53,7 +54,7 @@ const ResetPassword = () => {
     const { error } = await supabase.auth.updateUser({ password });
 
     if (error) {
-      toast.error("Erro ao redefinir a senha. Tente novamente.");
+      toast.error(translateAuthError(error.message));
     } else {
       setSuccess(true);
       toast.success("Senha redefinida com sucesso!");

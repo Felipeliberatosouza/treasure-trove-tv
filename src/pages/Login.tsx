@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { toast } from "sonner";
+import { translateAuthError } from "@/lib/translateAuthError";
 
 
 const Login = () => {
@@ -27,11 +28,7 @@ const Login = () => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
-      if (error.message?.toLowerCase().includes("email not confirmed")) {
-        toast.error("Confirme seu cadastro no e-mail enviado para você!");
-      } else {
-        toast.error("E-mail ou senha incorretos");
-      }
+      toast.error(translateAuthError(error.message));
     } else {
       toast.success("Login realizado com sucesso!");
       navigate("/");

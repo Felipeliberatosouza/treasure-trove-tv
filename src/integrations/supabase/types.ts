@@ -358,6 +358,7 @@ export type Database = {
           areas: string[] | null
           avatar_url: string | null
           bio: string | null
+          birth_date: string | null
           created_at: string
           email: string
           email_verified: boolean | null
@@ -372,6 +373,7 @@ export type Database = {
           areas?: string[] | null
           avatar_url?: string | null
           bio?: string | null
+          birth_date?: string | null
           created_at?: string
           email: string
           email_verified?: boolean | null
@@ -386,6 +388,7 @@ export type Database = {
           areas?: string[] | null
           avatar_url?: string | null
           bio?: string | null
+          birth_date?: string | null
           created_at?: string
           email?: string
           email_verified?: boolean | null

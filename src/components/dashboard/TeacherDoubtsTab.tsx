@@ -88,6 +88,35 @@ const TeacherDoubtsTab = () => {
     if (error) {
       toast.error("Erro ao enviar resposta.");
     } else {
+      // Send email to student
+      const { data: studentProfile } = await supabase
+        .from("profiles")
+        .select("email, name")
+        .eq("user_id", answerModal.student_id)
+        .single();
+
+      const { data: teacherProfile } = await supabase
+        .from("profiles")
+        .select("name")
+        .eq("user_id", user!.id)
+        .single();
+
+      if (studentProfile?.email) {
+        await supabase.functions.invoke("send-transactional-email", {
+          body: {
+            templateName: "doubt-answered",
+            recipientEmail: studentProfile.email,
+            idempotencyKey: `doubt-answered-${answerModal.id}`,
+            templateData: {
+              studentName: studentProfile.name || "Aluno",
+              question: answerModal.question,
+              answer: answerText.trim(),
+              teacherName: teacherProfile?.name || "Professor",
+            },
+          },
+        });
+      }
+
       toast.success("Resposta enviada ao aluno!");
       setAnswerModal(null);
       setAnswerText("");

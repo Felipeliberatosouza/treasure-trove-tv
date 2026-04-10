@@ -90,6 +90,29 @@ const AdminDoubtsTab = () => {
     if (error) {
       toast({ title: "Erro", description: "Falha ao aprovar dúvida.", variant: "destructive" });
     } else {
+      // Get teacher email
+      const { data: teacherProfile } = await supabase
+        .from("profiles")
+        .select("email, name")
+        .eq("user_id", doubt.teacher_id)
+        .single();
+
+      if (teacherProfile?.email) {
+        await supabase.functions.invoke("send-transactional-email", {
+          body: {
+            templateName: "doubt-approved",
+            recipientEmail: teacherProfile.email,
+            idempotencyKey: `doubt-approved-${doubt.id}`,
+            templateData: {
+              teacherName: teacherProfile.name || "Professor",
+              question: doubt.question,
+              deadlineDays: parseInt(deadlineDays) || 3,
+              studentName: doubt.student_name || "Aluno",
+            },
+          },
+        });
+      }
+
       toast({ title: "Aprovada", description: "Dúvida aprovada e enviada ao professor." });
       fetchDoubts();
     }

@@ -55,7 +55,7 @@ const VideoPage = () => {
         .eq("user_id", user.id);
       const userRoles = roles?.map((r) => r.role) || [];
       if (userRoles.includes("admin")) { setHasFullAccess(true); return; }
-      if (userRoles.includes("teacher") && video.teacherId === user.id) { setHasFullAccess(true); return; }
+      if (userRoles.includes("teacher") && teacherId === user.id) { setHasFullAccess(true); return; }
 
       if (trial.hasActiveTrial) { setHasFullAccess(true); return; }
       const { data: purchase } = await supabase

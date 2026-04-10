@@ -168,10 +168,10 @@ const VideoPage = () => {
   const previewLimit = hasFullAccess ? undefined : 20;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background text-foreground flex flex-col">
       <Navbar />
 
-      <div className="pt-16">
+      <div className="flex-1 pt-16">
         {/* Back button */}
         <div className="px-4 py-3 md:px-12 lg:px-20">
           <button onClick={() => navigate(-1)} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors">

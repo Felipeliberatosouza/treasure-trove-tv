@@ -31,6 +31,7 @@ import MinhasAulasAgendadas from "./pages/MinhasAulasAgendadas.tsx";
 import ForgotPassword from "./pages/ForgotPassword.tsx";
 import ResetPassword from "./pages/ResetPassword.tsx";
 import VideoPage from "./pages/VideoPage.tsx";
+import TeacherProfile from "./pages/TeacherProfile.tsx";
 import CookieConsent from "./components/CookieConsent.tsx";
 import DynamicBranding from "./components/DynamicBranding.tsx";
 
@@ -70,6 +71,7 @@ const App = () => (
             <Route path="/minhas-duvidas" element={<MinhasDuvidas />} />
             <Route path="/minhas-aulas-agendadas" element={<MinhasAulasAgendadas />} />
             <Route path="/video/:id" element={<VideoPage />} />
+            <Route path="/:slug" element={<TeacherProfile />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <DynamicBranding />

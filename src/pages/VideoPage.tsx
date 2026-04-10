@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Star, Play, ShoppingCart, Zap, Clock, BookOpen, Gift, AlertTriangle, Lock, ArrowLeft, FileText, ClipboardList, Trophy, StickyNote, HelpCircle, CalendarCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -35,7 +35,7 @@ const VideoPage = () => {
   const [viewId, setViewId] = useState<string | null>(null);
   const [showPaywall, setShowPaywall] = useState(false);
   const [hasFullAccess, setHasFullAccess] = useState(false);
-  const [teacherProfile, setTeacherProfile] = useState<{ name: string; avatar_url: string | null } | null>(null);
+  const [teacherProfile, setTeacherProfile] = useState<{ name: string; avatar_url: string | null; slug: string | null } | null>(null);
 
   useEffect(() => {
     if (!video) return;
@@ -70,7 +70,7 @@ const VideoPage = () => {
       if (teacherId) {
         const { data: profile } = await supabase
           .from("profiles")
-          .select("name, avatar_url")
+          .select("name, avatar_url, slug")
           .eq("user_id", teacherId)
           .maybeSingle();
         if (profile) setTeacherProfile(profile);
@@ -210,21 +210,31 @@ const VideoPage = () => {
         <div className="max-w-4xl mx-auto px-4 md:px-8 pb-12">
           {/* Title, teacher and description above video */}
           <div className="mb-4 space-y-2">
-            <div className="flex items-center gap-2.5">
-              <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0 overflow-hidden">
-                {teacherProfile?.avatar_url ? (
-                  <img src={teacherProfile.avatar_url} alt={teacherProfile.name} className="h-full w-full object-cover" />
-                ) : (
-                  <span className="text-sm font-bold text-primary">
-                    {(teacherProfile?.name || video.instructor)?.charAt(0) || "P"}
-                  </span>
-                )}
-              </div>
-              <div className="min-w-0">
-                <h1 className="font-display text-xl sm:text-2xl font-bold leading-tight text-foreground truncate">{video.title}</h1>
-                <span className="text-xs text-muted-foreground">{teacherProfile?.name || video.instructor}</span>
-              </div>
-            </div>
+            {(() => {
+              const teacherSlug = teacherProfile?.slug;
+              const teacherLink = teacherSlug ? `/${teacherSlug}` : undefined;
+              const avatarContent = (
+                <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0 overflow-hidden">
+                  {teacherProfile?.avatar_url ? (
+                    <img src={teacherProfile.avatar_url} alt={teacherProfile.name} className="h-full w-full object-cover" />
+                  ) : (
+                    <span className="text-sm font-bold text-primary">
+                      {(teacherProfile?.name || video.instructor)?.charAt(0) || "P"}
+                    </span>
+                  )}
+                </div>
+              );
+              const nameContent = <span className="text-xs text-muted-foreground hover:text-primary transition-colors">{teacherProfile?.name || video.instructor}</span>;
+              return (
+                <div className="flex items-center gap-2.5">
+                  {teacherLink ? <Link to={teacherLink}>{avatarContent}</Link> : avatarContent}
+                  <div className="min-w-0">
+                    <h1 className="font-display text-xl sm:text-2xl font-bold leading-tight text-foreground truncate">{video.title}</h1>
+                    {teacherLink ? <Link to={teacherLink}>{nameContent}</Link> : nameContent}
+                  </div>
+                </div>
+              );
+            })()}
             <p className="text-sm text-muted-foreground leading-relaxed">{video.description}</p>
             <div className="flex items-center gap-4 text-xs text-muted-foreground">
               <span className="flex items-center gap-1"><BookOpen className="h-3.5 w-3.5" />{video.lessons} aulas</span>

@@ -47,6 +47,16 @@ const VideoPage = () => {
     if (!video) return;
     const checkAccess = async () => {
       if (!user) { setHasFullAccess(false); return; }
+
+      // Admins and teachers (content owner) have full access
+      const { data: roles } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id);
+      const userRoles = roles?.map((r) => r.role) || [];
+      if (userRoles.includes("admin")) { setHasFullAccess(true); return; }
+      if (userRoles.includes("teacher") && video.teacherId === user.id) { setHasFullAccess(true); return; }
+
       if (trial.hasActiveTrial) { setHasFullAccess(true); return; }
       const { data: purchase } = await supabase
         .from("video_purchases")

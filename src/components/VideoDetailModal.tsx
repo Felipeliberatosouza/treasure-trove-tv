@@ -49,6 +49,14 @@ const VideoDetailModal = ({ video, open, onClose }: VideoDetailModalProps) => {
         return;
       }
 
+      // Admins have full access
+      const { data: roles } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id);
+      const userRoles = roles?.map((r) => r.role) || [];
+      if (userRoles.includes("admin")) { setHasFullAccess(true); return; }
+
       // Check active trial
       if (trial.hasActiveTrial) {
         setHasFullAccess(true);
@@ -69,7 +77,6 @@ const VideoDetailModal = ({ video, open, onClose }: VideoDetailModalProps) => {
         return;
       }
 
-      // TODO: check subscription status when Stripe is integrated
       setHasFullAccess(false);
     };
 

@@ -36,9 +36,9 @@ const SettingsFreeTrial = () => {
       <Card className="p-5 space-y-5">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-sm font-semibold">Ativar Teste Grátis</h3>
+         <h3 className="text-sm font-semibold">Ativar Teste Grátis</h3>
             <p className="text-xs text-muted-foreground">
-              Permite que novos usuários experimentem a plataforma antes de assinar.
+              Permite que novos usuários experimentem a plataforma antes de assinar. Inclui revisões, resumos, simulados, top questões e colinhas.
             </p>
           </div>
           <Switch

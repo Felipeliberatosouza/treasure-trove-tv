@@ -12,6 +12,7 @@ import Footer from "@/components/Footer";
 import VideoPlayer from "@/components/VideoPlayer";
 import VideoShareButtons from "@/components/VideoShareButtons";
 import { getVideoById } from "@/data/courses";
+import DoubtForm from "@/components/DoubtForm";
 import { RatingStars } from "@/components/VideoDetailModal";
 
 const DEMO_VIDEO_URL = "/demo-course.mp4";
@@ -36,6 +37,7 @@ const VideoPage = () => {
   const [showPaywall, setShowPaywall] = useState(false);
   const [hasFullAccess, setHasFullAccess] = useState(false);
   const [teacherProfile, setTeacherProfile] = useState<{ name: string; avatar_url: string | null; slug: string | null } | null>(null);
+  const [teacherId, setTeacherId] = useState<string | null>(null);
   const [videoType, setVideoType] = useState<string | null>(null);
   const [provaVotePercent, setProvaVotePercent] = useState<number | null>(null);
   const [userProvaVote, setUserProvaVote] = useState<boolean | null>(null);
@@ -73,6 +75,7 @@ const VideoPage = () => {
         .limit(1)
         .maybeSingle();
       teacherId = lesson?.teacher_id ?? null;
+      setTeacherId(teacherId);
       vType = (lesson as any)?.video_type ?? null;
 
       if (!teacherId) {
@@ -83,6 +86,7 @@ const VideoPage = () => {
           .limit(1)
           .maybeSingle();
         teacherId = exam?.teacher_id ?? null;
+        setTeacherId(teacherId);
         vType = (exam as any)?.video_type ?? null;
       }
 
@@ -406,13 +410,12 @@ const VideoPage = () => {
             </div>
 
             {/* Related services */}
-            <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+            <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
               {[
                 { icon: FileText, label: "Resumo" },
                 { icon: ClipboardList, label: "Simulado" },
                 { icon: Trophy, label: "Top Questões" },
                 { icon: StickyNote, label: "Colinha" },
-                { icon: HelpCircle, label: "Dúvidas" },
                 { icon: CalendarCheck, label: "Aula Particular" },
               ].map(({ icon: Icon, label }) => (
                 <button
@@ -424,6 +427,11 @@ const VideoPage = () => {
                 </button>
               ))}
             </div>
+
+            {/* Doubt Form */}
+            {teacherId && video && (
+              <DoubtForm contentId={video.id} contentType="lesson" teacherId={teacherId} />
+            )}
 
             {user && !trial.loading && (
               <>

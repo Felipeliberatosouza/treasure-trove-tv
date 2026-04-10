@@ -1,16 +1,18 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, User, CreditCard, Lock, FileText, BookOpen } from "lucide-react";
+import { ArrowLeft, User, CreditCard, Lock, FileText, BookOpen, HelpCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
 import PersonalDataTab from "@/components/dashboard/PersonalDataTab";
 import LoginDataTab from "@/components/dashboard/LoginDataTab";
+import StudentDoubtsTab from "@/components/dashboard/StudentDoubtsTab";
 
 const tabs = [
   { id: "personal", label: "Dados Pessoais", icon: User },
   { id: "subscription", label: "Assinatura e Compras", icon: CreditCard },
   { id: "login", label: "Dados de Login", icon: Lock },
+  { id: "doubts", label: "Minhas Dúvidas", icon: HelpCircle },
   { id: "exams", label: "Minhas Provas", icon: FileText },
   { id: "subjects", label: "Minhas Disciplinas", icon: BookOpen },
 ] as const;
@@ -60,6 +62,7 @@ const StudentDashboard = () => {
           >
             {activeTab === "personal" && <PersonalDataTab />}
             {activeTab === "login" && <LoginDataTab />}
+            {activeTab === "doubts" && <StudentDoubtsTab />}
             {activeTab === "subscription" && (
               <div>
                 <h2 className="font-display text-lg font-semibold mb-4">Assinatura e Compras</h2>

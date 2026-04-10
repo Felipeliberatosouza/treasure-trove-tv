@@ -21,6 +21,7 @@ const VideoPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const trial = useFreeTrial();
+  const { data: branding } = usePlatformSettings("branding");
 
   const video = id ? getVideoById(id) : null;
 

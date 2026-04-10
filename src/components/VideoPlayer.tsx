@@ -28,6 +28,7 @@ const VideoPlayer = ({
   poster,
   previewLimit,
   onPreviewLimitReached,
+  logoUrl,
 }: VideoPlayerProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);

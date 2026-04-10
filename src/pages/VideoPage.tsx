@@ -410,13 +410,12 @@ const VideoPage = () => {
             </div>
 
             {/* Related services */}
-            <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+            <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
               {[
                 { icon: FileText, label: "Resumo" },
                 { icon: ClipboardList, label: "Simulado" },
                 { icon: Trophy, label: "Top Questões" },
                 { icon: StickyNote, label: "Colinha" },
-                { icon: HelpCircle, label: "Dúvidas" },
                 { icon: CalendarCheck, label: "Aula Particular" },
               ].map(({ icon: Icon, label }) => (
                 <button
@@ -428,6 +427,11 @@ const VideoPage = () => {
                 </button>
               ))}
             </div>
+
+            {/* Doubt Form */}
+            {teacherId && video && (
+              <DoubtForm contentId={video.id} contentType="lesson" teacherId={teacherId} />
+            )}
 
             {user && !trial.loading && (
               <>

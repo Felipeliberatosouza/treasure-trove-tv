@@ -80,6 +80,7 @@ type SettingsMap = {
   about_us: PageContentSettings;
   terms_of_use: PageContentSettings;
   privacy_policy: PageContentSettings;
+  doubt_response_deadline_days: number;
 };
 
 export function usePlatformSettings<K extends keyof SettingsMap>(key: K) {

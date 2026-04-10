@@ -71,12 +71,14 @@ const StudentSignup = () => {
           await supabase.from("profiles").update({ avatar_url: urlData.publicUrl }).eq("user_id", signUpData.user.id);
         }
       }
-      // Save areas to profile if signup succeeded
-      if (signUpData?.user && selectedAreas.length > 0) {
-        await supabase
-          .from("profiles")
-          .update({ areas: selectedAreas })
-          .eq("user_id", signUpData.user.id);
+      // Save areas and phone to profile if signup succeeded
+      if (signUpData?.user) {
+        const updateData: any = {};
+        if (selectedAreas.length > 0) updateData.areas = selectedAreas;
+        if (phone) updateData.phone = phone;
+        if (Object.keys(updateData).length > 0) {
+          await supabase.from("profiles").update(updateData).eq("user_id", signUpData.user.id);
+        }
       }
       toast.success("Conta criada! Verifique seu e-mail para confirmar.");
       navigate("/login");

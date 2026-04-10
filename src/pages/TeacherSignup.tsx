@@ -21,6 +21,7 @@ const TeacherSignup = () => {
   const [bio, setBio] = useState("");
   const [expertise, setExpertise] = useState<string[]>([]);
   const [birthDate, setBirthDate] = useState("");
+  const [phone, setPhone] = useState("");
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
@@ -38,8 +39,12 @@ const TeacherSignup = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !email.trim() || !password.trim() || !birthDate) {
+    if (!name.trim() || !email.trim() || !password.trim() || !birthDate || !phone) {
       toast.error("Preencha todos os campos obrigatórios");
+      return;
+    }
+    if (!isValidBrazilianPhone(phone)) {
+      toast.error("Informe um celular válido com DDD (11 dígitos)");
       return;
     }
     if (password.length < 6) {
@@ -52,7 +57,7 @@ const TeacherSignup = () => {
       email,
       password,
       options: {
-        data: { name, role: "teacher", bio, expertise_area: expertise.join(", "), birth_date: birthDate },
+        data: { name, role: "teacher", bio, expertise_area: expertise.join(", "), birth_date: birthDate, phone },
         emailRedirectTo: window.location.origin,
       },
     });

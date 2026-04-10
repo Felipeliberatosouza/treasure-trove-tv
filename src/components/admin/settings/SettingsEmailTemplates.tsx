@@ -153,7 +153,13 @@ const SettingsEmailTemplates = () => {
       .replace(/\{\{confirmation_link\}\}/g, "#")
       .replace(/\{\{login_link\}\}/g, "#")
       .replace(/\{\{code\}\}/g, "123456")
-      .replace(/\{\{channel\}\}/g, "SMS");
+      .replace(/\{\{channel\}\}/g, "SMS")
+      .replace(/\{\{teacher_name\}\}/g, "Prof. Maria")
+      .replace(/\{\{student_name\}\}/g, "João Silva")
+      .replace(/\{\{question\}\}/g, "Como resolver essa equação?")
+      .replace(/\{\{answer\}\}/g, "Você precisa aplicar a fórmula de Bhaskara...")
+      .replace(/\{\{content_title\}\}/g, "Matemática - Equações")
+      .replace(/\{\{deadline_days\}\}/g, "3");
 
     return `
       <div style="max-width:600px;margin:0 auto;font-family:Arial,sans-serif;background:#ffffff;padding:24px;border-radius:8px;">

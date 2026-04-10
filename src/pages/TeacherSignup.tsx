@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Mail, Lock, User, Eye, EyeOff, BookOpen, ArrowLeft, Briefcase } from "lucide-react";
+import { Mail, Lock, User, Eye, EyeOff, BookOpen, ArrowLeft, Briefcase, CalendarDays } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -16,12 +16,13 @@ const TeacherSignup = () => {
   const [password, setPassword] = useState("");
   const [bio, setBio] = useState("");
   const [expertise, setExpertise] = useState("");
+  const [birthDate, setBirthDate] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !email.trim() || !password.trim()) {
+    if (!name.trim() || !email.trim() || !password.trim() || !birthDate) {
       toast.error("Preencha todos os campos obrigatórios");
       return;
     }
@@ -35,7 +36,7 @@ const TeacherSignup = () => {
       email,
       password,
       options: {
-        data: { name, role: "teacher", bio, expertise_area: expertise },
+        data: { name, role: "teacher", bio, expertise_area: expertise, birth_date: birthDate },
         emailRedirectTo: window.location.origin,
       },
     });
@@ -147,6 +148,17 @@ const TeacherSignup = () => {
               value={expertise}
               onChange={(e) => setExpertise(e.target.value)}
               className="pl-10 bg-secondary border-border"
+            />
+          </div>
+          <div className="relative">
+            <CalendarDays className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="date"
+              placeholder="Data de Nascimento *"
+              value={birthDate}
+              onChange={(e) => setBirthDate(e.target.value)}
+              className="pl-10 bg-secondary border-border"
+              max={new Date().toISOString().split("T")[0]}
             />
           </div>
           <Textarea

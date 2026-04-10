@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { toast } from "sonner";
 import AreaSelector from "@/components/AreaSelector";
+import { translateAuthError } from "@/lib/translateAuthError";
 
 const StudentSignup = () => {
   const navigate = useNavigate();

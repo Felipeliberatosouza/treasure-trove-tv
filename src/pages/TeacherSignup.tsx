@@ -10,6 +10,7 @@ import { lovable } from "@/integrations/lovable/index";
 import { toast } from "sonner";
 import { useCourseAreas } from "@/hooks/useCourseAreas";
 import AreaSelector from "@/components/AreaSelector";
+import { translateAuthError } from "@/lib/translateAuthError";
 
 const TeacherSignup = () => {
   const navigate = useNavigate();

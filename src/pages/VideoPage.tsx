@@ -245,26 +245,6 @@ const VideoPage = () => {
 
             <VideoShareButtons videoTitle={video.title} videoUrl={window.location.href} />
 
-
-            {user && !trial.loading && (
-              <>
-                {trial.hasActiveTrial && (
-                  <div className="flex items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 p-3">
-                    <Gift className="h-4 w-4 text-primary shrink-0" />
-                    <span className="text-sm text-foreground">
-                      {trial.trialType === "days" ? `Teste grátis ativo — ${trial.daysRemaining} dia(s) restante(s)` : `Teste grátis ativo — ${trial.videosRemaining} acesso(s) restante(s)`}
-                    </span>
-                  </div>
-                )}
-                {trialExpired && (
-                  <div className="flex items-center gap-2 rounded-lg border border-destructive/20 bg-destructive/5 p-3">
-                    <AlertTriangle className="h-4 w-4 text-destructive shrink-0" />
-                    <span className="text-sm text-foreground">Seu teste grátis expirou. Assine para continuar assistindo.</span>
-                  </div>
-                )}
-              </>
-            )}
-
             {/* Rating */}
             <div className="space-y-2">
               <div className="flex items-center gap-2">
@@ -286,6 +266,25 @@ const VideoPage = () => {
               )}
               {user && !hasWatched70 && <p className="text-xs text-muted-foreground italic">Assista pelo menos 70% do vídeo para poder avaliar.</p>}
             </div>
+
+            {user && !trial.loading && (
+              <>
+                {trial.hasActiveTrial && (
+                  <div className="flex items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 p-3">
+                    <Gift className="h-4 w-4 text-primary shrink-0" />
+                    <span className="text-sm text-foreground">
+                      {trial.trialType === "days" ? `Teste grátis ativo — ${trial.daysRemaining} dia(s) restante(s)` : `Teste grátis ativo — ${trial.videosRemaining} acesso(s) restante(s)`}
+                    </span>
+                  </div>
+                )}
+                {trialExpired && (
+                  <div className="flex items-center gap-2 rounded-lg border border-destructive/20 bg-destructive/5 p-3">
+                    <AlertTriangle className="h-4 w-4 text-destructive shrink-0" />
+                    <span className="text-sm text-foreground">Seu teste grátis expirou. Assine para continuar assistindo.</span>
+                  </div>
+                )}
+              </>
+            )}
 
             {/* Access options */}
             <div className="space-y-3 rounded-xl border border-border bg-secondary/30 p-4">

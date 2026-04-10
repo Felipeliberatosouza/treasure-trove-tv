@@ -17,7 +17,7 @@ const TeacherSignup = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [bio, setBio] = useState("");
-  const [expertise, setExpertise] = useState("");
+  const [expertise, setExpertise] = useState<string[]>([]);
   const [birthDate, setBirthDate] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -39,7 +39,7 @@ const TeacherSignup = () => {
       email,
       password,
       options: {
-        data: { name, role: "teacher", bio, expertise_area: expertise, birth_date: birthDate },
+        data: { name, role: "teacher", bio, expertise_area: expertise.join(", "), birth_date: birthDate },
         emailRedirectTo: window.location.origin,
       },
     });
@@ -145,16 +145,8 @@ const TeacherSignup = () => {
             </button>
           </div>
           <div>
-            <Select value={expertise} onValueChange={setExpertise}>
-              <SelectTrigger className="bg-secondary border-border">
-                <SelectValue placeholder="Área de especialização" />
-              </SelectTrigger>
-              <SelectContent>
-                {areas.map((area) => (
-                  <SelectItem key={area.id} value={area.name}>{area.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <label className="text-sm text-muted-foreground mb-1 block">Áreas de especialização</label>
+            <AreaSelector selected={expertise} onChange={setExpertise} max={areas.length || 10} />
           </div>
           <div className="relative">
             <CalendarDays className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />

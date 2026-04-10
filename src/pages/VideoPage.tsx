@@ -36,6 +36,7 @@ const VideoPage = () => {
   const [showPaywall, setShowPaywall] = useState(false);
   const [hasFullAccess, setHasFullAccess] = useState(false);
   const [teacherProfile, setTeacherProfile] = useState<{ name: string; avatar_url: string | null; slug: string | null } | null>(null);
+  const [teacherId, setTeacherId] = useState<string | null>(null);
   const [videoType, setVideoType] = useState<string | null>(null);
   const [provaVotePercent, setProvaVotePercent] = useState<number | null>(null);
   const [userProvaVote, setUserProvaVote] = useState<boolean | null>(null);
@@ -73,6 +74,7 @@ const VideoPage = () => {
         .limit(1)
         .maybeSingle();
       teacherId = lesson?.teacher_id ?? null;
+      setTeacherId(teacherId);
       vType = (lesson as any)?.video_type ?? null;
 
       if (!teacherId) {
@@ -83,6 +85,7 @@ const VideoPage = () => {
           .limit(1)
           .maybeSingle();
         teacherId = exam?.teacher_id ?? null;
+        setTeacherId(teacherId);
         vType = (exam as any)?.video_type ?? null;
       }
 

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Mail, Lock, User, Eye, EyeOff, GraduationCap, ArrowLeft } from "lucide-react";
+import { Mail, Lock, User, Eye, EyeOff, GraduationCap, ArrowLeft, CalendarDays } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,13 +15,14 @@ const StudentSignup = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [birthDate, setBirthDate] = useState("");
   const [selectedAreas, setSelectedAreas] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !email.trim() || !password.trim()) {
-      toast.error("Preencha todos os campos");
+    if (!name.trim() || !email.trim() || !password.trim() || !birthDate) {
+      toast.error("Preencha todos os campos obrigatórios");
       return;
     }
     if (password.length < 6) {
@@ -34,7 +35,7 @@ const StudentSignup = () => {
       email,
       password,
       options: {
-        data: { name, role: "student", areas: selectedAreas },
+        data: { name, role: "student", areas: selectedAreas, birth_date: birthDate },
         emailRedirectTo: window.location.origin,
       },
     });
@@ -144,6 +145,17 @@ const StudentSignup = () => {
             >
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
+          </div>
+          <div className="relative">
+            <CalendarDays className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              type="date"
+              placeholder="Data de Nascimento *"
+              value={birthDate}
+              onChange={(e) => setBirthDate(e.target.value)}
+              className="pl-10 bg-secondary border-border"
+              max={new Date().toISOString().split("T")[0]}
+            />
           </div>
           <div>
             <label className="text-sm text-muted-foreground mb-1 block">Áreas de interesse (opcional)</label>

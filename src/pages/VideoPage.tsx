@@ -35,6 +35,7 @@ const VideoPage = () => {
   const [viewId, setViewId] = useState<string | null>(null);
   const [showPaywall, setShowPaywall] = useState(false);
   const [hasFullAccess, setHasFullAccess] = useState(false);
+  const [teacherProfile, setTeacherProfile] = useState<{ name: string; avatar_url: string | null } | null>(null);
 
   useEffect(() => {
     if (!video) return;

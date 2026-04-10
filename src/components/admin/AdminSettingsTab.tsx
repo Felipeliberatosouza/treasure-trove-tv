@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Settings, Palette, Phone, FileText, Star, CreditCard, DollarSign, Layout, Gift, FolderOpen } from "lucide-react";
+import { Settings, Palette, Phone, FileText, Star, CreditCard, DollarSign, Layout, Gift, FolderOpen, Mail } from "lucide-react";
 import SettingsBranding from "./settings/SettingsBranding";
 import SettingsContact from "./settings/SettingsContact";
 import SettingsPages from "./settings/SettingsPages";
@@ -9,10 +9,12 @@ import SettingsSubscriptionPlans from "./settings/SettingsSubscriptionPlans";
 import SettingsVideoPricing from "./settings/SettingsVideoPricing";
 import SettingsFreeTrial from "./settings/SettingsFreeTrial";
 import SettingsCourseAreas from "./settings/SettingsCourseAreas";
+import SettingsEmailTemplates from "./settings/SettingsEmailTemplates";
 
 const sections = [
   { id: "branding", label: "Identidade Visual", icon: Palette },
   { id: "contact", label: "Contato", icon: Phone },
+  { id: "emails", label: "E-mails", icon: Mail },
   { id: "pages", label: "Páginas Institucionais", icon: FileText },
   { id: "hero", label: "Banner Principal", icon: Layout },
   { id: "featured", label: "Vídeos em Destaque", icon: Star },

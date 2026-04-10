@@ -7,7 +7,6 @@ export interface Video {
   category: string;
   instructor: string;
   lessons: number;
-  level: "Iniciante" | "Intermediário" | "Avançado";
   featured?: boolean;
   videoUrl?: string;
 }

@@ -476,6 +476,51 @@ export type Database = {
         }
         Relationships: []
       }
+      student_doubts: {
+        Row: {
+          answer: string | null
+          answered_at: string | null
+          approved_at: string | null
+          content_id: string
+          content_type: string
+          created_at: string
+          id: string
+          question: string
+          status: string
+          student_id: string
+          teacher_id: string
+          updated_at: string
+        }
+        Insert: {
+          answer?: string | null
+          answered_at?: string | null
+          approved_at?: string | null
+          content_id: string
+          content_type?: string
+          created_at?: string
+          id?: string
+          question: string
+          status?: string
+          student_id: string
+          teacher_id: string
+          updated_at?: string
+        }
+        Update: {
+          answer?: string | null
+          answered_at?: string | null
+          approved_at?: string | null
+          content_id?: string
+          content_type?: string
+          created_at?: string
+          id?: string
+          question?: string
+          status?: string
+          student_id?: string
+          teacher_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       teacher_payments: {
         Row: {
           avg_rating: number | null

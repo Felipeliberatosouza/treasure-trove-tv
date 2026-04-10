@@ -1,13 +1,15 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Mail, Lock, User, Eye, EyeOff, BookOpen, ArrowLeft, Briefcase, CalendarDays } from "lucide-react";
+import { Mail, Lock, User, Eye, EyeOff, BookOpen, ArrowLeft, CalendarDays } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { toast } from "sonner";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useCourseAreas } from "@/hooks/useCourseAreas";
 
 const TeacherSignup = () => {
   const navigate = useNavigate();
@@ -19,6 +21,7 @@ const TeacherSignup = () => {
   const [birthDate, setBirthDate] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const { areas } = useCourseAreas(true);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -141,14 +144,17 @@ const TeacherSignup = () => {
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           </div>
-          <div className="relative">
-            <Briefcase className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Área de especialização"
-              value={expertise}
-              onChange={(e) => setExpertise(e.target.value)}
-              className="pl-10 bg-secondary border-border"
-            />
+          <div>
+            <Select value={expertise} onValueChange={setExpertise}>
+              <SelectTrigger className="bg-secondary border-border">
+                <SelectValue placeholder="Área de especialização" />
+              </SelectTrigger>
+              <SelectContent>
+                {areas.map((area) => (
+                  <SelectItem key={area.id} value={area.name}>{area.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className="relative">
             <CalendarDays className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />

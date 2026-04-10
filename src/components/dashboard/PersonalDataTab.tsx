@@ -2,7 +2,11 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { useCourseAreas } from "@/hooks/useCourseAreas";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -13,6 +17,7 @@ const PersonalDataTab = () => {
   const [expertiseArea, setExpertiseArea] = useState("");
   const [birthDate, setBirthDate] = useState("");
   const [saving, setSaving] = useState(false);
+  const { areas } = useCourseAreas(true);
 
   useEffect(() => {
     if (profile) {

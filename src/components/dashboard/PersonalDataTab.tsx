@@ -2,17 +2,17 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useCourseAreas } from "@/hooks/useCourseAreas";
+import AreaSelector from "@/components/AreaSelector";
 
 const PersonalDataTab = () => {
   const { user, profile, role, refreshProfile } = useAuth();
   const [name, setName] = useState("");
   const [bio, setBio] = useState("");
-  const [expertiseArea, setExpertiseArea] = useState("");
+  const [expertiseAreas, setExpertiseAreas] = useState<string[]>([]);
   const [birthDate, setBirthDate] = useState("");
   const [saving, setSaving] = useState(false);
   const { areas } = useCourseAreas(true);
@@ -21,7 +21,7 @@ const PersonalDataTab = () => {
     if (profile) {
       setName(profile.name || "");
       setBio(profile.bio || "");
-      setExpertiseArea(profile.expertise_area || "");
+      setExpertiseAreas(profile.expertise_area ? profile.expertise_area.split(", ").filter(Boolean) : []);
       setBirthDate(profile.birth_date || "");
     }
   }, [profile]);
@@ -35,7 +35,7 @@ const PersonalDataTab = () => {
     setSaving(true);
     const { error } = await supabase
       .from("profiles")
-      .update({ name, bio, expertise_area: expertiseArea, birth_date: birthDate || null })
+      .update({ name, bio, expertise_area: expertiseAreas.join(", "), birth_date: birthDate || null })
       .eq("user_id", user.id);
 
     if (error) {
@@ -72,17 +72,8 @@ const PersonalDataTab = () => {
         {role === "teacher" && (
           <>
             <div>
-              <label className="text-sm text-muted-foreground mb-1 block">Área de expertise</label>
-              <Select value={expertiseArea} onValueChange={setExpertiseArea}>
-                <SelectTrigger className="bg-secondary">
-                  <SelectValue placeholder="Selecione uma área" />
-                </SelectTrigger>
-                <SelectContent>
-                  {areas.map((area) => (
-                    <SelectItem key={area.id} value={area.name}>{area.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <label className="text-sm text-muted-foreground mb-1 block">Áreas de expertise</label>
+              <AreaSelector selected={expertiseAreas} onChange={setExpertiseAreas} max={areas.length || 10} />
             </div>
             <div>
               <label className="text-sm text-muted-foreground mb-1 block">Bio</label>

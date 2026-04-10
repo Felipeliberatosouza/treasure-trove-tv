@@ -125,6 +125,39 @@ export type Database = {
         }
         Relationships: []
       }
+      email_templates: {
+        Row: {
+          body_html: string
+          created_at: string
+          id: string
+          logo_url: string | null
+          show_social_footer: boolean
+          subject: string
+          template_key: string
+          updated_at: string
+        }
+        Insert: {
+          body_html?: string
+          created_at?: string
+          id?: string
+          logo_url?: string | null
+          show_social_footer?: boolean
+          subject?: string
+          template_key: string
+          updated_at?: string
+        }
+        Update: {
+          body_html?: string
+          created_at?: string
+          id?: string
+          logo_url?: string | null
+          show_social_footer?: boolean
+          subject?: string
+          template_key?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       exam_solutions: {
         Row: {
           admin_approved: boolean | null
@@ -266,6 +299,39 @@ export type Database = {
         }
         Relationships: []
       }
+      phone_verifications: {
+        Row: {
+          channel: string
+          code: string
+          created_at: string
+          expires_at: string
+          id: string
+          phone: string
+          user_id: string
+          verified: boolean
+        }
+        Insert: {
+          channel?: string
+          code: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          phone: string
+          user_id: string
+          verified?: boolean
+        }
+        Update: {
+          channel?: string
+          code?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          phone?: string
+          user_id?: string
+          verified?: boolean
+        }
+        Relationships: []
+      }
       platform_settings: {
         Row: {
           id: string
@@ -294,9 +360,11 @@ export type Database = {
           bio: string | null
           created_at: string
           email: string
+          email_verified: boolean | null
           expertise_area: string | null
           id: string
           name: string
+          phone: string | null
           updated_at: string
           user_id: string
         }
@@ -306,9 +374,11 @@ export type Database = {
           bio?: string | null
           created_at?: string
           email: string
+          email_verified?: boolean | null
           expertise_area?: string | null
           id?: string
           name: string
+          phone?: string | null
           updated_at?: string
           user_id: string
         }
@@ -318,9 +388,11 @@ export type Database = {
           bio?: string | null
           created_at?: string
           email?: string
+          email_verified?: boolean | null
           expertise_area?: string | null
           id?: string
           name?: string
+          phone?: string | null
           updated_at?: string
           user_id?: string
         }

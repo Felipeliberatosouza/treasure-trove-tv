@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Star, Play, ShoppingCart, Zap, Clock, BookOpen, Gift, AlertTriangle, Lock, ArrowLeft, FileText, ClipboardList, Trophy, StickyNote, HelpCircle, CalendarCheck, ThumbsUp, ThumbsDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -46,13 +47,13 @@ const VideoPage = () => {
   const [provaVotePercent, setProvaVotePercent] = useState<number | null>(null);
   const [userProvaVote, setUserProvaVote] = useState<boolean | null>(null);
   const [votingProva, setVotingProva] = useState(false);
+  const [isDoubtsOpen, setIsDoubtsOpen] = useState(false);
 
   // Fetch video from DB if not found in static data
   useEffect(() => {
     if (staticVideo || !id) { setLoadingDb(false); return; }
     const fetchFromDb = async () => {
       setLoadingDb(true);
-      // Try lessons first
       const { data: lesson } = await supabase
         .from("lessons")
         .select("*")
@@ -76,7 +77,7 @@ const VideoPage = () => {
         setLoadingDb(false);
         return;
       }
-      // Try exam_solutions
+
       const { data: exam } = await supabase
         .from("exam_solutions")
         .select("*")
@@ -100,6 +101,7 @@ const VideoPage = () => {
         setLoadingDb(false);
         return;
       }
+
       setLoadingDb(false);
     };
     fetchFromDb();
@@ -134,9 +136,8 @@ const VideoPage = () => {
     checkAccess();
   }, [video, user, trial.hasActiveTrial, teacherId]);
 
-  // Fetch teacher profile and video_type from DB (for static videos only; DB videos already set these)
   useEffect(() => {
-    if (!video || dbVideo) return; // skip if already loaded from DB
+    if (!video || dbVideo) return;
     const fetchTeacherAndType = async () => {
       let tId: string | null = null;
       let vType: string | null = null;
@@ -149,7 +150,7 @@ const VideoPage = () => {
         .maybeSingle();
       tId = lesson?.teacher_id ?? null;
       setTeacherId(tId);
-      vType = (lesson as any)?.video_type ?? null;
+      vType = lesson?.video_type ?? null;
 
       if (!tId) {
         const { data: exam } = await supabase
@@ -160,7 +161,7 @@ const VideoPage = () => {
           .maybeSingle();
         tId = exam?.teacher_id ?? null;
         setTeacherId(tId);
-        vType = (exam as any)?.video_type ?? null;
+        vType = exam?.video_type ?? null;
       }
 
       setVideoType(vType);
@@ -168,7 +169,6 @@ const VideoPage = () => {
     fetchTeacherAndType();
   }, [video, dbVideo]);
 
-  // Fetch teacher profile when teacherId is available
   useEffect(() => {
     if (!teacherId) return;
     const fetchProfile = async () => {
@@ -182,7 +182,6 @@ const VideoPage = () => {
     fetchProfile();
   }, [teacherId]);
 
-  // Fetch prova votes
   const fetchProvaVotes = useCallback(async () => {
     if (!video) return;
     const { data: votes } = await supabase
@@ -276,7 +275,7 @@ const VideoPage = () => {
     if (!video) return;
     setSubmitting(true);
     setRating(value);
-    const payload = { user_id: user.id, content_type: contentType as string, content_id: video.id, rating: value };
+    const payload = { user_id: user.id, content_type: contentType, content_id: video.id, rating: value };
     if (ratingData.userRating !== null) {
       await supabase.from("video_ratings").update({ rating: value }).eq("user_id", user.id).eq("content_type", contentType).eq("content_id", video.id);
     } else {
@@ -291,8 +290,13 @@ const VideoPage = () => {
     if (!user) { navigate("/login"); return; }
     setStartingTrial(true);
     const ok = await trial.startTrial();
-    if (ok) { toast.success("Teste grátis ativado!"); setShowPaywall(false); setHasFullAccess(true); }
-    else toast.error("Não foi possível iniciar o teste grátis.");
+    if (ok) {
+      toast.success("Teste grátis ativado!");
+      setShowPaywall(false);
+      setHasFullAccess(true);
+    } else {
+      toast.error("Não foi possível iniciar o teste grátis.");
+    }
     setStartingTrial(false);
   };
 
@@ -302,8 +306,22 @@ const VideoPage = () => {
     if (user && video) startViewTracking(video.id);
   };
 
-  const handleProgressMilestone = useCallback((pct: number) => { if (pct >= 70) setHasWatched70(true); }, []);
-  const handlePreviewLimitReached = useCallback(() => { setShowPaywall(true); }, []);
+  const handleOpenDoubts = () => {
+    setIsDoubtsOpen(true);
+    if (!user) {
+      toast.info("Faça login para enviar sua dúvida.");
+    } else if (!teacherId) {
+      toast.info("Este vídeo demonstrativo não recebe dúvidas.");
+    }
+  };
+
+  const handleProgressMilestone = useCallback((pct: number) => {
+    if (pct >= 70) setHasWatched70(true);
+  }, []);
+
+  const handlePreviewLimitReached = useCallback(() => {
+    setShowPaywall(true);
+  }, []);
 
   const handleBuyUnit = () => {
     if (!user) { navigate("/login"); return; }
@@ -323,7 +341,7 @@ const VideoPage = () => {
       <div className="min-h-screen bg-background text-foreground flex flex-col">
         <Navbar />
         <div className="flex-1 flex items-center justify-center pt-24">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary"></div>
         </div>
         <Footer />
       </div>
@@ -335,8 +353,8 @@ const VideoPage = () => {
       <div className="min-h-screen bg-background text-foreground flex flex-col">
         <Navbar />
         <div className="flex-1 flex flex-col items-center justify-center px-6 pt-24 pb-12 md:px-16 lg:px-32">
-          <h1 className="text-2xl font-display font-bold text-foreground mb-4">Vídeo não encontrado</h1>
-          <Button onClick={() => navigate("/")} variant="outline"><ArrowLeft className="h-4 w-4 mr-2" /> Voltar</Button>
+          <h1 className="mb-4 text-2xl font-display font-bold text-foreground">Vídeo não encontrado</h1>
+          <Button onClick={() => navigate("/")} variant="outline"><ArrowLeft className="mr-2 h-4 w-4" /> Voltar</Button>
         </div>
         <Footer />
       </div>
@@ -351,22 +369,50 @@ const VideoPage = () => {
     <div className="min-h-screen bg-background text-foreground flex flex-col">
       <Navbar />
 
+      <Dialog open={isDoubtsOpen} onOpenChange={setIsDoubtsOpen}>
+        <DialogContent className="max-w-lg border-border bg-card">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <HelpCircle className="h-5 w-5 text-primary" />
+              Dúvidas sobre este conteúdo
+            </DialogTitle>
+          </DialogHeader>
+
+          {user ? (
+            teacherId ? (
+              <DoubtForm contentId={video.id} contentType={contentType} teacherId={teacherId} />
+            ) : (
+              <div className="space-y-3 rounded-xl border border-border bg-secondary/30 p-4">
+                <p className="text-sm text-muted-foreground">
+                  Este vídeo é demonstrativo e não está vinculado a um professor, então não é possível enviar dúvidas por aqui.
+                </p>
+              </div>
+            )
+          ) : (
+            <div className="space-y-3 rounded-xl border border-border bg-secondary/30 p-4">
+              <p className="text-sm text-muted-foreground">Faça login para enviar sua dúvida ao professor.</p>
+              <div>
+                <Button size="sm" onClick={() => navigate("/login")}>Fazer login</Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
       <div className="flex-1 pt-16">
-        {/* Back button */}
         <div className="px-4 py-3 md:px-12 lg:px-20">
-          <button onClick={() => navigate(-1)} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors">
+          <button onClick={() => navigate(-1)} className="flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground">
             <ArrowLeft className="h-4 w-4" /> Voltar
           </button>
         </div>
 
-        <div className="max-w-4xl mx-auto px-4 md:px-8 pb-12">
-          {/* Title, teacher and description above video */}
+        <div className="mx-auto max-w-4xl px-4 pb-12 md:px-8">
           <div className="mb-4 space-y-2">
             {(() => {
               const teacherSlug = teacherProfile?.slug;
               const teacherLink = teacherSlug ? `/${teacherSlug}` : undefined;
               const avatarContent = (
-                <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0 overflow-hidden">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary/10">
                   {teacherProfile?.avatar_url ? (
                     <img src={teacherProfile.avatar_url} alt={teacherProfile.name} className="h-full w-full object-cover" />
                   ) : (
@@ -376,26 +422,25 @@ const VideoPage = () => {
                   )}
                 </div>
               );
-              const nameContent = <span className="text-xs text-muted-foreground hover:text-primary transition-colors">{teacherProfile?.name || video.instructor}</span>;
+              const nameContent = <span className="text-xs text-muted-foreground transition-colors hover:text-primary">{teacherProfile?.name || video.instructor}</span>;
               return (
                 <div className="flex items-center gap-2.5">
                   {teacherLink ? <Link to={teacherLink}>{avatarContent}</Link> : avatarContent}
                   <div className="min-w-0">
-                    <h1 className="font-display text-xl sm:text-2xl font-bold leading-tight text-foreground truncate">{video.title}</h1>
+                    <h1 className="truncate font-display text-xl font-bold leading-tight text-foreground sm:text-2xl">{video.title}</h1>
                     {teacherLink ? <Link to={teacherLink}>{nameContent}</Link> : nameContent}
                   </div>
                 </div>
               );
             })()}
-            <p className="text-sm text-muted-foreground leading-relaxed">{video.description}</p>
+            <p className="text-sm leading-relaxed text-muted-foreground">{video.description}</p>
             <div className="flex items-center gap-4 text-xs text-muted-foreground">
               <span className="flex items-center gap-1"><BookOpen className="h-3.5 w-3.5" />{video.lessons} aulas</span>
               <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{video.duration}</span>
             </div>
           </div>
 
-          {/* Video area */}
-          <div className="relative rounded-xl overflow-hidden bg-black">
+          <div className="relative overflow-hidden rounded-xl bg-black">
             {isWatching ? (
               <VideoPlayer
                 videoUrl={video.videoUrl || DEMO_VIDEO_URL}
@@ -418,22 +463,22 @@ const VideoPage = () => {
             )}
 
             {showPaywall && (
-              <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-background/90 backdrop-blur-sm p-4 sm:p-6 text-center overflow-y-auto">
-                <div className="flex flex-col items-center w-full max-w-xs my-auto">
-                  <div className="rounded-full bg-primary/10 p-2 sm:p-3 mb-2 sm:mb-3"><Lock className="h-6 w-6 sm:h-8 sm:w-8 text-primary" /></div>
-                  <h3 className="text-base sm:text-lg font-display font-bold text-foreground mb-1">Prévia encerrada</h3>
-                  <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4">Você assistiu a prévia gratuita! Gostou do vídeo? Para continuar, escolha uma das opções abaixo:</p>
-                  <div className="flex flex-col gap-1.5 sm:gap-2 w-full">
-                    {!user && <Button onClick={handleGoToSignup} size="sm" className="w-full gap-2 font-display font-semibold text-xs sm:text-sm">Criar conta gratuita</Button>}
+              <div className="absolute inset-0 z-10 flex flex-col items-center justify-center overflow-y-auto bg-background/90 p-4 text-center backdrop-blur-sm sm:p-6">
+                <div className="my-auto flex w-full max-w-xs flex-col items-center">
+                  <div className="mb-2 rounded-full bg-primary/10 p-2 sm:mb-3 sm:p-3"><Lock className="h-6 w-6 text-primary sm:h-8 sm:w-8" /></div>
+                  <h3 className="mb-1 text-base font-display font-bold text-foreground sm:text-lg">Prévia encerrada</h3>
+                  <p className="mb-3 text-xs text-muted-foreground sm:mb-4 sm:text-sm">Você assistiu a prévia gratuita! Gostou do vídeo? Para continuar, escolha uma das opções abaixo:</p>
+                  <div className="flex w-full flex-col gap-1.5 sm:gap-2">
+                    {!user && <Button onClick={handleGoToSignup} size="sm" className="w-full gap-2 font-display text-xs font-semibold sm:text-sm">Criar conta gratuita</Button>}
                     {canStartTrial && (
-                      <Button onClick={handleStartTrial} disabled={startingTrial} variant={user ? "default" : "outline"} size="sm" className="w-full gap-2 font-display font-semibold text-xs sm:text-sm">
+                      <Button onClick={handleStartTrial} disabled={startingTrial} variant={user ? "default" : "outline"} size="sm" className="w-full gap-2 font-display text-xs font-semibold sm:text-sm">
                         <Gift className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> {startingTrial ? "Ativando..." : "Iniciar Teste Grátis"}
                       </Button>
                     )}
-                    <Button onClick={handleSubscribe} variant={!user || canStartTrial ? "outline" : "default"} size="sm" className="w-full gap-2 font-display font-semibold text-xs sm:text-sm">
+                    <Button onClick={handleSubscribe} variant={!user || canStartTrial ? "outline" : "default"} size="sm" className="w-full gap-2 font-display text-xs font-semibold sm:text-sm">
                       <Zap className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> Assinar — acesso total
                     </Button>
-                    <Button onClick={handleBuyUnit} variant="outline" size="sm" className="w-full gap-2 font-display font-semibold text-xs sm:text-sm">
+                    <Button onClick={handleBuyUnit} variant="outline" size="sm" className="w-full gap-2 font-display text-xs font-semibold sm:text-sm">
                       <ShoppingCart className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> Comprar este vídeo — R$ 19,90
                     </Button>
                   </div>
@@ -443,8 +488,7 @@ const VideoPage = () => {
           </div>
 
           <div className="mt-6 space-y-5">
-
-            <div className="flex items-center justify-between flex-wrap gap-2">
+            <div className="flex flex-wrap items-center justify-between gap-2">
               <VideoShareButtons videoTitle={video.title} videoUrl={window.location.href} />
 
               {videoType === "resolucao_prova" && (
@@ -453,7 +497,7 @@ const VideoPage = () => {
                   <Button
                     variant={userProvaVote === true ? "default" : "outline"}
                     size="sm"
-                    className="h-7 px-2 text-xs gap-1"
+                    className="h-7 gap-1 px-2 text-xs"
                     disabled={votingProva}
                     onClick={() => handleProvaVote(true)}
                   >
@@ -462,7 +506,7 @@ const VideoPage = () => {
                   <Button
                     variant={userProvaVote === false ? "default" : "outline"}
                     size="sm"
-                    className="h-7 px-2 text-xs gap-1"
+                    className="h-7 gap-1 px-2 text-xs"
                     disabled={votingProva}
                     onClick={() => handleProvaVote(false)}
                   >
@@ -477,7 +521,6 @@ const VideoPage = () => {
               )}
             </div>
 
-            {/* Rating */}
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <RatingStars value={ratingData.average} />
@@ -496,42 +539,34 @@ const VideoPage = () => {
                   </div>
                 </div>
               )}
-              {user && !hasWatched70 && <p className="text-xs text-muted-foreground italic">Assista pelo menos 70% do vídeo para poder avaliar.</p>}
+              {user && !hasWatched70 && <p className="text-xs italic text-muted-foreground">Assista pelo menos 70% do vídeo para poder avaliar.</p>}
             </div>
 
-            {/* Related services */}
-            <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+            <div className="grid grid-cols-3 gap-3 sm:grid-cols-6">
               {[
                 { icon: FileText, label: "Resumo" },
                 { icon: ClipboardList, label: "Simulado" },
                 { icon: Trophy, label: "Top Questões" },
                 { icon: StickyNote, label: "Colinha" },
-                { icon: HelpCircle, label: "Dúvidas", action: () => document.getElementById("doubt-form-section")?.scrollIntoView({ behavior: "smooth" }) },
+                { icon: HelpCircle, label: "Dúvidas", action: handleOpenDoubts },
                 { icon: CalendarCheck, label: "Aula Particular" },
               ].map(({ icon: Icon, label, action }) => (
                 <button
                   key={label}
                   onClick={action}
-                  className="flex flex-col items-center gap-1.5 rounded-xl border border-border bg-secondary/30 p-3 hover:bg-secondary/60 transition-colors"
+                  className="flex flex-col items-center gap-1.5 rounded-xl border border-border bg-secondary/30 p-3 transition-colors hover:bg-secondary/60"
                 >
                   <Icon className="h-6 w-6 text-foreground" />
-                  <span className="text-[10px] sm:text-xs text-muted-foreground text-center leading-tight">{label}</span>
+                  <span className="text-center text-[10px] leading-tight text-muted-foreground sm:text-xs">{label}</span>
                 </button>
               ))}
-            </div>
-
-            {/* Doubt Form */}
-            <div id="doubt-form-section">
-              {teacherId && video && (
-                <DoubtForm contentId={video.id} contentType={contentType} teacherId={teacherId} />
-              )}
             </div>
 
             {user && !trial.loading && (
               <>
                 {trial.hasActiveTrial && (
                   <div className="flex items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 p-3">
-                    <Gift className="h-4 w-4 text-primary shrink-0" />
+                    <Gift className="h-4 w-4 shrink-0 text-primary" />
                     <span className="text-sm text-foreground">
                       {trial.trialType === "days" ? `Teste grátis ativo — ${trial.daysRemaining} dia(s) restante(s)` : `Teste grátis ativo — ${trial.videosRemaining} acesso(s) restante(s)`}
                     </span>
@@ -539,18 +574,17 @@ const VideoPage = () => {
                 )}
                 {trialExpired && (
                   <div className="flex items-center gap-2 rounded-lg border border-destructive/20 bg-destructive/5 p-3">
-                    <AlertTriangle className="h-4 w-4 text-destructive shrink-0" />
+                    <AlertTriangle className="h-4 w-4 shrink-0 text-destructive" />
                     <span className="text-sm text-foreground">Seu teste grátis expirou. Assine para continuar assistindo.</span>
                   </div>
                 )}
               </>
             )}
 
-            {/* Access options */}
             <div className="space-y-3 rounded-xl border border-border bg-secondary/30 p-4">
               <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Opções de acesso</p>
               {isWatching && !showPaywall && (
-                <div className="text-center text-xs text-muted-foreground py-1">
+                <div className="py-1 text-center text-xs text-muted-foreground">
                   {hasFullAccess ? "🎬 Reproduzindo — assista 70% para poder avaliar" : "🎬 Prévia gratuita — até 20% do vídeo"}
                 </div>
               )}

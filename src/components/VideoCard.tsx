@@ -56,10 +56,7 @@ const VideoCard = ({ video, index, onClick, rating, showTrialBadge }: VideoCardP
               {video.duration}
             </span>
           </div>
-          <div className="flex items-center justify-between">
-            <span className="inline-block rounded-full bg-secondary px-2 py-0.5 text-[10px] font-medium text-secondary-foreground">
-              {video.level}
-            </span>
+          <div className="flex items-center justify-end">
             {rating && rating.count > 0 && (
               <div className="flex items-center gap-1">
                 <Star className="h-3 w-3 fill-accent text-accent" />

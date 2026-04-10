@@ -183,6 +183,12 @@ const VideoPage = () => {
         </div>
 
         <div className="max-w-4xl mx-auto px-4 md:px-8 pb-12">
+          {/* Title and description above video */}
+          <div className="mb-4 space-y-1">
+            <h1 className="font-display text-xl sm:text-2xl font-bold leading-tight text-foreground">{video.title}</h1>
+            <p className="text-sm text-muted-foreground leading-relaxed">{video.description}</p>
+          </div>
+
           {/* Video area */}
           <div className="relative rounded-xl overflow-hidden bg-black">
             {isWatching ? (
@@ -231,10 +237,7 @@ const VideoPage = () => {
             )}
           </div>
 
-          {/* Video info */}
           <div className="mt-6 space-y-5">
-            <h1 className="font-display text-2xl font-bold leading-tight text-foreground">{video.title}</h1>
-            <p className="text-sm text-muted-foreground leading-relaxed">{video.description}</p>
 
             <VideoShareButtons videoTitle={video.title} videoUrl={window.location.href} />
 

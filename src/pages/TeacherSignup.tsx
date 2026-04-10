@@ -82,6 +82,7 @@ const TeacherSignup = () => {
       }
       // Send welcome email
       if (userId) {
+        // Send welcome email to teacher
         await supabase.functions.invoke("send-transactional-email", {
           body: {
             templateName: "welcome-teacher",
@@ -90,6 +91,29 @@ const TeacherSignup = () => {
             templateData: { name: name.trim() },
           },
         });
+        // Notify admin about new teacher signup
+        const { data: adminRoles } = await supabase
+          .from("user_roles")
+          .select("user_id")
+          .eq("role", "admin");
+        if (adminRoles && adminRoles.length > 0) {
+          const { data: adminProfiles } = await supabase
+            .from("profiles")
+            .select("email")
+            .in("user_id", adminRoles.map((r) => r.user_id));
+          if (adminProfiles) {
+            for (const admin of adminProfiles) {
+              await supabase.functions.invoke("send-transactional-email", {
+                body: {
+                  templateName: "new-teacher-admin-notify",
+                  recipientEmail: admin.email,
+                  idempotencyKey: `new-teacher-notify-${userId}-${admin.email}`,
+                  templateData: { teacherName: name.trim(), teacherEmail: email },
+                },
+              });
+            }
+          }
+        }
       }
       toast.success("Conta criada! Verifique seu e-mail para confirmar.");
       navigate("/login");

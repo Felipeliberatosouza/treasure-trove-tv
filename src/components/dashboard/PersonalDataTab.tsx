@@ -11,6 +11,7 @@ const PersonalDataTab = () => {
   const [name, setName] = useState("");
   const [bio, setBio] = useState("");
   const [expertiseArea, setExpertiseArea] = useState("");
+  const [birthDate, setBirthDate] = useState("");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -18,6 +19,7 @@ const PersonalDataTab = () => {
       setName(profile.name || "");
       setBio(profile.bio || "");
       setExpertiseArea(profile.expertise_area || "");
+      setBirthDate(profile.birth_date || "");
     }
   }, [profile]);
 
@@ -26,7 +28,7 @@ const PersonalDataTab = () => {
     setSaving(true);
     const { error } = await supabase
       .from("profiles")
-      .update({ name, bio, expertise_area: expertiseArea })
+      .update({ name, bio, expertise_area: expertiseArea, birth_date: birthDate || null })
       .eq("user_id", user.id);
 
     if (error) {
@@ -49,6 +51,16 @@ const PersonalDataTab = () => {
         <div>
           <label className="text-sm text-muted-foreground mb-1 block">E-mail</label>
           <Input value={user?.email || ""} disabled className="bg-secondary opacity-60" />
+        </div>
+        <div>
+          <label className="text-sm text-muted-foreground mb-1 block">Data de Nascimento</label>
+          <Input
+            type="date"
+            value={birthDate}
+            onChange={(e) => setBirthDate(e.target.value)}
+            className="bg-secondary"
+            max={new Date().toISOString().split("T")[0]}
+          />
         </div>
         {role === "teacher" && (
           <>

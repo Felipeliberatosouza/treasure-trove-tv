@@ -146,16 +146,18 @@ const StudentSignup = () => {
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           </div>
-          <div className="relative">
-            <CalendarDays className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              type="date"
-              placeholder="Data de Nascimento *"
-              value={birthDate}
-              onChange={(e) => setBirthDate(e.target.value)}
-              className="pl-10 bg-secondary border-border"
-              max={new Date().toISOString().split("T")[0]}
-            />
+          <div>
+            <label className="text-sm text-muted-foreground mb-1 block">Data de Nascimento *</label>
+            <div className="relative">
+              <CalendarDays className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                type="date"
+                value={birthDate}
+                onChange={(e) => setBirthDate(e.target.value)}
+                className="pl-10 bg-secondary border-border"
+                max={new Date().toISOString().split("T")[0]}
+              />
+            </div>
           </div>
           <div>
             <label className="text-sm text-muted-foreground mb-1 block">Áreas de interesse (opcional)</label>

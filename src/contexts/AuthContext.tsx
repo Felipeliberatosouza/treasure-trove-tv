@@ -11,6 +11,7 @@ interface Profile {
   expertise_area: string | null;
   avatar_url: string | null;
   birth_date: string | null;
+  phone: string | null;
 }
 
 interface AuthContextType {

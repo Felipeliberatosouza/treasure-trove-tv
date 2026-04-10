@@ -12,6 +12,7 @@ import Footer from "@/components/Footer";
 import VideoPlayer from "@/components/VideoPlayer";
 import VideoShareButtons from "@/components/VideoShareButtons";
 import { getVideoById } from "@/data/courses";
+import type { Video } from "@/data/courses";
 import DoubtForm from "@/components/DoubtForm";
 import { RatingStars } from "@/components/VideoDetailModal";
 
@@ -24,8 +25,11 @@ const VideoPage = () => {
   const trial = useFreeTrial();
   const { data: branding } = usePlatformSettings("branding");
 
-  const video = id ? getVideoById(id) : null;
+  const staticVideo = id ? getVideoById(id) : null;
 
+  const [dbVideo, setDbVideo] = useState<Video | null>(null);
+  const [contentType, setContentType] = useState<"lesson" | "exam_solution">("lesson");
+  const [loadingDb, setLoadingDb] = useState(!staticVideo);
   const [rating, setRating] = useState(0);
   const [hoveredStar, setHoveredStar] = useState(0);
   const [ratingData, setRatingData] = useState<{ average: number; count: number; userRating: number | null }>({ average: 0, count: 0, userRating: null });
@@ -43,12 +47,71 @@ const VideoPage = () => {
   const [userProvaVote, setUserProvaVote] = useState<boolean | null>(null);
   const [votingProva, setVotingProva] = useState(false);
 
+  // Fetch video from DB if not found in static data
+  useEffect(() => {
+    if (staticVideo || !id) { setLoadingDb(false); return; }
+    const fetchFromDb = async () => {
+      setLoadingDb(true);
+      // Try lessons first
+      const { data: lesson } = await supabase
+        .from("lessons")
+        .select("*")
+        .eq("id", id)
+        .maybeSingle();
+      if (lesson) {
+        setDbVideo({
+          id: lesson.id,
+          title: lesson.title,
+          description: lesson.description || "",
+          thumbnail: lesson.thumbnail_url || "",
+          duration: "",
+          category: (lesson.areas && lesson.areas.length > 0) ? lesson.areas[0] : "",
+          instructor: "",
+          lessons: 1,
+          videoUrl: lesson.video_url || undefined,
+        });
+        setTeacherId(lesson.teacher_id);
+        setVideoType(lesson.video_type);
+        setContentType("lesson");
+        setLoadingDb(false);
+        return;
+      }
+      // Try exam_solutions
+      const { data: exam } = await supabase
+        .from("exam_solutions")
+        .select("*")
+        .eq("id", id)
+        .maybeSingle();
+      if (exam) {
+        setDbVideo({
+          id: exam.id,
+          title: exam.title,
+          description: exam.description || "",
+          thumbnail: exam.thumbnail_url || "",
+          duration: "",
+          category: (exam.areas && exam.areas.length > 0) ? exam.areas[0] : "",
+          instructor: "",
+          lessons: 1,
+          videoUrl: exam.video_url || undefined,
+        });
+        setTeacherId(exam.teacher_id);
+        setVideoType(exam.video_type);
+        setContentType("exam_solution");
+        setLoadingDb(false);
+        return;
+      }
+      setLoadingDb(false);
+    };
+    fetchFromDb();
+  }, [id, staticVideo]);
+
+  const video = staticVideo || dbVideo;
+
   useEffect(() => {
     if (!video) return;
     const checkAccess = async () => {
       if (!user) { setHasFullAccess(false); return; }
 
-      // Admins and teachers (content owner) have full access
       const { data: roles } = await supabase
         .from("user_roles")
         .select("role")
@@ -69,13 +132,13 @@ const VideoPage = () => {
       setHasFullAccess(false);
     };
     checkAccess();
-  }, [video, user, trial.hasActiveTrial]);
+  }, [video, user, trial.hasActiveTrial, teacherId]);
 
-  // Fetch teacher profile and video_type from DB
+  // Fetch teacher profile and video_type from DB (for static videos only; DB videos already set these)
   useEffect(() => {
-    if (!video) return;
+    if (!video || dbVideo) return; // skip if already loaded from DB
     const fetchTeacherAndType = async () => {
-      let teacherId: string | null = null;
+      let tId: string | null = null;
       let vType: string | null = null;
 
       const { data: lesson } = await supabase
@@ -84,35 +147,40 @@ const VideoPage = () => {
         .eq("id", video.id)
         .limit(1)
         .maybeSingle();
-      teacherId = lesson?.teacher_id ?? null;
-      setTeacherId(teacherId);
+      tId = lesson?.teacher_id ?? null;
+      setTeacherId(tId);
       vType = (lesson as any)?.video_type ?? null;
 
-      if (!teacherId) {
+      if (!tId) {
         const { data: exam } = await supabase
           .from("exam_solutions")
           .select("teacher_id, video_type")
           .eq("id", video.id)
           .limit(1)
           .maybeSingle();
-        teacherId = exam?.teacher_id ?? null;
-        setTeacherId(teacherId);
+        tId = exam?.teacher_id ?? null;
+        setTeacherId(tId);
         vType = (exam as any)?.video_type ?? null;
       }
 
       setVideoType(vType);
-
-      if (teacherId) {
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("name, avatar_url, slug")
-          .eq("user_id", teacherId)
-          .maybeSingle();
-        if (profile) setTeacherProfile(profile);
-      }
     };
     fetchTeacherAndType();
-  }, [video]);
+  }, [video, dbVideo]);
+
+  // Fetch teacher profile when teacherId is available
+  useEffect(() => {
+    if (!teacherId) return;
+    const fetchProfile = async () => {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("name, avatar_url, slug")
+        .eq("user_id", teacherId)
+        .maybeSingle();
+      if (profile) setTeacherProfile(profile);
+    };
+    fetchProfile();
+  }, [teacherId]);
 
   // Fetch prova votes
   const fetchProvaVotes = useCallback(async () => {
@@ -145,7 +213,7 @@ const VideoPage = () => {
     if (userProvaVote !== null) {
       await supabase.from("prova_votes").update({ vote }).eq("content_id", video.id).eq("user_id", user.id);
     } else {
-      await supabase.from("prova_votes").insert({ content_id: video.id, content_type: "lesson", user_id: user.id, vote });
+      await supabase.from("prova_votes").insert({ content_id: video.id, content_type: contentType, user_id: user.id, vote });
     }
     await fetchProvaVotes();
     setVotingProva(false);
@@ -166,7 +234,7 @@ const VideoPage = () => {
     if (!user) return;
     const { data } = await supabase
       .from("video_views")
-      .insert({ user_id: user.id, content_type: "lesson", content_id: contentId, watch_percentage: 0 })
+      .insert({ user_id: user.id, content_type: contentType, content_id: contentId, watch_percentage: 0 })
       .select("id")
       .single();
     if (data) setViewId(data.id);
@@ -178,7 +246,7 @@ const VideoPage = () => {
       .from("video_views")
       .select("watch_percentage")
       .eq("user_id", user.id)
-      .eq("content_type", "lesson")
+      .eq("content_type", contentType)
       .eq("content_id", video.id)
       .gte("watch_percentage", 70)
       .limit(1);
@@ -190,7 +258,7 @@ const VideoPage = () => {
     const { data: ratings } = await supabase
       .from("video_ratings")
       .select("rating, user_id")
-      .eq("content_type", "lesson")
+      .eq("content_type", contentType)
       .eq("content_id", video.id);
     if (ratings && ratings.length > 0) {
       const avg = ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length;
@@ -208,9 +276,9 @@ const VideoPage = () => {
     if (!video) return;
     setSubmitting(true);
     setRating(value);
-    const payload = { user_id: user.id, content_type: "lesson" as const, content_id: video.id, rating: value };
+    const payload = { user_id: user.id, content_type: contentType as string, content_id: video.id, rating: value };
     if (ratingData.userRating !== null) {
-      await supabase.from("video_ratings").update({ rating: value }).eq("user_id", user.id).eq("content_type", "lesson").eq("content_id", video.id);
+      await supabase.from("video_ratings").update({ rating: value }).eq("user_id", user.id).eq("content_type", contentType).eq("content_id", video.id);
     } else {
       await supabase.from("video_ratings").insert(payload);
     }
@@ -249,6 +317,18 @@ const VideoPage = () => {
   };
 
   const handleGoToSignup = () => navigate("/signup/student");
+
+  if (loadingDb) {
+    return (
+      <div className="min-h-screen bg-background text-foreground flex flex-col">
+        <Navbar />
+        <div className="flex-1 flex items-center justify-center pt-24">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   if (!video) {
     return (
@@ -320,7 +400,7 @@ const VideoPage = () => {
               <VideoPlayer
                 videoUrl={video.videoUrl || DEMO_VIDEO_URL}
                 contentId={video.id}
-                contentType="lesson"
+                contentType={contentType}
                 viewId={viewId}
                 onProgressMilestone={handleProgressMilestone}
                 poster={video.thumbnail}
@@ -443,7 +523,7 @@ const VideoPage = () => {
             {/* Doubt Form */}
             <div id="doubt-form-section">
               {teacherId && video && (
-                <DoubtForm contentId={video.id} contentType="lesson" teacherId={teacherId} />
+                <DoubtForm contentId={video.id} contentType={contentType} teacherId={teacherId} />
               )}
             </div>
 

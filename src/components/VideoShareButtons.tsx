@@ -1,4 +1,5 @@
-import { MessageCircle } from "lucide-react";
+import { useState } from "react";
+import { Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface VideoShareButtonsProps {
@@ -58,8 +59,20 @@ const VideoShareButtons = ({ videoTitle, videoUrl }: VideoShareButtonsProps) => 
     window.open(link.url, "_blank", "noopener,noreferrer");
   };
 
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(videoUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // fallback
+    }
+  };
+
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2 flex-wrap">
       <span className="text-xs text-muted-foreground font-medium">Compartilhar:</span>
       {shareLinks.map((link) => (
         <Button
@@ -73,6 +86,15 @@ const VideoShareButtons = ({ videoTitle, videoUrl }: VideoShareButtonsProps) => 
           {link.icon}
         </Button>
       ))}
+      <Button
+        variant="outline"
+        size="icon"
+        className="h-8 w-8 rounded-full"
+        onClick={handleCopyLink}
+        title="Copiar link"
+      >
+        {copied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+      </Button>
     </div>
   );
 };

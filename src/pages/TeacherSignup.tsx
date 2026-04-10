@@ -8,8 +8,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { toast } from "sonner";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCourseAreas } from "@/hooks/useCourseAreas";
+import AreaSelector from "@/components/AreaSelector";
 
 const TeacherSignup = () => {
   const navigate = useNavigate();

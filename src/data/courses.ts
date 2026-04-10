@@ -21,7 +21,6 @@ export const videos: Video[] = [
     category: "Desenvolvimento Web",
     instructor: "Carlos Silva",
     lessons: 180,
-    level: "Iniciante",
     featured: true,
     videoUrl: "/demo-course.mp4",
   },
@@ -34,7 +33,6 @@ export const videos: Video[] = [
     category: "Data Science",
     instructor: "Ana Martins",
     lessons: 220,
-    level: "Intermediário",
   },
   {
     id: "a0000000-0000-0000-0000-000000000003",
@@ -45,7 +43,6 @@ export const videos: Video[] = [
     category: "Design",
     instructor: "Marina Costa",
     lessons: 95,
-    level: "Iniciante",
   },
   {
     id: "a0000000-0000-0000-0000-000000000004",
@@ -56,7 +53,6 @@ export const videos: Video[] = [
     category: "Desenvolvimento Web",
     instructor: "Pedro Santos",
     lessons: 150,
-    level: "Intermediário",
   },
   {
     id: "a0000000-0000-0000-0000-000000000005",
@@ -67,7 +63,7 @@ export const videos: Video[] = [
     category: "Marketing",
     instructor: "Juliana Alves",
     lessons: 85,
-    level: "Iniciante",
+    
   },
   {
     id: "a0000000-0000-0000-0000-000000000006",
@@ -78,7 +74,6 @@ export const videos: Video[] = [
     category: "Data Science",
     instructor: "Roberto Lima",
     lessons: 200,
-    level: "Avançado",
   },
   {
     id: "a0000000-0000-0000-0000-000000000007",
@@ -89,7 +84,7 @@ export const videos: Video[] = [
     category: "Design",
     instructor: "Fernanda Reis",
     lessons: 70,
-    level: "Intermediário",
+    
   },
   {
     id: "a0000000-0000-0000-0000-000000000008",
@@ -100,7 +95,7 @@ export const videos: Video[] = [
     category: "Desenvolvimento Web",
     instructor: "Lucas Oliveira",
     lessons: 160,
-    level: "Avançado",
+    
   },
 ];
 

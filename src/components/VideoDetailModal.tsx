@@ -320,7 +320,7 @@ const VideoDetailModal = ({ video, open, onClose }: VideoDetailModalProps) => {
           <div className="flex items-center gap-4 text-xs text-muted-foreground">
             <span className="flex items-center gap-1"><BookOpen className="h-3.5 w-3.5" />{video.lessons} aulas</span>
             <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{video.duration}</span>
-            <span className="rounded-full bg-secondary px-2 py-0.5 text-secondary-foreground">{video.level}</span>
+            
           </div>
 
           {/* Trial status banner */}

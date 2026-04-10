@@ -36,9 +36,9 @@ const SettingsFreeTrial = () => {
       <Card className="p-5 space-y-5">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-sm font-semibold">Ativar Teste Grátis</h3>
+         <h3 className="text-sm font-semibold">Ativar Teste Grátis</h3>
             <p className="text-xs text-muted-foreground">
-              Permite que novos usuários experimentem a plataforma antes de assinar.
+              Permite que novos usuários experimentem a plataforma antes de assinar. Inclui revisões, resumos, simulados, top questões e colinhas.
             </p>
           </div>
           <Switch
@@ -81,9 +81,9 @@ const SettingsFreeTrial = () => {
               >
                 <PlayCircle className={`h-5 w-5 ${form.trial_type === "videos" ? "text-primary" : "text-muted-foreground"}`} />
                 <div>
-                  <span className="text-sm font-medium block">Por Vídeos</span>
+                  <span className="text-sm font-medium block">Por Acessos</span>
                   <span className="text-xs text-muted-foreground">
-                    Acesso a um número limitado de vídeos
+                    Número limitado de acessos a conteúdos (revisões, resumos, simulados, etc.)
                   </span>
                 </div>
               </button>
@@ -108,7 +108,7 @@ const SettingsFreeTrial = () => {
 
           {form.trial_type === "videos" && (
             <div className="max-w-xs">
-              <Label>Número de Vídeos</Label>
+              <Label>Número de Acessos</Label>
               <Input
                 type="number"
                 min={1}
@@ -117,7 +117,7 @@ const SettingsFreeTrial = () => {
                 onChange={(e) => setForm({ ...form, trial_videos: parseInt(e.target.value) || 1 })}
               />
               <p className="text-xs text-muted-foreground mt-1">
-                O usuário poderá assistir até {form.trial_videos} vídeo{form.trial_videos !== 1 ? "s" : ""} gratuitamente.
+                O usuário poderá acessar até {form.trial_videos} conteúdo{form.trial_videos !== 1 ? "s" : ""} gratuitamente (revisões, resumos, simulados, top questões e colinhas).
               </p>
             </div>
           )}

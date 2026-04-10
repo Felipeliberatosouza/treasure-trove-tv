@@ -56,8 +56,8 @@ export function useFreeTrial() {
     return true;
   }, [user, trialSettings, fetchTrial]);
 
-  /** Increment videos_watched counter. Call after a video is accessed during trial. */
-  const recordVideoWatch = useCallback(async () => {
+  /** Increment videos_watched counter. Call after any content is accessed during trial (revisões, resumos, simulados, top questões, colinhas). */
+  const recordContentAccess = useCallback(async () => {
     if (!user || !trialRow) return;
     await supabase
       .from("free_trials")
@@ -99,5 +99,5 @@ export function useFreeTrial() {
     expiresAt,
   };
 
-  return { ...status, startTrial, recordVideoWatch, trialRow, refetch: fetchTrial };
+  return { ...status, startTrial, recordContentAccess, recordVideoWatch: recordContentAccess, trialRow, refetch: fetchTrial };
 }

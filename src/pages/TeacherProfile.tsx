@@ -3,7 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { BookOpen, Video, Star, ArrowLeft } from "lucide-react";
+import { BookOpen, Video, Star, ArrowLeft, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface TeacherData {
@@ -27,6 +27,9 @@ const TeacherProfile = () => {
   const { slug } = useParams<{ slug: string }>();
   const [teacher, setTeacher] = useState<TeacherData | null>(null);
   const [content, setContent] = useState<ContentItem[]>([]);
+  const [totalViews, setTotalViews] = useState(0);
+  const [avgRating, setAvgRating] = useState(0);
+  const [ratingCount, setRatingCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
@@ -68,7 +71,30 @@ const TeacherProfile = () => {
 
       const lessons: ContentItem[] = (lessonsRes.data || []).map((l) => ({ ...l, type: "lesson" as const }));
       const exams: ContentItem[] = (examsRes.data || []).map((e) => ({ ...e, type: "exam_solution" as const }));
-      setContent([...lessons, ...exams]);
+      const allContent = [...lessons, ...exams];
+      setContent(allContent);
+
+      // Fetch views and ratings for all content IDs
+      const contentIds = allContent.map((c) => c.id);
+      if (contentIds.length > 0) {
+        const [viewsRes, ratingsRes] = await Promise.all([
+          supabase
+            .from("video_views")
+            .select("id", { count: "exact", head: true })
+            .in("content_id", contentIds),
+          supabase
+            .from("video_ratings")
+            .select("rating")
+            .in("content_id", contentIds),
+        ]);
+        setTotalViews(viewsRes.count || 0);
+        const ratings = ratingsRes.data || [];
+        setRatingCount(ratings.length);
+        if (ratings.length > 0) {
+          setAvgRating(ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length);
+        }
+      }
+
       setLoading(false);
     };
     fetchTeacher();
@@ -128,6 +154,13 @@ const TeacherProfile = () => {
               {teacher.bio && <p className="text-sm text-muted-foreground leading-relaxed max-w-lg">{teacher.bio}</p>}
               <div className="flex items-center gap-4 text-xs text-muted-foreground justify-center sm:justify-start">
                 <span className="flex items-center gap-1"><Video className="h-3.5 w-3.5" />{content.length} conteúdo{content.length !== 1 ? "s" : ""}</span>
+                <span className="flex items-center gap-1"><Eye className="h-3.5 w-3.5" />{totalViews.toLocaleString("pt-BR")} visualizações</span>
+                {ratingCount > 0 && (
+                  <span className="flex items-center gap-1">
+                    <Star className="h-3.5 w-3.5 fill-accent text-accent" />
+                    {avgRating.toFixed(1)} ({ratingCount})
+                  </span>
+                )}
               </div>
             </div>
           </div>

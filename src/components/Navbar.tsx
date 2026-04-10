@@ -152,10 +152,10 @@ const Navbar = () => {
             <AnimatePresence>
               {searchOpen && (
                 <motion.div
-                  initial={{ opacity: 0, width: 0 }}
-                  animate={{ opacity: 1, width: "280px" }}
-                  exit={{ opacity: 0, width: 0 }}
-                  className="absolute right-0 top-full mt-2 overflow-hidden"
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="fixed left-4 right-4 top-[60px] md:absolute md:left-auto md:right-0 md:top-full md:mt-2 md:w-[320px] z-50"
                 >
                   <Input
                     ref={searchInputRef}

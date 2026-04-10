@@ -187,6 +187,10 @@ const VideoPage = () => {
           <div className="mb-4 space-y-1">
             <h1 className="font-display text-xl sm:text-2xl font-bold leading-tight text-foreground">{video.title}</h1>
             <p className="text-sm text-muted-foreground leading-relaxed">{video.description}</p>
+            <div className="flex items-center gap-4 text-xs text-muted-foreground">
+              <span className="flex items-center gap-1"><BookOpen className="h-3.5 w-3.5" />{video.lessons} aulas</span>
+              <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{video.duration}</span>
+            </div>
           </div>
 
           {/* Video area */}

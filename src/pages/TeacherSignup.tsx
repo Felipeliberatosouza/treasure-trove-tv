@@ -76,6 +76,10 @@ const TeacherSignup = () => {
           await supabase.from("profiles").update({ avatar_url: urlData.publicUrl }).eq("user_id", userId);
         }
       }
+      // Save phone to profile
+      if (userId && phone) {
+        await supabase.from("profiles").update({ phone }).eq("user_id", userId);
+      }
       toast.success("Conta criada! Verifique seu e-mail para confirmar.");
       navigate("/login");
     }
@@ -205,6 +209,7 @@ const TeacherSignup = () => {
               max={new Date().toISOString().split("T")[0]}
             />
           </div>
+          <PhoneInput value={phone} onChange={setPhone} />
           <Textarea
             placeholder="Bio — Conte sobre você e sua experiência"
             value={bio}

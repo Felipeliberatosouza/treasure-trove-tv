@@ -27,7 +27,11 @@ const Login = () => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
-      toast.error("E-mail ou senha incorretos");
+      if (error.message?.toLowerCase().includes("email not confirmed")) {
+        toast.error("Confirme seu cadastro no e-mail enviado para você!");
+      } else {
+        toast.error("E-mail ou senha incorretos");
+      }
     } else {
       toast.success("Login realizado com sucesso!");
       navigate("/");

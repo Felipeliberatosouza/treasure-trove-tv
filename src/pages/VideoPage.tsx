@@ -12,6 +12,7 @@ import Footer from "@/components/Footer";
 import VideoPlayer from "@/components/VideoPlayer";
 import VideoShareButtons from "@/components/VideoShareButtons";
 import { getVideoById } from "@/data/courses";
+import DoubtForm from "@/components/DoubtForm";
 import { RatingStars } from "@/components/VideoDetailModal";
 
 const DEMO_VIDEO_URL = "/demo-course.mp4";

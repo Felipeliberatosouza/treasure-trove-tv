@@ -138,6 +138,10 @@ const PersonalDataTab = () => {
             max={new Date().toISOString().split("T")[0]}
           />
         </div>
+        <div>
+          <label className="text-sm text-muted-foreground mb-1 block">Celular</label>
+          <PhoneInput value={phone} onChange={setPhone} placeholder="(00) 00000-0000" />
+        </div>
         {role === "teacher" && (
           <>
             <div>

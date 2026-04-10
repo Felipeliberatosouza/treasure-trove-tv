@@ -183,9 +183,17 @@ const VideoPage = () => {
         </div>
 
         <div className="max-w-4xl mx-auto px-4 md:px-8 pb-12">
-          {/* Title and description above video */}
-          <div className="mb-4 space-y-1">
-            <h1 className="font-display text-xl sm:text-2xl font-bold leading-tight text-foreground">{video.title}</h1>
+          {/* Title, teacher and description above video */}
+          <div className="mb-4 space-y-2">
+            <div className="flex items-center gap-2.5">
+              <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                <span className="text-sm font-bold text-primary">{video.instructor?.charAt(0) || "P"}</span>
+              </div>
+              <div className="min-w-0">
+                <h1 className="font-display text-xl sm:text-2xl font-bold leading-tight text-foreground truncate">{video.title}</h1>
+                <span className="text-xs text-muted-foreground">{video.instructor}</span>
+              </div>
+            </div>
             <p className="text-sm text-muted-foreground leading-relaxed">{video.description}</p>
             <div className="flex items-center gap-4 text-xs text-muted-foreground">
               <span className="flex items-center gap-1"><BookOpen className="h-3.5 w-3.5" />{video.lessons} aulas</span>

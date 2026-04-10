@@ -73,7 +73,16 @@ const PersonalDataTab = () => {
           <>
             <div>
               <label className="text-sm text-muted-foreground mb-1 block">Área de expertise</label>
-              <Input value={expertiseArea} onChange={(e) => setExpertiseArea(e.target.value)} className="bg-secondary" />
+              <Select value={expertiseArea} onValueChange={setExpertiseArea}>
+                <SelectTrigger className="bg-secondary">
+                  <SelectValue placeholder="Selecione uma área" />
+                </SelectTrigger>
+                <SelectContent>
+                  {areas.map((area) => (
+                    <SelectItem key={area.id} value={area.name}>{area.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <label className="text-sm text-muted-foreground mb-1 block">Bio</label>

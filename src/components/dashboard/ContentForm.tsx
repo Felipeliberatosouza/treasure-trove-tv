@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Upload, X, Image, Video } from "lucide-react";
+import { Upload, X, Image, Video, FileText, ClipboardList, Trophy, StickyNote, HelpCircle, CalendarCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -22,6 +22,12 @@ const ContentForm = ({ table, onSaved, onCancel }: ContentFormProps) => {
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [carouselFile, setCarouselFile] = useState<File | null>(null);
   const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [resumoFile, setResumoFile] = useState<File | null>(null);
+  const [simuladoFile, setSimuladoFile] = useState<File | null>(null);
+  const [topQuestoesFile, setTopQuestoesFile] = useState<File | null>(null);
+  const [colinhaFile, setColinhaFile] = useState<File | null>(null);
+  const [duvidasFile, setDuvidasFile] = useState<File | null>(null);
+  const [aulaParticularFile, setAulaParticularFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
 
   const uploadFile = async (file: File, bucket: string) => {
@@ -46,10 +52,22 @@ const ContentForm = ({ table, onSaved, onCancel }: ContentFormProps) => {
       let thumbnail_url = "";
       let carousel_cover_url = "";
       let video_url = "";
+      let resumo_url = "";
+      let simulado_url = "";
+      let top_questoes_url = "";
+      let colinha_url = "";
+      let duvidas_url = "";
+      let aula_particular_url = "";
 
       if (thumbnailFile) thumbnail_url = await uploadFile(thumbnailFile, "thumbnails");
       if (carouselFile) carousel_cover_url = await uploadFile(carouselFile, "carousel-covers");
       if (videoFile) video_url = await uploadFile(videoFile, "videos");
+      if (resumoFile) resumo_url = await uploadFile(resumoFile, "materials");
+      if (simuladoFile) simulado_url = await uploadFile(simuladoFile, "materials");
+      if (topQuestoesFile) top_questoes_url = await uploadFile(topQuestoesFile, "materials");
+      if (colinhaFile) colinha_url = await uploadFile(colinhaFile, "materials");
+      if (duvidasFile) duvidas_url = await uploadFile(duvidasFile, "materials");
+      if (aulaParticularFile) aula_particular_url = await uploadFile(aulaParticularFile, "materials");
 
       const { error } = await supabase.from(table).insert({
         teacher_id: user.id,
@@ -59,7 +77,13 @@ const ContentForm = ({ table, onSaved, onCancel }: ContentFormProps) => {
         carousel_cover_url,
         video_url,
         areas: selectedAreas,
-      });
+        resumo_url,
+        simulado_url,
+        top_questoes_url,
+        colinha_url,
+        duvidas_url,
+        aula_particular_url,
+      } as any);
 
       if (error) throw error;
       toast.success("Conteúdo salvo com sucesso!");
@@ -145,6 +169,36 @@ const ContentForm = ({ table, onSaved, onCancel }: ContentFormProps) => {
           )}
         </div>
       </div>
+
+      <p className="text-sm font-semibold text-muted-foreground pt-2">Materiais complementares</p>
+
+      {([
+        { label: "Resumo", icon: FileText, file: resumoFile, setFile: setResumoFile },
+        { label: "Simulado", icon: ClipboardList, file: simuladoFile, setFile: setSimuladoFile },
+        { label: "Top Questões de Provas", icon: Trophy, file: topQuestoesFile, setFile: setTopQuestoesFile },
+        { label: "Colinha", icon: StickyNote, file: colinhaFile, setFile: setColinhaFile },
+        { label: "Dúvidas", icon: HelpCircle, file: duvidasFile, setFile: setDuvidasFile },
+        { label: "Agende uma Aula Particular", icon: CalendarCheck, file: aulaParticularFile, setFile: setAulaParticularFile },
+      ] as const).map(({ label, icon: Icon, file, setFile }) => (
+        <div key={label}>
+          <label className="text-sm text-muted-foreground mb-1 block flex items-center gap-1">
+            <Icon className="h-3.5 w-3.5" /> {label}
+          </label>
+          <div className="flex items-center gap-2">
+            <Input
+              type="file"
+              accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,image/*"
+              onChange={(e) => setFile(e.target.files?.[0] || null)}
+              className="bg-secondary text-xs"
+            />
+            {file && (
+              <button type="button" onClick={() => setFile(null)} className="text-muted-foreground hover:text-destructive">
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+        </div>
+      ))}
 
       <div className="flex gap-3 pt-2">
         <Button type="submit" disabled={saving} className="font-display">

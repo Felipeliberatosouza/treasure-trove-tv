@@ -410,16 +410,18 @@ const VideoPage = () => {
             </div>
 
             {/* Related services */}
-            <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
+            <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
               {[
                 { icon: FileText, label: "Resumo" },
                 { icon: ClipboardList, label: "Simulado" },
                 { icon: Trophy, label: "Top Questões" },
                 { icon: StickyNote, label: "Colinha" },
+                { icon: HelpCircle, label: "Dúvidas", action: () => document.getElementById("doubt-form-section")?.scrollIntoView({ behavior: "smooth" }) },
                 { icon: CalendarCheck, label: "Aula Particular" },
-              ].map(({ icon: Icon, label }) => (
+              ].map(({ icon: Icon, label, action }) => (
                 <button
                   key={label}
+                  onClick={action}
                   className="flex flex-col items-center gap-1.5 rounded-xl border border-border bg-secondary/30 p-3 hover:bg-secondary/60 transition-colors"
                 >
                   <Icon className="h-6 w-6 text-foreground" />
@@ -429,9 +431,11 @@ const VideoPage = () => {
             </div>
 
             {/* Doubt Form */}
-            {teacherId && video && (
-              <DoubtForm contentId={video.id} contentType="lesson" teacherId={teacherId} />
-            )}
+            <div id="doubt-form-section">
+              {teacherId && video && (
+                <DoubtForm contentId={video.id} contentType="lesson" teacherId={teacherId} />
+              )}
+            </div>
 
             {user && !trial.loading && (
               <>

@@ -55,6 +55,30 @@ const VideoPage = () => {
     checkAccess();
   }, [video, user, trial.hasActiveTrial]);
 
+  // Fetch teacher profile from DB
+  useEffect(() => {
+    if (!video) return;
+    const fetchTeacher = async () => {
+      // Try to find teacher by matching lesson/exam in DB
+      const { data: lesson } = await supabase
+        .from("lessons")
+        .select("teacher_id")
+        .eq("id", video.id)
+        .limit(1)
+        .maybeSingle();
+      const teacherId = lesson?.teacher_id;
+      if (teacherId) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("name, avatar_url")
+          .eq("user_id", teacherId)
+          .maybeSingle();
+        if (profile) setTeacherProfile(profile);
+      }
+    };
+    fetchTeacher();
+  }, [video]);
+
   useEffect(() => {
     if (video) {
       fetchRatings();

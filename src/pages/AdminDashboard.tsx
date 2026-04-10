@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Users, Video, DollarSign, Shield, LayoutDashboard, Settings, HelpCircle } from "lucide-react";
+import { ArrowLeft, Users, Video, DollarSign, Shield, LayoutDashboard, Settings, HelpCircle, Mail } from "lucide-react";
 import { Link, Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
@@ -10,6 +10,7 @@ import AdminContentTab from "@/components/admin/AdminContentTab";
 import AdminPaymentsTab from "@/components/admin/AdminPaymentsTab";
 import AdminSettingsTab from "@/components/admin/AdminSettingsTab";
 import AdminDoubtsTab from "@/components/admin/AdminDoubtsTab";
+import AdminEmailsTab from "@/components/admin/AdminEmailsTab";
 
 const tabs = [
   { id: "overview", label: "Visão Geral", icon: LayoutDashboard },
@@ -17,6 +18,7 @@ const tabs = [
   { id: "content", label: "Conteúdos", icon: Video },
   { id: "doubts", label: "Aprovação de Dúvidas", icon: HelpCircle },
   { id: "payments", label: "Pagamentos", icon: DollarSign },
+  { id: "emails", label: "E-mails", icon: Mail },
   { id: "settings", label: "Configurações", icon: Settings },
 ] as const;
 
@@ -72,6 +74,7 @@ const AdminDashboard = () => {
             {activeTab === "content" && <AdminContentTab />}
             {activeTab === "doubts" && <AdminDoubtsTab />}
             {activeTab === "payments" && <AdminPaymentsTab />}
+            {activeTab === "emails" && <AdminEmailsTab />}
             {activeTab === "settings" && <AdminSettingsTab />}
           </motion.div>
         </div>

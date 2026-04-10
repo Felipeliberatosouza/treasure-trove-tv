@@ -350,7 +350,38 @@ const VideoPage = () => {
 
           <div className="mt-6 space-y-5">
 
-            <VideoShareButtons videoTitle={video.title} videoUrl={window.location.href} />
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <VideoShareButtons videoTitle={video.title} videoUrl={window.location.href} />
+
+              {videoType === "resolucao_prova" && (
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-semibold text-muted-foreground">Caiu na sua Prova?</span>
+                  <Button
+                    variant={userProvaVote === true ? "default" : "outline"}
+                    size="sm"
+                    className="h-7 px-2 text-xs gap-1"
+                    disabled={votingProva}
+                    onClick={() => handleProvaVote(true)}
+                  >
+                    <ThumbsUp className="h-3.5 w-3.5" /> Sim
+                  </Button>
+                  <Button
+                    variant={userProvaVote === false ? "default" : "outline"}
+                    size="sm"
+                    className="h-7 px-2 text-xs gap-1"
+                    disabled={votingProva}
+                    onClick={() => handleProvaVote(false)}
+                  >
+                    <ThumbsDown className="h-3.5 w-3.5" /> Não
+                  </Button>
+                  {provaVotePercent !== null && (
+                    <span className="ml-1 rounded-full bg-primary px-2.5 py-0.5 text-xs font-bold text-primary-foreground">
+                      {provaVotePercent}% sim
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
 
             {/* Rating */}
             <div className="space-y-2">

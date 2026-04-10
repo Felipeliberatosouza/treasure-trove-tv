@@ -131,7 +131,7 @@ const FreeTrialBanner = () => {
                 ) : (
                   <p className="text-xs text-muted-foreground mt-1">
                     <span className="flex items-center gap-1">
-                      <Play className="h-3 w-3" /> {trial.videosRemaining} vídeo(s) restante(s)
+                      <Play className="h-3 w-3" /> {trial.videosRemaining} acesso(s) restante(s)
                     </span>
                   </p>
                 )}
@@ -169,8 +169,8 @@ const FreeTrialBanner = () => {
               </h3>
               <p className="mt-1 text-sm text-muted-foreground max-w-md">
                 {trial.trialType === "days"
-                  ? "Teste a plataforma por alguns dias sem compromisso. Acesse aulas, revisões e muito mais."
-                  : "Assista a alguns vídeos gratuitamente e descubra como a Revisão Fácil pode te ajudar."}
+                  ? "Teste a plataforma por alguns dias sem compromisso. Acesse revisões, resumos, simulados e muito mais."
+                  : "Acesse gratuitamente alguns conteúdos (revisões, resumos, simulados, top questões e colinhas) e descubra como a Revisão Fácil pode te ajudar."}
               </p>
             </div>
           </div>

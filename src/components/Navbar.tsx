@@ -22,7 +22,8 @@ const publicMenuItems = [
   { label: "Resumos", href: "/resumos" },
   { label: "Simulados", href: "/simulados" },
   { label: "Top Questões de Provas", href: "/top-questoes" },
-  { label: "Minhas Colinhas", href: "/colinhas" },
+  { label: "Colinhas", href: "/colinhas" },
+  { label: "Agende uma Aula Particular", href: "/contato" },
 ];
 
 const loggedMenuItems = [

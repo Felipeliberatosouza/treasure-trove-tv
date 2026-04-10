@@ -58,11 +58,15 @@ const AdminUsersTab = () => {
   const handleDelete = async (userId: string) => {
     if (!confirm("Tem certeza que deseja remover este usuário? Esta ação não pode ser desfeita.")) return;
     
-    const { error } = await supabase.from("profiles").delete().eq("user_id", userId);
-    if (error) {
+    const { data: { session } } = await supabase.auth.getSession();
+    const res = await supabase.functions.invoke("delete-user", {
+      body: { user_id: userId },
+    });
+
+    if (res.error) {
       toast({ title: "Erro", description: "Não foi possível remover o usuário.", variant: "destructive" });
     } else {
-      toast({ title: "Removido", description: "Perfil do usuário removido." });
+      toast({ title: "Removido", description: "Usuário removido completamente." });
       fetchUsers();
     }
   };

@@ -18,6 +18,7 @@ const StudentSignup = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [birthDate, setBirthDate] = useState("");
+  const [phone, setPhone] = useState("");
   const [selectedAreas, setSelectedAreas] = useState<string[]>([]);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
@@ -34,8 +35,12 @@ const StudentSignup = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !email.trim() || !password.trim() || !birthDate) {
+    if (!name.trim() || !email.trim() || !password.trim() || !birthDate || !phone) {
       toast.error("Preencha todos os campos obrigatórios");
+      return;
+    }
+    if (!isValidBrazilianPhone(phone)) {
+      toast.error("Informe um celular válido com DDD (11 dígitos)");
       return;
     }
     if (password.length < 6) {
@@ -48,7 +53,7 @@ const StudentSignup = () => {
       email,
       password,
       options: {
-        data: { name, role: "student", areas: selectedAreas, birth_date: birthDate },
+        data: { name, role: "student", areas: selectedAreas, birth_date: birthDate, phone },
         emailRedirectTo: window.location.origin,
       },
     });

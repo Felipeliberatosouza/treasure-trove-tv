@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Upload, X, Image, Video, FileText, ClipboardList, Trophy, StickyNote, HelpCircle, CalendarCheck } from "lucide-react";
+import { Upload, X, Image, Video, FileText, ClipboardList, Trophy, StickyNote } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -27,8 +27,6 @@ const ContentForm = ({ table, onSaved, onCancel }: ContentFormProps) => {
   const [simuladoFile, setSimuladoFile] = useState<File | null>(null);
   const [topQuestoesFile, setTopQuestoesFile] = useState<File | null>(null);
   const [colinhaFile, setColinhaFile] = useState<File | null>(null);
-  const [duvidasFile, setDuvidasFile] = useState<File | null>(null);
-  const [aulaParticularFile, setAulaParticularFile] = useState<File | null>(null);
   const [videoType, setVideoType] = useState<string>("revisao");
   const [saving, setSaving] = useState(false);
 
@@ -68,8 +66,6 @@ const ContentForm = ({ table, onSaved, onCancel }: ContentFormProps) => {
       if (simuladoFile) simulado_url = await uploadFile(simuladoFile, "materials");
       if (topQuestoesFile) top_questoes_url = await uploadFile(topQuestoesFile, "materials");
       if (colinhaFile) colinha_url = await uploadFile(colinhaFile, "materials");
-      if (duvidasFile) duvidas_url = await uploadFile(duvidasFile, "materials");
-      if (aulaParticularFile) aula_particular_url = await uploadFile(aulaParticularFile, "materials");
 
       const { error } = await supabase.from(table).insert({
         teacher_id: user.id,
@@ -193,8 +189,6 @@ const ContentForm = ({ table, onSaved, onCancel }: ContentFormProps) => {
         { label: "Simulado", icon: ClipboardList, file: simuladoFile, setFile: setSimuladoFile },
         { label: "Top Questões de Provas", icon: Trophy, file: topQuestoesFile, setFile: setTopQuestoesFile },
         { label: "Colinha", icon: StickyNote, file: colinhaFile, setFile: setColinhaFile },
-        { label: "Dúvidas", icon: HelpCircle, file: duvidasFile, setFile: setDuvidasFile },
-        { label: "Agende uma Aula Particular", icon: CalendarCheck, file: aulaParticularFile, setFile: setAulaParticularFile },
       ] as const).map(({ label, icon: Icon, file, setFile }) => (
         <div key={label}>
           <label className="text-sm text-muted-foreground mb-1 block flex items-center gap-1">

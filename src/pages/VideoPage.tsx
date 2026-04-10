@@ -59,14 +59,24 @@ const VideoPage = () => {
   useEffect(() => {
     if (!video) return;
     const fetchTeacher = async () => {
-      // Try to find teacher by matching lesson/exam in DB
+      // Try to find teacher by matching lesson or exam_solution in DB
+      let teacherId: string | null = null;
       const { data: lesson } = await supabase
         .from("lessons")
         .select("teacher_id")
         .eq("id", video.id)
         .limit(1)
         .maybeSingle();
-      const teacherId = lesson?.teacher_id;
+      teacherId = lesson?.teacher_id ?? null;
+      if (!teacherId) {
+        const { data: exam } = await supabase
+          .from("exam_solutions")
+          .select("teacher_id")
+          .eq("id", video.id)
+          .limit(1)
+          .maybeSingle();
+        teacherId = exam?.teacher_id ?? null;
+      }
       if (teacherId) {
         const { data: profile } = await supabase
           .from("profiles")

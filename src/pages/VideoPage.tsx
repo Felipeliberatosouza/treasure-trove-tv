@@ -152,9 +152,9 @@ const VideoPage = () => {
 
   if (!video) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background text-foreground flex flex-col">
         <Navbar />
-        <div className="flex flex-col items-center justify-center pt-32 pb-20 px-6">
+        <div className="flex-1 flex flex-col items-center justify-center px-6 pt-24 pb-12 md:px-16 lg:px-32">
           <h1 className="text-2xl font-display font-bold text-foreground mb-4">Vídeo não encontrado</h1>
           <Button onClick={() => navigate("/")} variant="outline"><ArrowLeft className="h-4 w-4 mr-2" /> Voltar</Button>
         </div>

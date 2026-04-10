@@ -236,6 +236,8 @@ const VideoPage = () => {
             <h1 className="font-display text-2xl font-bold leading-tight text-foreground">{video.title}</h1>
             <p className="text-sm text-muted-foreground leading-relaxed">{video.description}</p>
 
+            <VideoShareButtons videoTitle={video.title} videoUrl={window.location.href} />
+
             <div className="flex items-center gap-4 text-xs text-muted-foreground">
               <span className="flex items-center gap-1"><BookOpen className="h-3.5 w-3.5" />{video.lessons} aulas</span>
               <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{video.duration}</span>

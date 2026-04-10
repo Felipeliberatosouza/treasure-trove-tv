@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Star, Play, ShoppingCart, Zap, Clock, BookOpen, Gift, AlertTriangle, Lock, ArrowLeft } from "lucide-react";
+import { Star, Play, ShoppingCart, Zap, Clock, BookOpen, Gift, AlertTriangle, Lock, ArrowLeft, FileText, ClipboardList, Trophy, StickyNote, HelpCircle, CalendarCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFreeTrial } from "@/hooks/useFreeTrial";
@@ -265,6 +265,26 @@ const VideoPage = () => {
                 </div>
               )}
               {user && !hasWatched70 && <p className="text-xs text-muted-foreground italic">Assista pelo menos 70% do vídeo para poder avaliar.</p>}
+            </div>
+
+            {/* Related services */}
+            <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+              {[
+                { icon: FileText, label: "Resumo" },
+                { icon: ClipboardList, label: "Simulado" },
+                { icon: Trophy, label: "Top Questões" },
+                { icon: StickyNote, label: "Colinha" },
+                { icon: HelpCircle, label: "Dúvidas" },
+                { icon: CalendarCheck, label: "Aula Particular" },
+              ].map(({ icon: Icon, label }) => (
+                <button
+                  key={label}
+                  className="flex flex-col items-center gap-1.5 rounded-xl border border-border bg-secondary/30 p-3 hover:bg-secondary/60 transition-colors"
+                >
+                  <Icon className="h-6 w-6 text-foreground" />
+                  <span className="text-[10px] sm:text-xs text-muted-foreground text-center leading-tight">{label}</span>
+                </button>
+              ))}
             </div>
 
             {user && !trial.loading && (

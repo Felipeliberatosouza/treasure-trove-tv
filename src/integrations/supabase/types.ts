@@ -162,48 +162,66 @@ export type Database = {
         Row: {
           admin_approved: boolean | null
           areas: string[] | null
+          aula_particular_url: string | null
           carousel_cover_url: string | null
+          colinha_url: string | null
           created_at: string
           description: string | null
+          duvidas_url: string | null
           id: string
           platform_percentage: number | null
           price: number | null
           published: boolean | null
+          resumo_url: string | null
+          simulado_url: string | null
           teacher_id: string
           thumbnail_url: string | null
           title: string
+          top_questoes_url: string | null
           updated_at: string
           video_url: string | null
         }
         Insert: {
           admin_approved?: boolean | null
           areas?: string[] | null
+          aula_particular_url?: string | null
           carousel_cover_url?: string | null
+          colinha_url?: string | null
           created_at?: string
           description?: string | null
+          duvidas_url?: string | null
           id?: string
           platform_percentage?: number | null
           price?: number | null
           published?: boolean | null
+          resumo_url?: string | null
+          simulado_url?: string | null
           teacher_id: string
           thumbnail_url?: string | null
           title: string
+          top_questoes_url?: string | null
           updated_at?: string
           video_url?: string | null
         }
         Update: {
           admin_approved?: boolean | null
           areas?: string[] | null
+          aula_particular_url?: string | null
           carousel_cover_url?: string | null
+          colinha_url?: string | null
           created_at?: string
           description?: string | null
+          duvidas_url?: string | null
           id?: string
           platform_percentage?: number | null
           price?: number | null
           published?: boolean | null
+          resumo_url?: string | null
+          simulado_url?: string | null
           teacher_id?: string
           thumbnail_url?: string | null
           title?: string
+          top_questoes_url?: string | null
           updated_at?: string
           video_url?: string | null
         }
@@ -252,48 +270,66 @@ export type Database = {
         Row: {
           admin_approved: boolean | null
           areas: string[] | null
+          aula_particular_url: string | null
           carousel_cover_url: string | null
+          colinha_url: string | null
           created_at: string
           description: string | null
+          duvidas_url: string | null
           id: string
           platform_percentage: number | null
           price: number | null
           published: boolean | null
+          resumo_url: string | null
+          simulado_url: string | null
           teacher_id: string
           thumbnail_url: string | null
           title: string
+          top_questoes_url: string | null
           updated_at: string
           video_url: string | null
         }
         Insert: {
           admin_approved?: boolean | null
           areas?: string[] | null
+          aula_particular_url?: string | null
           carousel_cover_url?: string | null
+          colinha_url?: string | null
           created_at?: string
           description?: string | null
+          duvidas_url?: string | null
           id?: string
           platform_percentage?: number | null
           price?: number | null
           published?: boolean | null
+          resumo_url?: string | null
+          simulado_url?: string | null
           teacher_id: string
           thumbnail_url?: string | null
           title: string
+          top_questoes_url?: string | null
           updated_at?: string
           video_url?: string | null
         }
         Update: {
           admin_approved?: boolean | null
           areas?: string[] | null
+          aula_particular_url?: string | null
           carousel_cover_url?: string | null
+          colinha_url?: string | null
           created_at?: string
           description?: string | null
+          duvidas_url?: string | null
           id?: string
           platform_percentage?: number | null
           price?: number | null
           published?: boolean | null
+          resumo_url?: string | null
+          simulado_url?: string | null
           teacher_id?: string
           thumbnail_url?: string | null
           title?: string
+          top_questoes_url?: string | null
           updated_at?: string
           video_url?: string | null
         }

@@ -25,6 +25,9 @@ const TEMPLATE_LABELS: Record<string, string> = {
   welcome: "Boas-vindas",
   phone_verification: "Verificação por Celular",
   birthday: "Feliz Aniversário",
+  doubt_approved: "Dúvida Aprovada (Professor)",
+  doubt_answered: "Dúvida Respondida (Aluno)",
+  doubt_submitted: "Dúvida Enviada (Aluno)",
 };
 
 const TEMPLATE_DESCRIPTIONS: Record<string, string> = {
@@ -32,6 +35,9 @@ const TEMPLATE_DESCRIPTIONS: Record<string, string> = {
   welcome: "Enviado após o usuário confirmar o cadastro pelo link de e-mail.",
   phone_verification: "Mensagem com código de verificação enviada por SMS/WhatsApp.",
   birthday: "Enviado automaticamente no dia do aniversário do usuário (diariamente às 8h).",
+  doubt_approved: "Enviado ao professor quando uma dúvida de aluno é aprovada pelo administrador.",
+  doubt_answered: "Enviado ao aluno quando o professor responde sua dúvida.",
+  doubt_submitted: "Mensagem exibida ao aluno após enviar uma dúvida.",
 };
 
 const TEMPLATE_VARS: Record<string, string[]> = {
@@ -39,6 +45,9 @@ const TEMPLATE_VARS: Record<string, string[]> = {
   welcome: ["{{name}}", "{{login_link}}"],
   phone_verification: ["{{name}}", "{{code}}", "{{channel}}"],
   birthday: ["{{name}}", "{{login_link}}"],
+  doubt_approved: ["{{teacher_name}}", "{{student_name}}", "{{question}}", "{{content_title}}", "{{deadline_days}}"],
+  doubt_answered: ["{{student_name}}", "{{teacher_name}}", "{{question}}", "{{answer}}", "{{content_title}}"],
+  doubt_submitted: ["{{student_name}}"],
 };
 
 const SettingsEmailTemplates = () => {

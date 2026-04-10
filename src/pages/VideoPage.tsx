@@ -195,6 +195,7 @@ const VideoPage = () => {
                 poster={video.thumbnail}
                 previewLimit={previewLimit}
                 onPreviewLimitReached={handlePreviewLimitReached}
+                logoUrl={branding?.logo_url}
               />
             ) : (
               <div className="relative aspect-video w-full cursor-pointer" onClick={handleReplayVideo}>

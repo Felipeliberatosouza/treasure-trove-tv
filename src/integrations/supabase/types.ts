@@ -179,6 +179,7 @@ export type Database = {
           title: string
           top_questoes_url: string | null
           updated_at: string
+          video_type: string
           video_url: string | null
         }
         Insert: {
@@ -201,6 +202,7 @@ export type Database = {
           title: string
           top_questoes_url?: string | null
           updated_at?: string
+          video_type?: string
           video_url?: string | null
         }
         Update: {
@@ -223,6 +225,7 @@ export type Database = {
           title?: string
           top_questoes_url?: string | null
           updated_at?: string
+          video_type?: string
           video_url?: string | null
         }
         Relationships: []
@@ -287,6 +290,7 @@ export type Database = {
           title: string
           top_questoes_url: string | null
           updated_at: string
+          video_type: string
           video_url: string | null
         }
         Insert: {
@@ -309,6 +313,7 @@ export type Database = {
           title: string
           top_questoes_url?: string | null
           updated_at?: string
+          video_type?: string
           video_url?: string | null
         }
         Update: {
@@ -331,6 +336,7 @@ export type Database = {
           title?: string
           top_questoes_url?: string | null
           updated_at?: string
+          video_type?: string
           video_url?: string | null
         }
         Relationships: []
@@ -440,6 +446,33 @@ export type Database = {
           slug?: string | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      prova_votes: {
+        Row: {
+          content_id: string
+          content_type: string
+          created_at: string
+          id: string
+          user_id: string
+          vote: boolean
+        }
+        Insert: {
+          content_id: string
+          content_type: string
+          created_at?: string
+          id?: string
+          user_id: string
+          vote: boolean
+        }
+        Update: {
+          content_id?: string
+          content_type?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+          vote?: boolean
         }
         Relationships: []
       }

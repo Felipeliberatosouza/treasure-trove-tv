@@ -33,7 +33,7 @@ const loggedMenuItems = [
   { label: "Minhas Top Questões de Provas", href: "/minhas-top-questoes" },
   { label: "Minhas Colinhas", href: "/minhas-colinhas" },
   { label: "Minhas Dúvidas", href: "/minhas-duvidas" },
-  { label: "Minhas Aulas Agendadas", href: "/minhas-aulas-agendadas" },
+  { label: "Minhas Aulas Particulares Agendadas", href: "/minhas-aulas-agendadas" },
 ];
 
 const Navbar = () => {

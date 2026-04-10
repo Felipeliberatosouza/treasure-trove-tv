@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useCourseAreas } from "@/hooks/useCourseAreas";
 import AreaSelector from "@/components/AreaSelector";
+import { Camera, Loader2 } from "lucide-react";
 
 const PersonalDataTab = () => {
   const { user, profile, role, refreshProfile } = useAuth();
@@ -15,6 +16,8 @@ const PersonalDataTab = () => {
   const [expertiseAreas, setExpertiseAreas] = useState<string[]>([]);
   const [birthDate, setBirthDate] = useState("");
   const [saving, setSaving] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
   const { areas } = useCourseAreas(true);
 
   useEffect(() => {
@@ -25,6 +28,26 @@ const PersonalDataTab = () => {
       setBirthDate(profile.birth_date || "");
     }
   }, [profile]);
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    setUploadingAvatar(true);
+    try {
+      const ext = file.name.split(".").pop();
+      const path = `${user.id}/${Date.now()}.${ext}`;
+      const { error: uploadErr } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
+      if (uploadErr) throw uploadErr;
+      const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
+      const { error: updateErr } = await supabase.from("profiles").update({ avatar_url: urlData.publicUrl }).eq("user_id", user.id);
+      if (updateErr) throw updateErr;
+      toast.success("Foto atualizada!");
+      refreshProfile();
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao enviar foto");
+    }
+    setUploadingAvatar(false);
+  };
 
   const handleSave = async () => {
     if (!user) return;
@@ -51,6 +74,36 @@ const PersonalDataTab = () => {
     <div>
       <h2 className="font-display text-lg font-semibold mb-4">Dados Pessoais</h2>
       <div className="space-y-4 max-w-md">
+        {/* Avatar */}
+        <div className="flex items-center gap-4">
+          <button
+            type="button"
+            onClick={() => avatarInputRef.current?.click()}
+            disabled={uploadingAvatar}
+            className="relative h-20 w-20 rounded-full bg-secondary border-2 border-dashed border-border hover:border-primary/50 transition-colors flex items-center justify-center overflow-hidden shrink-0"
+          >
+            {uploadingAvatar ? (
+              <Loader2 className="h-6 w-6 text-muted-foreground animate-spin" />
+            ) : profile?.avatar_url ? (
+              <img src={profile.avatar_url} alt={profile.name} className="h-full w-full object-cover" />
+            ) : (
+              <Camera className="h-6 w-6 text-muted-foreground" />
+            )}
+          </button>
+          <div>
+            <p className="text-sm font-medium text-foreground">{profile?.name || "Sua foto"}</p>
+            <button
+              type="button"
+              onClick={() => avatarInputRef.current?.click()}
+              disabled={uploadingAvatar}
+              className="text-xs text-primary hover:underline"
+            >
+              {uploadingAvatar ? "Enviando..." : "Alterar foto"}
+            </button>
+          </div>
+          <input ref={avatarInputRef} type="file" accept="image/*" onChange={handleAvatarChange} className="hidden" />
+        </div>
+
         <div>
           <label className="text-sm text-muted-foreground mb-1 block">Nome completo</label>
           <Input value={name} onChange={(e) => setName(e.target.value)} className="bg-secondary" />

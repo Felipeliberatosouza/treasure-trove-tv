@@ -237,10 +237,7 @@ const VideoPage = () => {
             )}
           </div>
 
-          {/* Video info */}
           <div className="mt-6 space-y-5">
-            <h1 className="font-display text-2xl font-bold leading-tight text-foreground">{video.title}</h1>
-            <p className="text-sm text-muted-foreground leading-relaxed">{video.description}</p>
 
             <VideoShareButtons videoTitle={video.title} videoUrl={window.location.href} />
 

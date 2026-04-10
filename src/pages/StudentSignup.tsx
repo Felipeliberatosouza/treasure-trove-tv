@@ -203,6 +203,7 @@ const StudentSignup = () => {
               max={new Date().toISOString().split("T")[0]}
             />
           </div>
+          <PhoneInput value={phone} onChange={setPhone} />
           <div>
             <label className="text-sm text-muted-foreground mb-1 block">Áreas de interesse (opcional)</label>
             <AreaSelector selected={selectedAreas} onChange={setSelectedAreas} max={3} />

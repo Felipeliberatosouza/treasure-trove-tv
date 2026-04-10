@@ -16,6 +16,7 @@ const PersonalDataTab = () => {
   const [bio, setBio] = useState("");
   const [expertiseAreas, setExpertiseAreas] = useState<string[]>([]);
   const [birthDate, setBirthDate] = useState("");
+  const [phone, setPhone] = useState("");
   const [slug, setSlug] = useState("");
   const [profileTitle, setProfileTitle] = useState("");
   const [saving, setSaving] = useState(false);
@@ -29,6 +30,7 @@ const PersonalDataTab = () => {
       setBio(profile.bio || "");
       setExpertiseAreas(profile.expertise_area ? profile.expertise_area.split(", ").filter(Boolean) : []);
       setBirthDate(profile.birth_date || "");
+      setPhone(profile.phone || "");
       setSlug((profile as any).slug || "");
       setProfileTitle((profile as any).profile_title || "");
     }
@@ -60,8 +62,12 @@ const PersonalDataTab = () => {
       toast.error("A data de nascimento é obrigatória");
       return;
     }
+    if (phone && !isValidBrazilianPhone(phone)) {
+      toast.error("Informe um celular válido com DDD (11 dígitos)");
+      return;
+    }
     setSaving(true);
-    const updateData: any = { name, bio, expertise_area: expertiseAreas.join(", "), birth_date: birthDate || null };
+    const updateData: any = { name, bio, expertise_area: expertiseAreas.join(", "), birth_date: birthDate || null, phone: phone || null };
     if (role === "teacher") {
       updateData.slug = slug;
       updateData.profile_title = profileTitle;

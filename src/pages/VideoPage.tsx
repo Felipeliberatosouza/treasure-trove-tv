@@ -5,10 +5,12 @@ import { Star, Play, ShoppingCart, Zap, Clock, BookOpen, Gift, AlertTriangle, Lo
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFreeTrial } from "@/hooks/useFreeTrial";
+import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import VideoPlayer from "@/components/VideoPlayer";
+import VideoShareButtons from "@/components/VideoShareButtons";
 import { getVideoById } from "@/data/courses";
 import { RatingStars } from "@/components/VideoDetailModal";
 

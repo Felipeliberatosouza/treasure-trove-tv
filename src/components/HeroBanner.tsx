@@ -46,8 +46,6 @@ const HeroBanner = ({ onVideoClick }: { onVideoClick: (id: string) => void }) =>
             <span>{featured.lessons} aulas</span>
             <span className="h-1 w-1 rounded-full bg-muted-foreground" />
             <span>{featured.duration}</span>
-            <span className="h-1 w-1 rounded-full bg-muted-foreground" />
-            <span>{featured.level}</span>
           </div>
           <div className="flex gap-3 pt-2">
             <Button

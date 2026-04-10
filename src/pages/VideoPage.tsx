@@ -5,10 +5,12 @@ import { Star, Play, ShoppingCart, Zap, Clock, BookOpen, Gift, AlertTriangle, Lo
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFreeTrial } from "@/hooks/useFreeTrial";
+import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import VideoPlayer from "@/components/VideoPlayer";
+import VideoShareButtons from "@/components/VideoShareButtons";
 import { getVideoById } from "@/data/courses";
 import { RatingStars } from "@/components/VideoDetailModal";
 
@@ -19,6 +21,7 @@ const VideoPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const trial = useFreeTrial();
+  const { data: branding } = usePlatformSettings("branding");
 
   const video = id ? getVideoById(id) : null;
 
@@ -192,6 +195,7 @@ const VideoPage = () => {
                 poster={video.thumbnail}
                 previewLimit={previewLimit}
                 onPreviewLimitReached={handlePreviewLimitReached}
+                logoUrl={branding?.logo_url}
               />
             ) : (
               <div className="relative aspect-video w-full cursor-pointer" onClick={handleReplayVideo}>
@@ -231,6 +235,8 @@ const VideoPage = () => {
           <div className="mt-6 space-y-5">
             <h1 className="font-display text-2xl font-bold leading-tight text-foreground">{video.title}</h1>
             <p className="text-sm text-muted-foreground leading-relaxed">{video.description}</p>
+
+            <VideoShareButtons videoTitle={video.title} videoUrl={window.location.href} />
 
             <div className="flex items-center gap-4 text-xs text-muted-foreground">
               <span className="flex items-center gap-1"><BookOpen className="h-3.5 w-3.5" />{video.lessons} aulas</span>

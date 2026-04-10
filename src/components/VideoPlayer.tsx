@@ -15,6 +15,8 @@ interface VideoPlayerProps {
   /** If set, pauses video at this percentage and fires onPreviewLimitReached */
   previewLimit?: number;
   onPreviewLimitReached?: () => void;
+  /** Logo URL for watermark overlay */
+  logoUrl?: string;
 }
 
 const VideoPlayer = ({
@@ -26,6 +28,7 @@ const VideoPlayer = ({
   poster,
   previewLimit,
   onPreviewLimitReached,
+  logoUrl,
 }: VideoPlayerProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -260,6 +263,13 @@ const VideoPlayer = ({
           </div>
         </div>
       </div>
+
+      {/* Logo watermark */}
+      {logoUrl && (
+        <div className="absolute top-2 left-2 z-10 pointer-events-none">
+          <img src={logoUrl} alt="Logo" className="h-6 sm:h-8 w-auto opacity-60" />
+        </div>
+      )}
 
       {/* Progress milestone indicator */}
       {maxPercentage >= 70 && (

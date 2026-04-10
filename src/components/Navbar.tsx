@@ -1,12 +1,20 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
+import { useState, useRef, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import { Search, User, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
 import UserMenu from "@/components/UserMenu";
 import { useAllPlatformSettings } from "@/hooks/usePlatformSettings";
 import type { BrandingSettings } from "@/hooks/usePlatformSettings";
+import { supabase } from "@/integrations/supabase/client";
+
+interface SearchResult {
+  id: string;
+  title: string;
+  type: "lesson" | "exam_solution";
+}
 
 const publicMenuItems = [
   { label: "Assine a Revisão Fácil", href: "#pricing" },
@@ -29,11 +37,77 @@ const loggedMenuItems = [
 
 const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [searching, setSearching] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const searchContainerRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { settings } = useAllPlatformSettings();
   const branding = settings.branding as BrandingSettings | undefined;
 
   const menuItems = user ? loggedMenuItems : publicMenuItems;
+
+  useEffect(() => {
+    if (searchOpen && searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  }, [searchOpen]);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(e.target as Node)) {
+        setSearchOpen(false);
+        setSearchQuery("");
+        setSearchResults([]);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    if (searchQuery.trim().length < 2) {
+      setSearchResults([]);
+      return;
+    }
+    const timeout = setTimeout(async () => {
+      setSearching(true);
+      const term = `%${searchQuery.trim()}%`;
+      const [lessonsRes, examsRes] = await Promise.all([
+        supabase
+          .from("lessons")
+          .select("id, title")
+          .eq("published", true)
+          .eq("admin_approved", true)
+          .ilike("title", term)
+          .limit(5),
+        supabase
+          .from("exam_solutions")
+          .select("id, title")
+          .eq("published", true)
+          .eq("admin_approved", true)
+          .ilike("title", term)
+          .limit(5),
+      ]);
+      const results: SearchResult[] = [
+        ...(lessonsRes.data || []).map((l) => ({ id: l.id, title: l.title, type: "lesson" as const })),
+        ...(examsRes.data || []).map((e) => ({ id: e.id, title: e.title, type: "exam_solution" as const })),
+      ];
+      setSearchResults(results);
+      setSearching(false);
+    }, 300);
+    return () => clearTimeout(timeout);
+  }, [searchQuery]);
+
+  const handleResultClick = (result: SearchResult) => {
+    navigate(`/video/${result.id}`);
+    setSearchOpen(false);
+    setSearchQuery("");
+    setSearchResults([]);
+  };
 
   return (
     <motion.nav
@@ -67,9 +141,55 @@ const Navbar = () => {
         </div>
 
         <div className="flex items-center gap-3">
-          <button className="rounded-full p-2 transition-colors hover:bg-secondary">
-            <Search className="h-5 w-5 text-muted-foreground" />
-          </button>
+          <div ref={searchContainerRef} className="relative">
+            <button
+              className="rounded-full p-2 transition-colors hover:bg-secondary"
+              onClick={() => setSearchOpen(!searchOpen)}
+            >
+              <Search className="h-5 w-5 text-muted-foreground" />
+            </button>
+
+            <AnimatePresence>
+              {searchOpen && (
+                <motion.div
+                  initial={{ opacity: 0, width: 0 }}
+                  animate={{ opacity: 1, width: "280px" }}
+                  exit={{ opacity: 0, width: 0 }}
+                  className="absolute right-0 top-full mt-2 overflow-hidden"
+                >
+                  <Input
+                    ref={searchInputRef}
+                    placeholder="Buscar aulas e provas..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="bg-background border-border"
+                  />
+                  {(searchResults.length > 0 || searching) && (
+                    <div className="mt-1 rounded-md border border-border bg-background shadow-lg max-h-60 overflow-y-auto">
+                      {searching && (
+                        <p className="px-3 py-2 text-sm text-muted-foreground">Buscando...</p>
+                      )}
+                      {searchResults.map((result) => (
+                        <button
+                          key={result.id}
+                          onClick={() => handleResultClick(result)}
+                          className="w-full text-left px-3 py-2 text-sm hover:bg-secondary transition-colors flex items-center gap-2"
+                        >
+                          <span className="text-xs text-muted-foreground shrink-0">
+                            {result.type === "lesson" ? "📖 Aula" : "📝 Prova"}
+                          </span>
+                          <span className="truncate">{result.title}</span>
+                        </button>
+                      ))}
+                      {!searching && searchResults.length === 0 && searchQuery.trim().length >= 2 && (
+                        <p className="px-3 py-2 text-sm text-muted-foreground">Nenhum resultado encontrado.</p>
+                      )}
+                    </div>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
 
           {user ? (
             <UserMenu />

@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useCourseAreas } from "@/hooks/useCourseAreas";
 import AreaSelector from "@/components/AreaSelector";
+import PhoneInput, { isValidBrazilianPhone } from "@/components/PhoneInput";
 import { Camera, Loader2 } from "lucide-react";
 
 const PersonalDataTab = () => {
@@ -15,6 +16,7 @@ const PersonalDataTab = () => {
   const [bio, setBio] = useState("");
   const [expertiseAreas, setExpertiseAreas] = useState<string[]>([]);
   const [birthDate, setBirthDate] = useState("");
+  const [phone, setPhone] = useState("");
   const [slug, setSlug] = useState("");
   const [profileTitle, setProfileTitle] = useState("");
   const [saving, setSaving] = useState(false);
@@ -28,6 +30,7 @@ const PersonalDataTab = () => {
       setBio(profile.bio || "");
       setExpertiseAreas(profile.expertise_area ? profile.expertise_area.split(", ").filter(Boolean) : []);
       setBirthDate(profile.birth_date || "");
+      setPhone(profile.phone || "");
       setSlug((profile as any).slug || "");
       setProfileTitle((profile as any).profile_title || "");
     }
@@ -59,8 +62,12 @@ const PersonalDataTab = () => {
       toast.error("A data de nascimento é obrigatória");
       return;
     }
+    if (phone && !isValidBrazilianPhone(phone)) {
+      toast.error("Informe um celular válido com DDD (11 dígitos)");
+      return;
+    }
     setSaving(true);
-    const updateData: any = { name, bio, expertise_area: expertiseAreas.join(", "), birth_date: birthDate || null };
+    const updateData: any = { name, bio, expertise_area: expertiseAreas.join(", "), birth_date: birthDate || null, phone: phone || null };
     if (role === "teacher") {
       updateData.slug = slug;
       updateData.profile_title = profileTitle;
@@ -130,6 +137,10 @@ const PersonalDataTab = () => {
             className="bg-secondary"
             max={new Date().toISOString().split("T")[0]}
           />
+        </div>
+        <div>
+          <label className="text-sm text-muted-foreground mb-1 block">Celular</label>
+          <PhoneInput value={phone} onChange={setPhone} placeholder="(00) 00000-0000" />
         </div>
         {role === "teacher" && (
           <>

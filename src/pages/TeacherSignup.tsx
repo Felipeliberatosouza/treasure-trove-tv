@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Mail, Lock, User, Eye, EyeOff, BookOpen, ArrowLeft, CalendarDays, Camera } from "lucide-react";
+import PhoneInput, { isValidBrazilianPhone } from "@/components/PhoneInput";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -20,6 +21,7 @@ const TeacherSignup = () => {
   const [bio, setBio] = useState("");
   const [expertise, setExpertise] = useState<string[]>([]);
   const [birthDate, setBirthDate] = useState("");
+  const [phone, setPhone] = useState("");
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
@@ -37,8 +39,12 @@ const TeacherSignup = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !email.trim() || !password.trim() || !birthDate) {
+    if (!name.trim() || !email.trim() || !password.trim() || !birthDate || !phone) {
       toast.error("Preencha todos os campos obrigatórios");
+      return;
+    }
+    if (!isValidBrazilianPhone(phone)) {
+      toast.error("Informe um celular válido com DDD (11 dígitos)");
       return;
     }
     if (password.length < 6) {
@@ -51,7 +57,7 @@ const TeacherSignup = () => {
       email,
       password,
       options: {
-        data: { name, role: "teacher", bio, expertise_area: expertise.join(", "), birth_date: birthDate },
+        data: { name, role: "teacher", bio, expertise_area: expertise.join(", "), birth_date: birthDate, phone },
         emailRedirectTo: window.location.origin,
       },
     });
@@ -69,6 +75,10 @@ const TeacherSignup = () => {
           const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
           await supabase.from("profiles").update({ avatar_url: urlData.publicUrl }).eq("user_id", userId);
         }
+      }
+      // Save phone to profile
+      if (userId && phone) {
+        await supabase.from("profiles").update({ phone }).eq("user_id", userId);
       }
       toast.success("Conta criada! Verifique seu e-mail para confirmar.");
       navigate("/login");
@@ -199,6 +209,7 @@ const TeacherSignup = () => {
               max={new Date().toISOString().split("T")[0]}
             />
           </div>
+          <PhoneInput value={phone} onChange={setPhone} />
           <Textarea
             placeholder="Bio — Conte sobre você e sua experiência"
             value={bio}

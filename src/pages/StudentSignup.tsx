@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Mail, Lock, User, Eye, EyeOff, GraduationCap, ArrowLeft, CalendarDays, Camera } from "lucide-react";
+import PhoneInput, { isValidBrazilianPhone } from "@/components/PhoneInput";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
@@ -17,6 +18,7 @@ const StudentSignup = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [birthDate, setBirthDate] = useState("");
+  const [phone, setPhone] = useState("");
   const [selectedAreas, setSelectedAreas] = useState<string[]>([]);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
@@ -33,8 +35,12 @@ const StudentSignup = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !email.trim() || !password.trim() || !birthDate) {
+    if (!name.trim() || !email.trim() || !password.trim() || !birthDate || !phone) {
       toast.error("Preencha todos os campos obrigatórios");
+      return;
+    }
+    if (!isValidBrazilianPhone(phone)) {
+      toast.error("Informe um celular válido com DDD (11 dígitos)");
       return;
     }
     if (password.length < 6) {
@@ -47,7 +53,7 @@ const StudentSignup = () => {
       email,
       password,
       options: {
-        data: { name, role: "student", areas: selectedAreas, birth_date: birthDate },
+        data: { name, role: "student", areas: selectedAreas, birth_date: birthDate, phone },
         emailRedirectTo: window.location.origin,
       },
     });
@@ -65,12 +71,14 @@ const StudentSignup = () => {
           await supabase.from("profiles").update({ avatar_url: urlData.publicUrl }).eq("user_id", signUpData.user.id);
         }
       }
-      // Save areas to profile if signup succeeded
-      if (signUpData?.user && selectedAreas.length > 0) {
-        await supabase
-          .from("profiles")
-          .update({ areas: selectedAreas })
-          .eq("user_id", signUpData.user.id);
+      // Save areas and phone to profile if signup succeeded
+      if (signUpData?.user) {
+        const updateData: any = {};
+        if (selectedAreas.length > 0) updateData.areas = selectedAreas;
+        if (phone) updateData.phone = phone;
+        if (Object.keys(updateData).length > 0) {
+          await supabase.from("profiles").update(updateData).eq("user_id", signUpData.user.id);
+        }
       }
       toast.success("Conta criada! Verifique seu e-mail para confirmar.");
       navigate("/login");
@@ -197,6 +205,7 @@ const StudentSignup = () => {
               max={new Date().toISOString().split("T")[0]}
             />
           </div>
+          <PhoneInput value={phone} onChange={setPhone} />
           <div>
             <label className="text-sm text-muted-foreground mb-1 block">Áreas de interesse (opcional)</label>
             <AreaSelector selected={selectedAreas} onChange={setSelectedAreas} max={3} />

@@ -506,7 +506,18 @@ const VideoPage = () => {
                 { icon: ClipboardList, label: "Simulado" },
                 { icon: Trophy, label: "Top Questões" },
                 { icon: StickyNote, label: "Colinha" },
-                { icon: HelpCircle, label: "Dúvidas", action: () => document.getElementById("doubt-form-section")?.scrollIntoView({ behavior: "smooth" }) },
+                {
+                  icon: HelpCircle,
+                  label: "Dúvidas",
+                  action: () => {
+                    if (!user) {
+                      toast.info("Faça login para enviar sua dúvida.");
+                    } else if (!teacherId) {
+                      toast.info("Este vídeo demonstrativo não recebe dúvidas.");
+                    }
+                    document.getElementById("doubt-form-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
+                  },
+                },
                 { icon: CalendarCheck, label: "Aula Particular" },
               ].map(({ icon: Icon, label, action }) => (
                 <button
@@ -521,9 +532,32 @@ const VideoPage = () => {
             </div>
 
             {/* Doubt Form */}
-            <div id="doubt-form-section">
-              {teacherId && video && (
-                <DoubtForm contentId={video.id} contentType={contentType} teacherId={teacherId} />
+            <div id="doubt-form-section" className="scroll-mt-24">
+              {user ? (
+                teacherId && video ? (
+                  <DoubtForm contentId={video.id} contentType={contentType} teacherId={teacherId} />
+                ) : (
+                  <div className="space-y-3 rounded-xl border border-border bg-secondary/30 p-4">
+                    <div className="flex items-center gap-2">
+                      <HelpCircle className="h-5 w-5 text-primary" />
+                      <h3 className="text-sm font-semibold">Dúvidas sobre este conteúdo</h3>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Este vídeo é demonstrativo e não está vinculado a um professor, então não é possível enviar dúvidas por aqui.
+                    </p>
+                  </div>
+                )
+              ) : (
+                <div className="space-y-3 rounded-xl border border-border bg-secondary/30 p-4">
+                  <div className="flex items-center gap-2">
+                    <HelpCircle className="h-5 w-5 text-primary" />
+                    <h3 className="text-sm font-semibold">Dúvidas sobre este conteúdo</h3>
+                  </div>
+                  <p className="text-sm text-muted-foreground">Faça login para enviar sua dúvida ao professor.</p>
+                  <div>
+                    <Button size="sm" onClick={() => navigate("/login")}>Fazer login</Button>
+                  </div>
+                </div>
               )}
             </div>
 

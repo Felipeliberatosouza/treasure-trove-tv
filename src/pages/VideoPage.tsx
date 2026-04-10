@@ -431,9 +431,11 @@ const VideoPage = () => {
             </div>
 
             {/* Doubt Form */}
-            {teacherId && video && (
-              <DoubtForm contentId={video.id} contentType="lesson" teacherId={teacherId} />
-            )}
+            <div id="doubt-form-section">
+              {teacherId && video && (
+                <DoubtForm contentId={video.id} contentType="lesson" teacherId={teacherId} />
+              )}
+            </div>
 
             {user && !trial.loading && (
               <>

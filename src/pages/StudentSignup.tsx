@@ -80,6 +80,17 @@ const StudentSignup = () => {
           await supabase.from("profiles").update(updateData).eq("user_id", signUpData.user.id);
         }
       }
+      // Send welcome email
+      if (signUpData?.user) {
+        await supabase.functions.invoke("send-transactional-email", {
+          body: {
+            templateName: "welcome-student",
+            recipientEmail: email,
+            idempotencyKey: `welcome-student-${signUpData.user.id}`,
+            templateData: { name: name.trim() },
+          },
+        });
+      }
       toast.success("Conta criada! Verifique seu e-mail para confirmar.");
       navigate("/login");
     }

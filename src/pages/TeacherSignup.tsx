@@ -10,6 +10,7 @@ import { lovable } from "@/integrations/lovable/index";
 import { toast } from "sonner";
 import { useCourseAreas } from "@/hooks/useCourseAreas";
 import AreaSelector from "@/components/AreaSelector";
+import { translateAuthError } from "@/lib/translateAuthError";
 
 const TeacherSignup = () => {
   const navigate = useNavigate();
@@ -45,7 +46,7 @@ const TeacherSignup = () => {
     });
 
     if (error) {
-      toast.error(error.message);
+      toast.error(translateAuthError(error.message));
     } else {
       // Update profile with bio and expertise after signup
       toast.success("Conta criada! Verifique seu e-mail para confirmar.");

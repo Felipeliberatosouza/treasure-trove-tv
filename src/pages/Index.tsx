@@ -60,7 +60,7 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background text-foreground flex flex-col">
       <Navbar />
       <HeroBanner onVideoClick={handleVideoClick} />
       <FreeTrialBanner />

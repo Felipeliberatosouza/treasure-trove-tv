@@ -164,7 +164,7 @@ const Navbar = () => {
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="bg-background border-border"
                   />
-                  {(searchResults.length > 0 || searching) && (
+                  {(searchResults.length > 0 || searching || (searchQuery.trim().length >= 2 && !searching)) && (
                     <div className="mt-1 rounded-md border border-border bg-background shadow-lg max-h-60 overflow-y-auto">
                       {searching && (
                         <p className="px-3 py-2 text-sm text-muted-foreground">Buscando...</p>

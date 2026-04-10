@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useCourseAreas } from "@/hooks/useCourseAreas";
 import AreaSelector from "@/components/AreaSelector";
+import PhoneInput, { isValidBrazilianPhone } from "@/components/PhoneInput";
 import { Camera, Loader2 } from "lucide-react";
 
 const PersonalDataTab = () => {

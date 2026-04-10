@@ -59,28 +59,35 @@ const VideoPage = () => {
     checkAccess();
   }, [video, user, trial.hasActiveTrial]);
 
-  // Fetch teacher profile from DB
+  // Fetch teacher profile and video_type from DB
   useEffect(() => {
     if (!video) return;
-    const fetchTeacher = async () => {
-      // Try to find teacher by matching lesson or exam_solution in DB
+    const fetchTeacherAndType = async () => {
       let teacherId: string | null = null;
+      let vType: string | null = null;
+
       const { data: lesson } = await supabase
         .from("lessons")
-        .select("teacher_id")
+        .select("teacher_id, video_type")
         .eq("id", video.id)
         .limit(1)
         .maybeSingle();
       teacherId = lesson?.teacher_id ?? null;
+      vType = (lesson as any)?.video_type ?? null;
+
       if (!teacherId) {
         const { data: exam } = await supabase
           .from("exam_solutions")
-          .select("teacher_id")
+          .select("teacher_id, video_type")
           .eq("id", video.id)
           .limit(1)
           .maybeSingle();
         teacherId = exam?.teacher_id ?? null;
+        vType = (exam as any)?.video_type ?? null;
       }
+
+      setVideoType(vType);
+
       if (teacherId) {
         const { data: profile } = await supabase
           .from("profiles")
@@ -90,8 +97,45 @@ const VideoPage = () => {
         if (profile) setTeacherProfile(profile);
       }
     };
-    fetchTeacher();
+    fetchTeacherAndType();
   }, [video]);
+
+  // Fetch prova votes
+  const fetchProvaVotes = useCallback(async () => {
+    if (!video) return;
+    const { data: votes } = await supabase
+      .from("prova_votes")
+      .select("vote, user_id")
+      .eq("content_id", video.id);
+    if (votes && votes.length > 0) {
+      const yesCount = votes.filter(v => v.vote === true).length;
+      setProvaVotePercent(Math.round((yesCount / votes.length) * 100));
+      if (user) {
+        const uv = votes.find(v => v.user_id === user.id);
+        setUserProvaVote(uv?.vote ?? null);
+      }
+    } else {
+      setProvaVotePercent(null);
+      setUserProvaVote(null);
+    }
+  }, [video, user]);
+
+  useEffect(() => {
+    if (videoType === "resolucao_prova") fetchProvaVotes();
+  }, [videoType, fetchProvaVotes]);
+
+  const handleProvaVote = async (vote: boolean) => {
+    if (!user) { toast.error("Faça login para votar."); return; }
+    if (!video) return;
+    setVotingProva(true);
+    if (userProvaVote !== null) {
+      await supabase.from("prova_votes").update({ vote }).eq("content_id", video.id).eq("user_id", user.id);
+    } else {
+      await supabase.from("prova_votes").insert({ content_id: video.id, content_type: "lesson", user_id: user.id, vote });
+    }
+    await fetchProvaVotes();
+    setVotingProva(false);
+  };
 
   useEffect(() => {
     if (video) {

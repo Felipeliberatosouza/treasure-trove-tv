@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Upload, X, Image, Video, FileText, ClipboardList, Trophy, StickyNote, HelpCircle, CalendarCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -28,6 +29,7 @@ const ContentForm = ({ table, onSaved, onCancel }: ContentFormProps) => {
   const [colinhaFile, setColinhaFile] = useState<File | null>(null);
   const [duvidasFile, setDuvidasFile] = useState<File | null>(null);
   const [aulaParticularFile, setAulaParticularFile] = useState<File | null>(null);
+  const [videoType, setVideoType] = useState<string>("revisao");
   const [saving, setSaving] = useState(false);
 
   const uploadFile = async (file: File, bucket: string) => {
@@ -77,6 +79,7 @@ const ContentForm = ({ table, onSaved, onCancel }: ContentFormProps) => {
         carousel_cover_url,
         video_url,
         areas: selectedAreas,
+        video_type: videoType,
         resumo_url,
         simulado_url,
         top_questoes_url,
@@ -106,6 +109,19 @@ const ContentForm = ({ table, onSaved, onCancel }: ContentFormProps) => {
       <div>
         <label className="text-sm text-muted-foreground mb-1 block">Áreas do conteúdo</label>
         <AreaSelector selected={selectedAreas} onChange={setSelectedAreas} max={3} />
+      </div>
+
+      <div>
+        <label className="text-sm text-muted-foreground mb-1 block">Tipo de vídeo</label>
+        <Select value={videoType} onValueChange={setVideoType}>
+          <SelectTrigger className="bg-secondary">
+            <SelectValue placeholder="Selecione o tipo" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="revisao">Revisão</SelectItem>
+            <SelectItem value="resolucao_prova">Resolução de Questões de Prova</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       <div>

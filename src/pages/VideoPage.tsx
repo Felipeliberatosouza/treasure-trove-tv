@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Star, Play, ShoppingCart, Zap, Clock, BookOpen, Gift, AlertTriangle, Lock, ArrowLeft, FileText, ClipboardList, Trophy, StickyNote, HelpCircle, CalendarCheck } from "lucide-react";
+import { Star, Play, ShoppingCart, Zap, Clock, BookOpen, Gift, AlertTriangle, Lock, ArrowLeft, FileText, ClipboardList, Trophy, StickyNote, HelpCircle, CalendarCheck, ThumbsUp, ThumbsDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFreeTrial } from "@/hooks/useFreeTrial";
@@ -36,6 +36,10 @@ const VideoPage = () => {
   const [showPaywall, setShowPaywall] = useState(false);
   const [hasFullAccess, setHasFullAccess] = useState(false);
   const [teacherProfile, setTeacherProfile] = useState<{ name: string; avatar_url: string | null; slug: string | null } | null>(null);
+  const [videoType, setVideoType] = useState<string | null>(null);
+  const [provaVotePercent, setProvaVotePercent] = useState<number | null>(null);
+  const [userProvaVote, setUserProvaVote] = useState<boolean | null>(null);
+  const [votingProva, setVotingProva] = useState(false);
 
   useEffect(() => {
     if (!video) return;
@@ -55,28 +59,35 @@ const VideoPage = () => {
     checkAccess();
   }, [video, user, trial.hasActiveTrial]);
 
-  // Fetch teacher profile from DB
+  // Fetch teacher profile and video_type from DB
   useEffect(() => {
     if (!video) return;
-    const fetchTeacher = async () => {
-      // Try to find teacher by matching lesson or exam_solution in DB
+    const fetchTeacherAndType = async () => {
       let teacherId: string | null = null;
+      let vType: string | null = null;
+
       const { data: lesson } = await supabase
         .from("lessons")
-        .select("teacher_id")
+        .select("teacher_id, video_type")
         .eq("id", video.id)
         .limit(1)
         .maybeSingle();
       teacherId = lesson?.teacher_id ?? null;
+      vType = (lesson as any)?.video_type ?? null;
+
       if (!teacherId) {
         const { data: exam } = await supabase
           .from("exam_solutions")
-          .select("teacher_id")
+          .select("teacher_id, video_type")
           .eq("id", video.id)
           .limit(1)
           .maybeSingle();
         teacherId = exam?.teacher_id ?? null;
+        vType = (exam as any)?.video_type ?? null;
       }
+
+      setVideoType(vType);
+
       if (teacherId) {
         const { data: profile } = await supabase
           .from("profiles")
@@ -86,8 +97,45 @@ const VideoPage = () => {
         if (profile) setTeacherProfile(profile);
       }
     };
-    fetchTeacher();
+    fetchTeacherAndType();
   }, [video]);
+
+  // Fetch prova votes
+  const fetchProvaVotes = useCallback(async () => {
+    if (!video) return;
+    const { data: votes } = await supabase
+      .from("prova_votes")
+      .select("vote, user_id")
+      .eq("content_id", video.id);
+    if (votes && votes.length > 0) {
+      const yesCount = votes.filter(v => v.vote === true).length;
+      setProvaVotePercent(Math.round((yesCount / votes.length) * 100));
+      if (user) {
+        const uv = votes.find(v => v.user_id === user.id);
+        setUserProvaVote(uv?.vote ?? null);
+      }
+    } else {
+      setProvaVotePercent(null);
+      setUserProvaVote(null);
+    }
+  }, [video, user]);
+
+  useEffect(() => {
+    if (videoType === "resolucao_prova") fetchProvaVotes();
+  }, [videoType, fetchProvaVotes]);
+
+  const handleProvaVote = async (vote: boolean) => {
+    if (!user) { toast.error("Faça login para votar."); return; }
+    if (!video) return;
+    setVotingProva(true);
+    if (userProvaVote !== null) {
+      await supabase.from("prova_votes").update({ vote }).eq("content_id", video.id).eq("user_id", user.id);
+    } else {
+      await supabase.from("prova_votes").insert({ content_id: video.id, content_type: "lesson", user_id: user.id, vote });
+    }
+    await fetchProvaVotes();
+    setVotingProva(false);
+  };
 
   useEffect(() => {
     if (video) {
@@ -302,7 +350,38 @@ const VideoPage = () => {
 
           <div className="mt-6 space-y-5">
 
-            <VideoShareButtons videoTitle={video.title} videoUrl={window.location.href} />
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <VideoShareButtons videoTitle={video.title} videoUrl={window.location.href} />
+
+              {videoType === "resolucao_prova" && (
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-semibold text-muted-foreground">Caiu na sua Prova?</span>
+                  <Button
+                    variant={userProvaVote === true ? "default" : "outline"}
+                    size="sm"
+                    className="h-7 px-2 text-xs gap-1"
+                    disabled={votingProva}
+                    onClick={() => handleProvaVote(true)}
+                  >
+                    <ThumbsUp className="h-3.5 w-3.5" /> Sim
+                  </Button>
+                  <Button
+                    variant={userProvaVote === false ? "default" : "outline"}
+                    size="sm"
+                    className="h-7 px-2 text-xs gap-1"
+                    disabled={votingProva}
+                    onClick={() => handleProvaVote(false)}
+                  >
+                    <ThumbsDown className="h-3.5 w-3.5" /> Não
+                  </Button>
+                  {provaVotePercent !== null && (
+                    <span className="ml-1 rounded-full bg-primary px-2.5 py-0.5 text-xs font-bold text-primary-foreground">
+                      {provaVotePercent}% sim
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
 
             {/* Rating */}
             <div className="space-y-2">

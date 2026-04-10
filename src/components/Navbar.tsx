@@ -152,10 +152,10 @@ const Navbar = () => {
             <AnimatePresence>
               {searchOpen && (
                 <motion.div
-                  initial={{ opacity: 0, width: 0 }}
-                  animate={{ opacity: 1, width: "280px" }}
-                  exit={{ opacity: 0, width: 0 }}
-                  className="absolute right-0 top-full mt-2 overflow-hidden"
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="fixed left-4 right-4 top-[60px] md:absolute md:left-auto md:right-0 md:top-full md:mt-2 md:w-[320px] z-50"
                 >
                   <Input
                     ref={searchInputRef}
@@ -164,7 +164,7 @@ const Navbar = () => {
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="bg-background border-border"
                   />
-                  {(searchResults.length > 0 || searching) && (
+                  {(searchResults.length > 0 || searching || (searchQuery.trim().length >= 2 && !searching)) && (
                     <div className="mt-1 rounded-md border border-border bg-background shadow-lg max-h-60 overflow-y-auto">
                       {searching && (
                         <p className="px-3 py-2 text-sm text-muted-foreground">Buscando...</p>

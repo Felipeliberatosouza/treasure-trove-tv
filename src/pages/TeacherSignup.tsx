@@ -80,6 +80,17 @@ const TeacherSignup = () => {
       if (userId && phone) {
         await supabase.from("profiles").update({ phone }).eq("user_id", userId);
       }
+      // Send welcome email
+      if (userId) {
+        await supabase.functions.invoke("send-transactional-email", {
+          body: {
+            templateName: "welcome-teacher",
+            recipientEmail: email,
+            idempotencyKey: `welcome-teacher-${userId}`,
+            templateData: { name: name.trim() },
+          },
+        });
+      }
       toast.success("Conta criada! Verifique seu e-mail para confirmar.");
       navigate("/login");
     }

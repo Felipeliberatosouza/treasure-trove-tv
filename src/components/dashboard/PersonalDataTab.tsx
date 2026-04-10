@@ -15,6 +15,8 @@ const PersonalDataTab = () => {
   const [bio, setBio] = useState("");
   const [expertiseAreas, setExpertiseAreas] = useState<string[]>([]);
   const [birthDate, setBirthDate] = useState("");
+  const [slug, setSlug] = useState("");
+  const [profileTitle, setProfileTitle] = useState("");
   const [saving, setSaving] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
@@ -26,6 +28,8 @@ const PersonalDataTab = () => {
       setBio(profile.bio || "");
       setExpertiseAreas(profile.expertise_area ? profile.expertise_area.split(", ").filter(Boolean) : []);
       setBirthDate(profile.birth_date || "");
+      setSlug((profile as any).slug || "");
+      setProfileTitle((profile as any).profile_title || "");
     }
   }, [profile]);
 
@@ -56,9 +60,14 @@ const PersonalDataTab = () => {
       return;
     }
     setSaving(true);
+    const updateData: any = { name, bio, expertise_area: expertiseAreas.join(", "), birth_date: birthDate || null };
+    if (role === "teacher") {
+      updateData.slug = slug;
+      updateData.profile_title = profileTitle;
+    }
     const { error } = await supabase
       .from("profiles")
-      .update({ name, bio, expertise_area: expertiseAreas.join(", "), birth_date: birthDate || null })
+      .update(updateData)
       .eq("user_id", user.id);
 
     if (error) {
@@ -124,6 +133,27 @@ const PersonalDataTab = () => {
         </div>
         {role === "teacher" && (
           <>
+            <div>
+              <label className="text-sm text-muted-foreground mb-1 block">URL da sua página</label>
+              <div className="flex items-center gap-1">
+                <span className="text-sm text-muted-foreground whitespace-nowrap">revisaofacil.com/</span>
+                <Input
+                  value={slug}
+                  onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9.]/g, ""))}
+                  className="bg-secondary"
+                  placeholder="nome.sobrenome"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="text-sm text-muted-foreground mb-1 block">Título da sua página</label>
+              <Input
+                value={profileTitle}
+                onChange={(e) => setProfileTitle(e.target.value)}
+                className="bg-secondary"
+                placeholder="Ex: Aulas de Matemática com Prof. João"
+              />
+            </div>
             <div>
               <label className="text-sm text-muted-foreground mb-1 block">Áreas de expertise</label>
               <AreaSelector selected={expertiseAreas} onChange={setExpertiseAreas} max={areas.length || 10} />

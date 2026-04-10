@@ -402,6 +402,7 @@ export type Database = {
           id: string
           name: string
           phone: string | null
+          profile_title: string | null
           slug: string | null
           updated_at: string
           user_id: string
@@ -418,6 +419,7 @@ export type Database = {
           id?: string
           name: string
           phone?: string | null
+          profile_title?: string | null
           slug?: string | null
           updated_at?: string
           user_id: string
@@ -434,6 +436,7 @@ export type Database = {
           id?: string
           name?: string
           phone?: string | null
+          profile_title?: string | null
           slug?: string | null
           updated_at?: string
           user_id?: string

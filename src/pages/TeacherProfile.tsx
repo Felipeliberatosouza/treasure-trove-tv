@@ -11,6 +11,7 @@ interface TeacherData {
   avatar_url: string | null;
   bio: string | null;
   expertise_area: string | null;
+  profile_title: string | null;
   user_id: string;
 }
 
@@ -39,7 +40,7 @@ const TeacherProfile = () => {
       setLoading(true);
       const { data: profile } = await supabase
         .from("profiles")
-        .select("name, avatar_url, bio, expertise_area, user_id")
+        .select("name, avatar_url, bio, expertise_area, profile_title, user_id")
         .eq("slug", slug)
         .maybeSingle();
 
@@ -164,6 +165,11 @@ const TeacherProfile = () => {
               </div>
             </div>
           </div>
+
+          {/* Page title */}
+          {teacher.profile_title && (
+            <h2 className="font-display text-xl sm:text-2xl font-bold text-center mb-8 text-foreground">{teacher.profile_title}</h2>
+          )}
 
           {/* Content grid */}
           <div className="mb-4">

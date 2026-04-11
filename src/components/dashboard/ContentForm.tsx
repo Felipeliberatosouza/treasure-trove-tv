@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import AreaSelector from "@/components/AreaSelector";
 import VideoRecorder from "./VideoRecorder";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
+import { compositeVideo, type ImpactWord } from "@/utils/videoCompositor";
 
 interface ContentFormProps {
   table: "lessons" | "exam_solutions";
@@ -35,12 +36,15 @@ const ContentForm = ({ table, onSaved, onCancel }: ContentFormProps) => {
   const [showRecorder, setShowRecorder] = useState(false);
   const [subtitlesVtt, setSubtitlesVtt] = useState<string>("");
   const [teacherName, setTeacherName] = useState("");
+  const [processingUpload, setProcessingUpload] = useState(false);
+  const [processingStep, setProcessingStep] = useState("");
 
   const recordingEnabled = productConfig?.revisoes?.enable_recording ?? false;
   const maxRecordingMinutes = productConfig?.revisoes?.max_recording_minutes ?? 30;
   const enableSubtitles = productConfig?.revisoes?.enable_subtitles ?? false;
   const enableBlackboard = productConfig?.revisoes?.enable_blackboard ?? false;
   const enableAutoCover = productConfig?.revisoes?.enable_auto_cover ?? false;
+  const needsProcessing = enableSubtitles || enableBlackboard || enableAutoCover;
 
   // Fetch teacher name for auto cover
   useEffect(() => {
@@ -54,6 +58,111 @@ const ContentForm = ({ table, onSaved, onCancel }: ContentFormProps) => {
         if (data?.name) setTeacherName(data.name);
       });
   }, [user]);
+
+  // Extract audio from a video file and return base64
+  const extractAudioBase64 = useCallback(async (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const video = document.createElement("video");
+      video.preload = "auto";
+      video.muted = true;
+      video.src = URL.createObjectURL(file);
+
+      video.onloadedmetadata = async () => {
+        try {
+          const audioCtx = new AudioContext();
+          const source = audioCtx.createMediaElementSource(video);
+          const dest = audioCtx.createMediaStreamDestination();
+          source.connect(dest);
+
+          const audioRecorder = new MediaRecorder(dest.stream, { mimeType: "audio/webm" });
+          const chunks: Blob[] = [];
+          audioRecorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
+
+          const done = new Promise<Blob>((res) => {
+            audioRecorder.onstop = () => res(new Blob(chunks, { type: "audio/webm" }));
+          });
+
+          audioRecorder.start(500);
+          video.muted = false;
+          video.playbackRate = 16;
+          await video.play();
+
+          video.onended = () => {
+            audioRecorder.stop();
+            audioCtx.close();
+            URL.revokeObjectURL(video.src);
+          };
+
+          const audioBlob = await done;
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            const base64 = (reader.result as string).split(",")[1];
+            resolve(base64);
+          };
+          reader.onerror = () => reject(new Error("Failed to read audio"));
+          reader.readAsDataURL(audioBlob);
+        } catch (err) {
+          URL.revokeObjectURL(video.src);
+          reject(err);
+        }
+      };
+
+      video.onerror = () => {
+        URL.revokeObjectURL(video.src);
+        reject(new Error("Failed to load video"));
+      };
+    });
+  }, []);
+
+  // Process an uploaded video file through the AI pipeline
+  const processUploadedVideo = useCallback(async (file: File): Promise<{ processedFile: File; vtt: string }> => {
+    setProcessingUpload(true);
+    setProcessingStep("Extraindo áudio do vídeo...");
+
+    let impactWords: ImpactWord[] = [];
+    let vtt = "";
+
+    try {
+      if (enableSubtitles || enableBlackboard) {
+        const audioBase64 = await extractAudioBase64(file);
+        setProcessingStep("Transcrevendo áudio com IA...");
+
+        const { data: funcData, error: funcError } = await supabase.functions.invoke(
+          "process-recorded-video",
+          { body: { audioBase64, title, mimeType: "audio/webm" } }
+        );
+
+        if (funcError) {
+          console.error("Transcription function error:", funcError);
+          toast.error("Erro na transcrição. O vídeo será salvo sem legendas/quadro negro.");
+        } else if (funcData) {
+          vtt = funcData.subtitlesVtt || "";
+          impactWords = funcData.impactWords || [];
+        }
+      }
+
+      if ((enableBlackboard && impactWords.length > 0) || enableAutoCover) {
+        setProcessingStep("Processando vídeo com quadro negro e capa...");
+
+        const videoBlob = new Blob([await file.arrayBuffer()], { type: file.type });
+        const compositedBlob = await compositeVideo(videoBlob, {
+          impactWords: enableBlackboard ? impactWords : [],
+          introTitle: enableAutoCover ? title : undefined,
+          introArea: enableAutoCover ? (selectedAreas[0] || "") : undefined,
+          introTeacher: enableAutoCover ? teacherName : undefined,
+          onProgress: () => {},
+        });
+
+        const processedFile = new File([compositedBlob], `processado-${Date.now()}.webm`, { type: compositedBlob.type });
+        return { processedFile, vtt };
+      }
+
+      return { processedFile: file, vtt };
+    } finally {
+      setProcessingUpload(false);
+      setProcessingStep("");
+    }
+  }, [enableSubtitles, enableBlackboard, enableAutoCover, title, selectedAreas, teacherName, extractAudioBase64]);
 
   const uploadFile = async (file: File, bucket: string) => {
     const ext = file.name.split(".").pop();
@@ -91,15 +200,32 @@ const ContentForm = ({ table, onSaved, onCancel }: ContentFormProps) => {
 
       if (thumbnailFile) thumbnail_url = await uploadFile(thumbnailFile, "thumbnails");
       if (carouselFile) carousel_cover_url = await uploadFile(carouselFile, "carousel-covers");
-      if (videoFile) video_url = await uploadFile(videoFile, "videos");
+      let subtitles_url = "";
+      if (videoFile) {
+        let finalVideoFile = videoFile;
+        if (needsProcessing && !subtitlesVtt) {
+          try {
+            const result = await processUploadedVideo(videoFile);
+            finalVideoFile = result.processedFile;
+            if (result.vtt) {
+              setSubtitlesVtt(result.vtt);
+              const vttBlob = new Blob([result.vtt], { type: "text/vtt" });
+              const vttFile = new File([vttBlob], `legendas-${Date.now()}.vtt`, { type: "text/vtt" });
+              subtitles_url = await uploadFile(vttFile, "materials");
+            }
+          } catch (err) {
+            console.error("Video processing error:", err);
+            toast.error("Erro ao processar vídeo. Enviando original.");
+          }
+        }
+        video_url = await uploadFile(finalVideoFile, "videos");
+      }
       if (resumoFile) resumo_url = await uploadFile(resumoFile, "materials");
       if (simuladoFile) simulado_url = await uploadFile(simuladoFile, "materials");
       if (topQuestoesFile) top_questoes_url = await uploadFile(topQuestoesFile, "materials");
       if (colinhaFile) colinha_url = await uploadFile(colinhaFile, "materials");
 
-      // Upload subtitles VTT if available
-      let subtitles_url = "";
-      if (subtitlesVtt) {
+      if (subtitlesVtt && !subtitles_url) {
         const vttBlob = new Blob([subtitlesVtt], { type: "text/vtt" });
         const vttFile = new File([vttBlob], `legendas-${Date.now()}.vtt`, { type: "text/vtt" });
         subtitles_url = await uploadFile(vttFile, "materials");
@@ -296,7 +422,7 @@ const ContentForm = ({ table, onSaved, onCancel }: ContentFormProps) => {
       <div className="flex gap-3 pt-2">
         <Button type="submit" disabled={saving} className="font-display">
           <Upload className="h-4 w-4 mr-1" />
-          {saving ? "Enviando..." : "Submeter para Aprovação"}
+          {saving ? (processingUpload ? processingStep || "Processando..." : "Enviando...") : "Submeter para Aprovação"}
         </Button>
         <Button type="button" variant="secondary" onClick={onCancel} className="font-display">
           Cancelar

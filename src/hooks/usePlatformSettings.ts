@@ -69,6 +69,30 @@ export interface PageContentSettings {
   content: string;
 }
 
+export interface AboutUsSettings {
+  description: string;
+  mission: string;
+  values: string;
+  how_it_works_items: {
+    title: string;
+    description: string;
+  }[];
+}
+
+export interface TermsOfUseSettings {
+  sections: {
+    title: string;
+    content: string;
+  }[];
+}
+
+export interface PrivacyPolicySettings {
+  sections: {
+    title: string;
+    content: string;
+  }[];
+}
+
 type SettingsMap = {
   branding: BrandingSettings;
   contact: ContactSettings;
@@ -77,9 +101,9 @@ type SettingsMap = {
   subscription_plans: SubscriptionPlansSettings;
   video_pricing: VideoPricingSettings;
   free_trial: FreeTrialSettings;
-  about_us: PageContentSettings;
-  terms_of_use: PageContentSettings;
-  privacy_policy: PageContentSettings;
+  about_us: AboutUsSettings;
+  terms_of_use: TermsOfUseSettings;
+  privacy_policy: PrivacyPolicySettings;
   doubt_response_deadline_days: number;
   product_config: ProductConfigSettings;
 };

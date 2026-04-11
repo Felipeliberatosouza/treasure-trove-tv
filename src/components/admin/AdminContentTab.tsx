@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, CheckCircle, XCircle, Video, FileText, DollarSign, Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 
 interface ContentItem {
   id: string;
@@ -29,6 +31,8 @@ const AdminContentTab = () => {
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterType, setFilterType] = useState("all");
+  const [rejectItem, setRejectItem] = useState<ContentItem | null>(null);
+  const [rejectReason, setRejectReason] = useState("");
   const { toast } = useToast();
 
   const fetchContent = async () => {
@@ -61,18 +65,19 @@ const AdminContentTab = () => {
 
   useEffect(() => { fetchContent(); }, []);
 
-  const sendDecisionEmail = async (item: ContentItem, approved: boolean) => {
+  const sendDecisionEmail = async (item: ContentItem, approved: boolean, reason?: string) => {
     if (!item.teacher_email) return;
 
     const { error } = await supabase.functions.invoke("send-transactional-email", {
       body: {
         templateName: approved ? "content-approved" : "content-rejected",
         recipientEmail: item.teacher_email,
-        idempotencyKey: `content-${approved ? "approved" : "rejected"}-${item.type}-${item.id}`,
+        idempotencyKey: `content-${approved ? "approved" : "rejected"}-${item.type}-${item.id}-${Date.now()}`,
         templateData: {
           teacherName: item.teacher_name || "",
           contentTitle: item.title,
           contentType: item.type,
+          ...(reason ? { rejectionReason: reason } : {}),
         },
       },
     });
@@ -99,7 +104,7 @@ const AdminContentTab = () => {
     fetchContent();
   };
 
-  const handleReject = async (item: ContentItem) => {
+  const handleReject = async (item: ContentItem, reason: string) => {
     const table = item.type === "lesson" ? "lessons" : "exam_solutions";
     const { error } = await supabase
       .from(table)
@@ -111,8 +116,10 @@ const AdminContentTab = () => {
       return;
     }
 
-    await sendDecisionEmail(item, false);
+    await sendDecisionEmail(item, false, reason);
     toast({ title: "Rejeitado", description: `"${item.title}" foi rejeitado e voltou para rascunho.` });
+    setRejectItem(null);
+    setRejectReason("");
     fetchContent();
   };
 
@@ -264,7 +271,7 @@ const AdminContentTab = () => {
                           <Button size="sm" variant="ghost" className="h-8 text-green-500 hover:text-green-400" onClick={() => handleApprove(item)}>
                             <CheckCircle className="h-4 w-4 mr-1" /> Aprovar
                           </Button>
-                          <Button size="sm" variant="ghost" className="h-8 text-destructive hover:text-destructive" onClick={() => handleReject(item)}>
+                          <Button size="sm" variant="ghost" className="h-8 text-destructive hover:text-destructive" onClick={() => { setRejectItem(item); setRejectReason(""); }}>
                             <XCircle className="h-4 w-4 mr-1" /> Rejeitar
                           </Button>
                         </>
@@ -289,6 +296,28 @@ const AdminContentTab = () => {
           </Table>
         </div>
       )}
+      <Dialog open={!!rejectItem} onOpenChange={(open) => { if (!open) { setRejectItem(null); setRejectReason(""); } }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Rejeitar conteúdo</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Explique ao professor o motivo da rejeição de <strong>"{rejectItem?.title}"</strong>. Esta observação será enviada por e-mail.
+          </p>
+          <Textarea
+            placeholder="Descreva os pontos que precisam ser corrigidos..."
+            value={rejectReason}
+            onChange={(e) => setRejectReason(e.target.value)}
+            rows={4}
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setRejectItem(null); setRejectReason(""); }}>Cancelar</Button>
+            <Button variant="destructive" disabled={!rejectReason.trim()} onClick={() => rejectItem && handleReject(rejectItem, rejectReason.trim())}>
+              Confirmar Rejeição
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

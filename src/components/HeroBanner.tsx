@@ -89,14 +89,6 @@ const HeroBanner = ({ onVideoClick, onExploreClick }: HeroBannerProps) => {
             >
               <PrimaryIcon className="h-5 w-5" /> {ctaText}
             </Button>
-            <Button
-              size="lg"
-              variant="secondary"
-              className="gap-2 font-display font-semibold"
-              onClick={handleSecondaryClick}
-            >
-              <SecondaryIcon className="h-5 w-5" /> {secondaryText}
-            </Button>
           </div>
         </motion.div>
       </div>

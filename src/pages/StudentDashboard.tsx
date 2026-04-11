@@ -63,6 +63,7 @@ const StudentDashboard = () => {
             animate={{ opacity: 1, y: 0 }}
             className="flex-1 rounded-xl border border-border bg-card p-6"
           >
+            {activeTab === "instructions" && <StudentInstructionsTab />}
             {activeTab === "personal" && <PersonalDataTab />}
             {activeTab === "login" && <LoginDataTab />}
             {activeTab === "doubts" && <StudentDoubtsTab />}

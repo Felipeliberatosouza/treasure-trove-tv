@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Check, Zap } from "lucide-react";
+import { Check, Zap, ShieldCheck, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -110,12 +110,14 @@ const PricingSection = () => {
                   Começar Agora
                 </Button>
                 {plan.allow_free_cancel !== false && plan.cancel_text && (
-                  <p className="text-xs text-muted-foreground">
+                  <p className="flex items-center justify-center gap-1.5 text-xs text-green-500">
+                    <ShieldCheck className="h-3.5 w-3.5" />
                     {plan.cancel_text}
                   </p>
                 )}
                 {plan.allow_free_cancel === false && plan.min_commitment_days && (
-                  <p className="text-xs text-muted-foreground">
+                  <p className="flex items-center justify-center gap-1.5 text-xs text-amber-500">
+                    <Clock className="h-3.5 w-3.5" />
                     Permanência mínima de {plan.min_commitment_days} dias.
                   </p>
                 )}

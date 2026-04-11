@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, CheckCircle, XCircle, Video, FileText, DollarSign } from "lucide-react";
+import { Search, CheckCircle, XCircle, Video, FileText, DollarSign, Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface ContentItem {
@@ -61,35 +61,75 @@ const AdminContentTab = () => {
 
   useEffect(() => { fetchContent(); }, []);
 
-  const handleApprove = async (item: ContentItem, approve: boolean) => {
+  const sendDecisionEmail = async (item: ContentItem, approved: boolean) => {
+    if (!item.teacher_email) return;
+
+    const { error } = await supabase.functions.invoke("send-transactional-email", {
+      body: {
+        templateName: approved ? "content-approved" : "content-rejected",
+        recipientEmail: item.teacher_email,
+        idempotencyKey: `content-${approved ? "approved" : "rejected"}-${item.type}-${item.id}`,
+        templateData: {
+          teacherName: item.teacher_name || "",
+          contentTitle: item.title,
+          contentType: item.type,
+        },
+      },
+    });
+
+    if (error) {
+      console.error("Erro ao enviar e-mail de moderação:", error);
+    }
+  };
+
+  const handleApprove = async (item: ContentItem) => {
     const table = item.type === "lesson" ? "lessons" : "exam_solutions";
     const { error } = await supabase
       .from(table)
-      .update({ admin_approved: approve })
+      .update({ published: true, admin_approved: true })
       .eq("id", item.id);
 
     if (error) {
-      toast({ title: "Erro", description: "Falha ao atualizar status.", variant: "destructive" });
-    } else {
-      toast({ title: approve ? "Aprovado" : "Rejeitado", description: `"${item.title}" foi ${approve ? "aprovado" : "rejeitado"}.` });
-      fetchContent();
-
-      // Send email notification to teacher
-      if (item.teacher_email) {
-        supabase.functions.invoke("send-transactional-email", {
-          body: {
-            templateName: approve ? "content-approved" : "content-rejected",
-            recipientEmail: item.teacher_email,
-            idempotencyKey: `content-${approve ? "approved" : "rejected"}-${item.type}-${item.id}`,
-            templateData: {
-              teacherName: item.teacher_name || "",
-              contentTitle: item.title,
-              contentType: item.type,
-            },
-          },
-        });
-      }
+      toast({ title: "Erro", description: "Falha ao aprovar conteúdo.", variant: "destructive" });
+      return;
     }
+
+    await sendDecisionEmail(item, true);
+    toast({ title: "Aprovado", description: `"${item.title}" foi aprovado e publicado.` });
+    fetchContent();
+  };
+
+  const handleReject = async (item: ContentItem) => {
+    const table = item.type === "lesson" ? "lessons" : "exam_solutions";
+    const { error } = await supabase
+      .from(table)
+      .update({ published: false, admin_approved: false })
+      .eq("id", item.id);
+
+    if (error) {
+      toast({ title: "Erro", description: "Falha ao rejeitar conteúdo.", variant: "destructive" });
+      return;
+    }
+
+    await sendDecisionEmail(item, false);
+    toast({ title: "Rejeitado", description: `"${item.title}" foi rejeitado e voltou para rascunho.` });
+    fetchContent();
+  };
+
+  const handleRevoke = async (item: ContentItem) => {
+    const table = item.type === "lesson" ? "lessons" : "exam_solutions";
+    const { error } = await supabase
+      .from(table)
+      .update({ admin_approved: false })
+      .eq("id", item.id);
+
+    if (error) {
+      toast({ title: "Erro", description: "Falha ao revogar aprovação.", variant: "destructive" });
+      return;
+    }
+
+    toast({ title: "Aprovação revogada", description: `"${item.title}" voltou para pendente.` });
+    fetchContent();
   };
 
   const handlePercentageChange = async (item: ContentItem, percentage: number) => {
@@ -211,13 +251,26 @@ const AdminContentTab = () => {
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-1">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-8"
+                        onClick={() => window.open(`/video/${item.id}`, "_blank")}
+                      >
+                        <Eye className="h-4 w-4 mr-1" /> Assistir
+                      </Button>
                       {item.published && !item.admin_approved && (
-                        <Button size="sm" variant="ghost" className="h-8 text-green-500 hover:text-green-400" onClick={() => handleApprove(item, true)}>
-                          <CheckCircle className="h-4 w-4 mr-1" /> Aprovar
-                        </Button>
+                        <>
+                          <Button size="sm" variant="ghost" className="h-8 text-green-500 hover:text-green-400" onClick={() => handleApprove(item)}>
+                            <CheckCircle className="h-4 w-4 mr-1" /> Aprovar
+                          </Button>
+                          <Button size="sm" variant="ghost" className="h-8 text-destructive hover:text-destructive" onClick={() => handleReject(item)}>
+                            <XCircle className="h-4 w-4 mr-1" /> Rejeitar
+                          </Button>
+                        </>
                       )}
                       {item.admin_approved && (
-                        <Button size="sm" variant="ghost" className="h-8 text-destructive hover:text-destructive" onClick={() => handleApprove(item, false)}>
+                        <Button size="sm" variant="ghost" className="h-8 text-destructive hover:text-destructive" onClick={() => handleRevoke(item)}>
                           <XCircle className="h-4 w-4 mr-1" /> Revogar
                         </Button>
                       )}

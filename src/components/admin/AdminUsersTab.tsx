@@ -14,6 +14,7 @@ interface UserWithRole {
   email: string;
   role: string;
   created_at: string;
+  referral_code: number | null;
 }
 
 const AdminUsersTab = () => {

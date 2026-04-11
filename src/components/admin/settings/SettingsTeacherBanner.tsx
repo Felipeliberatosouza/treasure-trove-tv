@@ -18,7 +18,7 @@ const defaults: TeacherBannerSettings = {
   title: "Você é Professor?",
   subtitle: "Faça parte da Revisão Fácil! Ganhe conosco!",
   cta_text: "Cadastre-se como Professor",
-  cta_link: "/cadastro-professor",
+  cta_link: "/signup/teacher",
   background_image_url: "",
 };
 

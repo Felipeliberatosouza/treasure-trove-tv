@@ -17,7 +17,7 @@ const TeacherBanner = () => {
   const title = settings?.title || "Você é Professor?";
   const subtitle = settings?.subtitle || "Faça parte da Revisão Fácil! Ganhe conosco!";
   const ctaText = settings?.cta_text || "Cadastre-se como Professor";
-  const ctaLink = settings?.cta_link || "/cadastro-professor";
+  const ctaLink = settings?.cta_link || "/signup/teacher";
   const bgImage = settings?.background_image_url || defaultBg;
 
   return (

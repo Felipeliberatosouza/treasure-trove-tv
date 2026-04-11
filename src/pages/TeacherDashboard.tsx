@@ -24,7 +24,7 @@ const tabs = [
 type TabId = (typeof tabs)[number]["id"];
 
 const TeacherDashboard = () => {
-  const [activeTab, setActiveTab] = useState<TabId>("personal");
+  const [activeTab, setActiveTab] = useState<TabId>("instructions");
   const { profile } = useAuth();
 
   return (

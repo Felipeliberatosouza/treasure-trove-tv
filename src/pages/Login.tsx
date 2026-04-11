@@ -104,6 +104,13 @@ const Login = () => {
           </div>
         </div>
 
+        {deactivatedMsg && (
+          <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive space-y-1">
+            <p className="font-semibold">Conta desativada</p>
+            <p>Sua conta foi desativada pelo administrador. Para mais informações ou reativação, entre em contato com o suporte pelo e-mail ou WhatsApp disponíveis na página de contato.</p>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="relative">
             <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />

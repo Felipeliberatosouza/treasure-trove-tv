@@ -18,7 +18,7 @@ import AdminUsageHistoryTab from "@/components/admin/AdminUsageHistoryTab";
 const tabs = [
   { id: "overview", label: "Visão Geral", icon: LayoutDashboard },
   { id: "users", label: "Usuários", icon: Users },
-  { id: "content", label: "Conteúdos", icon: Video },
+  { id: "content", label: "Moderações", icon: Video },
   { id: "doubts", label: "Aprovação de Dúvidas", icon: HelpCircle },
   { id: "payments", label: "Pagamentos", icon: DollarSign },
   { id: "plans", label: "Planos de Assinatura", icon: CreditCard },

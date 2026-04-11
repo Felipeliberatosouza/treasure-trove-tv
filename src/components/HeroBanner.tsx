@@ -10,6 +10,8 @@ interface HeroBannerProps {
   onExploreClick?: () => void;
 }
 
+const SEARCH_CTA_TEXTS = new Set(["comece agora", "começar agora"]);
+
 const HeroBanner = ({ onVideoClick, onExploreClick }: HeroBannerProps) => {
   const featured = getFeaturedVideo();
   const { data: heroBannerSettings } = usePlatformSettings("hero_banner");
@@ -18,6 +20,33 @@ const HeroBanner = ({ onVideoClick, onExploreClick }: HeroBannerProps) => {
   const subtitle = heroBannerSettings?.subtitle || featured.description;
   const ctaText = heroBannerSettings?.cta_text || "Assistir Agora";
   const bannerImage = heroBannerSettings?.banner_image_url || heroBanner;
+
+  const normalizedPrimaryCta = ctaText.trim().toLowerCase();
+  const primaryGoesToPopular = SEARCH_CTA_TEXTS.has(normalizedPrimaryCta);
+
+  const handlePrimaryClick = () => {
+    if (primaryGoesToPopular && onExploreClick) {
+      onExploreClick();
+      return;
+    }
+
+    onVideoClick(featured.id);
+  };
+
+  const handleSecondaryClick = () => {
+    if (primaryGoesToPopular) {
+      onVideoClick(featured.id);
+      return;
+    }
+
+    onExploreClick?.();
+  };
+
+  const primaryIcon = primaryGoesToPopular ? BookOpen : Play;
+  const secondaryIcon = primaryGoesToPopular ? Play : BookOpen;
+  const secondaryText = primaryGoesToPopular ? "Assistir Destaque" : "Comece Agora";
+  const PrimaryIcon = primaryIcon;
+  const SecondaryIcon = secondaryIcon;
 
   return (
     <section className="relative h-[85vh] min-h-[500px] w-full overflow-hidden">
@@ -52,21 +81,21 @@ const HeroBanner = ({ onVideoClick, onExploreClick }: HeroBannerProps) => {
             <span className="h-1 w-1 rounded-full bg-muted-foreground" />
             <span>{featured.duration}</span>
           </div>
-          <div className="flex gap-3 pt-2">
+          <div className="flex gap-3 pt-2 flex-wrap">
             <Button
               size="lg"
               className="gap-2 font-display font-semibold"
-              onClick={() => onVideoClick(featured.id)}
+              onClick={handlePrimaryClick}
             >
-              <Play className="h-5 w-5" /> {ctaText}
+              <PrimaryIcon className="h-5 w-5" /> {ctaText}
             </Button>
             <Button
               size="lg"
               variant="secondary"
               className="gap-2 font-display font-semibold"
-              onClick={onExploreClick}
+              onClick={handleSecondaryClick}
             >
-              <BookOpen className="h-5 w-5" /> Comece Agora
+              <SecondaryIcon className="h-5 w-5" /> {secondaryText}
             </Button>
           </div>
         </motion.div>

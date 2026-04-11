@@ -496,6 +496,7 @@ export type Database = {
           name: string
           phone: string | null
           profile_title: string | null
+          referral_code: number | null
           slug: string | null
           updated_at: string
           user_id: string
@@ -513,6 +514,7 @@ export type Database = {
           name: string
           phone?: string | null
           profile_title?: string | null
+          referral_code?: number | null
           slug?: string | null
           updated_at?: string
           user_id: string
@@ -530,6 +532,7 @@ export type Database = {
           name?: string
           phone?: string | null
           profile_title?: string | null
+          referral_code?: number | null
           slug?: string | null
           updated_at?: string
           user_id?: string

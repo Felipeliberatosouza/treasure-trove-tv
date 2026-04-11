@@ -411,6 +411,21 @@ const VideoPage = () => {
     <div className="min-h-screen bg-background text-foreground flex flex-col">
       <Navbar />
 
+      {limitInfo && (
+        <ResourceLimitModal
+          open={showLimitModal}
+          onClose={() => setShowLimitModal(false)}
+          resourceType={limitInfo.resourceType}
+          used={limitInfo.used}
+          total={limitInfo.total}
+          hasSubscription={limitInfo.hasSubscription}
+          individualPrice={limitInfo.individualPrice}
+          onBuyIndividual={() => {
+            toast.info("Compra individual será integrada com Stripe em breve.");
+          }}
+        />
+      )}
+
       <Dialog open={isDoubtsOpen} onOpenChange={setIsDoubtsOpen}>
         <DialogContent className="max-w-lg border-border bg-card">
           <DialogHeader>

@@ -1,0 +1,1 @@
+ALTER TABLE public.subscription_plans ADD COLUMN checkout_url text DEFAULT '';

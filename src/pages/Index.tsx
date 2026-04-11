@@ -12,6 +12,7 @@ import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import { useHomepageAreas } from "@/hooks/useCourseAreas";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import { Search, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { AnimatePresence, motion } from "framer-motion";
@@ -25,11 +26,14 @@ interface SearchResult {
 
 const Index = () => {
   const navigate = useNavigate();
+  const { user, profile, role } = useAuth();
   const ratings = useVideoRatings(videos.map((v) => v.id));
   const { data: trialSettings } = usePlatformSettings("free_trial");
   const showTrialBadge = trialSettings?.enabled ?? false;
   const { areas } = useHomepageAreas();
   const [areaLessons, setAreaLessons] = useState<Record<string, Video[]>>({});
+  const [popularVideos, setPopularVideos] = useState<Video[]>([]);
+  const [loadingPopular, setLoadingPopular] = useState(false);
 
   // Inline search state
   const [inlineSearchOpen, setInlineSearchOpen] = useState(false);
@@ -38,6 +42,66 @@ const Index = () => {
   const [inlineSearching, setInlineSearching] = useState(false);
   const inlineSearchRef = useRef<HTMLInputElement>(null);
   const popularSectionRef = useRef<HTMLDivElement>(null);
+
+  // Fetch popular videos based on student's interest areas
+  useEffect(() => {
+    const studentAreas = profile?.areas;
+    const isStudent = role === "student" && user && studentAreas && studentAreas.length > 0;
+
+    if (!isStudent) {
+      setPopularVideos([]);
+      return;
+    }
+
+    const fetchPopular = async () => {
+      setLoadingPopular(true);
+      // Fetch most viewed lessons from the student's interest areas
+      const { data: viewCounts } = await supabase
+        .from("video_views")
+        .select("content_id, content_type");
+
+      // Count views per content
+      const viewMap: Record<string, number> = {};
+      (viewCounts || []).forEach((v) => {
+        viewMap[v.content_id] = (viewMap[v.content_id] || 0) + 1;
+      });
+
+      // Fetch lessons that overlap with student areas
+      const { data: lessons } = await supabase
+        .from("lessons")
+        .select("*")
+        .eq("published", true)
+        .eq("admin_approved", true)
+        .overlaps("areas", studentAreas)
+        .limit(20);
+
+      if (lessons && lessons.length > 0) {
+        // Sort by view count descending
+        const sorted = [...lessons].sort(
+          (a, b) => (viewMap[b.id] || 0) - (viewMap[a.id] || 0)
+        );
+        setPopularVideos(
+          sorted.map((l) => ({
+            id: l.id,
+            title: l.title,
+            description: l.description || "",
+            thumbnail: l.thumbnail_url || "/placeholder.svg",
+            duration: "",
+            category: (l.areas as string[] || [])[0] || "",
+            instructor: "",
+            lessons: 1,
+            level: "Iniciante" as const,
+            videoUrl: l.video_url || undefined,
+          }))
+        );
+      } else {
+        setPopularVideos([]);
+      }
+      setLoadingPopular(false);
+    };
+
+    fetchPopular();
+  }, [user, profile?.areas, role]);
 
   useEffect(() => {
     if (areas.length === 0) return;
@@ -181,9 +245,9 @@ const Index = () => {
 
           <VideoCarousel
             title="🔥 Mais Populares"
-            videos={videos}
+            videos={popularVideos.length > 0 ? popularVideos : videos}
             onVideoClick={handleVideoClick}
-            ratings={ratings}
+            ratings={popularVideos.length > 0 ? undefined : ratings}
             showTrialBadge={showTrialBadge}
           />
         </div>

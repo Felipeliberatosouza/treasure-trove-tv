@@ -34,6 +34,7 @@ const AdminUsersTab = () => {
       const merged = profiles.map((p) => ({
         ...p,
         role: roleMap.get(p.user_id) || "student",
+        referral_code: p.referral_code ?? null,
       }));
       setUsers(merged);
     }

@@ -1,10 +1,18 @@
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Check, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { usePlatformSettings } from "@/hooks/usePlatformSettings";
-import type { SubscriptionPlan } from "@/hooks/usePlatformSettings";
+import { supabase } from "@/integrations/supabase/client";
 
-const defaultPlans: SubscriptionPlan[] = [
+interface PlanData {
+  name: string;
+  price: number;
+  features: string[];
+  highlighted: boolean;
+  cancel_text?: string;
+}
+
+const defaultPlans: PlanData[] = [
   {
     name: "PLANO PREMIUM",
     price: 49,
@@ -17,12 +25,24 @@ const defaultPlans: SubscriptionPlan[] = [
       "Comunidade exclusiva",
     ],
     highlighted: true,
+    cancel_text: "Cancele quando quiser. Sem compromisso.",
   },
 ];
 
 const PricingSection = () => {
-  const { data } = usePlatformSettings("subscription_plans");
-  const plans = data?.plans?.length ? data.plans : defaultPlans;
+  const [plans, setPlans] = useState<PlanData[]>(defaultPlans);
+
+  useEffect(() => {
+    const fetchPlans = async () => {
+      const { data } = await supabase
+        .from("subscription_plans")
+        .select("name, price, features, highlighted, cancel_text")
+        .eq("active", true)
+        .order("sort_order");
+      if (data?.length) setPlans(data as unknown as PlanData[]);
+    };
+    fetchPlans();
+  }, []);
 
   return (
     <section className="px-6 py-20 md:px-12 lg:px-20">
@@ -78,9 +98,11 @@ const PricingSection = () => {
                 <Button size="lg" className="w-full font-display font-semibold">
                   Começar Agora
                 </Button>
-                <p className="text-xs text-muted-foreground">
-                  Cancele quando quiser. Sem compromisso.
-                </p>
+                {plan.cancel_text && (
+                  <p className="text-xs text-muted-foreground">
+                    {plan.cancel_text}
+                  </p>
+                )}
               </div>
             </motion.div>
           ))}

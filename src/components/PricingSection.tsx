@@ -81,7 +81,7 @@ const PricingSection = () => {
     const fetchPlans = async () => {
       const { data } = await supabase
         .from("subscription_plans")
-        .select("name, price, features, highlighted, cancel_text, stripe_price_id, allow_free_cancel, min_commitment_days")
+        .select("name, price, features, highlighted, cancel_text, stripe_price_id, allow_free_cancel, min_commitment_days, service_revisoes, service_revisoes_qty, service_resumos, service_resumos_qty, service_simulados, service_simulados_qty, service_top_questoes, service_top_questoes_qty, service_colinhas, service_colinhas_qty, service_duvidas, service_duvidas_qty, service_aula_particular, service_aula_particular_qty")
         .eq("active", true)
         .order("sort_order");
       if (data?.length) setPlans(data as unknown as PlanData[]);

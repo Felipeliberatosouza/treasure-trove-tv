@@ -117,12 +117,24 @@ export default function StudentSubscriptionTab() {
   return (
     <div>
       <h2 className="font-display text-lg font-semibold mb-1">Assinatura e Compras</h2>
-      <div className="flex items-center gap-2 mb-6">
-        <Badge variant="default">{plan.name as string}</Badge>
-        <span className="text-xs text-muted-foreground">
-          Desde {new Date(subscription.started_at).toLocaleDateString("pt-BR")}
-          {subscription.expires_at && ` · Expira em ${new Date(subscription.expires_at).toLocaleDateString("pt-BR")}`}
-        </span>
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-6">
+        <div className="flex items-center gap-2">
+          <Badge variant="default">{plan.name as string}</Badge>
+          <span className="text-xs text-muted-foreground">
+            Desde {new Date(subscription.started_at).toLocaleDateString("pt-BR")}
+            {subscription.expires_at && ` · Expira em ${new Date(subscription.expires_at).toLocaleDateString("pt-BR")}`}
+          </span>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleManageSubscription}
+          disabled={portalLoading}
+          className="sm:ml-auto"
+        >
+          {portalLoading ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Settings className="h-4 w-4 mr-1" />}
+          Gerenciar Assinatura
+        </Button>
       </div>
 
       <h3 className="text-sm font-medium mb-3">Uso dos Recursos</h3>

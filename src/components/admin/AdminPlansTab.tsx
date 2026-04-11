@@ -142,6 +142,15 @@ const AdminPlansTab = () => {
               <Label className="cursor-pointer">Destacar este plano</Label>
             </div>
 
+            <div>
+              <Label>Frase de cancelamento</Label>
+              <Input
+                value={(plan.cancel_text as string) || ""}
+                onChange={(e) => updatePlan(pi, "cancel_text", e.target.value)}
+                placeholder="Ex: Cancele quando quiser. Sem compromisso."
+              />
+            </div>
+
             {/* Free text features */}
             <div>
               <Label>Recursos (texto livre)</Label>

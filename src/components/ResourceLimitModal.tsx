@@ -11,7 +11,7 @@ const RESOURCE_LABELS: Record<string, string> = {
   top_questoes: "Top Questões",
   colinha: "Colinha",
   duvida: "Dúvida",
-  aula_particular: "Aula Particular",
+  aula_particular: "Aula Particular (50 min)",
 };
 
 interface Props {
@@ -77,17 +77,23 @@ export default function ResourceLimitModal({
 
           {/* Individual purchase */}
           {individualPrice !== null && individualPrice > 0 && (
-            <Button
-              variant="outline"
-              className="w-full justify-start gap-2"
-              onClick={() => {
-                onBuyIndividual?.();
-                onClose();
-              }}
-            >
-              <ShoppingCart className="h-4 w-4" />
-              Comprar avulso por R$ {individualPrice.toFixed(2).replace(".", ",")}
-            </Button>
+            <div className="space-y-1.5">
+              <Button
+                variant="outline"
+                className="w-full justify-start gap-2"
+                onClick={() => {
+                  onBuyIndividual?.();
+                  onClose();
+                }}
+              >
+                <ShoppingCart className="h-4 w-4" />
+                Comprar avulso por R$ {individualPrice.toFixed(2).replace(".", ",")}
+              </Button>
+              <p className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1.5 pl-1">
+                <AlertTriangle className="h-3 w-3 shrink-0" />
+                A compra avulsa dá direito a <strong>1 único uso</strong>. Para mais acessos, assine um plano ou compre novamente.
+              </p>
+            </div>
           )}
         </div>
 

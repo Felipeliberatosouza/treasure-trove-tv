@@ -12,6 +12,7 @@ interface Profile {
   avatar_url: string | null;
   birth_date: string | null;
   phone: string | null;
+  areas: string[] | null;
 }
 
 interface SubscriptionStatus {
@@ -80,7 +81,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const fetchProfile = async (userId: string) => {
     const { data } = await supabase
       .from("profiles")
-      .select("name, email, bio, expertise_area, avatar_url, birth_date, phone")
+      .select("name, email, bio, expertise_area, avatar_url, birth_date, phone, areas")
       .eq("user_id", userId)
       .single();
     setProfile(data ?? null);

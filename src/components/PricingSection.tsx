@@ -166,6 +166,12 @@ const PricingSection = () => {
                       <span className="text-muted-foreground">{item}</span>
                     </li>
                   ))}
+                  {getEnabledServices(plan).map((service) => (
+                    <li key={service} className="flex items-center gap-3">
+                      <Check className="h-4 w-4 shrink-0 text-accent" />
+                      <span className="text-foreground font-medium">{service}</span>
+                    </li>
+                  ))}
                 </ul>
                 <Button
                   size="lg"

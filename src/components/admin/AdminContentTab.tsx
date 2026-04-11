@@ -171,7 +171,7 @@ const AdminContentTab = () => {
   return (
     <div>
       <h2 className="font-display text-lg font-semibold mb-1 flex items-center gap-2">
-        <Video className="h-5 w-5" /> Moderação de Conteúdo
+        <Video className="h-5 w-5" /> Aprovação de Conteúdos
       </h2>
       {pendingCount > 0 && (
         <p className="text-sm text-accent font-medium mb-4">{pendingCount} conteúdo(s) aguardando aprovação</p>

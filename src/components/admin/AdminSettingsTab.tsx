@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Settings, Palette, Phone, FileText, Star, Layout, Gift, FolderOpen, Mail } from "lucide-react";
+import { Settings, Palette, Phone, FileText, Star, Layout, Gift, FolderOpen, Mail, Package } from "lucide-react";
 import SettingsBranding from "./settings/SettingsBranding";
 import SettingsContact from "./settings/SettingsContact";
 import SettingsPages from "./settings/SettingsPages";
@@ -9,6 +9,7 @@ import SettingsFreeTrial from "./settings/SettingsFreeTrial";
 import SettingsCourseAreas from "./settings/SettingsCourseAreas";
 import SettingsEmailTemplates from "./settings/SettingsEmailTemplates";
 import SettingsTeacherBanner from "./settings/SettingsTeacherBanner";
+import SettingsProductConfig from "./settings/SettingsProductConfig";
 
 const sections = [
   { id: "branding", label: "Identidade Visual", icon: Palette },
@@ -20,6 +21,7 @@ const sections = [
   { id: "featured", label: "Vídeos em Destaque", icon: Star },
   { id: "areas", label: "Áreas de Cursos", icon: FolderOpen },
   { id: "trial", label: "Teste Grátis", icon: Gift },
+  { id: "products", label: "Config. de Produtos", icon: Package },
 ] as const;
 
 type SectionId = (typeof sections)[number]["id"];
@@ -59,6 +61,7 @@ const AdminSettingsTab = () => {
       {activeSection === "featured" && <SettingsFeaturedVideos />}
       {activeSection === "areas" && <SettingsCourseAreas />}
       {activeSection === "trial" && <SettingsFreeTrial />}
+      {activeSection === "products" && <SettingsProductConfig />}
     </div>
   );
 };

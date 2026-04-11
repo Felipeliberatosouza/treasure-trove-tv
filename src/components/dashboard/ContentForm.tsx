@@ -1,13 +1,15 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Upload, X, Image, Video, FileText, ClipboardList, Trophy, StickyNote } from "lucide-react";
+import { Upload, X, Image, Video, FileText, ClipboardList, Trophy, StickyNote, Camera } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import AreaSelector from "@/components/AreaSelector";
+import VideoRecorder from "./VideoRecorder";
+import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 
 interface ContentFormProps {
   table: "lessons" | "exam_solutions";
@@ -17,6 +19,7 @@ interface ContentFormProps {
 
 const ContentForm = ({ table, onSaved, onCancel }: ContentFormProps) => {
   const { user } = useAuth();
+  const { data: productConfig } = usePlatformSettings("product_config");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [selectedAreas, setSelectedAreas] = useState<string[]>([]);
@@ -29,6 +32,10 @@ const ContentForm = ({ table, onSaved, onCancel }: ContentFormProps) => {
   const [colinhaFile, setColinhaFile] = useState<File | null>(null);
   const [videoType, setVideoType] = useState<string>("revisao");
   const [saving, setSaving] = useState(false);
+  const [showRecorder, setShowRecorder] = useState(false);
+
+  const recordingEnabled = productConfig?.revisoes?.enable_recording ?? false;
+  const maxRecordingMinutes = productConfig?.revisoes?.max_recording_minutes ?? 30;
 
   const uploadFile = async (file: File, bucket: string) => {
     const ext = file.name.split(".").pop();
@@ -165,21 +172,52 @@ const ContentForm = ({ table, onSaved, onCancel }: ContentFormProps) => {
 
       <div>
         <label className="text-sm text-muted-foreground mb-1 block flex items-center gap-1">
-          <Video className="h-3.5 w-3.5" /> Upload de vídeo
+          <Video className="h-3.5 w-3.5" /> Vídeo
         </label>
-        <div className="flex items-center gap-2">
-          <Input
-            type="file"
-            accept="video/*"
-            onChange={(e) => setVideoFile(e.target.files?.[0] || null)}
-            className="bg-secondary text-xs"
+
+        {showRecorder ? (
+          <VideoRecorder
+            maxMinutes={maxRecordingMinutes}
+            onRecorded={(file) => {
+              setVideoFile(file);
+              setShowRecorder(false);
+              toast.success("Vídeo gravado com sucesso!");
+            }}
+            onCancel={() => setShowRecorder(false)}
           />
-          {videoFile && (
-            <button type="button" onClick={() => setVideoFile(null)} className="text-muted-foreground hover:text-destructive">
-              <X className="h-4 w-4" />
-            </button>
-          )}
-        </div>
+        ) : (
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <Input
+                type="file"
+                accept="video/*"
+                onChange={(e) => setVideoFile(e.target.files?.[0] || null)}
+                className="bg-secondary text-xs"
+              />
+              {videoFile && (
+                <button type="button" onClick={() => setVideoFile(null)} className="text-muted-foreground hover:text-destructive">
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+            {recordingEnabled && (
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => setShowRecorder(true)}
+                className="gap-1"
+              >
+                <Camera className="h-4 w-4" /> Gravar Vídeo
+              </Button>
+            )}
+            {videoFile && (
+              <p className="text-xs text-muted-foreground">
+                Arquivo: {videoFile.name} ({(videoFile.size / 1024 / 1024).toFixed(1)} MB)
+              </p>
+            )}
+          </div>
+        )}
       </div>
 
       <p className="text-sm font-semibold text-muted-foreground pt-2">Materiais complementares</p>

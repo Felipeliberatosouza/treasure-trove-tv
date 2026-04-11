@@ -81,7 +81,19 @@ type SettingsMap = {
   terms_of_use: PageContentSettings;
   privacy_policy: PageContentSettings;
   doubt_response_deadline_days: number;
+  product_config: ProductConfigSettings;
 };
+
+export interface ProductConfigSettings {
+  revisoes: {
+    max_recording_minutes: number;
+    enable_recording: boolean;
+  };
+  colinhas: Record<string, unknown>;
+  resumos: Record<string, unknown>;
+  top_questoes: Record<string, unknown>;
+  simulados: Record<string, unknown>;
+}
 
 export function usePlatformSettings<K extends keyof SettingsMap>(key: K) {
   const [data, setData] = useState<SettingsMap[K] | null>(null);

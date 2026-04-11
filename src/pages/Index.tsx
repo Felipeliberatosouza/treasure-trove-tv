@@ -12,6 +12,7 @@ import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import { useHomepageAreas } from "@/hooks/useCourseAreas";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import { Search, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { AnimatePresence, motion } from "framer-motion";
@@ -25,11 +26,14 @@ interface SearchResult {
 
 const Index = () => {
   const navigate = useNavigate();
+  const { user, profile, role } = useAuth();
   const ratings = useVideoRatings(videos.map((v) => v.id));
   const { data: trialSettings } = usePlatformSettings("free_trial");
   const showTrialBadge = trialSettings?.enabled ?? false;
   const { areas } = useHomepageAreas();
   const [areaLessons, setAreaLessons] = useState<Record<string, Video[]>>({});
+  const [popularVideos, setPopularVideos] = useState<Video[]>([]);
+  const [loadingPopular, setLoadingPopular] = useState(false);
 
   // Inline search state
   const [inlineSearchOpen, setInlineSearchOpen] = useState(false);

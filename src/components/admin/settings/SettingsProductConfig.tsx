@@ -56,15 +56,25 @@ const SettingsProductConfig = () => {
             min={1}
             max={120}
             value={form.revisoes.max_recording_minutes}
-            onChange={(e) =>
+            onChange={(e) => {
+              const raw = e.target.value;
+              const num = raw === "" ? 0 : parseInt(raw);
               setForm({
                 ...form,
                 revisoes: {
                   ...form.revisoes,
-                  max_recording_minutes: parseInt(e.target.value) || 30,
+                  max_recording_minutes: isNaN(num) ? 0 : num,
                 },
-              })
-            }
+              });
+            }}
+            onBlur={() => {
+              if (!form.revisoes.max_recording_minutes || form.revisoes.max_recording_minutes < 1) {
+                setForm({
+                  ...form,
+                  revisoes: { ...form.revisoes, max_recording_minutes: 1 },
+                });
+              }
+            }}
           />
           <p className="text-xs text-muted-foreground mt-1">
             Limite em minutos para cada gravação de vídeo feita pelo professor.

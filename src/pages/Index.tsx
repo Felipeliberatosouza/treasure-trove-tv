@@ -46,6 +46,22 @@ const Index = () => {
   const inlineSearchRef = useRef<HTMLInputElement>(null);
   const popularSectionRef = useRef<HTMLDivElement>(null);
 
+  // Fetch watched video IDs for logged-in students
+  useEffect(() => {
+    if (!user || role !== "student") {
+      setWatchedIds(new Set());
+      return;
+    }
+    const fetchWatched = async () => {
+      const { data } = await supabase
+        .from("video_views")
+        .select("content_id")
+        .eq("user_id", user.id);
+      setWatchedIds(new Set((data || []).map((v) => v.content_id)));
+    };
+    fetchWatched();
+  }, [user, role]);
+
   // Fetch popular videos based on student's interest areas
   useEffect(() => {
     const studentAreas = profile?.areas;
@@ -59,10 +75,9 @@ const Index = () => {
     const fetchPopular = async () => {
       setLoadingPopular(true);
 
-      // Fetch all view counts and the student's own watched videos in parallel
-      const [viewCountsRes, studentViewsRes, lessonsRes] = await Promise.all([
+      // Fetch all view counts and lessons in parallel
+      const [viewCountsRes, lessonsRes] = await Promise.all([
         supabase.from("video_views").select("content_id, content_type"),
-        supabase.from("video_views").select("content_id").eq("user_id", user!.id),
         supabase
           .from("lessons")
           .select("*")
@@ -78,18 +93,12 @@ const Index = () => {
         viewMap[v.content_id] = (viewMap[v.content_id] || 0) + 1;
       });
 
-      // Set of content IDs already watched by this student
-      const watchedSet = new Set(
-        (studentViewsRes.data || []).map((v) => v.content_id)
-      );
-      setWatchedIds(watchedSet);
-
       const lessons = lessonsRes.data;
       if (lessons && lessons.length > 0) {
         // Sort: unwatched first, then by view count descending
         const sorted = [...lessons].sort((a, b) => {
-          const aWatched = watchedSet.has(a.id) ? 1 : 0;
-          const bWatched = watchedSet.has(b.id) ? 1 : 0;
+          const aWatched = watchedIds.has(a.id) ? 1 : 0;
+          const bWatched = watchedIds.has(b.id) ? 1 : 0;
           if (aWatched !== bWatched) return aWatched - bWatched;
           return (viewMap[b.id] || 0) - (viewMap[a.id] || 0);
         });
@@ -114,7 +123,7 @@ const Index = () => {
     };
 
     fetchPopular();
-  }, [user, profile?.areas, role]);
+  }, [user, profile?.areas, role, watchedIds]);
 
   useEffect(() => {
     if (areas.length === 0) return;

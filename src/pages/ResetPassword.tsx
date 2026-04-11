@@ -42,8 +42,9 @@ const ResetPassword = () => {
       toast.error("Preencha todos os campos");
       return;
     }
-    if (password.length < 6) {
-      toast.error("A senha deve ter pelo menos 6 caracteres");
+    const pwdError = validatePassword(password);
+    if (pwdError) {
+      toast.error(pwdError);
       return;
     }
     if (password !== confirmPassword) {

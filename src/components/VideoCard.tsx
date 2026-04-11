@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Play, Clock, BookOpen, Star, Gift } from "lucide-react";
+import { Play, Clock, BookOpen, Star, Gift, CheckCircle } from "lucide-react";
 import type { Video } from "@/data/courses";
 
 interface VideoCardProps {
@@ -8,6 +8,7 @@ interface VideoCardProps {
   onClick: (id: string) => void;
   rating?: { average: number; count: number };
   showTrialBadge?: boolean;
+  watched?: boolean;
 }
 
 const VideoCard = ({ video, index, onClick, rating, showTrialBadge }: VideoCardProps) => {

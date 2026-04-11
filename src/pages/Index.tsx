@@ -245,9 +245,9 @@ const Index = () => {
 
           <VideoCarousel
             title="🔥 Mais Populares"
-            videos={videos}
+            videos={popularVideos.length > 0 ? popularVideos : videos}
             onVideoClick={handleVideoClick}
-            ratings={ratings}
+            ratings={popularVideos.length > 0 ? undefined : ratings}
             showTrialBadge={showTrialBadge}
           />
         </div>

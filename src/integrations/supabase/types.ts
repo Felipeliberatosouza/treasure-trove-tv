@@ -563,6 +563,74 @@ export type Database = {
         }
         Relationships: []
       }
+      resource_prices: {
+        Row: {
+          active: boolean
+          id: string
+          price: number
+          resource_type: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          id?: string
+          price?: number
+          resource_type: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          id?: string
+          price?: number
+          resource_type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      resource_usage: {
+        Row: {
+          accessed_at: string
+          content_id: string | null
+          content_type: string | null
+          created_at: string
+          duration_seconds: number
+          id: string
+          resource_type: string
+          subscription_id: string | null
+          user_id: string
+        }
+        Insert: {
+          accessed_at?: string
+          content_id?: string | null
+          content_type?: string | null
+          created_at?: string
+          duration_seconds?: number
+          id?: string
+          resource_type: string
+          subscription_id?: string | null
+          user_id: string
+        }
+        Update: {
+          accessed_at?: string
+          content_id?: string | null
+          content_type?: string | null
+          created_at?: string
+          duration_seconds?: number
+          id?: string
+          resource_type?: string
+          subscription_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resource_usage_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "student_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       student_doubts: {
         Row: {
           answer: string | null
@@ -604,6 +672,128 @@ export type Database = {
           status?: string
           student_id?: string
           teacher_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      student_subscriptions: {
+        Row: {
+          created_at: string
+          expires_at: string | null
+          id: string
+          plan_id: string
+          started_at: string
+          status: string
+          stripe_subscription_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          plan_id: string
+          started_at?: string
+          status?: string
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          plan_id?: string
+          started_at?: string
+          status?: string
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subscription_plans: {
+        Row: {
+          active: boolean
+          created_at: string
+          features: string[]
+          highlighted: boolean
+          id: string
+          name: string
+          price: number
+          service_aula_particular: boolean
+          service_aula_particular_qty: number
+          service_colinhas: boolean
+          service_colinhas_qty: number
+          service_duvidas: boolean
+          service_duvidas_qty: number
+          service_resumos: boolean
+          service_resumos_qty: number
+          service_revisoes: boolean
+          service_revisoes_qty: number
+          service_simulados: boolean
+          service_simulados_qty: number
+          service_top_questoes: boolean
+          service_top_questoes_qty: number
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          features?: string[]
+          highlighted?: boolean
+          id?: string
+          name: string
+          price?: number
+          service_aula_particular?: boolean
+          service_aula_particular_qty?: number
+          service_colinhas?: boolean
+          service_colinhas_qty?: number
+          service_duvidas?: boolean
+          service_duvidas_qty?: number
+          service_resumos?: boolean
+          service_resumos_qty?: number
+          service_revisoes?: boolean
+          service_revisoes_qty?: number
+          service_simulados?: boolean
+          service_simulados_qty?: number
+          service_top_questoes?: boolean
+          service_top_questoes_qty?: number
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          features?: string[]
+          highlighted?: boolean
+          id?: string
+          name?: string
+          price?: number
+          service_aula_particular?: boolean
+          service_aula_particular_qty?: number
+          service_colinhas?: boolean
+          service_colinhas_qty?: number
+          service_duvidas?: boolean
+          service_duvidas_qty?: number
+          service_resumos?: boolean
+          service_resumos_qty?: number
+          service_revisoes?: boolean
+          service_revisoes_qty?: number
+          service_simulados?: boolean
+          service_simulados_qty?: number
+          service_top_questoes?: boolean
+          service_top_questoes_qty?: number
+          sort_order?: number
           updated_at?: string
         }
         Relationships: []

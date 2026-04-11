@@ -34,6 +34,7 @@ import VideoPage from "./pages/VideoPage.tsx";
 import TeacherProfile from "./pages/TeacherProfile.tsx";
 import CookieConsent from "./components/CookieConsent.tsx";
 import Unsubscribe from "./pages/Unsubscribe.tsx";
+import PaymentSuccess from "./pages/PaymentSuccess.tsx";
 import DynamicBranding from "./components/DynamicBranding.tsx";
 
 const queryClient = new QueryClient();

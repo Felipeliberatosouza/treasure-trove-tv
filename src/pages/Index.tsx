@@ -32,6 +32,7 @@ const Index = () => {
   const showTrialBadge = trialSettings?.enabled ?? false;
   const { areas } = useHomepageAreas();
   const [areaLessons, setAreaLessons] = useState<Record<string, Video[]>>({});
+  const [loadingAreas, setLoadingAreas] = useState(false);
   const [popularVideos, setPopularVideos] = useState<Video[]>([]);
   const [loadingPopular, setLoadingPopular] = useState(false);
 
@@ -106,6 +107,7 @@ const Index = () => {
   useEffect(() => {
     if (areas.length === 0) return;
     const fetchAreaLessons = async () => {
+      setLoadingAreas(true);
       const result: Record<string, Video[]> = {};
       for (const area of areas) {
         const { data } = await supabase
@@ -132,6 +134,7 @@ const Index = () => {
         }
       }
       setAreaLessons(result);
+      setLoadingAreas(false);
     };
     fetchAreaLessons();
   }, [areas]);
@@ -259,16 +262,23 @@ const Index = () => {
           )}
         </div>
 
-        {areas.map((area) =>
-          areaLessons[area.name] && areaLessons[area.name].length > 0 ? (
-            <VideoCarousel
-              key={area.id}
-              title={`📚 ${area.name}`}
-              videos={areaLessons[area.name]}
-              onVideoClick={handleVideoClick}
-              showTrialBadge={showTrialBadge}
-            />
-          ) : null
+        {loadingAreas && areas.length > 0 ? (
+          <div className="flex items-center justify-center py-16 gap-2 text-muted-foreground">
+            <Loader2 className="h-5 w-5 animate-spin" />
+            <span className="text-sm">Carregando conteúdos por área...</span>
+          </div>
+        ) : (
+          areas.map((area) =>
+            areaLessons[area.name] && areaLessons[area.name].length > 0 ? (
+              <VideoCarousel
+                key={area.id}
+                title={`📚 ${area.name}`}
+                videos={areaLessons[area.name]}
+                onVideoClick={handleVideoClick}
+                showTrialBadge={showTrialBadge}
+              />
+            ) : null
+          )
         )}
       </div>
 

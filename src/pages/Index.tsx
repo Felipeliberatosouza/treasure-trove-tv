@@ -43,6 +43,66 @@ const Index = () => {
   const inlineSearchRef = useRef<HTMLInputElement>(null);
   const popularSectionRef = useRef<HTMLDivElement>(null);
 
+  // Fetch popular videos based on student's interest areas
+  useEffect(() => {
+    const studentAreas = profile?.areas;
+    const isStudent = role === "student" && user && studentAreas && studentAreas.length > 0;
+
+    if (!isStudent) {
+      setPopularVideos([]);
+      return;
+    }
+
+    const fetchPopular = async () => {
+      setLoadingPopular(true);
+      // Fetch most viewed lessons from the student's interest areas
+      const { data: viewCounts } = await supabase
+        .from("video_views")
+        .select("content_id, content_type");
+
+      // Count views per content
+      const viewMap: Record<string, number> = {};
+      (viewCounts || []).forEach((v) => {
+        viewMap[v.content_id] = (viewMap[v.content_id] || 0) + 1;
+      });
+
+      // Fetch lessons that overlap with student areas
+      const { data: lessons } = await supabase
+        .from("lessons")
+        .select("*")
+        .eq("published", true)
+        .eq("admin_approved", true)
+        .overlaps("areas", studentAreas)
+        .limit(20);
+
+      if (lessons && lessons.length > 0) {
+        // Sort by view count descending
+        const sorted = [...lessons].sort(
+          (a, b) => (viewMap[b.id] || 0) - (viewMap[a.id] || 0)
+        );
+        setPopularVideos(
+          sorted.map((l) => ({
+            id: l.id,
+            title: l.title,
+            description: l.description || "",
+            thumbnail: l.thumbnail_url || "/placeholder.svg",
+            duration: "",
+            category: (l.areas as string[] || [])[0] || "",
+            instructor: "",
+            lessons: 1,
+            level: "Iniciante" as const,
+            videoUrl: l.video_url || undefined,
+          }))
+        );
+      } else {
+        setPopularVideos([]);
+      }
+      setLoadingPopular(false);
+    };
+
+    fetchPopular();
+  }, [user, profile?.areas, role]);
+
   useEffect(() => {
     if (areas.length === 0) return;
     const fetchAreaLessons = async () => {

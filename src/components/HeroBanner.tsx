@@ -5,7 +5,12 @@ import { getFeaturedVideo } from "@/data/courses";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import heroBanner from "@/assets/hero-banner.jpg";
 
-const HeroBanner = ({ onVideoClick }: { onVideoClick: (id: string) => void }) => {
+interface HeroBannerProps {
+  onVideoClick: (id: string) => void;
+  onExploreClick?: () => void;
+}
+
+const HeroBanner = ({ onVideoClick, onExploreClick }: HeroBannerProps) => {
   const featured = getFeaturedVideo();
   const { data: heroBannerSettings } = usePlatformSettings("hero_banner");
 

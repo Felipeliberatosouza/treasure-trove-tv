@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, CheckCircle, XCircle, Video, FileText, DollarSign } from "lucide-react";
+import { Search, CheckCircle, XCircle, Video, FileText, DollarSign, Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface ContentItem {
@@ -211,6 +211,14 @@ const AdminContentTab = () => {
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-1">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-8"
+                        onClick={() => window.open(`/video/${item.id}`, "_blank")}
+                      >
+                        <Eye className="h-4 w-4 mr-1" /> Assistir
+                      </Button>
                       {item.published && !item.admin_approved && (
                         <Button size="sm" variant="ghost" className="h-8 text-green-500 hover:text-green-400" onClick={() => handleApprove(item, true)}>
                           <CheckCircle className="h-4 w-4 mr-1" /> Aprovar

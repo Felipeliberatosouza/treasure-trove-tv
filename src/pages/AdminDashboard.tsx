@@ -79,6 +79,8 @@ const AdminDashboard = () => {
             {activeTab === "doubts" && <AdminDoubtsTab />}
             {activeTab === "payments" && <AdminPaymentsTab />}
             {activeTab === "emails" && <AdminEmailsTab />}
+            {activeTab === "plans" && <AdminPlansTab />}
+            {activeTab === "pricing" && <AdminResourcePricingTab />}
             {activeTab === "settings" && <AdminSettingsTab />}
           </motion.div>
         </div>

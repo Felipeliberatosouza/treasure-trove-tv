@@ -128,6 +128,13 @@ const PersonalDataTab = () => {
           <label className="text-sm text-muted-foreground mb-1 block">E-mail</label>
           <Input value={user?.email || ""} disabled className="bg-secondary opacity-60" />
         </div>
+        {(profile as any)?.referral_code && (
+          <div>
+            <label className="text-sm text-muted-foreground mb-1 block">Código de Indicação</label>
+            <Input value={String((profile as any).referral_code)} disabled className="bg-secondary opacity-60 font-mono font-semibold" />
+            <p className="text-xs text-muted-foreground mt-1">Compartilhe este código para indicar amigos</p>
+          </div>
+        )}
         <div>
           <label className="text-sm text-muted-foreground mb-1 block">Data de Nascimento</label>
           <Input

@@ -14,6 +14,7 @@ interface UserWithRole {
   email: string;
   role: string;
   created_at: string;
+  referral_code: number | null;
 }
 
 const AdminUsersTab = () => {
@@ -25,7 +26,7 @@ const AdminUsersTab = () => {
 
   const fetchUsers = async () => {
     setLoading(true);
-    const { data: profiles } = await supabase.from("profiles").select("user_id, name, email, created_at");
+    const { data: profiles } = await supabase.from("profiles").select("user_id, name, email, created_at, referral_code");
     const { data: roles } = await supabase.from("user_roles").select("user_id, role");
 
     if (profiles && roles) {
@@ -33,6 +34,7 @@ const AdminUsersTab = () => {
       const merged = profiles.map((p) => ({
         ...p,
         role: roleMap.get(p.user_id) || "student",
+        referral_code: p.referral_code ?? null,
       }));
       setUsers(merged);
     }
@@ -119,7 +121,8 @@ const AdminUsersTab = () => {
         <div className="rounded-lg border border-border overflow-hidden">
           <Table>
             <TableHeader>
-              <TableRow>
+             <TableRow>
+                <TableHead>Código</TableHead>
                 <TableHead>Nome</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Papel</TableHead>
@@ -130,6 +133,7 @@ const AdminUsersTab = () => {
             <TableBody>
               {filtered.map((u) => (
                 <TableRow key={u.user_id}>
+                  <TableCell className="font-mono text-sm">{u.referral_code || "—"}</TableCell>
                   <TableCell className="font-medium">{u.name}</TableCell>
                   <TableCell className="text-muted-foreground">{u.email}</TableCell>
                   <TableCell>{roleBadge(u.role)}</TableCell>
@@ -157,7 +161,7 @@ const AdminUsersTab = () => {
               ))}
               {filtered.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
                     Nenhum usuário encontrado.
                   </TableCell>
                 </TableRow>

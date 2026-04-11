@@ -35,6 +35,7 @@ import TeacherProfile from "./pages/TeacherProfile.tsx";
 import CookieConsent from "./components/CookieConsent.tsx";
 import Unsubscribe from "./pages/Unsubscribe.tsx";
 import PaymentSuccess from "./pages/PaymentSuccess.tsx";
+import PaymentCanceled from "./pages/PaymentCanceled.tsx";
 import DynamicBranding from "./components/DynamicBranding.tsx";
 
 const queryClient = new QueryClient();
@@ -74,6 +75,7 @@ const App = () => (
             <Route path="/minhas-aulas-agendadas" element={<MinhasAulasAgendadas />} />
             <Route path="/video/:id" element={<VideoPage />} />
             <Route path="/payment-success" element={<PaymentSuccess />} />
+            <Route path="/payment-canceled" element={<PaymentCanceled />} />
             <Route path="/unsubscribe" element={<Unsubscribe />} />
             <Route path="/:slug" element={<TeacherProfile />} />
             <Route path="*" element={<NotFound />} />

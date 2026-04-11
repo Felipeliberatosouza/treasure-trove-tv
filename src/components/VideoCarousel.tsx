@@ -9,9 +9,10 @@ interface VideoCarouselProps {
   onVideoClick: (id: string) => void;
   ratings?: Record<string, { average: number; count: number }>;
   showTrialBadge?: boolean;
+  watchedIds?: Set<string>;
 }
 
-const VideoCarousel = ({ title, videos, onVideoClick, ratings, showTrialBadge }: VideoCarouselProps) => {
+const VideoCarousel = ({ title, videos, onVideoClick, ratings, showTrialBadge, watchedIds }: VideoCarouselProps) => {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const scroll = (direction: "left" | "right") => {
@@ -54,6 +55,7 @@ const VideoCarousel = ({ title, videos, onVideoClick, ratings, showTrialBadge }:
               onClick={onVideoClick}
               rating={ratings?.[video.id]}
               showTrialBadge={showTrialBadge}
+              watched={watchedIds?.has(video.id)}
             />
         ))}
       </div>

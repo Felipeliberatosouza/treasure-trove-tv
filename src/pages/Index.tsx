@@ -36,6 +36,7 @@ const Index = () => {
   const [loadingAreas, setLoadingAreas] = useState(false);
   const [popularVideos, setPopularVideos] = useState<Video[]>([]);
   const [loadingPopular, setLoadingPopular] = useState(false);
+  const [watchedIds, setWatchedIds] = useState<Set<string>>(new Set());
 
   // Inline search state
   const [inlineSearchOpen, setInlineSearchOpen] = useState(false);
@@ -81,6 +82,7 @@ const Index = () => {
       const watchedSet = new Set(
         (studentViewsRes.data || []).map((v) => v.content_id)
       );
+      setWatchedIds(watchedSet);
 
       const lessons = lessonsRes.data;
       if (lessons && lessons.length > 0) {
@@ -268,6 +270,7 @@ const Index = () => {
               onVideoClick={handleVideoClick}
               ratings={popularVideos.length > 0 ? undefined : ratings}
               showTrialBadge={showTrialBadge}
+              watchedIds={watchedIds}
             />
           )}
         </div>

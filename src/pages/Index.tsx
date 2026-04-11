@@ -243,13 +243,20 @@ const Index = () => {
             )}
           </AnimatePresence>
 
-          <VideoCarousel
-            title="🔥 Mais Populares"
-            videos={popularVideos.length > 0 ? popularVideos : videos}
-            onVideoClick={handleVideoClick}
-            ratings={popularVideos.length > 0 ? undefined : ratings}
-            showTrialBadge={showTrialBadge}
-          />
+          {loadingPopular ? (
+            <div className="flex items-center justify-center py-16 gap-2 text-muted-foreground">
+              <Loader2 className="h-5 w-5 animate-spin" />
+              <span className="text-sm">Carregando vídeos populares...</span>
+            </div>
+          ) : (
+            <VideoCarousel
+              title="🔥 Mais Populares"
+              videos={popularVideos.length > 0 ? popularVideos : videos}
+              onVideoClick={handleVideoClick}
+              ratings={popularVideos.length > 0 ? undefined : ratings}
+              showTrialBadge={showTrialBadge}
+            />
+          )}
         </div>
 
         {areas.map((area) =>

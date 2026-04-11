@@ -27,7 +27,7 @@ const SettingsTeacherBanner = () => {
   const settings = data as unknown as TeacherBannerSettings | null;
   const [form, setForm] = useState<TeacherBannerSettings>(defaults);
   const [saving, setSaving] = useState(false);
-  const { uploading, uploadFile } = useStorageUpload();
+  const { uploading, upload } = useStorageUpload("platform-assets");
 
   useEffect(() => {
     if (settings) setForm(settings);

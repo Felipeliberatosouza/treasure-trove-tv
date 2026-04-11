@@ -17,6 +17,7 @@ interface ContentItem {
   platform_percentage: number | null;
   teacher_id: string;
   teacher_name?: string;
+  teacher_email?: string;
   type: "lesson" | "exam_solution";
   created_at: string;
   price: number | null;
@@ -35,21 +36,23 @@ const AdminContentTab = () => {
     const [lessonsRes, examsRes, profilesRes] = await Promise.all([
       supabase.from("lessons").select("id, title, description, published, admin_approved, platform_percentage, teacher_id, created_at, price"),
       supabase.from("exam_solutions").select("id, title, description, published, admin_approved, platform_percentage, teacher_id, created_at, price"),
-      supabase.from("profiles").select("user_id, name"),
+      supabase.from("profiles").select("user_id, name, email"),
     ]);
 
-    const profileMap = new Map((profilesRes.data || []).map((p) => [p.user_id, p.name]));
+    const profileMap = new Map((profilesRes.data || []).map((p) => [p.user_id, { name: p.name, email: p.email }]));
 
     const lessons: ContentItem[] = (lessonsRes.data || []).map((l) => ({
       ...l,
       type: "lesson" as const,
-      teacher_name: profileMap.get(l.teacher_id) || "Desconhecido",
+      teacher_name: profileMap.get(l.teacher_id)?.name || "Desconhecido",
+      teacher_email: profileMap.get(l.teacher_id)?.email || "",
     }));
 
     const exams: ContentItem[] = (examsRes.data || []).map((e) => ({
       ...e,
       type: "exam_solution" as const,
-      teacher_name: profileMap.get(e.teacher_id) || "Desconhecido",
+      teacher_name: profileMap.get(e.teacher_id)?.name || "Desconhecido",
+      teacher_email: profileMap.get(e.teacher_id)?.email || "",
     }));
 
     setItems([...lessons, ...exams].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
@@ -70,6 +73,22 @@ const AdminContentTab = () => {
     } else {
       toast({ title: approve ? "Aprovado" : "Rejeitado", description: `"${item.title}" foi ${approve ? "aprovado" : "rejeitado"}.` });
       fetchContent();
+
+      // Send email notification to teacher
+      if (item.teacher_email) {
+        supabase.functions.invoke("send-transactional-email", {
+          body: {
+            templateName: approve ? "content-approved" : "content-rejected",
+            recipientEmail: item.teacher_email,
+            idempotencyKey: `content-${approve ? "approved" : "rejected"}-${item.type}-${item.id}`,
+            templateData: {
+              teacherName: item.teacher_name || "",
+              contentTitle: item.title,
+              contentType: item.type,
+            },
+          },
+        });
+      }
     }
   };
 

@@ -8,6 +8,7 @@ import SettingsFeaturedVideos from "./settings/SettingsFeaturedVideos";
 import SettingsFreeTrial from "./settings/SettingsFreeTrial";
 import SettingsCourseAreas from "./settings/SettingsCourseAreas";
 import SettingsEmailTemplates from "./settings/SettingsEmailTemplates";
+import SettingsTeacherBanner from "./settings/SettingsTeacherBanner";
 
 const sections = [
   { id: "branding", label: "Identidade Visual", icon: Palette },
@@ -15,6 +16,7 @@ const sections = [
   { id: "emails", label: "E-mails", icon: Mail },
   { id: "pages", label: "Páginas Institucionais", icon: FileText },
   { id: "hero", label: "Banner Principal", icon: Layout },
+  { id: "teacher_banner", label: "Banner Professor", icon: Layout },
   { id: "featured", label: "Vídeos em Destaque", icon: Star },
   { id: "areas", label: "Áreas de Cursos", icon: FolderOpen },
   { id: "trial", label: "Teste Grátis", icon: Gift },
@@ -53,6 +55,7 @@ const AdminSettingsTab = () => {
       {activeSection === "emails" && <SettingsEmailTemplates />}
       {activeSection === "pages" && <SettingsPages />}
       {activeSection === "hero" && <SettingsHeroBanner />}
+      {activeSection === "teacher_banner" && <SettingsTeacherBanner />}
       {activeSection === "featured" && <SettingsFeaturedVideos />}
       {activeSection === "areas" && <SettingsCourseAreas />}
       {activeSection === "trial" && <SettingsFreeTrial />}

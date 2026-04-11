@@ -6,6 +6,7 @@ import VideoCarousel from "@/components/VideoCarousel";
 import PricingSection from "@/components/PricingSection";
 import Footer from "@/components/Footer";
 import WhatsAppFloat from "@/components/WhatsAppFloat";
+import TeacherBanner from "@/components/TeacherBanner";
 import { videos } from "@/data/courses";
 import { useVideoRatings } from "@/hooks/useVideoRatings";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
@@ -282,6 +283,7 @@ const Index = () => {
         )}
       </div>
 
+      <TeacherBanner />
       <div id="pricing">
         <PricingSection />
       </div>

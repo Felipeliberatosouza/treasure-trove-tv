@@ -77,9 +77,22 @@ export function useResourceLimit() {
         .from("resource_prices")
         .select("resource_type, price, active");
 
+      // Map DB resource_type (plural) to internal keys (singular)
+      const PRICE_KEY_MAP: Record<string, string> = {
+        revisoes: "revisao",
+        resumos: "resumo",
+        simulados: "simulado",
+        top_questoes: "top_questoes",
+        colinhas: "colinha",
+        duvidas: "duvida",
+        aula_particular: "aula_particular",
+      };
       const priceMap: Record<string, number> = {};
       (prices || []).forEach((p) => {
-        if (p.active) priceMap[p.resource_type] = Number(p.price);
+        if (p.active) {
+          const key = PRICE_KEY_MAP[p.resource_type] || p.resource_type;
+          priceMap[key] = Number(p.price);
+        }
       });
       setResourcePrices(priceMap);
 

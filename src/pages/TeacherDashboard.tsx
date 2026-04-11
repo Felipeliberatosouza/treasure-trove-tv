@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, User, Lock, Video, FileText, DollarSign, HelpCircle } from "lucide-react";
+import { ArrowLeft, User, Lock, Video, FileText, DollarSign, HelpCircle, BookOpen } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
@@ -9,8 +9,10 @@ import LoginDataTab from "@/components/dashboard/LoginDataTab";
 import LessonsTab from "@/components/dashboard/LessonsTab";
 import ExamSolutionsTab from "@/components/dashboard/ExamSolutionsTab";
 import TeacherDoubtsTab from "@/components/dashboard/TeacherDoubtsTab";
+import TeacherInstructionsTab from "@/components/dashboard/TeacherInstructionsTab";
 
 const tabs = [
+  { id: "instructions", label: "Instruções", icon: BookOpen },
   { id: "personal", label: "Dados Pessoais", icon: User },
   { id: "login", label: "Dados de Login", icon: Lock },
   { id: "lessons", label: "Minhas Aulas", icon: Video },
@@ -22,7 +24,7 @@ const tabs = [
 type TabId = (typeof tabs)[number]["id"];
 
 const TeacherDashboard = () => {
-  const [activeTab, setActiveTab] = useState<TabId>("personal");
+  const [activeTab, setActiveTab] = useState<TabId>("instructions");
   const { profile } = useAuth();
 
   return (
@@ -60,6 +62,7 @@ const TeacherDashboard = () => {
             animate={{ opacity: 1, y: 0 }}
             className="flex-1 rounded-xl border border-border bg-card p-6"
           >
+            {activeTab === "instructions" && <TeacherInstructionsTab />}
             {activeTab === "personal" && <PersonalDataTab />}
             {activeTab === "login" && <LoginDataTab />}
             {activeTab === "lessons" && <LessonsTab />}

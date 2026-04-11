@@ -410,6 +410,7 @@ const VideoPage = () => {
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
+      <VLibrasWidget />
       <Navbar />
 
       {limitInfo && (

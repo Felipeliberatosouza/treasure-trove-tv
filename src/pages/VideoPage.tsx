@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFreeTrial } from "@/hooks/useFreeTrial";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
+import { useResourceLimit, type ResourceType } from "@/hooks/useResourceLimit";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -16,6 +17,7 @@ import { getVideoById } from "@/data/courses";
 import type { Video } from "@/data/courses";
 import DoubtForm from "@/components/DoubtForm";
 import { RatingStars } from "@/components/VideoDetailModal";
+import ResourceLimitModal from "@/components/ResourceLimitModal";
 
 const DEMO_VIDEO_URL = "/demo-course.mp4";
 

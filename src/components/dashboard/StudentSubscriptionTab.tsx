@@ -39,6 +39,23 @@ export default function StudentSubscriptionTab() {
   const [subscription, setSubscription] = useState<SubscriptionData | null>(null);
   const [usageCounts, setUsageCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
+  const [portalLoading, setPortalLoading] = useState(false);
+
+  const handleManageSubscription = async () => {
+    setPortalLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("customer-portal");
+      if (error) throw error;
+      if (data?.url) {
+        window.open(data.url, "_blank");
+      }
+    } catch (err: any) {
+      toast.error("Não foi possível abrir o portal de gerenciamento.");
+      console.error(err);
+    } finally {
+      setPortalLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (!user) return;

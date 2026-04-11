@@ -7,6 +7,7 @@ import Navbar from "@/components/Navbar";
 import PersonalDataTab from "@/components/dashboard/PersonalDataTab";
 import LoginDataTab from "@/components/dashboard/LoginDataTab";
 import StudentDoubtsTab from "@/components/dashboard/StudentDoubtsTab";
+import StudentSubscriptionTab from "@/components/dashboard/StudentSubscriptionTab";
 
 const tabs = [
   { id: "personal", label: "Dados Pessoais", icon: User },
@@ -63,12 +64,7 @@ const StudentDashboard = () => {
             {activeTab === "personal" && <PersonalDataTab />}
             {activeTab === "login" && <LoginDataTab />}
             {activeTab === "doubts" && <StudentDoubtsTab />}
-            {activeTab === "subscription" && (
-              <div>
-                <h2 className="font-display text-lg font-semibold mb-4">Assinatura e Compras</h2>
-                <p className="text-sm text-muted-foreground">Você ainda não possui assinatura ativa. Em breve, planos estarão disponíveis.</p>
-              </div>
-            )}
+            {activeTab === "subscription" && <StudentSubscriptionTab />}
             {activeTab === "exams" && (
               <div>
                 <h2 className="font-display text-lg font-semibold mb-4">Minhas Provas</h2>

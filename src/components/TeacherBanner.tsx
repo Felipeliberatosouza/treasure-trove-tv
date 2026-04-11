@@ -21,15 +21,15 @@ const TeacherBanner = () => {
   const bgImage = settings?.background_image_url || defaultBg;
 
   return (
-    <section
-      className="relative w-full py-16 md:py-20 overflow-hidden"
-      style={{
-        backgroundImage: `url(${bgImage})`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-      }}
-    >
-      <div className="absolute inset-0 bg-background/60" />
+    <section className="relative w-full py-16 md:py-20 overflow-hidden bg-card border-t border-border">
+      <div
+        className="absolute inset-0 opacity-10"
+        style={{
+          backgroundImage: `url(${bgImage})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      />
       <div className="relative z-10 flex flex-col items-center justify-center text-center px-6 gap-4">
         <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground">
           {title}

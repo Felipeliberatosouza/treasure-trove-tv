@@ -3,8 +3,10 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BookOpen, FileText, ClipboardList, Award, StickyNote, HelpCircle, GraduationCap, AlertTriangle } from "lucide-react";
+import { BookOpen, FileText, ClipboardList, Award, StickyNote, HelpCircle, GraduationCap, AlertTriangle, Settings, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 const SERVICE_META: Record<string, { label: string; icon: React.ElementType; resourceType: string }> = {
   service_revisoes: { label: "Revisões", icon: BookOpen, resourceType: "revisao" },

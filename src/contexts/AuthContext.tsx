@@ -89,6 +89,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const checkSubscription = useCallback(async () => {
     try {
+      const { data: { session: currentSession } } = await supabase.auth.getSession();
+      if (!currentSession) return;
+
       const { data, error } = await supabase.functions.invoke("check-subscription");
       if (error) {
         console.error("Error checking subscription:", error);

@@ -181,6 +181,34 @@ export default function StudentSubscriptionTab() {
       {Object.entries(SERVICE_META).every(([key]) => !(plan[key] as boolean)) && (
         <p className="text-sm text-muted-foreground mt-2">Nenhum serviço incluído neste plano.</p>
       )}
+
+      <AlertDialog open={!!commitmentWarning} onOpenChange={(open) => !open && setCommitmentWarning(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-destructive" />
+              Período mínimo de permanência
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Seu plano possui um período mínimo de permanência. Faltam{" "}
+              <strong>{commitmentWarning?.daysRemaining} dia{(commitmentWarning?.daysRemaining ?? 0) !== 1 ? "s" : ""}</strong>{" "}
+              para completá-lo. Se cancelar agora, poderá haver cobrança proporcional ao período restante.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Voltar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (commitmentWarning?.url) window.open(commitmentWarning.url, "_blank");
+                setCommitmentWarning(null);
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Continuar mesmo assim
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

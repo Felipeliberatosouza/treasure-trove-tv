@@ -88,6 +88,9 @@ export interface ProductConfigSettings {
   revisoes: {
     max_recording_minutes: number;
     enable_recording: boolean;
+    enable_subtitles: boolean;
+    enable_blackboard: boolean;
+    enable_auto_cover: boolean;
   };
   colinhas: Record<string, unknown>;
   resumos: Record<string, unknown>;

@@ -4,10 +4,16 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Save, Video, FileText, StickyNote, Trophy, ClipboardList } from "lucide-react";
+import { Save, Video, FileText, StickyNote, Trophy, ClipboardList, Subtitles, PenTool, Image } from "lucide-react";
 
 const defaultConfig: ProductConfigSettings = {
-  revisoes: { max_recording_minutes: 30, enable_recording: true },
+  revisoes: {
+    max_recording_minutes: 30,
+    enable_recording: true,
+    enable_subtitles: false,
+    enable_blackboard: false,
+    enable_auto_cover: false,
+  },
   colinhas: {},
   resumos: {},
   top_questoes: {},
@@ -20,13 +26,21 @@ const SettingsProductConfig = () => {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (data) setForm({ ...defaultConfig, ...(data as unknown as ProductConfigSettings) });
+    if (data) {
+      const merged = { ...defaultConfig, ...(data as unknown as ProductConfigSettings) };
+      merged.revisoes = { ...defaultConfig.revisoes, ...merged.revisoes };
+      setForm(merged);
+    }
   }, [data]);
 
   const handleSave = async () => {
     setSaving(true);
     await update(form as any);
     setSaving(false);
+  };
+
+  const updateRevisoes = (key: string, value: any) => {
+    setForm({ ...form, revisoes: { ...form.revisoes, [key]: value } });
   };
 
   if (loading) return <p className="text-sm text-muted-foreground">Carregando...</p>;
@@ -42,9 +56,7 @@ const SettingsProductConfig = () => {
         <div className="flex items-center gap-2">
           <Switch
             checked={form.revisoes.enable_recording}
-            onCheckedChange={(v) =>
-              setForm({ ...form, revisoes: { ...form.revisoes, enable_recording: v } })
-            }
+            onCheckedChange={(v) => updateRevisoes("enable_recording", v)}
           />
           <Label className="cursor-pointer">Habilitar gravação de vídeo pelo professor</Label>
         </div>
@@ -59,25 +71,64 @@ const SettingsProductConfig = () => {
             onChange={(e) => {
               const raw = e.target.value;
               const num = raw === "" ? 0 : parseInt(raw);
-              setForm({
-                ...form,
-                revisoes: {
-                  ...form.revisoes,
-                  max_recording_minutes: isNaN(num) ? 0 : num,
-                },
-              });
+              updateRevisoes("max_recording_minutes", isNaN(num) ? 0 : num);
             }}
             onBlur={() => {
               if (!form.revisoes.max_recording_minutes || form.revisoes.max_recording_minutes < 1) {
-                setForm({
-                  ...form,
-                  revisoes: { ...form.revisoes, max_recording_minutes: 1 },
-                });
+                updateRevisoes("max_recording_minutes", 1);
               }
             }}
           />
           <p className="text-xs text-muted-foreground mt-1">
             Limite em minutos para cada gravação de vídeo feita pelo professor.
+          </p>
+        </div>
+
+        <div className="border-t border-border pt-3 space-y-3">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+            Processamento automático de vídeo (IA)
+          </p>
+
+          <div className="flex items-center gap-2">
+            <Switch
+              checked={form.revisoes.enable_subtitles}
+              onCheckedChange={(v) => updateRevisoes("enable_subtitles", v)}
+            />
+            <Label className="cursor-pointer flex items-center gap-1.5">
+              <Subtitles className="h-3.5 w-3.5 text-primary" />
+              Legendas automáticas
+            </Label>
+          </div>
+          <p className="text-xs text-muted-foreground ml-10">
+            Gera legendas por IA após a gravação. Exibidas no player de vídeo.
+          </p>
+
+          <div className="flex items-center gap-2">
+            <Switch
+              checked={form.revisoes.enable_blackboard}
+              onCheckedChange={(v) => updateRevisoes("enable_blackboard", v)}
+            />
+            <Label className="cursor-pointer flex items-center gap-1.5">
+              <PenTool className="h-3.5 w-3.5 text-primary" />
+              Quadro negro com palavras de impacto
+            </Label>
+          </div>
+          <p className="text-xs text-muted-foreground ml-10">
+            A IA extrai termos-chave da fala do professor e os exibe em um quadro negro embutido no vídeo.
+          </p>
+
+          <div className="flex items-center gap-2">
+            <Switch
+              checked={form.revisoes.enable_auto_cover}
+              onCheckedChange={(v) => updateRevisoes("enable_auto_cover", v)}
+            />
+            <Label className="cursor-pointer flex items-center gap-1.5">
+              <Image className="h-3.5 w-3.5 text-primary" />
+              Capa automática de introdução
+            </Label>
+          </div>
+          <p className="text-xs text-muted-foreground ml-10">
+            Gera uma capa de introdução com título, área e nome do professor no início do vídeo.
           </p>
         </div>
       </div>

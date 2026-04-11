@@ -34,8 +34,24 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "user_id é obrigatório" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    // Use service role to delete from auth.users (cascades to profiles, user_roles, etc.)
     const adminClient = createClient(supabaseUrl, serviceRoleKey);
+
+    // Reserve the referral_code before deleting the user
+    const { data: profile } = await adminClient
+      .from("profiles")
+      .select("referral_code, email")
+      .eq("user_id", user_id)
+      .maybeSingle();
+
+    if (profile?.referral_code) {
+      await adminClient.from("reserved_referral_codes").insert({
+        referral_code: profile.referral_code,
+        original_user_email: profile.email || null,
+        reason: "deleted",
+      });
+    }
+
+    // Delete from auth.users (cascades to profiles, user_roles, etc.)
     const { error } = await adminClient.auth.admin.deleteUser(user_id);
 
     if (error) {

@@ -484,6 +484,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          active: boolean
           areas: string[] | null
           avatar_url: string | null
           bio: string | null
@@ -502,6 +503,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          active?: boolean
           areas?: string[] | null
           avatar_url?: string | null
           bio?: string | null
@@ -520,6 +522,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          active?: boolean
           areas?: string[] | null
           avatar_url?: string | null
           bio?: string | null
@@ -563,6 +566,30 @@ export type Database = {
           id?: string
           user_id?: string
           vote?: boolean
+        }
+        Relationships: []
+      }
+      reserved_referral_codes: {
+        Row: {
+          created_at: string
+          id: string
+          original_user_email: string | null
+          reason: string
+          referral_code: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          original_user_email?: string | null
+          reason?: string
+          referral_code: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          original_user_email?: string | null
+          reason?: string
+          referral_code?: number
         }
         Relationships: []
       }

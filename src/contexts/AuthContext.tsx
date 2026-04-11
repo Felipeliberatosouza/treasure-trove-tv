@@ -81,9 +81,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const fetchProfile = async (userId: string) => {
     const { data } = await supabase
       .from("profiles")
-      .select("name, email, bio, expertise_area, avatar_url, birth_date, phone, areas")
+      .select("name, email, bio, expertise_area, avatar_url, birth_date, phone, areas, active, referral_code")
       .eq("user_id", userId)
       .single();
+    
+    if (data && data.active === false) {
+      await supabase.auth.signOut();
+      setProfile(null);
+      setRole(null);
+      setUser(null);
+      setSession(null);
+      return;
+    }
+    
     setProfile(data ?? null);
   };
 

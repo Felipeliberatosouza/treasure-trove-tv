@@ -50,7 +50,7 @@ export const template = {
   component: ContentRejectedEmail,
   subject: (data: Record<string, any>) => `Seu conteúdo "${data.contentTitle || ''}" precisa de ajustes`,
   displayName: 'Conteúdo rejeitado (professor)',
-  previewData: { teacherName: 'João', contentTitle: 'É nois!', contentType: 'lesson' },
+  previewData: { teacherName: 'João', contentTitle: 'É nois!', contentType: 'lesson', rejectionReason: 'O vídeo possui trechos com áudio inaudível e a resolução está incompleta no minuto 3:45.' },
 } satisfies TemplateEntry
 
 const main = { backgroundColor: '#ffffff', fontFamily: 'Arial, sans-serif' }

@@ -42,7 +42,7 @@ const SettingsTeacherBanner = () => {
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const url = await uploadFile(file, "platform-assets", `teacher-banner/${Date.now()}-${file.name}`);
+    const url = await upload(file, `teacher-banner/${Date.now()}-${file.name}`);
     if (url) setForm((f) => ({ ...f, background_image_url: url }));
   };
 

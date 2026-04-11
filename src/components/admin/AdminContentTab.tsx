@@ -260,12 +260,17 @@ const AdminContentTab = () => {
                         <Eye className="h-4 w-4 mr-1" /> Assistir
                       </Button>
                       {item.published && !item.admin_approved && (
-                        <Button size="sm" variant="ghost" className="h-8 text-green-500 hover:text-green-400" onClick={() => handleApprove(item, true)}>
-                          <CheckCircle className="h-4 w-4 mr-1" /> Aprovar
-                        </Button>
+                        <>
+                          <Button size="sm" variant="ghost" className="h-8 text-green-500 hover:text-green-400" onClick={() => handleApprove(item)}>
+                            <CheckCircle className="h-4 w-4 mr-1" /> Aprovar
+                          </Button>
+                          <Button size="sm" variant="ghost" className="h-8 text-destructive hover:text-destructive" onClick={() => handleReject(item)}>
+                            <XCircle className="h-4 w-4 mr-1" /> Rejeitar
+                          </Button>
+                        </>
                       )}
                       {item.admin_approved && (
-                        <Button size="sm" variant="ghost" className="h-8 text-destructive hover:text-destructive" onClick={() => handleApprove(item, false)}>
+                        <Button size="sm" variant="ghost" className="h-8 text-destructive hover:text-destructive" onClick={() => handleRevoke(item)}>
                           <XCircle className="h-4 w-4 mr-1" /> Revogar
                         </Button>
                       )}

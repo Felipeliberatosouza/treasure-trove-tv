@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Check, Zap, ShieldCheck, Clock } from "lucide-react";
+import { Check, Zap, ShieldCheck, Clock, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 interface PlanData {
   name: string;
@@ -11,7 +14,7 @@ interface PlanData {
   features: string[];
   highlighted: boolean;
   cancel_text?: string;
-  checkout_url?: string;
+  stripe_price_id?: string;
   allow_free_cancel?: boolean;
   min_commitment_days?: number;
 }
@@ -35,18 +38,48 @@ const defaultPlans: PlanData[] = [
 
 const PricingSection = () => {
   const [plans, setPlans] = useState<PlanData[]>(defaultPlans);
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchPlans = async () => {
       const { data } = await supabase
         .from("subscription_plans")
-        .select("name, price, features, highlighted, cancel_text, checkout_url, allow_free_cancel, min_commitment_days")
+        .select("name, price, features, highlighted, cancel_text, stripe_price_id, allow_free_cancel, min_commitment_days")
         .eq("active", true)
         .order("sort_order");
       if (data?.length) setPlans(data as unknown as PlanData[]);
     };
     fetchPlans();
   }, []);
+
+  const handleCheckout = async (plan: PlanData) => {
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+    if (!plan.stripe_price_id) {
+      toast.error("Este plano ainda não está disponível para compra.");
+      return;
+    }
+    setLoadingPlan(plan.name);
+    try {
+      const { data, error } = await supabase.functions.invoke("create-checkout", {
+        body: { priceId: plan.stripe_price_id },
+      });
+      if (error) throw error;
+      if (data?.url) {
+        window.location.href = data.url;
+      }
+    } catch (err: any) {
+      const msg = err?.message || "Erro ao iniciar checkout.";
+      toast.error(msg);
+      console.error(err);
+    } finally {
+      setLoadingPlan(null);
+    }
+  };
 
   return (
     <section className="px-6 py-20 md:px-12 lg:px-20">
@@ -102,13 +135,14 @@ const PricingSection = () => {
                 <Button
                   size="lg"
                   className="w-full font-display font-semibold"
-                  onClick={() => {
-                    if (plan.checkout_url) {
-                      window.open(plan.checkout_url, "_blank");
-                    }
-                  }}
+                  disabled={loadingPlan === plan.name}
+                  onClick={() => handleCheckout(plan)}
                 >
-                  Começar Agora
+                  {loadingPlan === plan.name ? (
+                    <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Processando...</>
+                  ) : (
+                    "Começar Agora"
+                  )}
                 </Button>
                 {plan.allow_free_cancel !== false && plan.cancel_text && (
                   <p className="flex items-center justify-center gap-1.5 text-xs text-green-500">

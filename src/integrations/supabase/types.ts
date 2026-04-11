@@ -748,6 +748,7 @@ export type Database = {
           service_top_questoes: boolean
           service_top_questoes_qty: number
           sort_order: number
+          stripe_price_id: string | null
           updated_at: string
         }
         Insert: {
@@ -777,6 +778,7 @@ export type Database = {
           service_top_questoes?: boolean
           service_top_questoes_qty?: number
           sort_order?: number
+          stripe_price_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -806,6 +808,7 @@ export type Database = {
           service_top_questoes?: boolean
           service_top_questoes_qty?: number
           sort_order?: number
+          stripe_price_id?: string | null
           updated_at?: string
         }
         Relationships: []

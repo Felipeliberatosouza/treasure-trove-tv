@@ -29,12 +29,12 @@ const TeacherBanner = () => {
         backgroundPosition: "center",
       }}
     >
-      <div className="absolute inset-0 bg-black/50" />
+      <div className="absolute inset-0 bg-background/60" />
       <div className="relative z-10 flex flex-col items-center justify-center text-center px-6 gap-4">
-        <h2 className="text-3xl md:text-4xl font-display font-bold text-white drop-shadow-lg">
+        <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground">
           {title}
         </h2>
-        <p className="text-lg md:text-xl text-white/90 max-w-2xl drop-shadow">
+        <p className="text-lg md:text-xl text-muted-foreground max-w-2xl">
           {subtitle}
         </p>
         <Link

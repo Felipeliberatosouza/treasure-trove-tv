@@ -16,6 +16,7 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [deactivatedMsg, setDeactivatedMsg] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,14 +26,33 @@ const Login = () => {
     }
 
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    setDeactivatedMsg(false);
+    const { data: signInData, error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
       toast.error(translateAuthError(error.message));
-    } else {
-      toast.success("Login realizado com sucesso!");
-      navigate("/");
+      setLoading(false);
+      return;
     }
+
+    // Check if user is active
+    if (signInData.user) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("active")
+        .eq("user_id", signInData.user.id)
+        .single();
+
+      if (profile && profile.active === false) {
+        await supabase.auth.signOut();
+        setDeactivatedMsg(true);
+        setLoading(false);
+        return;
+      }
+    }
+
+    toast.success("Login realizado com sucesso!");
+    navigate("/");
     setLoading(false);
   };
 
@@ -83,6 +103,13 @@ const Login = () => {
             <span className="bg-background px-2 text-muted-foreground">ou</span>
           </div>
         </div>
+
+        {deactivatedMsg && (
+          <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive space-y-1">
+            <p className="font-semibold">Conta desativada</p>
+            <p>Sua conta foi desativada pelo administrador. Para mais informações ou reativação, entre em contato com o suporte pelo e-mail ou WhatsApp disponíveis na página de contato.</p>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="relative">

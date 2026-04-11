@@ -26,7 +26,7 @@ const AdminUsersTab = () => {
 
   const fetchUsers = async () => {
     setLoading(true);
-    const { data: profiles } = await supabase.from("profiles").select("user_id, name, email, created_at");
+    const { data: profiles } = await supabase.from("profiles").select("user_id, name, email, created_at, referral_code");
     const { data: roles } = await supabase.from("user_roles").select("user_id, role");
 
     if (profiles && roles) {

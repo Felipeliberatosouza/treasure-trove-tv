@@ -3,8 +3,10 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BookOpen, FileText, ClipboardList, Award, StickyNote, HelpCircle, GraduationCap, AlertTriangle } from "lucide-react";
+import { BookOpen, FileText, ClipboardList, Award, StickyNote, HelpCircle, GraduationCap, AlertTriangle, Settings, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 const SERVICE_META: Record<string, { label: string; icon: React.ElementType; resourceType: string }> = {
   service_revisoes: { label: "Revisões", icon: BookOpen, resourceType: "revisao" },
@@ -37,6 +39,23 @@ export default function StudentSubscriptionTab() {
   const [subscription, setSubscription] = useState<SubscriptionData | null>(null);
   const [usageCounts, setUsageCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
+  const [portalLoading, setPortalLoading] = useState(false);
+
+  const handleManageSubscription = async () => {
+    setPortalLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("customer-portal");
+      if (error) throw error;
+      if (data?.url) {
+        window.open(data.url, "_blank");
+      }
+    } catch (err: any) {
+      toast.error("Não foi possível abrir o portal de gerenciamento.");
+      console.error(err);
+    } finally {
+      setPortalLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -98,12 +117,24 @@ export default function StudentSubscriptionTab() {
   return (
     <div>
       <h2 className="font-display text-lg font-semibold mb-1">Assinatura e Compras</h2>
-      <div className="flex items-center gap-2 mb-6">
-        <Badge variant="default">{plan.name as string}</Badge>
-        <span className="text-xs text-muted-foreground">
-          Desde {new Date(subscription.started_at).toLocaleDateString("pt-BR")}
-          {subscription.expires_at && ` · Expira em ${new Date(subscription.expires_at).toLocaleDateString("pt-BR")}`}
-        </span>
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-6">
+        <div className="flex items-center gap-2">
+          <Badge variant="default">{plan.name as string}</Badge>
+          <span className="text-xs text-muted-foreground">
+            Desde {new Date(subscription.started_at).toLocaleDateString("pt-BR")}
+            {subscription.expires_at && ` · Expira em ${new Date(subscription.expires_at).toLocaleDateString("pt-BR")}`}
+          </span>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleManageSubscription}
+          disabled={portalLoading}
+          className="sm:ml-auto"
+        >
+          {portalLoading ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Settings className="h-4 w-4 mr-1" />}
+          Gerenciar Assinatura
+        </Button>
       </div>
 
       <h3 className="text-sm font-medium mb-3">Uso dos Recursos</h3>

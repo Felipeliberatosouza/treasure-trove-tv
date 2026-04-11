@@ -117,10 +117,21 @@ const PricingSection = () => {
                   </p>
                 )}
                 {plan.allow_free_cancel === false && plan.min_commitment_days && (
-                  <p className="flex items-center justify-center gap-1.5 text-xs text-amber-500">
-                    <Clock className="h-3.5 w-3.5" />
-                    Permanência mínima de {plan.min_commitment_days} dias.
-                  </p>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <p className="flex items-center justify-center gap-1.5 text-xs text-amber-500 cursor-help">
+                        <Clock className="h-3.5 w-3.5" />
+                        Permanência mínima de {plan.min_commitment_days} dias.
+                      </p>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="max-w-xs text-center">
+                      <p className="text-sm">
+                        Este plano possui um período mínimo de <strong>{plan.min_commitment_days} dias</strong>.
+                        Se cancelar antes desse prazo, será cobrado o valor proporcional aos dias restantes.
+                        Após o período mínimo, o cancelamento é gratuito.
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
                 )}
               </div>
             </motion.div>

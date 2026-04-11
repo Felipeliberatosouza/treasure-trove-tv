@@ -289,6 +289,7 @@ const Index = () => {
                 videos={areaLessons[area.name]}
                 onVideoClick={handleVideoClick}
                 showTrialBadge={showTrialBadge}
+                watchedIds={watchedIds}
               />
             ) : null
           )

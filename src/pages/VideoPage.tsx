@@ -25,7 +25,7 @@ const DEMO_VIDEO_URL = "/demo-course.mp4";
 const VideoPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const trial = useFreeTrial();
   const { data: branding } = usePlatformSettings("branding");
   const resourceLimit = useResourceLimit();
@@ -55,9 +55,33 @@ const VideoPage = () => {
   const [votingProva, setVotingProva] = useState(false);
   const [isDoubtsOpen, setIsDoubtsOpen] = useState(false);
 
+  const resolveVideoPlaybackUrl = useCallback(async (storedVideoUrl?: string | null) => {
+    if (!storedVideoUrl) return undefined;
+
+    const marker = "/videos/";
+    const markerIndex = storedVideoUrl.indexOf(marker);
+    const storagePath = markerIndex >= 0
+      ? decodeURIComponent(storedVideoUrl.slice(markerIndex + marker.length).split("?")[0])
+      : storedVideoUrl.replace(/^\/+/, "");
+
+    if (!storagePath) return storedVideoUrl || undefined;
+
+    const { data, error } = await supabase.storage
+      .from("videos")
+      .createSignedUrl(storagePath, 60 * 60);
+
+    if (error || !data?.signedUrl) {
+      return /^https?:\/\//.test(storedVideoUrl) ? storedVideoUrl : undefined;
+    }
+
+    return data.signedUrl;
+  }, []);
+
   // Fetch video from DB if not found in static data
   useEffect(() => {
     if (staticVideo || !id) { setLoadingDb(false); return; }
+    if (authLoading) return;
+
     const fetchFromDb = async () => {
       setLoadingDb(true);
       const { data: lesson } = await supabase
@@ -66,6 +90,7 @@ const VideoPage = () => {
         .eq("id", id)
         .maybeSingle();
       if (lesson) {
+        const lessonVideoUrl = await resolveVideoPlaybackUrl(lesson.video_url);
         setDbVideo({
           id: lesson.id,
           title: lesson.title,
@@ -75,7 +100,7 @@ const VideoPage = () => {
           category: (lesson.areas && lesson.areas.length > 0) ? lesson.areas[0] : "",
           instructor: "",
           lessons: 1,
-          videoUrl: lesson.video_url || undefined,
+          videoUrl: lessonVideoUrl || undefined,
         });
         setTeacherId(lesson.teacher_id);
         setVideoType(lesson.video_type);
@@ -90,6 +115,7 @@ const VideoPage = () => {
         .eq("id", id)
         .maybeSingle();
       if (exam) {
+        const examVideoUrl = await resolveVideoPlaybackUrl(exam.video_url);
         setDbVideo({
           id: exam.id,
           title: exam.title,
@@ -99,7 +125,7 @@ const VideoPage = () => {
           category: (exam.areas && exam.areas.length > 0) ? exam.areas[0] : "",
           instructor: "",
           lessons: 1,
-          videoUrl: exam.video_url || undefined,
+          videoUrl: examVideoUrl || undefined,
         });
         setTeacherId(exam.teacher_id);
         setVideoType(exam.video_type);
@@ -110,8 +136,9 @@ const VideoPage = () => {
 
       setLoadingDb(false);
     };
+
     fetchFromDb();
-  }, [id, staticVideo]);
+  }, [authLoading, id, resolveVideoPlaybackUrl, staticVideo]);
 
   const video = staticVideo || dbVideo;
 

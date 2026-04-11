@@ -135,13 +135,14 @@ const PricingSection = () => {
                 <Button
                   size="lg"
                   className="w-full font-display font-semibold"
-                  onClick={() => {
-                    if (plan.checkout_url) {
-                      window.open(plan.checkout_url, "_blank");
-                    }
-                  }}
+                  disabled={loadingPlan === plan.name}
+                  onClick={() => handleCheckout(plan)}
                 >
-                  Começar Agora
+                  {loadingPlan === plan.name ? (
+                    <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Processando...</>
+                  ) : (
+                    "Começar Agora"
+                  )}
                 </Button>
                 {plan.allow_free_cancel !== false && plan.cancel_text && (
                   <p className="flex items-center justify-center gap-1.5 text-xs text-green-500">

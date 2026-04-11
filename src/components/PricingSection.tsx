@@ -11,6 +11,8 @@ interface PlanData {
   highlighted: boolean;
   cancel_text?: string;
   checkout_url?: string;
+  allow_free_cancel?: boolean;
+  min_commitment_days?: number;
 }
 
 const defaultPlans: PlanData[] = [
@@ -37,7 +39,7 @@ const PricingSection = () => {
     const fetchPlans = async () => {
       const { data } = await supabase
         .from("subscription_plans")
-        .select("name, price, features, highlighted, cancel_text, checkout_url")
+        .select("name, price, features, highlighted, cancel_text, checkout_url, allow_free_cancel, min_commitment_days")
         .eq("active", true)
         .order("sort_order");
       if (data?.length) setPlans(data as unknown as PlanData[]);
@@ -107,9 +109,14 @@ const PricingSection = () => {
                 >
                   Começar Agora
                 </Button>
-                {plan.cancel_text && (
+                {plan.allow_free_cancel !== false && plan.cancel_text && (
                   <p className="text-xs text-muted-foreground">
                     {plan.cancel_text}
+                  </p>
+                )}
+                {plan.allow_free_cancel === false && plan.min_commitment_days && (
+                  <p className="text-xs text-muted-foreground">
+                    Permanência mínima de {plan.min_commitment_days} dias.
                   </p>
                 )}
               </div>

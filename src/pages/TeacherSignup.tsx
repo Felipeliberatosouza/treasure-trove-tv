@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { useCourseAreas } from "@/hooks/useCourseAreas";
 import AreaSelector from "@/components/AreaSelector";
 import { translateAuthError } from "@/lib/translateAuthError";
+import PasswordStrengthChecker, { validatePassword } from "@/components/PasswordStrengthChecker";
 
 const TeacherSignup = () => {
   const navigate = useNavigate();
@@ -26,6 +27,7 @@ const TeacherSignup = () => {
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const { areas } = useCourseAreas(true);
 
@@ -47,8 +49,13 @@ const TeacherSignup = () => {
       toast.error("Informe um celular válido com DDD (11 dígitos)");
       return;
     }
-    if (password.length < 6) {
-      toast.error("A senha deve ter pelo menos 6 caracteres");
+    const pwdError = validatePassword(password, birthDate);
+    if (pwdError) {
+      toast.error(pwdError);
+      return;
+    }
+    if (password !== confirmPassword) {
+      toast.error("As senhas não coincidem");
       return;
     }
 
@@ -214,7 +221,7 @@ const TeacherSignup = () => {
             <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               type={showPassword ? "text" : "password"}
-              placeholder="Senha (mín. 6 caracteres) *"
+              placeholder="Senha *"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="pl-10 pr-10 bg-secondary border-border"
@@ -227,6 +234,20 @@ const TeacherSignup = () => {
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           </div>
+          <PasswordStrengthChecker password={password} birthDate={birthDate} />
+          <div className="relative">
+            <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              type={showPassword ? "text" : "password"}
+              placeholder="Confirmar senha *"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              className="pl-10 bg-secondary border-border"
+            />
+          </div>
+          {confirmPassword && password !== confirmPassword && (
+            <p className="text-xs text-destructive">As senhas não coincidem</p>
+          )}
           <div>
             <label className="text-sm text-muted-foreground mb-1 block">Áreas de especialização</label>
             <AreaSelector selected={expertise} onChange={setExpertise} max={areas.length || 10} />

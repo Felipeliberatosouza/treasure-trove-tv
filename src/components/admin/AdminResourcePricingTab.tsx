@@ -13,7 +13,7 @@ const RESOURCE_LABELS: Record<string, string> = {
   top_questoes: "Top Questões de Provas",
   colinhas: "Colinhas",
   duvidas: "Dúvidas (professor responde)",
-  aula_particular: "Aula Particular",
+  aula_particular: "Aula Particular (50 minutos)",
 };
 
 interface ResourcePrice {

@@ -33,9 +33,27 @@ const ContentForm = ({ table, onSaved, onCancel }: ContentFormProps) => {
   const [videoType, setVideoType] = useState<string>("revisao");
   const [saving, setSaving] = useState(false);
   const [showRecorder, setShowRecorder] = useState(false);
+  const [subtitlesVtt, setSubtitlesVtt] = useState<string>("");
+  const [teacherName, setTeacherName] = useState("");
 
   const recordingEnabled = productConfig?.revisoes?.enable_recording ?? false;
   const maxRecordingMinutes = productConfig?.revisoes?.max_recording_minutes ?? 30;
+  const enableSubtitles = productConfig?.revisoes?.enable_subtitles ?? false;
+  const enableBlackboard = productConfig?.revisoes?.enable_blackboard ?? false;
+  const enableAutoCover = productConfig?.revisoes?.enable_auto_cover ?? false;
+
+  // Fetch teacher name for auto cover
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("profiles")
+      .select("name")
+      .eq("user_id", user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.name) setTeacherName(data.name);
+      });
+  }, [user]);
 
   const uploadFile = async (file: File, bucket: string) => {
     const ext = file.name.split(".").pop();
@@ -74,7 +92,15 @@ const ContentForm = ({ table, onSaved, onCancel }: ContentFormProps) => {
       if (topQuestoesFile) top_questoes_url = await uploadFile(topQuestoesFile, "materials");
       if (colinhaFile) colinha_url = await uploadFile(colinhaFile, "materials");
 
-      const { error } = await supabase.from(table).insert({
+      // Upload subtitles VTT if available
+      let subtitles_url = "";
+      if (subtitlesVtt) {
+        const vttBlob = new Blob([subtitlesVtt], { type: "text/vtt" });
+        const vttFile = new File([vttBlob], `legendas-${Date.now()}.vtt`, { type: "text/vtt" });
+        subtitles_url = await uploadFile(vttFile, "materials");
+      }
+
+      const insertData: any = {
         teacher_id: user.id,
         title,
         description,
@@ -89,7 +115,9 @@ const ContentForm = ({ table, onSaved, onCancel }: ContentFormProps) => {
         colinha_url,
         duvidas_url,
         aula_particular_url,
-      } as any);
+      };
+
+      const { error } = await supabase.from(table).insert(insertData);
 
       if (error) throw error;
       toast.success("Conteúdo salvo com sucesso!");
@@ -178,10 +206,17 @@ const ContentForm = ({ table, onSaved, onCancel }: ContentFormProps) => {
         {showRecorder ? (
           <VideoRecorder
             maxMinutes={maxRecordingMinutes}
-            onRecorded={(file) => {
+            enableSubtitles={enableSubtitles}
+            enableBlackboard={enableBlackboard}
+            enableAutoCover={enableAutoCover}
+            lessonTitle={title}
+            lessonArea={selectedAreas[0] || ""}
+            teacherName={teacherName}
+            onRecorded={(file, vtt) => {
               setVideoFile(file);
+              if (vtt) setSubtitlesVtt(vtt);
               setShowRecorder(false);
-              toast.success("Vídeo gravado com sucesso!");
+              toast.success("Vídeo gravado e processado com sucesso!");
             }}
             onCancel={() => setShowRecorder(false)}
           />

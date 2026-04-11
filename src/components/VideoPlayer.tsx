@@ -2,7 +2,7 @@ import { useRef, useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Progress } from "@/components/ui/progress";
-import { Play, Pause, Volume2, VolumeX, Maximize, RotateCcw } from "lucide-react";
+import { Play, Pause, Volume2, VolumeX, Maximize, RotateCcw, Subtitles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface VideoPlayerProps {
@@ -12,11 +12,10 @@ interface VideoPlayerProps {
   viewId: string | null;
   onProgressMilestone?: (percentage: number) => void;
   poster?: string;
-  /** If set, pauses video at this percentage and fires onPreviewLimitReached */
   previewLimit?: number;
   onPreviewLimitReached?: () => void;
-  /** Logo URL for watermark overlay */
   logoUrl?: string;
+  subtitlesVttUrl?: string;
 }
 
 const VideoPlayer = ({
@@ -29,6 +28,7 @@ const VideoPlayer = ({
   previewLimit,
   onPreviewLimitReached,
   logoUrl,
+  subtitlesVttUrl,
 }: VideoPlayerProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -40,6 +40,7 @@ const VideoPlayer = ({
   const [muted, setMuted] = useState(false);
   const [showControls, setShowControls] = useState(true);
   const [maxPercentage, setMaxPercentage] = useState(0);
+  const [subtitlesEnabled, setSubtitlesEnabled] = useState(true);
   const hideControlsTimer = useRef<ReturnType<typeof setTimeout>>();
   const lastSavedPercentage = useRef(0);
 
@@ -55,24 +56,19 @@ const VideoPlayer = ({
     [user, viewId]
   );
 
-  // Save progress periodically and on milestones
   useEffect(() => {
     const roundedPct = Math.floor(percentage);
     if (roundedPct > maxPercentage) {
       setMaxPercentage(roundedPct);
-
-      // Save every 5% and at key milestones
       if (roundedPct % 5 === 0 || roundedPct === 70 || roundedPct === 100) {
         saveProgress(roundedPct);
       }
-
       if (roundedPct >= 70) {
         onProgressMilestone?.(roundedPct);
       }
     }
   }, [percentage, maxPercentage, saveProgress, onProgressMilestone]);
 
-  // Save on unmount
   useEffect(() => {
     return () => {
       if (maxPercentage > lastSavedPercentage.current) {
@@ -81,6 +77,16 @@ const VideoPlayer = ({
     };
   }, [maxPercentage, saveProgress]);
 
+  // Manage subtitle track visibility
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    const tracks = video.textTracks;
+    for (let i = 0; i < tracks.length; i++) {
+      tracks[i].mode = subtitlesEnabled ? "showing" : "hidden";
+    }
+  }, [subtitlesEnabled, subtitlesVttUrl]);
+
   const handleTimeUpdate = () => {
     const video = videoRef.current;
     if (!video || !video.duration) return;
@@ -88,7 +94,6 @@ const VideoPlayer = ({
     setCurrentTime(video.currentTime);
     setPercentage(pct);
 
-    // Enforce preview limit
     if (previewLimit && pct >= previewLimit) {
       video.pause();
       video.currentTime = (previewLimit / 100) * video.duration;
@@ -184,7 +189,19 @@ const VideoPlayer = ({
         }}
         onClick={togglePlay}
         playsInline
-      />
+        crossOrigin="anonymous"
+      >
+        {/* Subtitle track */}
+        {subtitlesVttUrl && (
+          <track
+            kind="subtitles"
+            src={subtitlesVttUrl}
+            srcLang="pt-BR"
+            label="Português"
+            default
+          />
+        )}
+      </video>
 
       {/* Big play overlay when paused */}
       {!isPlaying && (
@@ -245,6 +262,19 @@ const VideoPlayer = ({
             >
               {muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
             </Button>
+            {subtitlesVttUrl && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className={`h-7 w-7 hover:bg-white/20 ${
+                  subtitlesEnabled ? "text-primary" : "text-white/50"
+                }`}
+                onClick={() => setSubtitlesEnabled(!subtitlesEnabled)}
+                title={subtitlesEnabled ? "Desativar legendas" : "Ativar legendas"}
+              >
+                <Subtitles className="h-4 w-4" />
+              </Button>
+            )}
             <span className="ml-1 text-xs text-white/80 font-mono">
               {formatTime(currentTime)} / {formatTime(duration)}
             </span>

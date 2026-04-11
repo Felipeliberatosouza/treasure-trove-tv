@@ -5,6 +5,7 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { BookOpen, FileText, ClipboardList, Award, StickyNote, HelpCircle, GraduationCap, AlertTriangle, Settings, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -40,6 +41,7 @@ export default function StudentSubscriptionTab() {
   const [usageCounts, setUsageCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [portalLoading, setPortalLoading] = useState(false);
+  const [commitmentWarning, setCommitmentWarning] = useState<{ daysRemaining: number; url: string } | null>(null);
 
   const handleManageSubscription = async () => {
     setPortalLoading(true);
@@ -47,7 +49,11 @@ export default function StudentSubscriptionTab() {
       const { data, error } = await supabase.functions.invoke("customer-portal");
       if (error) throw error;
       if (data?.url) {
-        window.open(data.url, "_blank");
+        if (!data.can_cancel_freely && data.days_remaining > 0) {
+          setCommitmentWarning({ daysRemaining: data.days_remaining, url: data.url });
+        } else {
+          window.open(data.url, "_blank");
+        }
       }
     } catch (err: any) {
       toast.error("Não foi possível abrir o portal de gerenciamento.");
@@ -175,6 +181,34 @@ export default function StudentSubscriptionTab() {
       {Object.entries(SERVICE_META).every(([key]) => !(plan[key] as boolean)) && (
         <p className="text-sm text-muted-foreground mt-2">Nenhum serviço incluído neste plano.</p>
       )}
+
+      <AlertDialog open={!!commitmentWarning} onOpenChange={(open) => !open && setCommitmentWarning(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-destructive" />
+              Período mínimo de permanência
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Seu plano possui um período mínimo de permanência. Faltam{" "}
+              <strong>{commitmentWarning?.daysRemaining} dia{(commitmentWarning?.daysRemaining ?? 0) !== 1 ? "s" : ""}</strong>{" "}
+              para completá-lo. Se cancelar agora, poderá haver cobrança proporcional ao período restante.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Voltar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (commitmentWarning?.url) window.open(commitmentWarning.url, "_blank");
+                setCommitmentWarning(null);
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Continuar mesmo assim
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

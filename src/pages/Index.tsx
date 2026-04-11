@@ -283,10 +283,10 @@ const Index = () => {
         )}
       </div>
 
-      <TeacherBanner />
       <div id="pricing">
         <PricingSection />
       </div>
+      <TeacherBanner />
       <Footer />
       <WhatsAppFloat />
     </div>

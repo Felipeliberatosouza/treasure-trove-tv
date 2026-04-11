@@ -61,35 +61,75 @@ const AdminContentTab = () => {
 
   useEffect(() => { fetchContent(); }, []);
 
-  const handleApprove = async (item: ContentItem, approve: boolean) => {
+  const sendDecisionEmail = async (item: ContentItem, approved: boolean) => {
+    if (!item.teacher_email) return;
+
+    const { error } = await supabase.functions.invoke("send-transactional-email", {
+      body: {
+        templateName: approved ? "content-approved" : "content-rejected",
+        recipientEmail: item.teacher_email,
+        idempotencyKey: `content-${approved ? "approved" : "rejected"}-${item.type}-${item.id}`,
+        templateData: {
+          teacherName: item.teacher_name || "",
+          contentTitle: item.title,
+          contentType: item.type,
+        },
+      },
+    });
+
+    if (error) {
+      console.error("Erro ao enviar e-mail de moderação:", error);
+    }
+  };
+
+  const handleApprove = async (item: ContentItem) => {
     const table = item.type === "lesson" ? "lessons" : "exam_solutions";
     const { error } = await supabase
       .from(table)
-      .update({ admin_approved: approve })
+      .update({ published: true, admin_approved: true })
       .eq("id", item.id);
 
     if (error) {
-      toast({ title: "Erro", description: "Falha ao atualizar status.", variant: "destructive" });
-    } else {
-      toast({ title: approve ? "Aprovado" : "Rejeitado", description: `"${item.title}" foi ${approve ? "aprovado" : "rejeitado"}.` });
-      fetchContent();
-
-      // Send email notification to teacher
-      if (item.teacher_email) {
-        supabase.functions.invoke("send-transactional-email", {
-          body: {
-            templateName: approve ? "content-approved" : "content-rejected",
-            recipientEmail: item.teacher_email,
-            idempotencyKey: `content-${approve ? "approved" : "rejected"}-${item.type}-${item.id}`,
-            templateData: {
-              teacherName: item.teacher_name || "",
-              contentTitle: item.title,
-              contentType: item.type,
-            },
-          },
-        });
-      }
+      toast({ title: "Erro", description: "Falha ao aprovar conteúdo.", variant: "destructive" });
+      return;
     }
+
+    await sendDecisionEmail(item, true);
+    toast({ title: "Aprovado", description: `"${item.title}" foi aprovado e publicado.` });
+    fetchContent();
+  };
+
+  const handleReject = async (item: ContentItem) => {
+    const table = item.type === "lesson" ? "lessons" : "exam_solutions";
+    const { error } = await supabase
+      .from(table)
+      .update({ published: false, admin_approved: false })
+      .eq("id", item.id);
+
+    if (error) {
+      toast({ title: "Erro", description: "Falha ao rejeitar conteúdo.", variant: "destructive" });
+      return;
+    }
+
+    await sendDecisionEmail(item, false);
+    toast({ title: "Rejeitado", description: `"${item.title}" foi rejeitado e voltou para rascunho.` });
+    fetchContent();
+  };
+
+  const handleRevoke = async (item: ContentItem) => {
+    const table = item.type === "lesson" ? "lessons" : "exam_solutions";
+    const { error } = await supabase
+      .from(table)
+      .update({ admin_approved: false })
+      .eq("id", item.id);
+
+    if (error) {
+      toast({ title: "Erro", description: "Falha ao revogar aprovação.", variant: "destructive" });
+      return;
+    }
+
+    toast({ title: "Aprovação revogada", description: `"${item.title}" voltou para pendente.` });
+    fetchContent();
   };
 
   const handlePercentageChange = async (item: ContentItem, percentage: number) => {

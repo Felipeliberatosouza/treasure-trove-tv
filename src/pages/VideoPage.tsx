@@ -358,8 +358,12 @@ const VideoPage = () => {
   }, []);
 
   const handlePreviewLimitReached = useCallback(() => {
-    setShowPaywall(true);
-  }, []);
+    if (limitInfo) {
+      setShowLimitModal(true);
+    } else {
+      setShowPaywall(true);
+    }
+  }, [limitInfo]);
 
   const handleBuyUnit = () => {
     if (!user) { navigate("/login"); return; }

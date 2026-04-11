@@ -32,6 +32,7 @@ interface Plan {
 const emptyPlan = (): Plan => {
   const p: Plan = {
     name: "", price: 0, highlighted: false, features: [""], active: true, sort_order: 0,
+    allow_free_cancel: true, min_commitment_days: 30, cancel_text: "",
   };
   SERVICE_KEYS.forEach(s => {
     p[`service_${s.key}`] = false;
@@ -142,13 +143,42 @@ const AdminPlansTab = () => {
               <Label className="cursor-pointer">Destacar este plano</Label>
             </div>
 
-            <div>
-              <Label>Frase de cancelamento</Label>
-              <Input
-                value={(plan.cancel_text as string) || ""}
-                onChange={(e) => updatePlan(pi, "cancel_text", e.target.value)}
-                placeholder="Ex: Cancele quando quiser. Sem compromisso."
-              />
+            {/* Cancellation policy */}
+            <div className="space-y-3 border rounded-lg p-3">
+              <div className="flex items-center gap-2">
+                <Switch
+                  checked={!!plan.allow_free_cancel}
+                  onCheckedChange={(v) => updatePlan(pi, "allow_free_cancel", v)}
+                />
+                <Label className="cursor-pointer">Cancelamento livre (sem cobrança)</Label>
+              </div>
+
+              {plan.allow_free_cancel ? (
+                <div>
+                  <Label>Frase de cancelamento</Label>
+                  <Input
+                    value={(plan.cancel_text as string) || ""}
+                    onChange={(e) => updatePlan(pi, "cancel_text", e.target.value)}
+                    placeholder="Ex: Cancele quando quiser. Sem compromisso."
+                  />
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <div>
+                    <Label>Tempo mínimo de permanência (dias)</Label>
+                    <Input
+                      type="number"
+                      min={1}
+                      className="w-32"
+                      value={(plan.min_commitment_days as number) || 30}
+                      onChange={(e) => updatePlan(pi, "min_commitment_days", parseInt(e.target.value) || 30)}
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    O aluno será cobrado se cancelar antes de {(plan.min_commitment_days as number) || 30} dias.
+                  </p>
+                </div>
+              )}
             </div>
 
             <div>

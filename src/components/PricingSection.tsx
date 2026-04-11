@@ -10,6 +10,7 @@ interface PlanData {
   features: string[];
   highlighted: boolean;
   cancel_text?: string;
+  checkout_url?: string;
 }
 
 const defaultPlans: PlanData[] = [

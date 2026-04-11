@@ -7,6 +7,7 @@ import Navbar from "@/components/Navbar";
 import PersonalDataTab from "@/components/dashboard/PersonalDataTab";
 import LoginDataTab from "@/components/dashboard/LoginDataTab";
 import StudentDoubtsTab from "@/components/dashboard/StudentDoubtsTab";
+import StudentSubscriptionTab from "@/components/dashboard/StudentSubscriptionTab";
 
 const tabs = [
   { id: "personal", label: "Dados Pessoais", icon: User },

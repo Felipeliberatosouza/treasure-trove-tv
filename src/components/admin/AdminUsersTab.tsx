@@ -121,7 +121,8 @@ const AdminUsersTab = () => {
         <div className="rounded-lg border border-border overflow-hidden">
           <Table>
             <TableHeader>
-              <TableRow>
+             <TableRow>
+                <TableHead>Código</TableHead>
                 <TableHead>Nome</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Papel</TableHead>
@@ -132,6 +133,7 @@ const AdminUsersTab = () => {
             <TableBody>
               {filtered.map((u) => (
                 <TableRow key={u.user_id}>
+                  <TableCell className="font-mono text-sm">{u.referral_code || "—"}</TableCell>
                   <TableCell className="font-medium">{u.name}</TableCell>
                   <TableCell className="text-muted-foreground">{u.email}</TableCell>
                   <TableCell>{roleBadge(u.role)}</TableCell>

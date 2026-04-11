@@ -73,6 +73,7 @@ const App = () => (
             <Route path="/minhas-duvidas" element={<MinhasDuvidas />} />
             <Route path="/minhas-aulas-agendadas" element={<MinhasAulasAgendadas />} />
             <Route path="/video/:id" element={<VideoPage />} />
+            <Route path="/payment-success" element={<PaymentSuccess />} />
             <Route path="/unsubscribe" element={<Unsubscribe />} />
             <Route path="/:slug" element={<TeacherProfile />} />
             <Route path="*" element={<NotFound />} />

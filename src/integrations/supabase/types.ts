@@ -724,6 +724,7 @@ export type Database = {
         Row: {
           active: boolean
           cancel_text: string | null
+          checkout_url: string | null
           created_at: string
           features: string[]
           highlighted: boolean
@@ -750,6 +751,7 @@ export type Database = {
         Insert: {
           active?: boolean
           cancel_text?: string | null
+          checkout_url?: string | null
           created_at?: string
           features?: string[]
           highlighted?: boolean
@@ -776,6 +778,7 @@ export type Database = {
         Update: {
           active?: boolean
           cancel_text?: string | null
+          checkout_url?: string | null
           created_at?: string
           features?: string[]
           highlighted?: boolean

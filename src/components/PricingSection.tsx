@@ -10,6 +10,7 @@ interface PlanData {
   features: string[];
   highlighted: boolean;
   cancel_text?: string;
+  checkout_url?: string;
 }
 
 const defaultPlans: PlanData[] = [
@@ -36,7 +37,7 @@ const PricingSection = () => {
     const fetchPlans = async () => {
       const { data } = await supabase
         .from("subscription_plans")
-        .select("name, price, features, highlighted, cancel_text")
+        .select("name, price, features, highlighted, cancel_text, checkout_url")
         .eq("active", true)
         .order("sort_order");
       if (data?.length) setPlans(data as unknown as PlanData[]);
@@ -95,7 +96,15 @@ const PricingSection = () => {
                     </li>
                   ))}
                 </ul>
-                <Button size="lg" className="w-full font-display font-semibold">
+                <Button
+                  size="lg"
+                  className="w-full font-display font-semibold"
+                  onClick={() => {
+                    if (plan.checkout_url) {
+                      window.open(plan.checkout_url, "_blank");
+                    }
+                  }}
+                >
                   Começar Agora
                 </Button>
                 {plan.cancel_text && (

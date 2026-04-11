@@ -151,6 +151,15 @@ const AdminPlansTab = () => {
               />
             </div>
 
+            <div>
+              <Label>Link de checkout (URL Stripe)</Label>
+              <Input
+                value={(plan.checkout_url as string) || ""}
+                onChange={(e) => updatePlan(pi, "checkout_url", e.target.value)}
+                placeholder="https://buy.stripe.com/..."
+              />
+            </div>
+
             {/* Free text features */}
             <div>
               <Label>Recursos (texto livre)</Label>

@@ -16,6 +16,7 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [deactivatedMsg, setDeactivatedMsg] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,14 +26,33 @@ const Login = () => {
     }
 
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    setDeactivatedMsg(false);
+    const { data: signInData, error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
       toast.error(translateAuthError(error.message));
-    } else {
-      toast.success("Login realizado com sucesso!");
-      navigate("/");
+      setLoading(false);
+      return;
     }
+
+    // Check if user is active
+    if (signInData.user) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("active")
+        .eq("user_id", signInData.user.id)
+        .single();
+
+      if (profile && profile.active === false) {
+        await supabase.auth.signOut();
+        setDeactivatedMsg(true);
+        setLoading(false);
+        return;
+      }
+    }
+
+    toast.success("Login realizado com sucesso!");
+    navigate("/");
     setLoading(false);
   };
 

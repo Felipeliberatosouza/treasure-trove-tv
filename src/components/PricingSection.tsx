@@ -17,7 +17,42 @@ interface PlanData {
   stripe_price_id?: string;
   allow_free_cancel?: boolean;
   min_commitment_days?: number;
+  service_revisoes?: boolean;
+  service_revisoes_qty?: number;
+  service_resumos?: boolean;
+  service_resumos_qty?: number;
+  service_simulados?: boolean;
+  service_simulados_qty?: number;
+  service_top_questoes?: boolean;
+  service_top_questoes_qty?: number;
+  service_colinhas?: boolean;
+  service_colinhas_qty?: number;
+  service_duvidas?: boolean;
+  service_duvidas_qty?: number;
+  service_aula_particular?: boolean;
+  service_aula_particular_qty?: number;
 }
+
+const SERVICE_LABELS: Record<string, string> = {
+  service_revisoes: "Revisões",
+  service_resumos: "Resumos",
+  service_simulados: "Simulados",
+  service_top_questoes: "Top Questões",
+  service_colinhas: "Colinhas",
+  service_duvidas: "Dúvidas",
+  service_aula_particular: "Aula Particular (50 min)",
+};
+
+const getEnabledServices = (plan: PlanData): string[] => {
+  const services: string[] = [];
+  for (const [key, label] of Object.entries(SERVICE_LABELS)) {
+    if (plan[key as keyof PlanData]) {
+      const qty = plan[`${key}_qty` as keyof PlanData] as number | undefined;
+      services.push(qty ? `${label}: ${qty}` : label);
+    }
+  }
+  return services;
+};
 
 const defaultPlans: PlanData[] = [
   {

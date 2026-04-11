@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -26,6 +27,7 @@ interface ContentItem {
 }
 
 const AdminContentTab = () => {
+  const navigate = useNavigate();
   const [items, setItems] = useState<ContentItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -262,7 +264,7 @@ const AdminContentTab = () => {
                         size="sm"
                         variant="ghost"
                         className="h-8"
-                        onClick={() => window.open(`/video/${item.id}`, "_blank")}
+                        onClick={() => navigate(`/video/${item.id}`)}
                       >
                         <Eye className="h-4 w-4 mr-1" /> Assistir
                       </Button>

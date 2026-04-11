@@ -1,21 +1,10 @@
 import { useEffect, useState } from "react";
-import { usePlatformSettings } from "@/hooks/usePlatformSettings";
+import { usePlatformSettings, ProductConfigSettings } from "@/hooks/usePlatformSettings";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Save, Video, FileText, StickyNote, Trophy, ClipboardList } from "lucide-react";
-
-export interface ProductConfigSettings {
-  revisoes: {
-    max_recording_minutes: number;
-    enable_recording: boolean;
-  };
-  colinhas: Record<string, unknown>;
-  resumos: Record<string, unknown>;
-  top_questoes: Record<string, unknown>;
-  simulados: Record<string, unknown>;
-}
 
 const defaultConfig: ProductConfigSettings = {
   revisoes: { max_recording_minutes: 30, enable_recording: true },

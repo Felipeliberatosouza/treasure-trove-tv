@@ -64,8 +64,9 @@ const HeroBanner = ({ onVideoClick, onExploreClick }: HeroBannerProps) => {
               size="lg"
               variant="secondary"
               className="gap-2 font-display font-semibold"
+              onClick={onExploreClick}
             >
-              <BookOpen className="h-5 w-5" /> Mais Detalhes
+              <BookOpen className="h-5 w-5" /> Comece Agora
             </Button>
           </div>
         </motion.div>

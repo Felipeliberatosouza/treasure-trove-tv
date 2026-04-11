@@ -115,12 +115,17 @@ const ContentForm = ({ table, onSaved, onCancel }: ContentFormProps) => {
         colinha_url,
         duvidas_url,
         aula_particular_url,
+        published: true,
+        admin_approved: false,
       };
 
       const { error } = await supabase.from(table).insert(insertData);
 
       if (error) throw error;
-      toast.success("Conteúdo salvo com sucesso!");
+      toast.success(
+        "Sua aula foi enviada para aprovação da Revisão Fácil! Se estiver de acordo com as regras da plataforma, será publicada em até 3 dias úteis. Você receberá um e-mail com a confirmação da publicação ou com orientações sobre eventuais ajustes necessários.",
+        { duration: 12000 }
+      );
       onSaved();
     } catch (err: any) {
       toast.error(err.message || "Erro ao salvar");
@@ -286,7 +291,7 @@ const ContentForm = ({ table, onSaved, onCancel }: ContentFormProps) => {
       <div className="flex gap-3 pt-2">
         <Button type="submit" disabled={saving} className="font-display">
           <Upload className="h-4 w-4 mr-1" />
-          {saving ? "Salvando..." : "Publicar"}
+          {saving ? "Enviando..." : "Submeter para Aprovação"}
         </Button>
         <Button type="button" variant="secondary" onClick={onCancel} className="font-display">
           Cancelar

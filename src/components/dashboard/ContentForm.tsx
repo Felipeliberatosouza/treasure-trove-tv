@@ -19,6 +19,7 @@ interface ContentFormProps {
 
 const ContentForm = ({ table, onSaved, onCancel }: ContentFormProps) => {
   const { user } = useAuth();
+  const { data: productConfig } = usePlatformSettings("product_config");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [selectedAreas, setSelectedAreas] = useState<string[]>([]);
@@ -31,6 +32,10 @@ const ContentForm = ({ table, onSaved, onCancel }: ContentFormProps) => {
   const [colinhaFile, setColinhaFile] = useState<File | null>(null);
   const [videoType, setVideoType] = useState<string>("revisao");
   const [saving, setSaving] = useState(false);
+  const [showRecorder, setShowRecorder] = useState(false);
+
+  const recordingEnabled = productConfig?.revisoes?.enable_recording ?? false;
+  const maxRecordingMinutes = productConfig?.revisoes?.max_recording_minutes ?? 30;
 
   const uploadFile = async (file: File, bucket: string) => {
     const ext = file.name.split(".").pop();

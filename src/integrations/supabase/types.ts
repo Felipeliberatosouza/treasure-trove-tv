@@ -725,7 +725,6 @@ export type Database = {
           active: boolean
           allow_free_cancel: boolean
           cancel_text: string | null
-          checkout_url: string | null
           created_at: string
           features: string[]
           highlighted: boolean
@@ -755,7 +754,6 @@ export type Database = {
           active?: boolean
           allow_free_cancel?: boolean
           cancel_text?: string | null
-          checkout_url?: string | null
           created_at?: string
           features?: string[]
           highlighted?: boolean
@@ -785,7 +783,6 @@ export type Database = {
           active?: boolean
           allow_free_cancel?: boolean
           cancel_text?: string | null
-          checkout_url?: string | null
           created_at?: string
           features?: string[]
           highlighted?: boolean

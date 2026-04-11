@@ -1,0 +1,1 @@
+ALTER TABLE public.subscription_plans DROP COLUMN checkout_url;

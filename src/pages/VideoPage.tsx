@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFreeTrial } from "@/hooks/useFreeTrial";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
+import { useResourceLimit, type ResourceType } from "@/hooks/useResourceLimit";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -16,6 +17,7 @@ import { getVideoById } from "@/data/courses";
 import type { Video } from "@/data/courses";
 import DoubtForm from "@/components/DoubtForm";
 import { RatingStars } from "@/components/VideoDetailModal";
+import ResourceLimitModal from "@/components/ResourceLimitModal";
 
 const DEMO_VIDEO_URL = "/demo-course.mp4";
 
@@ -25,6 +27,9 @@ const VideoPage = () => {
   const { user } = useAuth();
   const trial = useFreeTrial();
   const { data: branding } = usePlatformSettings("branding");
+  const resourceLimit = useResourceLimit();
+  const [showLimitModal, setShowLimitModal] = useState(false);
+  const [limitInfo, setLimitInfo] = useState<{ resourceType: string; used: number; total: number; hasSubscription: boolean; individualPrice: number | null } | null>(null);
 
   const staticVideo = id ? getVideoById(id) : null;
 
@@ -109,6 +114,17 @@ const VideoPage = () => {
 
   const video = staticVideo || dbVideo;
 
+  const VIDEO_TYPE_TO_RESOURCE: Record<string, ResourceType> = {
+    revisao: "revisao",
+    resolucao_prova: "revisao",
+    resumo: "resumo",
+    simulado: "simulado",
+    top_questoes: "top_questoes",
+    colinha: "colinha",
+    duvida: "duvida",
+    aula_particular: "aula_particular",
+  };
+
   useEffect(() => {
     if (!video) return;
     const checkAccess = async () => {
@@ -123,6 +139,8 @@ const VideoPage = () => {
       if (userRoles.includes("teacher") && teacherId === user.id) { setHasFullAccess(true); return; }
 
       if (trial.hasActiveTrial) { setHasFullAccess(true); return; }
+
+      // Check individual purchase
       const { data: purchase } = await supabase
         .from("video_purchases")
         .select("id")
@@ -131,10 +149,30 @@ const VideoPage = () => {
         .eq("payment_status", "completed")
         .limit(1);
       if (purchase && purchase.length > 0) { setHasFullAccess(true); return; }
+
+      // Check subscription resource limit
+      if (resourceLimit.loaded && videoType) {
+        const rt = VIDEO_TYPE_TO_RESOURCE[videoType];
+        if (rt) {
+          const result = resourceLimit.checkLimit(rt);
+          if (result.hasSubscription && result.allowed) {
+            setHasFullAccess(true);
+            return;
+          }
+          if (result.hasSubscription && !result.allowed) {
+            // Will show modal when user tries to play
+            setLimitInfo({ resourceType: rt, used: result.used, total: result.total, hasSubscription: result.hasSubscription, individualPrice: result.individualPrice });
+          }
+          if (!result.hasSubscription) {
+            setLimitInfo({ resourceType: rt, used: 0, total: 0, hasSubscription: false, individualPrice: result.individualPrice });
+          }
+        }
+      }
+
       setHasFullAccess(false);
     };
     checkAccess();
-  }, [video, user, trial.hasActiveTrial, teacherId]);
+  }, [video, user, trial.hasActiveTrial, teacherId, resourceLimit.loaded, videoType]);
 
   useEffect(() => {
     if (!video || dbVideo) return;
@@ -320,8 +358,12 @@ const VideoPage = () => {
   }, []);
 
   const handlePreviewLimitReached = useCallback(() => {
-    setShowPaywall(true);
-  }, []);
+    if (limitInfo) {
+      setShowLimitModal(true);
+    } else {
+      setShowPaywall(true);
+    }
+  }, [limitInfo]);
 
   const handleBuyUnit = () => {
     if (!user) { navigate("/login"); return; }
@@ -368,6 +410,21 @@ const VideoPage = () => {
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
       <Navbar />
+
+      {limitInfo && (
+        <ResourceLimitModal
+          open={showLimitModal}
+          onClose={() => setShowLimitModal(false)}
+          resourceType={limitInfo.resourceType}
+          used={limitInfo.used}
+          total={limitInfo.total}
+          hasSubscription={limitInfo.hasSubscription}
+          individualPrice={limitInfo.individualPrice}
+          onBuyIndividual={() => {
+            toast.info("Compra individual será integrada com Stripe em breve.");
+          }}
+        />
+      )}
 
       <Dialog open={isDoubtsOpen} onOpenChange={setIsDoubtsOpen}>
         <DialogContent className="max-w-lg border-border bg-card">

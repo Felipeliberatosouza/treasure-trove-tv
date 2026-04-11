@@ -723,12 +723,14 @@ export type Database = {
       subscription_plans: {
         Row: {
           active: boolean
+          allow_free_cancel: boolean
           cancel_text: string | null
           checkout_url: string | null
           created_at: string
           features: string[]
           highlighted: boolean
           id: string
+          min_commitment_days: number
           name: string
           price: number
           service_aula_particular: boolean
@@ -750,12 +752,14 @@ export type Database = {
         }
         Insert: {
           active?: boolean
+          allow_free_cancel?: boolean
           cancel_text?: string | null
           checkout_url?: string | null
           created_at?: string
           features?: string[]
           highlighted?: boolean
           id?: string
+          min_commitment_days?: number
           name: string
           price?: number
           service_aula_particular?: boolean
@@ -777,12 +781,14 @@ export type Database = {
         }
         Update: {
           active?: boolean
+          allow_free_cancel?: boolean
           cancel_text?: string | null
           checkout_url?: string | null
           created_at?: string
           features?: string[]
           highlighted?: boolean
           id?: string
+          min_commitment_days?: number
           name?: string
           price?: number
           service_aula_particular?: boolean

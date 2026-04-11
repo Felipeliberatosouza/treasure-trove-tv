@@ -11,7 +11,7 @@ interface VideoCardProps {
   watched?: boolean;
 }
 
-const VideoCard = ({ video, index, onClick, rating, showTrialBadge }: VideoCardProps) => {
+const VideoCard = ({ video, index, onClick, rating, showTrialBadge, watched }: VideoCardProps) => {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -39,6 +39,11 @@ const VideoCard = ({ video, index, onClick, rating, showTrialBadge }: VideoCardP
           {showTrialBadge && (
             <div className="absolute top-2 left-2 flex items-center gap-1 rounded-full bg-accent px-2 py-0.5 text-[10px] font-bold text-accent-foreground shadow-md">
               <Gift className="h-3 w-3" /> TESTE GRÁTIS
+            </div>
+          )}
+          {watched && (
+            <div className="absolute top-2 right-2 flex items-center gap-1 rounded-full bg-green-600/90 px-2 py-0.5 text-[10px] font-bold text-white shadow-md backdrop-blur-sm">
+              <CheckCircle className="h-3 w-3" /> Assistido
             </div>
           )}
         </div>

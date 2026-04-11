@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { HelpCircle, Send } from "lucide-react";
+import { HelpCircle, Send, Mail } from "lucide-react";
 import { toast } from "sonner";
 
 interface DoubtFormProps {
@@ -28,7 +28,10 @@ const DoubtForm = ({ contentId, contentType, teacherId }: DoubtFormProps) => {
       return;
     }
     setSubmitting(true);
+
+    const doubtId = crypto.randomUUID();
     const { error } = await supabase.from("student_doubts").insert({
+      id: doubtId,
       student_id: user.id,
       teacher_id: teacherId,
       content_id: contentId,
@@ -41,7 +44,27 @@ const DoubtForm = ({ contentId, contentType, teacherId }: DoubtFormProps) => {
     } else {
       setSubmitted(true);
       setQuestion("");
-      toast.success("Dúvida enviada! O professor irá responder o mais rápido possível.");
+
+      // Get student profile for email
+      const { data: studentProfile } = await supabase
+        .from("profiles")
+        .select("email, name")
+        .eq("user_id", user.id)
+        .single();
+
+      if (studentProfile?.email) {
+        await supabase.functions.invoke("send-transactional-email", {
+          body: {
+            templateName: "doubt-sent-confirmation",
+            recipientEmail: studentProfile.email,
+            idempotencyKey: `doubt-sent-${doubtId}`,
+            templateData: {
+              studentName: studentProfile.name || "Aluno",
+              question: question.trim(),
+            },
+          },
+        });
+      }
     }
     setSubmitting(false);
   };
@@ -56,10 +79,16 @@ const DoubtForm = ({ contentId, contentType, teacherId }: DoubtFormProps) => {
       </div>
 
       {submitted ? (
-        <div className="rounded-lg bg-primary/5 border border-primary/20 p-4 text-center">
+        <div className="rounded-lg bg-primary/5 border border-primary/20 p-4 text-center space-y-2">
           <p className="text-sm text-foreground font-medium">✅ Dúvida enviada com sucesso!</p>
-          <p className="text-xs text-muted-foreground mt-1">O professor irá responder o mais rápido possível.</p>
-          <Button variant="outline" size="sm" className="mt-3" onClick={() => setSubmitted(false)}>
+          <p className="text-xs text-muted-foreground">
+            Sua dúvida foi recebida e está sendo analisada. Em breve o professor irá responder.
+          </p>
+          <div className="flex items-center justify-center gap-1 text-xs text-primary">
+            <Mail className="h-3.5 w-3.5" />
+            <span>Te avisaremos por e-mail quando houver resposta.</span>
+          </div>
+          <Button variant="outline" size="sm" className="mt-2" onClick={() => setSubmitted(false)}>
             Enviar outra dúvida
           </Button>
         </div>

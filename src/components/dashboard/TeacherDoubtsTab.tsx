@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { HelpCircle, Send, Clock, AlertTriangle, CheckCircle } from "lucide-react";
+import { HelpCircle, Send, Clock, AlertTriangle, CheckCircle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 interface Doubt {
@@ -42,7 +42,7 @@ const TeacherDoubtsTab = () => {
       .from("student_doubts")
       .select("*")
       .eq("teacher_id", user.id)
-      .in("status", ["approved", "answered"])
+      .in("status", ["approved", "pending_answer_approval", "answered"])
       .order("created_at", { ascending: false });
 
     if (!data) { setLoading(false); return; }
@@ -80,44 +80,21 @@ const TeacherDoubtsTab = () => {
   const handleAnswer = async () => {
     if (!answerModal || !answerText.trim()) return;
     setSubmitting(true);
+
+    // Teacher submits answer → goes to pending_answer_approval (admin must approve)
     const { error } = await supabase
       .from("student_doubts")
-      .update({ answer: answerText.trim(), status: "answered", answered_at: new Date().toISOString() })
+      .update({
+        answer: answerText.trim(),
+        status: "pending_answer_approval",
+        answered_at: new Date().toISOString(),
+      })
       .eq("id", answerModal.id);
 
     if (error) {
       toast.error("Erro ao enviar resposta.");
     } else {
-      // Send email to student
-      const { data: studentProfile } = await supabase
-        .from("profiles")
-        .select("email, name")
-        .eq("user_id", answerModal.student_id)
-        .single();
-
-      const { data: teacherProfile } = await supabase
-        .from("profiles")
-        .select("name")
-        .eq("user_id", user!.id)
-        .single();
-
-      if (studentProfile?.email) {
-        await supabase.functions.invoke("send-transactional-email", {
-          body: {
-            templateName: "doubt-answered",
-            recipientEmail: studentProfile.email,
-            idempotencyKey: `doubt-answered-${answerModal.id}`,
-            templateData: {
-              studentName: studentProfile.name || "Aluno",
-              question: answerModal.question,
-              answer: answerText.trim(),
-              teacherName: teacherProfile?.name || "Professor",
-            },
-          },
-        });
-      }
-
-      toast.success("Resposta enviada ao aluno!");
+      toast.success("Resposta enviada! Aguarde a aprovação do administrador antes de ser entregue ao aluno.");
       setAnswerModal(null);
       setAnswerText("");
       fetchDoubts();
@@ -126,15 +103,30 @@ const TeacherDoubtsTab = () => {
   };
 
   const pendingCount = doubts.filter(d => d.status === "approved").length;
+  const pendingApprovalCount = doubts.filter(d => d.status === "pending_answer_approval").length;
+
+  const statusConfig: Record<string, { label: string; color: string }> = {
+    approved: { label: "Pendente", color: "border-blue-500/30 text-blue-500" },
+    pending_answer_approval: { label: "Aguardando Aprovação", color: "border-orange-500/30 text-orange-500" },
+    answered: { label: "Respondida", color: "border-green-500/30 text-green-500" },
+  };
 
   return (
     <div>
       <h2 className="font-display text-lg font-semibold mb-1 flex items-center gap-2">
         <HelpCircle className="h-5 w-5" /> Dúvidas de Alunos
       </h2>
-      <p className="text-sm text-muted-foreground mb-4">
-        {pendingCount > 0 ? `${pendingCount} dúvida(s) aguardando resposta. Prazo: ${deadlineDays} dias.` : "Todas as dúvidas foram respondidas."}
-      </p>
+      <div className="text-sm text-muted-foreground mb-4 space-y-1">
+        {pendingCount > 0 && (
+          <p>{pendingCount} dúvida(s) aguardando resposta. Prazo: {deadlineDays} dias.</p>
+        )}
+        {pendingApprovalCount > 0 && (
+          <p className="text-orange-500">{pendingApprovalCount} resposta(s) aguardando aprovação do administrador.</p>
+        )}
+        {pendingCount === 0 && pendingApprovalCount === 0 && (
+          <p>Todas as dúvidas foram respondidas.</p>
+        )}
+      </div>
 
       {loading ? (
         <p className="text-sm text-muted-foreground">Carregando...</p>
@@ -155,6 +147,7 @@ const TeacherDoubtsTab = () => {
               {doubts.map((doubt) => {
                 const days = getDaysElapsed(doubt.approved_at || doubt.created_at);
                 const overdue = doubt.status === "approved" && days > deadlineDays;
+                const cfg = statusConfig[doubt.status] || statusConfig.approved;
                 return (
                   <TableRow key={doubt.id}>
                     <TableCell className="text-sm font-medium">{doubt.student_name}</TableCell>
@@ -163,7 +156,7 @@ const TeacherDoubtsTab = () => {
                     <TableCell>
                       <div className={`flex items-center gap-1 text-sm ${overdue ? "text-destructive font-medium" : "text-muted-foreground"}`}>
                         {overdue ? <AlertTriangle className="h-3.5 w-3.5" /> : <Clock className="h-3.5 w-3.5" />}
-                        {doubt.status === "answered" ? (
+                        {doubt.status === "answered" || doubt.status === "pending_answer_approval" ? (
                           <span>{getDaysElapsed(doubt.approved_at || doubt.created_at)} dia(s)</span>
                         ) : (
                           <span>{days}/{deadlineDays}</span>
@@ -171,13 +164,11 @@ const TeacherDoubtsTab = () => {
                       </div>
                     </TableCell>
                     <TableCell>
-                      {doubt.status === "approved" ? (
-                        <Badge variant="outline" className="border-blue-500/30 text-blue-500">Pendente</Badge>
-                      ) : (
-                        <Badge variant="outline" className="border-green-500/30 text-green-500">
-                          <CheckCircle className="h-3 w-3 mr-1" /> Respondida
-                        </Badge>
-                      )}
+                      <Badge variant="outline" className={cfg.color}>
+                        {doubt.status === "pending_answer_approval" && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}
+                        {doubt.status === "answered" && <CheckCircle className="h-3 w-3 mr-1" />}
+                        {cfg.label}
+                      </Badge>
                     </TableCell>
                     <TableCell className="text-right">
                       {doubt.status === "approved" ? (
@@ -209,17 +200,26 @@ const TeacherDoubtsTab = () => {
       <Dialog open={!!answerModal} onOpenChange={(o) => !o && setAnswerModal(null)}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>{answerModal?.status === "answered" ? "Resposta Enviada" : "Responder Dúvida"}</DialogTitle>
+            <DialogTitle>
+              {answerModal?.status === "answered" || answerModal?.status === "pending_answer_approval"
+                ? "Resposta Enviada"
+                : "Responder Dúvida"}
+            </DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
             <div>
               <p className="text-xs font-semibold text-muted-foreground mb-1">Dúvida do aluno:</p>
               <p className="text-sm bg-secondary/30 rounded-lg p-3 border border-border">{answerModal?.question}</p>
             </div>
-            {answerModal?.status === "answered" ? (
+            {answerModal?.status === "answered" || answerModal?.status === "pending_answer_approval" ? (
               <div>
                 <p className="text-xs font-semibold text-muted-foreground mb-1">Sua resposta:</p>
-                <p className="text-sm bg-primary/5 rounded-lg p-3 border border-primary/20">{answerModal?.answer}</p>
+                <p className="text-sm bg-primary/5 rounded-lg p-3 border border-primary/20 whitespace-pre-wrap">{answerModal?.answer}</p>
+                {answerModal?.status === "pending_answer_approval" && (
+                  <p className="text-xs text-orange-500 mt-2 flex items-center gap-1">
+                    <Loader2 className="h-3 w-3 animate-spin" /> Aguardando aprovação do administrador
+                  </p>
+                )}
               </div>
             ) : (
               <div>
@@ -231,10 +231,13 @@ const TeacherDoubtsTab = () => {
                   placeholder="Digite sua resposta..."
                   maxLength={5000}
                 />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Sua resposta será enviada para aprovação do administrador antes de ser entregue ao aluno.
+                </p>
               </div>
             )}
           </div>
-          {answerModal?.status !== "answered" && (
+          {answerModal?.status === "approved" && (
             <DialogFooter>
               <Button onClick={handleAnswer} disabled={submitting || answerText.trim().length < 5}>
                 <Send className="h-4 w-4 mr-1" /> {submitting ? "Enviando..." : "Enviar Resposta"}

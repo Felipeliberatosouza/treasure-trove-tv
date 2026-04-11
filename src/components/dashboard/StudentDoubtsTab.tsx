@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Badge } from "@/components/ui/badge";
-import { HelpCircle, CheckCircle, Clock, XCircle } from "lucide-react";
+import { HelpCircle, CheckCircle, Clock, XCircle, Loader2, Mail } from "lucide-react";
 
 interface Doubt {
   id: string;
@@ -59,11 +59,35 @@ const StudentDoubtsTab = () => {
     fetch();
   }, [user]);
 
-  const statusConfig: Record<string, { label: string; icon: typeof Clock; color: string }> = {
-    pending_approval: { label: "Em análise", icon: Clock, color: "border-accent/30 text-accent" },
-    approved: { label: "Aguardando resposta", icon: Clock, color: "border-blue-500/30 text-blue-500" },
-    answered: { label: "Respondida", icon: CheckCircle, color: "border-green-500/30 text-green-500" },
-    rejected: { label: "Rejeitada", icon: XCircle, color: "border-destructive/30 text-destructive" },
+  const statusConfig: Record<string, { label: string; sublabel?: string; icon: typeof Clock; color: string }> = {
+    pending_approval: {
+      label: "Em análise",
+      sublabel: "Sua dúvida está sendo analisada pela equipe.",
+      icon: Clock,
+      color: "border-accent/30 text-accent",
+    },
+    approved: {
+      label: "Aguardando resposta",
+      sublabel: "Sua dúvida foi aprovada! O professor irá responder em breve. Te avisaremos por e-mail.",
+      icon: Clock,
+      color: "border-blue-500/30 text-blue-500",
+    },
+    pending_answer_approval: {
+      label: "Resposta em revisão",
+      sublabel: "O professor respondeu e a resposta está sendo revisada pela equipe.",
+      icon: Loader2,
+      color: "border-orange-500/30 text-orange-500",
+    },
+    answered: {
+      label: "Respondida",
+      icon: CheckCircle,
+      color: "border-green-500/30 text-green-500",
+    },
+    rejected: {
+      label: "Rejeitada",
+      icon: XCircle,
+      color: "border-destructive/30 text-destructive",
+    },
   };
 
   return (
@@ -84,6 +108,7 @@ const StudentDoubtsTab = () => {
           {doubts.map((doubt) => {
             const cfg = statusConfig[doubt.status] || statusConfig.pending_approval;
             const StatusIcon = cfg.icon;
+            const isAnimated = doubt.status === "pending_answer_approval";
             return (
               <div key={doubt.id} className="rounded-xl border border-border bg-card p-4 space-y-2">
                 <div className="flex items-start justify-between gap-2">
@@ -92,10 +117,19 @@ const StudentDoubtsTab = () => {
                     <p className="text-sm font-medium mt-1">{doubt.question}</p>
                   </div>
                   <Badge variant="outline" className={`shrink-0 ${cfg.color}`}>
-                    <StatusIcon className="h-3 w-3 mr-1" />
+                    <StatusIcon className={`h-3 w-3 mr-1 ${isAnimated ? "animate-spin" : ""}`} />
                     {cfg.label}
                   </Badge>
                 </div>
+
+                {/* Status sublabel with email notification info */}
+                {cfg.sublabel && doubt.status !== "answered" && (
+                  <div className="flex items-start gap-1.5 text-xs text-muted-foreground bg-secondary/30 rounded-lg p-2.5">
+                    <Mail className="h-3.5 w-3.5 shrink-0 mt-0.5 text-primary" />
+                    <span>{cfg.sublabel}</span>
+                  </div>
+                )}
+
                 {doubt.status === "answered" && doubt.answer && (
                   <div className="rounded-lg bg-primary/5 border border-primary/20 p-3 mt-2">
                     <p className="text-xs font-semibold text-primary mb-1">Resposta do professor:</p>

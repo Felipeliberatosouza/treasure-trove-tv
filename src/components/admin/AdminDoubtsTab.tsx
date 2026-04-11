@@ -5,10 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, CheckCircle, XCircle, HelpCircle, Clock } from "lucide-react";
+import { Search, CheckCircle, XCircle, HelpCircle, Clock, Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface Doubt {
   id: string;
@@ -36,6 +37,7 @@ const AdminDoubtsTab = () => {
   const { data: deadlineData, update: updateDeadline } = usePlatformSettings("doubt_response_deadline_days");
   const [deadlineDays, setDeadlineDays] = useState("3");
   const [savingDeadline, setSavingDeadline] = useState(false);
+  const [viewAnswer, setViewAnswer] = useState<Doubt | null>(null);
 
   useEffect(() => {
     if (deadlineData !== undefined && deadlineData !== null) {
@@ -52,12 +54,10 @@ const AdminDoubtsTab = () => {
 
     if (!doubtsData) { setLoading(false); return; }
 
-    // Get profiles for names
     const userIds = [...new Set([...doubtsData.map(d => d.student_id), ...doubtsData.map(d => d.teacher_id)])];
     const { data: profiles } = await supabase.from("profiles").select("user_id, name").in("user_id", userIds);
     const profileMap = new Map((profiles || []).map(p => [p.user_id, p.name]));
 
-    // Get content titles
     const lessonIds = doubtsData.filter(d => d.content_type === "lesson").map(d => d.content_id);
     const examIds = doubtsData.filter(d => d.content_type === "exam_solution").map(d => d.content_id);
 
@@ -81,7 +81,8 @@ const AdminDoubtsTab = () => {
 
   useEffect(() => { fetchDoubts(); }, []);
 
-  const handleApprove = async (doubt: Doubt) => {
+  // 1. Approve student's question → send to teacher
+  const handleApproveQuestion = async (doubt: Doubt) => {
     const { error } = await supabase
       .from("student_doubts")
       .update({ status: "approved", approved_at: new Date().toISOString() })
@@ -89,33 +90,100 @@ const AdminDoubtsTab = () => {
 
     if (error) {
       toast({ title: "Erro", description: "Falha ao aprovar dúvida.", variant: "destructive" });
-    } else {
-      // Get teacher email
-      const { data: teacherProfile } = await supabase
-        .from("profiles")
-        .select("email, name")
-        .eq("user_id", doubt.teacher_id)
-        .single();
-
-      if (teacherProfile?.email) {
-        await supabase.functions.invoke("send-transactional-email", {
-          body: {
-            templateName: "doubt-approved",
-            recipientEmail: teacherProfile.email,
-            idempotencyKey: `doubt-approved-${doubt.id}`,
-            templateData: {
-              teacherName: teacherProfile.name || "Professor",
-              question: doubt.question,
-              deadlineDays: parseInt(deadlineDays) || 3,
-              studentName: doubt.student_name || "Aluno",
-            },
-          },
-        });
-      }
-
-      toast({ title: "Aprovada", description: "Dúvida aprovada e enviada ao professor." });
-      fetchDoubts();
+      return;
     }
+
+    // Email to teacher
+    const { data: teacherProfile } = await supabase
+      .from("profiles")
+      .select("email, name")
+      .eq("user_id", doubt.teacher_id)
+      .single();
+
+    if (teacherProfile?.email) {
+      await supabase.functions.invoke("send-transactional-email", {
+        body: {
+          templateName: "doubt-approved",
+          recipientEmail: teacherProfile.email,
+          idempotencyKey: `doubt-approved-${doubt.id}`,
+          templateData: {
+            teacherName: teacherProfile.name || "Professor",
+            question: doubt.question,
+            deadlineDays: parseInt(deadlineDays) || 3,
+            studentName: doubt.student_name || "Aluno",
+          },
+        },
+      });
+    }
+
+    // Email to student (question approved)
+    const { data: studentProfile } = await supabase
+      .from("profiles")
+      .select("email, name")
+      .eq("user_id", doubt.student_id)
+      .single();
+
+    if (studentProfile?.email) {
+      await supabase.functions.invoke("send-transactional-email", {
+        body: {
+          templateName: "doubt-question-approved",
+          recipientEmail: studentProfile.email,
+          idempotencyKey: `doubt-question-approved-${doubt.id}`,
+          templateData: {
+            studentName: studentProfile.name || "Aluno",
+            question: doubt.question,
+          },
+        },
+      });
+    }
+
+    toast({ title: "Aprovada", description: "Dúvida aprovada. Professor e aluno foram notificados por e-mail." });
+    fetchDoubts();
+  };
+
+  // 2. Approve teacher's answer → send to student
+  const handleApproveAnswer = async (doubt: Doubt) => {
+    const { error } = await supabase
+      .from("student_doubts")
+      .update({ status: "answered" })
+      .eq("id", doubt.id);
+
+    if (error) {
+      toast({ title: "Erro", description: "Falha ao aprovar resposta.", variant: "destructive" });
+      return;
+    }
+
+    // Email to student with the answer
+    const { data: studentProfile } = await supabase
+      .from("profiles")
+      .select("email, name")
+      .eq("user_id", doubt.student_id)
+      .single();
+
+    const { data: teacherProfile } = await supabase
+      .from("profiles")
+      .select("name")
+      .eq("user_id", doubt.teacher_id)
+      .single();
+
+    if (studentProfile?.email) {
+      await supabase.functions.invoke("send-transactional-email", {
+        body: {
+          templateName: "doubt-answered",
+          recipientEmail: studentProfile.email,
+          idempotencyKey: `doubt-answered-${doubt.id}`,
+          templateData: {
+            studentName: studentProfile.name || "Aluno",
+            question: doubt.question,
+            answer: doubt.answer || "",
+            teacherName: teacherProfile?.name || "Professor",
+          },
+        },
+      });
+    }
+
+    toast({ title: "Resposta aprovada", description: "Resposta aprovada e enviada ao aluno por e-mail." });
+    fetchDoubts();
   };
 
   const handleReject = async (doubt: Doubt) => {
@@ -125,9 +193,24 @@ const AdminDoubtsTab = () => {
       .eq("id", doubt.id);
 
     if (error) {
-      toast({ title: "Erro", description: "Falha ao rejeitar dúvida.", variant: "destructive" });
+      toast({ title: "Erro", description: "Falha ao rejeitar.", variant: "destructive" });
     } else {
-      toast({ title: "Rejeitada", description: "Dúvida rejeitada." });
+      toast({ title: "Rejeitada", description: "Dúvida/resposta rejeitada." });
+      fetchDoubts();
+    }
+  };
+
+  const handleRejectAnswer = async (doubt: Doubt) => {
+    // Send answer back to teacher for revision
+    const { error } = await supabase
+      .from("student_doubts")
+      .update({ status: "approved", answer: null, answered_at: null })
+      .eq("id", doubt.id);
+
+    if (error) {
+      toast({ title: "Erro", description: "Falha ao devolver para o professor.", variant: "destructive" });
+    } else {
+      toast({ title: "Devolvida", description: "Resposta devolvida ao professor para revisão." });
       fetchDoubts();
     }
   };
@@ -141,15 +224,17 @@ const AdminDoubtsTab = () => {
   };
 
   const statusLabel: Record<string, string> = {
-    pending_approval: "Pendente",
+    pending_approval: "Dúvida Pendente",
     approved: "Aguardando Resposta",
-    answered: "Respondida",
+    pending_answer_approval: "Resposta Pendente",
+    answered: "Concluída",
     rejected: "Rejeitada",
   };
 
   const statusColor: Record<string, string> = {
     pending_approval: "border-accent/30 text-accent",
     approved: "border-blue-500/30 text-blue-500",
+    pending_answer_approval: "border-orange-500/30 text-orange-500",
     answered: "border-green-500/30 text-green-500",
     rejected: "border-destructive/30 text-destructive",
   };
@@ -162,16 +247,22 @@ const AdminDoubtsTab = () => {
     return matchSearch && matchStatus;
   });
 
-  const pendingCount = doubts.filter(d => d.status === "pending_approval").length;
+  const pendingQuestions = doubts.filter(d => d.status === "pending_approval").length;
+  const pendingAnswers = doubts.filter(d => d.status === "pending_answer_approval").length;
 
   return (
     <div>
       <h2 className="font-display text-lg font-semibold mb-1 flex items-center gap-2">
         <HelpCircle className="h-5 w-5" /> Aprovação de Dúvidas
       </h2>
-      {pendingCount > 0 && (
-        <p className="text-sm text-accent font-medium mb-4">{pendingCount} dúvida(s) aguardando aprovação</p>
-      )}
+      <div className="flex flex-wrap gap-3 mb-4">
+        {pendingQuestions > 0 && (
+          <p className="text-sm text-accent font-medium">{pendingQuestions} dúvida(s) de alunos aguardando aprovação</p>
+        )}
+        {pendingAnswers > 0 && (
+          <p className="text-sm text-orange-500 font-medium">{pendingAnswers} resposta(s) de professores aguardando aprovação</p>
+        )}
+      </div>
 
       {/* Deadline config */}
       <div className="flex items-end gap-3 mb-4 p-3 rounded-lg bg-secondary/30 border border-border">
@@ -197,14 +288,15 @@ const AdminDoubtsTab = () => {
           <Input placeholder="Buscar por dúvida, aluno ou professor..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
         </div>
         <Select value={filterStatus} onValueChange={setFilterStatus}>
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className="w-[200px]">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todos</SelectItem>
-            <SelectItem value="pending_approval">Pendentes</SelectItem>
+            <SelectItem value="pending_approval">Dúvidas Pendentes</SelectItem>
             <SelectItem value="approved">Aguardando Resposta</SelectItem>
-            <SelectItem value="answered">Respondidas</SelectItem>
+            <SelectItem value="pending_answer_approval">Respostas Pendentes</SelectItem>
+            <SelectItem value="answered">Concluídas</SelectItem>
             <SelectItem value="rejected">Rejeitadas</SelectItem>
           </SelectContent>
         </Select>
@@ -238,16 +330,36 @@ const AdminDoubtsTab = () => {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-1">
+                    <div className="flex items-center justify-end gap-1 flex-wrap">
+                      {/* Step 1: Approve student question */}
                       {doubt.status === "pending_approval" && (
                         <>
-                          <Button size="sm" variant="ghost" className="h-8 text-green-500 hover:text-green-400" onClick={() => handleApprove(doubt)}>
+                          <Button size="sm" variant="ghost" className="h-8 text-green-500 hover:text-green-400" onClick={() => handleApproveQuestion(doubt)}>
                             <CheckCircle className="h-4 w-4 mr-1" /> Aprovar
                           </Button>
                           <Button size="sm" variant="ghost" className="h-8 text-destructive hover:text-destructive" onClick={() => handleReject(doubt)}>
                             <XCircle className="h-4 w-4 mr-1" /> Rejeitar
                           </Button>
                         </>
+                      )}
+                      {/* Step 2: Approve teacher answer */}
+                      {doubt.status === "pending_answer_approval" && (
+                        <>
+                          <Button size="sm" variant="ghost" className="h-8 text-blue-500" onClick={() => setViewAnswer(doubt)}>
+                            <Eye className="h-4 w-4 mr-1" /> Ver Resposta
+                          </Button>
+                          <Button size="sm" variant="ghost" className="h-8 text-green-500 hover:text-green-400" onClick={() => handleApproveAnswer(doubt)}>
+                            <CheckCircle className="h-4 w-4 mr-1" /> Aprovar
+                          </Button>
+                          <Button size="sm" variant="ghost" className="h-8 text-destructive hover:text-destructive" onClick={() => handleRejectAnswer(doubt)}>
+                            <XCircle className="h-4 w-4 mr-1" /> Devolver
+                          </Button>
+                        </>
+                      )}
+                      {doubt.status === "answered" && doubt.answer && (
+                        <Button size="sm" variant="ghost" className="h-8" onClick={() => setViewAnswer(doubt)}>
+                          <Eye className="h-4 w-4 mr-1" /> Ver
+                        </Button>
                       )}
                     </div>
                   </TableCell>
@@ -264,6 +376,25 @@ const AdminDoubtsTab = () => {
           </Table>
         </div>
       )}
+
+      {/* View Answer Modal */}
+      <Dialog open={!!viewAnswer} onOpenChange={(o) => !o && setViewAnswer(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Dúvida e Resposta</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <p className="text-xs font-semibold text-muted-foreground mb-1">Dúvida do aluno ({viewAnswer?.student_name}):</p>
+              <p className="text-sm bg-secondary/30 rounded-lg p-3 border border-border">{viewAnswer?.question}</p>
+            </div>
+            <div>
+              <p className="text-xs font-semibold text-muted-foreground mb-1">Resposta do professor ({viewAnswer?.teacher_name}):</p>
+              <p className="text-sm bg-primary/5 rounded-lg p-3 border border-primary/20 whitespace-pre-wrap">{viewAnswer?.answer || "Sem resposta ainda."}</p>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -172,21 +172,52 @@ const ContentForm = ({ table, onSaved, onCancel }: ContentFormProps) => {
 
       <div>
         <label className="text-sm text-muted-foreground mb-1 block flex items-center gap-1">
-          <Video className="h-3.5 w-3.5" /> Upload de vídeo
+          <Video className="h-3.5 w-3.5" /> Vídeo
         </label>
-        <div className="flex items-center gap-2">
-          <Input
-            type="file"
-            accept="video/*"
-            onChange={(e) => setVideoFile(e.target.files?.[0] || null)}
-            className="bg-secondary text-xs"
+
+        {showRecorder ? (
+          <VideoRecorder
+            maxMinutes={maxRecordingMinutes}
+            onRecorded={(file) => {
+              setVideoFile(file);
+              setShowRecorder(false);
+              toast.success("Vídeo gravado com sucesso!");
+            }}
+            onCancel={() => setShowRecorder(false)}
           />
-          {videoFile && (
-            <button type="button" onClick={() => setVideoFile(null)} className="text-muted-foreground hover:text-destructive">
-              <X className="h-4 w-4" />
-            </button>
-          )}
-        </div>
+        ) : (
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <Input
+                type="file"
+                accept="video/*"
+                onChange={(e) => setVideoFile(e.target.files?.[0] || null)}
+                className="bg-secondary text-xs"
+              />
+              {videoFile && (
+                <button type="button" onClick={() => setVideoFile(null)} className="text-muted-foreground hover:text-destructive">
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+            {recordingEnabled && (
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => setShowRecorder(true)}
+                className="gap-1"
+              >
+                <Camera className="h-4 w-4" /> Gravar Vídeo
+              </Button>
+            )}
+            {videoFile && (
+              <p className="text-xs text-muted-foreground">
+                Arquivo: {videoFile.name} ({(videoFile.size / 1024 / 1024).toFixed(1)} MB)
+              </p>
+            )}
+          </div>
+        )}
       </div>
 
       <p className="text-sm font-semibold text-muted-foreground pt-2">Materiais complementares</p>

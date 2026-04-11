@@ -39,6 +39,15 @@ serve(async (req) => {
     if (!user?.email) throw new Error("User not authenticated or email not available");
     logStep("User authenticated", { email: user.email });
 
+    // Check if user wants to query cancellation eligibility only
+    let actionQuery = "portal";
+    try {
+      const body = await req.json();
+      if (body?.action) actionQuery = body.action;
+    } catch {
+      // No body or invalid JSON — default to portal
+    }
+
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
     if (customers.data.length === 0) {
@@ -47,6 +56,48 @@ serve(async (req) => {
     const customerId = customers.data[0].id;
     logStep("Found Stripe customer", { customerId });
 
+    // Get active subscription from local DB to check plan commitment rules
+    const { data: subData } = await supabaseClient
+      .from("student_subscriptions")
+      .select("id, started_at, plan_id, subscription_plans(allow_free_cancel, min_commitment_days)")
+      .eq("user_id", user.id)
+      .eq("status", "active")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    let canCancelFreely = true;
+    let daysRemaining = 0;
+    let minDays = 0;
+
+    if (subData?.subscription_plans) {
+      const plan = subData.subscription_plans as any;
+      const allowFree = plan.allow_free_cancel ?? true;
+      minDays = plan.min_commitment_days ?? 0;
+
+      if (!allowFree && minDays > 0) {
+        const startedAt = new Date(subData.started_at);
+        const now = new Date();
+        const daysSinceStart = Math.floor((now.getTime() - startedAt.getTime()) / (1000 * 60 * 60 * 24));
+        daysRemaining = Math.max(0, minDays - daysSinceStart);
+        canCancelFreely = daysSinceStart >= minDays;
+        logStep("Commitment check", { daysSinceStart, minDays, canCancelFreely, daysRemaining });
+      }
+    }
+
+    // If action is just checking eligibility, return info without opening portal
+    if (actionQuery === "check") {
+      return new Response(JSON.stringify({
+        can_cancel_freely: canCancelFreely,
+        days_remaining: daysRemaining,
+        min_commitment_days: minDays,
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    }
+
+    // Open portal session
     const origin = req.headers.get("origin") || "http://localhost:3000";
     const portalSession = await stripe.billingPortal.sessions.create({
       customer: customerId,
@@ -54,7 +105,12 @@ serve(async (req) => {
     });
     logStep("Portal session created", { url: portalSession.url });
 
-    return new Response(JSON.stringify({ url: portalSession.url }), {
+    return new Response(JSON.stringify({
+      url: portalSession.url,
+      can_cancel_freely: canCancelFreely,
+      days_remaining: daysRemaining,
+      min_commitment_days: minDays,
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });

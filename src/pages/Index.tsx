@@ -57,33 +57,42 @@ const Index = () => {
 
     const fetchPopular = async () => {
       setLoadingPopular(true);
-      // Fetch most viewed lessons from the student's interest areas
-      const { data: viewCounts } = await supabase
-        .from("video_views")
-        .select("content_id, content_type");
+
+      // Fetch all view counts and the student's own watched videos in parallel
+      const [viewCountsRes, studentViewsRes, lessonsRes] = await Promise.all([
+        supabase.from("video_views").select("content_id, content_type"),
+        supabase.from("video_views").select("content_id").eq("user_id", user!.id),
+        supabase
+          .from("lessons")
+          .select("*")
+          .eq("published", true)
+          .eq("admin_approved", true)
+          .overlaps("areas", studentAreas!)
+          .limit(40),
+      ]);
 
       // Count views per content
       const viewMap: Record<string, number> = {};
-      (viewCounts || []).forEach((v) => {
+      (viewCountsRes.data || []).forEach((v) => {
         viewMap[v.content_id] = (viewMap[v.content_id] || 0) + 1;
       });
 
-      // Fetch lessons that overlap with student areas
-      const { data: lessons } = await supabase
-        .from("lessons")
-        .select("*")
-        .eq("published", true)
-        .eq("admin_approved", true)
-        .overlaps("areas", studentAreas)
-        .limit(20);
+      // Set of content IDs already watched by this student
+      const watchedSet = new Set(
+        (studentViewsRes.data || []).map((v) => v.content_id)
+      );
 
+      const lessons = lessonsRes.data;
       if (lessons && lessons.length > 0) {
-        // Sort by view count descending
-        const sorted = [...lessons].sort(
-          (a, b) => (viewMap[b.id] || 0) - (viewMap[a.id] || 0)
-        );
+        // Sort: unwatched first, then by view count descending
+        const sorted = [...lessons].sort((a, b) => {
+          const aWatched = watchedSet.has(a.id) ? 1 : 0;
+          const bWatched = watchedSet.has(b.id) ? 1 : 0;
+          if (aWatched !== bWatched) return aWatched - bWatched;
+          return (viewMap[b.id] || 0) - (viewMap[a.id] || 0);
+        });
         setPopularVideos(
-          sorted.map((l) => ({
+          sorted.slice(0, 20).map((l) => ({
             id: l.id,
             title: l.title,
             description: l.description || "",

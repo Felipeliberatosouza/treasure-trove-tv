@@ -41,6 +41,7 @@ export default function StudentSubscriptionTab() {
   const [usageCounts, setUsageCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [portalLoading, setPortalLoading] = useState(false);
+  const [commitmentWarning, setCommitmentWarning] = useState<{ daysRemaining: number; url: string } | null>(null);
 
   const handleManageSubscription = async () => {
     setPortalLoading(true);
@@ -48,7 +49,11 @@ export default function StudentSubscriptionTab() {
       const { data, error } = await supabase.functions.invoke("customer-portal");
       if (error) throw error;
       if (data?.url) {
-        window.open(data.url, "_blank");
+        if (!data.can_cancel_freely && data.days_remaining > 0) {
+          setCommitmentWarning({ daysRemaining: data.days_remaining, url: data.url });
+        } else {
+          window.open(data.url, "_blank");
+        }
       }
     } catch (err: any) {
       toast.error("Não foi possível abrir o portal de gerenciamento.");

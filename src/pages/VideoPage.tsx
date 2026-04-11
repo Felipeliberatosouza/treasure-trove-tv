@@ -114,6 +114,17 @@ const VideoPage = () => {
 
   const video = staticVideo || dbVideo;
 
+  const VIDEO_TYPE_TO_RESOURCE: Record<string, ResourceType> = {
+    revisao: "revisao",
+    resolucao_prova: "revisao",
+    resumo: "resumo",
+    simulado: "simulado",
+    top_questoes: "top_questoes",
+    colinha: "colinha",
+    duvida: "duvida",
+    aula_particular: "aula_particular",
+  };
+
   useEffect(() => {
     if (!video) return;
     const checkAccess = async () => {
@@ -128,6 +139,8 @@ const VideoPage = () => {
       if (userRoles.includes("teacher") && teacherId === user.id) { setHasFullAccess(true); return; }
 
       if (trial.hasActiveTrial) { setHasFullAccess(true); return; }
+
+      // Check individual purchase
       const { data: purchase } = await supabase
         .from("video_purchases")
         .select("id")
@@ -136,10 +149,30 @@ const VideoPage = () => {
         .eq("payment_status", "completed")
         .limit(1);
       if (purchase && purchase.length > 0) { setHasFullAccess(true); return; }
+
+      // Check subscription resource limit
+      if (resourceLimit.loaded && videoType) {
+        const rt = VIDEO_TYPE_TO_RESOURCE[videoType];
+        if (rt) {
+          const result = resourceLimit.checkLimit(rt);
+          if (result.hasSubscription && result.allowed) {
+            setHasFullAccess(true);
+            return;
+          }
+          if (result.hasSubscription && !result.allowed) {
+            // Will show modal when user tries to play
+            setLimitInfo({ resourceType: rt, used: result.used, total: result.total, hasSubscription: result.hasSubscription, individualPrice: result.individualPrice });
+          }
+          if (!result.hasSubscription) {
+            setLimitInfo({ resourceType: rt, used: 0, total: 0, hasSubscription: false, individualPrice: result.individualPrice });
+          }
+        }
+      }
+
       setHasFullAccess(false);
     };
     checkAccess();
-  }, [video, user, trial.hasActiveTrial, teacherId]);
+  }, [video, user, trial.hasActiveTrial, teacherId, resourceLimit.loaded, videoType]);
 
   useEffect(() => {
     if (!video || dbVideo) return;

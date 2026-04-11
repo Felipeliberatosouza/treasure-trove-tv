@@ -60,6 +60,11 @@ const ContentForm = ({ table, onSaved, onCancel }: ContentFormProps) => {
     const path = `${user!.id}/${Date.now()}.${ext}`;
     const { error } = await supabase.storage.from(bucket).upload(path, file);
     if (error) throw error;
+
+    if (bucket === "videos") {
+      return path;
+    }
+
     const { data } = supabase.storage.from(bucket).getPublicUrl(path);
     return data.publicUrl;
   };

@@ -27,6 +27,9 @@ const VideoPage = () => {
   const { user } = useAuth();
   const trial = useFreeTrial();
   const { data: branding } = usePlatformSettings("branding");
+  const resourceLimit = useResourceLimit();
+  const [showLimitModal, setShowLimitModal] = useState(false);
+  const [limitInfo, setLimitInfo] = useState<{ resourceType: string; used: number; total: number; hasSubscription: boolean; individualPrice: number | null } | null>(null);
 
   const staticVideo = id ? getVideoById(id) : null;
 

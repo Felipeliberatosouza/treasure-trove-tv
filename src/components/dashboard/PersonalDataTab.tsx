@@ -16,6 +16,7 @@ import { Camera, Loader2 } from "lucide-react";
 
 const PersonalDataTab = () => {
   const { user, profile, role, refreshProfile } = useAuth();
+  const { logAction } = useAuditLog();
   const [name, setName] = useState("");
   const [bio, setBio] = useState("");
   const [expertiseAreas, setExpertiseAreas] = useState<string[]>([]);
@@ -125,6 +126,7 @@ const PersonalDataTab = () => {
     if (error) {
       toast.error("Erro ao salvar dados");
     } else {
+      await logAction("profile_update", { targetTable: "profiles", metadata: { fields: Object.keys(updateData) } });
       toast.success("Dados atualizados com sucesso!");
       refreshProfile();
     }

@@ -125,7 +125,26 @@ const TeacherContractModal = ({ open, onClose, onSigned }: TeacherContractModalP
 
       if (error) throw error;
 
-      toast.success("Contrato assinado com sucesso!");
+      // Send contract signed email to teacher
+      const maskedCpf = cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '***.$2.***-$4');
+      await supabase.functions.invoke('send-transactional-email', {
+        body: {
+          templateName: 'contract-signed',
+          recipientEmail: profile?.email || user.email,
+          idempotencyKey: `contract-signed-${user.id}-${now}`,
+          templateData: {
+            name: teacherName,
+            signedAt: `${new Date().toLocaleDateString("pt-BR")} às ${new Date().toLocaleTimeString("pt-BR")}`,
+            expiresAt: new Date(expiresAt).toLocaleDateString("pt-BR"),
+            ipAddress,
+            deviceInfo,
+            cpf: maskedCpf,
+            contractText,
+          },
+        },
+      });
+
+      toast.success("Contrato assinado com sucesso! Uma cópia foi enviada para seu e-mail.");
       onSigned();
     } catch (err: any) {
       toast.error(err.message || "Erro ao assinar contrato");

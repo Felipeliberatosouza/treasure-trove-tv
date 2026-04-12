@@ -8,6 +8,8 @@ import { useFreeTrial } from "@/hooks/useFreeTrial";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import VideoPlayer from "@/components/VideoPlayer";
+import CpfRequiredModal from "@/components/CpfRequiredModal";
+import { useCpfGuard } from "@/hooks/useCpfGuard";
 import type { Video } from "@/data/courses";
 
 interface VideoDetailModalProps {

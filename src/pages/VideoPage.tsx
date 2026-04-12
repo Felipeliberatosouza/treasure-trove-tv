@@ -18,6 +18,8 @@ import type { Video } from "@/data/courses";
 import DoubtForm from "@/components/DoubtForm";
 import { RatingStars } from "@/components/VideoDetailModal";
 import ResourceLimitModal from "@/components/ResourceLimitModal";
+import CpfRequiredModal from "@/components/CpfRequiredModal";
+import { useCpfGuard } from "@/hooks/useCpfGuard";
 import VLibrasWidget from "@/components/VLibrasWidget";
 
 const DEMO_VIDEO_URL = "/demo-course.mp4";

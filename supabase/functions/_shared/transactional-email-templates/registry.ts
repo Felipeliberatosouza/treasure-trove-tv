@@ -20,6 +20,7 @@ import { template as newStudentAdminNotify } from './new-student-admin-notify.ts
 import { template as contentApproved } from './content-approved.tsx'
 import { template as contentRejected } from './content-rejected.tsx'
 import { template as contractSigned } from './contract-signed.tsx'
+import { template as paymentConfirmation } from './payment-confirmation.tsx'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'doubt-approved': doubtApproved,
@@ -33,4 +34,5 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'content-approved': contentApproved,
   'content-rejected': contentRejected,
   'contract-signed': contractSigned,
+  'payment-confirmation': paymentConfirmation,
 }

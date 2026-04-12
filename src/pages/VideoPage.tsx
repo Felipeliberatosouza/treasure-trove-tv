@@ -448,6 +448,8 @@ const VideoPage = () => {
       <Navbar />
 
       <CpfRequiredModal open={showCpfModal} onClose={() => setShowCpfModal(false)} onComplete={onCpfComplete} />
+
+      {limitInfo && (
         <ResourceLimitModal
           open={showLimitModal}
           onClose={() => setShowLimitModal(false)}

@@ -190,34 +190,52 @@ export type Database = {
       }
       email_templates: {
         Row: {
+          always_send: boolean
           body_html: string
           created_at: string
+          font_family: string
           id: string
+          link_color: string
           logo_url: string | null
+          respect_marketing_preference: boolean
           show_social_footer: boolean
           subject: string
           template_key: string
+          text_color: string
           updated_at: string
+          use_uploaded_logo: boolean
         }
         Insert: {
+          always_send?: boolean
           body_html?: string
           created_at?: string
+          font_family?: string
           id?: string
+          link_color?: string
           logo_url?: string | null
+          respect_marketing_preference?: boolean
           show_social_footer?: boolean
           subject?: string
           template_key: string
+          text_color?: string
           updated_at?: string
+          use_uploaded_logo?: boolean
         }
         Update: {
+          always_send?: boolean
           body_html?: string
           created_at?: string
+          font_family?: string
           id?: string
+          link_color?: string
           logo_url?: string | null
+          respect_marketing_preference?: boolean
           show_social_footer?: boolean
           subject?: string
           template_key?: string
+          text_color?: string
           updated_at?: string
+          use_uploaded_logo?: boolean
         }
         Relationships: []
       }
@@ -672,6 +690,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      security_notifications: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          ip_address: string | null
+          notes: string | null
+          status: string
+          subject: string
+          template_key: string
+          updated_at: string
+          user_agent: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          ip_address?: string | null
+          notes?: string | null
+          status?: string
+          subject?: string
+          template_key: string
+          updated_at?: string
+          user_agent?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          ip_address?: string | null
+          notes?: string | null
+          status?: string
+          subject?: string
+          template_key?: string
+          updated_at?: string
+          user_agent?: string | null
+        }
+        Relationships: []
       }
       student_doubts: {
         Row: {

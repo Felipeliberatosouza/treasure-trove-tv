@@ -186,6 +186,7 @@ const AdminUsersTab = () => {
                 <TableHead>Email</TableHead>
                 <TableHead>Papel</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Contrato</TableHead>
                 <TableHead>Cadastro</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
@@ -202,6 +203,22 @@ const AdminUsersTab = () => {
                       <Badge variant="outline" className="border-green-500/30 text-green-500">Ativo</Badge>
                     ) : (
                       <Badge variant="outline" className="border-destructive/30 text-destructive">Inativo</Badge>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {u.role === "teacher" ? (
+                      u.contract_signed_at ? (
+                        <div className="flex items-center gap-1">
+                          <span className="text-xs text-muted-foreground">{new Date(u.contract_signed_at).toLocaleDateString("pt-BR")}</span>
+                          <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => setViewContract(u)} title="Ver contrato">
+                            <Eye className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      )
+                    ) : (
+                      <span className="text-xs text-muted-foreground">—</span>
                     )}
                   </TableCell>
                   <TableCell className="text-muted-foreground text-xs">
@@ -243,7 +260,7 @@ const AdminUsersTab = () => {
               ))}
               {filtered.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
                     Nenhum usuário encontrado.
                   </TableCell>
                 </TableRow>

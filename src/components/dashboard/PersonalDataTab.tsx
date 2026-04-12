@@ -90,6 +90,10 @@ const PersonalDataTab = () => {
         toast.error("O endereço é obrigatório para professores (necessário para o contrato)");
         return;
       }
+      if (!pixKey || !pixKey.trim()) {
+        toast.error("A chave PIX é obrigatória para professores (necessária para pagamento)");
+        return;
+      }
     }
     setSaving(true);
     const updateData: any = { name, bio, expertise_area: expertiseAreas.join(", "), birth_date: birthDate || null, phone: phone || null, cpf: cpf || null, accepts_marketing: acceptsMarketing };
@@ -97,6 +101,7 @@ const PersonalDataTab = () => {
       updateData.slug = slug;
       updateData.profile_title = profileTitle;
       updateData.address = address || null;
+      updateData.pix_key = pixKey || null;
     }
     const { error } = await supabase
       .from("profiles")

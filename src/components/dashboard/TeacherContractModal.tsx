@@ -226,12 +226,13 @@ const TeacherContractModal = ({ open, onClose, onSigned }: TeacherContractModalP
           ) : (
             <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-line text-sm leading-relaxed min-w-max">
               {renderContract().split("\n").map((line, i) => {
-              if (line.startsWith("**") && line.endsWith("**")) {
-                return <p key={i} className="font-bold mt-3 mb-1">{line.replace(/\*\*/g, "")}</p>;
-              }
-              return <p key={i} className="my-0.5">{line.replace(/\*\*/g, "")}</p>;
-            })}
-          </div>
+                if (line.startsWith("**") && line.endsWith("**")) {
+                  return <p key={i} className="font-bold mt-3 mb-1">{line.replace(/\*\*/g, "")}</p>;
+                }
+                return <p key={i} className="my-0.5">{line.replace(/\*\*/g, "")}</p>;
+              })}
+            </div>
+          )}
         </div>
 
         <div className="space-y-3 pt-2">

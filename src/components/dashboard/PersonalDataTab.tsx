@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -22,6 +23,7 @@ const PersonalDataTab = () => {
   const [cpf, setCpf] = useState("");
   const [slug, setSlug] = useState("");
   const [profileTitle, setProfileTitle] = useState("");
+  const [acceptsMarketing, setAcceptsMarketing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
@@ -37,6 +39,7 @@ const PersonalDataTab = () => {
       setCpf((profile as any).cpf || "");
       setSlug((profile as any).slug || "");
       setProfileTitle((profile as any).profile_title || "");
+      setAcceptsMarketing((profile as any).accepts_marketing || false);
     }
   }, [profile]);
 
@@ -75,7 +78,7 @@ const PersonalDataTab = () => {
       return;
     }
     setSaving(true);
-    const updateData: any = { name, bio, expertise_area: expertiseAreas.join(", "), birth_date: birthDate || null, phone: phone || null, cpf: cpf || null };
+    const updateData: any = { name, bio, expertise_area: expertiseAreas.join(", "), birth_date: birthDate || null, phone: phone || null, cpf: cpf || null, accepts_marketing: acceptsMarketing };
     if (role === "teacher") {
       updateData.slug = slug;
       updateData.profile_title = profileTitle;
@@ -160,6 +163,17 @@ const PersonalDataTab = () => {
         <div>
           <label className="text-sm text-muted-foreground mb-1 block">CPF</label>
           <CpfInput value={cpf} onChange={setCpf} className="bg-secondary" />
+        </div>
+        <div className="flex items-start gap-2 pt-2">
+          <Checkbox
+            id="acceptsMarketing"
+            checked={acceptsMarketing}
+            onCheckedChange={(v) => setAcceptsMarketing(v === true)}
+            className="mt-0.5"
+          />
+          <label htmlFor="acceptsMarketing" className="text-sm text-muted-foreground leading-tight">
+            Aceito receber mensagens e e-mails com promoções e novidades da Revisão Fácil
+          </label>
         </div>
         {role === "teacher" && (
           <>

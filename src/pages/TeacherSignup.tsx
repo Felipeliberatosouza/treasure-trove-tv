@@ -30,6 +30,8 @@ const TeacherSignup = () => {
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [acceptsTerms, setAcceptsTerms] = useState(false);
+  const [acceptsMarketing, setAcceptsMarketing] = useState(false);
   const [loading, setLoading] = useState(false);
   const { areas } = useCourseAreas(true);
 
@@ -45,6 +47,10 @@ const TeacherSignup = () => {
     e.preventDefault();
     if (!name.trim() || !email.trim() || !password.trim() || !birthDate || !phone) {
       toast.error("Preencha todos os campos obrigatórios");
+      return;
+    }
+    if (!acceptsTerms) {
+      toast.error("Você precisa aceitar os Termos de Uso para continuar");
       return;
     }
     if (!isValidBrazilianPhone(phone)) {

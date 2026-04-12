@@ -27,6 +27,8 @@ const StudentSignup = () => {
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
+  const [acceptsTerms, setAcceptsTerms] = useState(false);
+  const [acceptsMarketing, setAcceptsMarketing] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -41,6 +43,10 @@ const StudentSignup = () => {
     e.preventDefault();
     if (!name.trim() || !email.trim() || !password.trim() || !birthDate || !phone) {
       toast.error("Preencha todos os campos obrigatórios");
+      return;
+    }
+    if (!acceptsTerms) {
+      toast.error("Você precisa aceitar os Termos de Uso para continuar");
       return;
     }
     if (!isValidBrazilianPhone(phone)) {

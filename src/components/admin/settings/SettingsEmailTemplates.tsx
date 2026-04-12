@@ -35,6 +35,13 @@ const TEMPLATE_LABELS: Record<string, string> = {
   doubt_approved: "Dúvida Aprovada (Professor)",
   doubt_answered: "Dúvida Respondida (Aluno)",
   doubt_submitted: "Dúvida Enviada (Aluno)",
+  new_content: "Novo Conteúdo",
+  payment_confirmation: "Confirmação de Pagamento",
+  new_student_admin: "Novo Aluno (Admin)",
+  new_teacher_admin: "Novo Professor (Admin)",
+  content_approved: "Conteúdo Aprovado",
+  content_rejected: "Conteúdo Rejeitado",
+  contract_signed: "Contrato Assinado",
 };
 
 const TEMPLATE_DESCRIPTIONS: Record<string, string> = {
@@ -45,6 +52,13 @@ const TEMPLATE_DESCRIPTIONS: Record<string, string> = {
   doubt_approved: "Enviado ao professor quando uma dúvida de aluno é aprovada pelo administrador.",
   doubt_answered: "Enviado ao aluno quando o professor responde sua dúvida.",
   doubt_submitted: "Mensagem exibida ao aluno após enviar uma dúvida.",
+  new_content: "Enviado aos alunos quando um novo conteúdo é publicado na plataforma.",
+  payment_confirmation: "Enviado ao aluno após pagamento aprovado (assinatura ou compra avulsa).",
+  new_student_admin: "Notifica o administrador quando um novo aluno se cadastra.",
+  new_teacher_admin: "Notifica o administrador quando um novo professor se cadastra.",
+  content_approved: "Enviado ao professor quando seu conteúdo é aprovado pelo administrador.",
+  content_rejected: "Enviado ao professor quando seu conteúdo precisa de ajustes.",
+  contract_signed: "Confirmação enviada ao professor após assinar o contrato.",
 };
 
 const TEMPLATE_VARS: Record<string, string[]> = {
@@ -55,6 +69,13 @@ const TEMPLATE_VARS: Record<string, string[]> = {
   doubt_approved: ["{{teacher_name}}", "{{student_name}}", "{{question}}", "{{content_title}}", "{{deadline_days}}"],
   doubt_answered: ["{{student_name}}", "{{teacher_name}}", "{{question}}", "{{answer}}", "{{content_title}}"],
   doubt_submitted: ["{{student_name}}"],
+  new_content: ["{{name}}", "{{content_title}}", "{{teacher_name}}", "{{content_type}}", "{{content_link}}"],
+  payment_confirmation: ["{{name}}", "{{plan_name}}", "{{amount}}", "{{payment_date}}", "{{dashboard_link}}"],
+  new_student_admin: ["{{student_name}}", "{{student_email}}", "{{signup_date}}"],
+  new_teacher_admin: ["{{teacher_name}}", "{{teacher_email}}", "{{expertise_area}}", "{{signup_date}}"],
+  content_approved: ["{{teacher_name}}", "{{content_title}}", "{{content_type}}", "{{dashboard_link}}"],
+  content_rejected: ["{{teacher_name}}", "{{content_title}}", "{{rejection_reason}}", "{{dashboard_link}}"],
+  contract_signed: ["{{teacher_name}}", "{{signed_date}}", "{{expiry_date}}", "{{dashboard_link}}"],
 };
 
 const FONT_OPTIONS = [

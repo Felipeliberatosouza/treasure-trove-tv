@@ -103,6 +103,7 @@ const SettingsEmailTemplates = () => {
   const [activeKey, setActiveKey] = useState<string>("");
   const [saving, setSaving] = useState(false);
   const [previewing, setPreviewing] = useState(false);
+  const [applyingAll, setApplyingAll] = useState(false);
   const { upload, uploading } = useStorageUpload("platform-assets");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { data: contactData } = usePlatformSettings("contact");

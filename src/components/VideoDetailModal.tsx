@@ -438,6 +438,7 @@ const VideoDetailModal = ({ video, open, onClose }: VideoDetailModalProps) => {
         </div>
       </DialogContent>
     </Dialog>
+    </>
   );
 };
 

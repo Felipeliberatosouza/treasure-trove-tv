@@ -6,6 +6,7 @@ import PhoneInput, { isValidBrazilianPhone } from "@/components/PhoneInput";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { toast } from "sonner";
@@ -29,6 +30,8 @@ const TeacherSignup = () => {
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [acceptsTerms, setAcceptsTerms] = useState(false);
+  const [acceptsMarketing, setAcceptsMarketing] = useState(false);
   const [loading, setLoading] = useState(false);
   const { areas } = useCourseAreas(true);
 
@@ -44,6 +47,10 @@ const TeacherSignup = () => {
     e.preventDefault();
     if (!name.trim() || !email.trim() || !password.trim() || !birthDate || !phone) {
       toast.error("Preencha todos os campos obrigatórios");
+      return;
+    }
+    if (!acceptsTerms) {
+      toast.error("Você precisa aceitar os Termos de Uso para continuar");
       return;
     }
     if (!isValidBrazilianPhone(phone)) {
@@ -84,9 +91,9 @@ const TeacherSignup = () => {
           await supabase.from("profiles").update({ avatar_url: urlData.publicUrl }).eq("user_id", userId);
         }
       }
-      // Save phone to profile
-      if (userId && phone) {
-        await supabase.from("profiles").update({ phone }).eq("user_id", userId);
+      // Save phone and marketing preference to profile
+      if (userId) {
+        await supabase.from("profiles").update({ phone, accepts_marketing: acceptsMarketing }).eq("user_id", userId);
       }
       // Send welcome email
       if (userId) {
@@ -274,7 +281,37 @@ const TeacherSignup = () => {
             onChange={(e) => setBio(e.target.value)}
             className="min-h-[100px] bg-secondary border-border"
           />
-          <Button className="w-full font-display font-semibold" size="lg" disabled={loading}>
+
+          <div className="space-y-3 pt-2">
+            <div className="flex items-start gap-2">
+              <Checkbox
+                id="terms"
+                checked={acceptsTerms}
+                onCheckedChange={(v) => setAcceptsTerms(v === true)}
+                className="mt-0.5"
+              />
+              <label htmlFor="terms" className="text-sm text-muted-foreground leading-tight">
+                Li e concordo com os{" "}
+                <Link to="/termos" target="_blank" className="text-primary hover:underline font-medium">
+                  Termos de Uso
+                </Link>{" "}
+                *
+              </label>
+            </div>
+            <div className="flex items-start gap-2">
+              <Checkbox
+                id="marketing"
+                checked={acceptsMarketing}
+                onCheckedChange={(v) => setAcceptsMarketing(v === true)}
+                className="mt-0.5"
+              />
+              <label htmlFor="marketing" className="text-sm text-muted-foreground leading-tight">
+                Aceito receber mensagens e e-mails com promoções e novidades da Revisão Fácil
+              </label>
+            </div>
+          </div>
+
+          <Button className="w-full font-display font-semibold" size="lg" disabled={loading || !acceptsTerms}>
             {loading ? "Criando..." : "Criar Conta de Professor"}
           </Button>
         </form>

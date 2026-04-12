@@ -5,6 +5,7 @@ import { Mail, Lock, User, Eye, EyeOff, GraduationCap, ArrowLeft, CalendarDays, 
 import PhoneInput, { isValidBrazilianPhone } from "@/components/PhoneInput";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { toast } from "sonner";
@@ -26,6 +27,8 @@ const StudentSignup = () => {
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
+  const [acceptsTerms, setAcceptsTerms] = useState(false);
+  const [acceptsMarketing, setAcceptsMarketing] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -40,6 +43,10 @@ const StudentSignup = () => {
     e.preventDefault();
     if (!name.trim() || !email.trim() || !password.trim() || !birthDate || !phone) {
       toast.error("Preencha todos os campos obrigatórios");
+      return;
+    }
+    if (!acceptsTerms) {
+      toast.error("Você precisa aceitar os Termos de Uso para continuar");
       return;
     }
     if (!isValidBrazilianPhone(phone)) {
@@ -79,14 +86,12 @@ const StudentSignup = () => {
           await supabase.from("profiles").update({ avatar_url: urlData.publicUrl }).eq("user_id", signUpData.user.id);
         }
       }
-      // Save areas and phone to profile if signup succeeded
+      // Save areas, phone and marketing preference to profile if signup succeeded
       if (signUpData?.user) {
-        const updateData: any = {};
+        const updateData: any = { accepts_marketing: acceptsMarketing };
         if (selectedAreas.length > 0) updateData.areas = selectedAreas;
         if (phone) updateData.phone = phone;
-        if (Object.keys(updateData).length > 0) {
-          await supabase.from("profiles").update(updateData).eq("user_id", signUpData.user.id);
-        }
+        await supabase.from("profiles").update(updateData).eq("user_id", signUpData.user.id);
       }
       // Send welcome email and notify admins
       if (signUpData?.user) {
@@ -267,7 +272,37 @@ const StudentSignup = () => {
             <label className="text-sm text-muted-foreground mb-1 block">Áreas de interesse (opcional)</label>
             <AreaSelector selected={selectedAreas} onChange={setSelectedAreas} max={3} />
           </div>
-          <Button className="w-full font-display font-semibold" size="lg" disabled={loading}>
+
+          <div className="space-y-3 pt-2">
+            <div className="flex items-start gap-2">
+              <Checkbox
+                id="terms"
+                checked={acceptsTerms}
+                onCheckedChange={(v) => setAcceptsTerms(v === true)}
+                className="mt-0.5"
+              />
+              <label htmlFor="terms" className="text-sm text-muted-foreground leading-tight">
+                Li e concordo com os{" "}
+                <Link to="/termos" target="_blank" className="text-primary hover:underline font-medium">
+                  Termos de Uso
+                </Link>{" "}
+                *
+              </label>
+            </div>
+            <div className="flex items-start gap-2">
+              <Checkbox
+                id="marketing"
+                checked={acceptsMarketing}
+                onCheckedChange={(v) => setAcceptsMarketing(v === true)}
+                className="mt-0.5"
+              />
+              <label htmlFor="marketing" className="text-sm text-muted-foreground leading-tight">
+                Aceito receber mensagens e e-mails com promoções e novidades da Revisão Fácil
+              </label>
+            </div>
+          </div>
+
+          <Button className="w-full font-display font-semibold" size="lg" disabled={loading || !acceptsTerms}>
             {loading ? "Criando..." : "Criar Conta de Aluno"}
           </Button>
         </form>

@@ -489,6 +489,7 @@ export type Database = {
           avatar_url: string | null
           bio: string | null
           birth_date: string | null
+          cpf: string | null
           created_at: string
           email: string
           email_verified: boolean | null
@@ -508,6 +509,7 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           birth_date?: string | null
+          cpf?: string | null
           created_at?: string
           email: string
           email_verified?: boolean | null
@@ -527,6 +529,7 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           birth_date?: string | null
+          cpf?: string | null
           created_at?: string
           email?: string
           email_verified?: boolean | null
@@ -861,6 +864,51 @@ export type Database = {
           id?: string
           metadata?: Json | null
           reason?: string
+        }
+        Relationships: []
+      }
+      teacher_contracts: {
+        Row: {
+          contract_text: string
+          created_at: string
+          device_info: string | null
+          expires_at: string
+          id: string
+          ip_address: string | null
+          signature_cpf: string
+          signature_name: string
+          signed_at: string
+          status: string
+          teacher_id: string
+          updated_at: string
+        }
+        Insert: {
+          contract_text: string
+          created_at?: string
+          device_info?: string | null
+          expires_at?: string
+          id?: string
+          ip_address?: string | null
+          signature_cpf: string
+          signature_name: string
+          signed_at?: string
+          status?: string
+          teacher_id: string
+          updated_at?: string
+        }
+        Update: {
+          contract_text?: string
+          created_at?: string
+          device_info?: string | null
+          expires_at?: string
+          id?: string
+          ip_address?: string | null
+          signature_cpf?: string
+          signature_name?: string
+          signed_at?: string
+          status?: string
+          teacher_id?: string
+          updated_at?: string
         }
         Relationships: []
       }

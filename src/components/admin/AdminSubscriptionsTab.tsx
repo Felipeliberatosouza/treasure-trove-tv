@@ -186,17 +186,23 @@ const AdminSubscriptionsTab = () => {
           <Calendar className="h-5 w-5 text-primary" />
           Assinaturas & Lembretes
         </h2>
-        <Select value={reminderDays} onValueChange={setReminderDays}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="7">Próximos 7 dias</SelectItem>
-            <SelectItem value="14">Próximos 14 dias</SelectItem>
-            <SelectItem value="30">Próximos 30 dias</SelectItem>
-            <SelectItem value="60">Próximos 60 dias</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={exportCsv} disabled={filteredSubs.length === 0}>
+            <Download className="h-4 w-4 mr-1" />
+            Exportar CSV
+          </Button>
+          <Select value={reminderDays} onValueChange={setReminderDays}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="7">Próximos 7 dias</SelectItem>
+              <SelectItem value="14">Próximos 14 dias</SelectItem>
+              <SelectItem value="30">Próximos 30 dias</SelectItem>
+              <SelectItem value="60">Próximos 60 dias</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* Stats Cards */}

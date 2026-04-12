@@ -211,6 +211,7 @@ const AdminPaymentsTab = () => {
             <TableHeader>
               <TableRow>
                 <TableHead>Professor</TableHead>
+                <TableHead>Chave PIX</TableHead>
                 <TableHead className="text-center"><Eye className="h-4 w-4 inline mr-1" />Views</TableHead>
                 <TableHead className="text-center"><Star className="h-4 w-4 inline mr-1" />Avaliação</TableHead>
                 <TableHead className="text-center">Compras</TableHead>
@@ -221,6 +222,7 @@ const AdminPaymentsTab = () => {
               {metrics.map((m) => (
                 <TableRow key={m.teacher_id}>
                   <TableCell className="font-medium">{m.teacher_name}</TableCell>
+                  <TableCell className="text-xs text-muted-foreground font-mono">{m.pix_key || <span className="text-destructive">Não informado</span>}</TableCell>
                   <TableCell className="text-center">{m.total_views}</TableCell>
                   <TableCell className="text-center">{m.avg_rating > 0 ? m.avg_rating.toFixed(1) : "—"}</TableCell>
                   <TableCell className="text-center">{m.total_purchases}</TableCell>

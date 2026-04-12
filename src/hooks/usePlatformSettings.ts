@@ -17,6 +17,9 @@ export interface ContactSettings {
   phone: string;
   address: string;
   platform_address: string;
+  razao_social: string;
+  nome_fantasia: string;
+  cnpj: string;
   instagram: string;
   youtube: string;
   facebook: string;

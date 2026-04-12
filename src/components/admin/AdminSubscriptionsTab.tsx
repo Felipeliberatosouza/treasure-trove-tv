@@ -2,10 +2,11 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Bell, AlertTriangle, CheckCircle, XCircle, Calendar, Users } from "lucide-react";
+import { Bell, AlertTriangle, CheckCircle, XCircle, Calendar, Users, Download } from "lucide-react";
 
 interface ExpiringSubscription {
   id: string;

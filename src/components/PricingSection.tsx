@@ -224,6 +224,7 @@ const PricingSection = () => {
         </div>
       </div>
     </section>
+    </>
   );
 };
 

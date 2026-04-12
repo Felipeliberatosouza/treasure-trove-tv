@@ -447,7 +447,7 @@ const VideoPage = () => {
       <VLibrasWidget />
       <Navbar />
 
-      {limitInfo && (
+      <CpfRequiredModal open={showCpfModal} onClose={() => setShowCpfModal(false)} onComplete={onCpfComplete} />
         <ResourceLimitModal
           open={showLimitModal}
           onClose={() => setShowLimitModal(false)}

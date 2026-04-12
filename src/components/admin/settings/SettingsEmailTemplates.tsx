@@ -157,9 +157,11 @@ const SettingsEmailTemplates = () => {
         respect_marketing_preference: active.respect_marketing_preference,
         text_color: active.text_color,
         link_color: active.link_color,
+        heading_color: active.heading_color,
+        button_color: active.button_color,
         font_family: active.font_family,
         use_uploaded_logo: active.use_uploaded_logo,
-      })
+      } as any)
       .eq("id", active.id);
 
     if (error) toast.error("Erro ao salvar template.");

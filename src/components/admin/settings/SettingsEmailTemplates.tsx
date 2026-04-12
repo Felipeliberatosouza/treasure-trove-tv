@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Save, Upload, X, Eye, Mail, Shield } from "lucide-react";
+import { Save, Upload, X, Eye, Mail, Shield, Copy } from "lucide-react";
 import { toast } from "sonner";
 
 interface EmailTemplate {

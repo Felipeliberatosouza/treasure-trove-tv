@@ -243,6 +243,12 @@ const StudentSignup = () => {
             />
           </div>
           <PhoneInput value={phone} onChange={setPhone} />
+          <div className="relative">
+            <CreditCard className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <div className="pl-10">
+              <CpfInput value={cpf} onChange={setCpf} placeholder="CPF *" className="bg-secondary border-border" />
+            </div>
+          </div>
           
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />

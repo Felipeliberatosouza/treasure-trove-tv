@@ -51,6 +51,31 @@ const Login = () => {
         email: email.toLowerCase(),
         success: !error,
       }] as any);
+
+      // Notify admins on suspicious activity (5+ failed attempts = blocked)
+      if (error) {
+        const { count } = await supabase
+          .from("login_attempts" as any)
+          .select("*", { count: "exact", head: true })
+          .eq("email", email.toLowerCase())
+          .eq("success", false)
+          .gte("attempted_at", new Date(Date.now() - 15 * 60 * 1000).toISOString());
+
+        if (count && count >= 5) {
+          supabase.functions.invoke("send-transactional-email", {
+            body: {
+              templateName: "suspicious-login-admin-notify",
+              recipientEmail: "admin",
+              idempotencyKey: `suspicious-login-${email.toLowerCase()}-${new Date().toISOString().slice(0, 13)}`,
+              templateData: {
+                suspectEmail: email.toLowerCase(),
+                failedCount: count,
+                isBlocked: true,
+              },
+            },
+          }).catch(() => {});
+        }
+      }
     } catch {
       // Non-critical
     }

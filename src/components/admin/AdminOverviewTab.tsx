@@ -147,9 +147,6 @@ const AdminOverviewTab = () => {
     value: { label: "Quantidade", color: "hsl(var(--primary))" },
   };
 
-  const [detailOpen, setDetailOpen] = useState(false);
-  const [detailKey, setDetailKey] = useState("");
-  const [detailTitle, setDetailTitle] = useState("");
 
   const openDetail = (key: string, label: string) => {
     setDetailKey(key);

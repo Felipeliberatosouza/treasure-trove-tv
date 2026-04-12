@@ -1,10 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Download } from "lucide-react";
 
 interface KpiDetailDialogProps {
   open: boolean;
@@ -200,11 +202,36 @@ const KpiDetailDialog = ({ open, onOpenChange, kpiKey, title }: KpiDetailDialogP
     return <span className="text-sm">{String(value ?? "—")}</span>;
   };
 
+  const exportCsv = useCallback(() => {
+    if (data.length === 0) return;
+    const headers = columns.map(c => columnLabels[c] ?? c);
+    const rows = data.map(row => columns.map(col => {
+      const val = row[col];
+      const str = String(val ?? "");
+      return str.includes(",") || str.includes('"') || str.includes("\n") ? `"${str.replace(/"/g, '""')}"` : str;
+    }));
+    const csv = [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${title.replace(/\s+/g, "_")}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [data, columns, columnLabels, title]);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[85vh]">
         <DialogHeader>
-          <DialogTitle>{title} — Relatório Detalhado</DialogTitle>
+          <div className="flex items-center justify-between gap-4">
+            <DialogTitle>{title} — Relatório Detalhado</DialogTitle>
+            {data.length > 0 && !loading && (
+              <Button variant="outline" size="sm" onClick={exportCsv} className="shrink-0">
+                <Download className="h-4 w-4 mr-1" /> CSV
+              </Button>
+            )}
+          </div>
         </DialogHeader>
 
         {loading ? (

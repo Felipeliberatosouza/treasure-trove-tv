@@ -23,6 +23,8 @@ interface EmailTemplate {
   respect_marketing_preference: boolean;
   text_color: string;
   link_color: string;
+  heading_color: string;
+  button_color: string;
   font_family: string;
   use_uploaded_logo: boolean;
 }

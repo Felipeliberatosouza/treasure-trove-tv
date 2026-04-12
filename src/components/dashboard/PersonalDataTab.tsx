@@ -79,6 +79,16 @@ const PersonalDataTab = () => {
       toast.error("Informe um CPF válido");
       return;
     }
+    if (role === "teacher") {
+      if (!cpf || !isValidCPF(cpf)) {
+        toast.error("O CPF é obrigatório para professores (necessário para o contrato)");
+        return;
+      }
+      if (!address || !address.trim()) {
+        toast.error("O endereço é obrigatório para professores (necessário para o contrato)");
+        return;
+      }
+    }
     setSaving(true);
     const updateData: any = { name, bio, expertise_area: expertiseAreas.join(", "), birth_date: birthDate || null, phone: phone || null, cpf: cpf || null, accepts_marketing: acceptsMarketing };
     if (role === "teacher") {

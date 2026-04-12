@@ -99,7 +99,9 @@ const TeacherContractModal = ({ open, onClose, onSigned }: TeacherContractModalP
       .replace(/\{\{platform_percentage_text\}\}/g, numberToText(platformPercentage))
       .replace(/\{\{data\}\}/g, now.toLocaleDateString("pt-BR"))
       .replace(/\{\{hora\}\}/g, now.toLocaleTimeString("pt-BR"))
-      .replace(/\{\{teacher_pix\}\}/g, teacherPixKey);
+      .replace(/\{\{teacher_pix\}\}/g, teacherPixKey)
+      .replace(/\{\{ip_address\}\}/g, "(registrado na assinatura)")
+      .replace(/\{\{device_info\}\}/g, navigator.userAgent);
   };
 
   const handleSign = async () => {

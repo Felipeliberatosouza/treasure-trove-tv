@@ -144,6 +144,16 @@ const AdminOverviewTab = () => {
     value: { label: "Quantidade", color: "hsl(var(--primary))" },
   };
 
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [detailKey, setDetailKey] = useState("");
+  const [detailTitle, setDetailTitle] = useState("");
+
+  const openDetail = (key: string, label: string) => {
+    setDetailKey(key);
+    setDetailTitle(label);
+    setDetailOpen(true);
+  };
+
   return (
     <div className="space-y-6">
       <h2 className="text-lg font-semibold">Visão Geral</h2>
@@ -151,7 +161,11 @@ const AdminOverviewTab = () => {
       {/* KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         {kpiCards.map((kpi) => (
-          <Card key={kpi.label} className="border-border">
+          <Card
+            key={kpi.label}
+            className="border-border cursor-pointer hover:ring-2 hover:ring-primary/30 transition-all"
+            onClick={() => openDetail(kpi.key, kpi.label)}
+          >
             <CardContent className="flex items-center gap-3 p-4">
               <kpi.icon className={`h-8 w-8 shrink-0 ${kpi.color}`} />
               <div className="min-w-0">
@@ -230,6 +244,13 @@ const AdminOverviewTab = () => {
           </CardContent>
         </Card>
       )}
+
+      <KpiDetailDialog
+        open={detailOpen}
+        onOpenChange={setDetailOpen}
+        kpiKey={detailKey}
+        title={detailTitle}
+      />
     </div>
   );
 };

@@ -6,12 +6,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import ContentForm from "./ContentForm";
 import TeacherContractModal from "./TeacherContractModal";
+import TeacherDataModal from "./TeacherDataModal";
+import { isValidCPF } from "@/lib/cpfValidator";
 
 const ExamSolutionsTab = () => {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [items, setItems] = useState<any[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [showContract, setShowContract] = useState(false);
+  const [showDataModal, setShowDataModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [hasValidContract, setHasValidContract] = useState<boolean | null>(null);
 
@@ -51,7 +54,23 @@ const ExamSolutionsTab = () => {
     checkContract();
   }, [user]);
 
+  const hasCompleteData = () => {
+    const p = profile as any;
+    return p?.cpf && isValidCPF(p.cpf) && p?.address && p.address.trim() !== "";
+  };
+
   const handleNewItem = () => {
+    if (!hasCompleteData()) {
+      setShowDataModal(true);
+    } else if (!hasValidContract) {
+      setShowContract(true);
+    } else {
+      setShowForm(true);
+    }
+  };
+
+  const handleDataComplete = () => {
+    setShowDataModal(false);
     if (!hasValidContract) {
       setShowContract(true);
     } else {
@@ -108,6 +127,12 @@ const ExamSolutionsTab = () => {
           ))}
         </div>
       )}
+
+      <TeacherDataModal
+        open={showDataModal}
+        onClose={() => setShowDataModal(false)}
+        onComplete={handleDataComplete}
+      />
 
       <TeacherContractModal
         open={showContract}

@@ -257,7 +257,7 @@ const TeacherContractModal = ({ open, onClose, onSigned }: TeacherContractModalP
           </label>
 
           <div className="flex gap-2">
-            <Button onClick={handleSign} disabled={signing || !agreed} className="flex-1 font-display gap-2">
+            <Button onClick={handleSign} disabled={signing || !agreed || loading} className="flex-1 font-display gap-2">
               <CheckCircle className="h-4 w-4" />
               {signing ? "Assinando..." : "Assinar Contrato Digitalmente"}
             </Button>

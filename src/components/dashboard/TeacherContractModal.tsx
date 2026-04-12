@@ -34,6 +34,7 @@ const TeacherContractModal = ({ open, onClose, onSigned }: TeacherContractModalP
 
   useEffect(() => {
     const fetchData = async () => {
+      setLoading(true);
       const { data: templateData } = await supabase
         .from("platform_settings")
         .select("value")
@@ -49,6 +50,7 @@ const TeacherContractModal = ({ open, onClose, onSigned }: TeacherContractModalP
           .maybeSingle();
         if (profileData) setFreshProfile(profileData);
       }
+      setLoading(false);
     };
     if (open) {
       fetchData();

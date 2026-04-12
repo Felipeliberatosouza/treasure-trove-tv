@@ -135,7 +135,7 @@ const PersonalDataTab = () => {
         </div>
 
         <div>
-          <label className="text-sm text-muted-foreground mb-1 block">Nome completo</label>
+          <label className="text-sm text-muted-foreground mb-1 block">Nome completo <span className="text-destructive">*</span></label>
           <Input value={name} onChange={(e) => setName(e.target.value)} className="bg-secondary" />
         </div>
         <div>
@@ -150,7 +150,7 @@ const PersonalDataTab = () => {
           </div>
         )}
         <div>
-          <label className="text-sm text-muted-foreground mb-1 block">Data de Nascimento</label>
+          <label className="text-sm text-muted-foreground mb-1 block">Data de Nascimento <span className="text-destructive">*</span></label>
           <Input
             type="date"
             value={birthDate}
@@ -164,7 +164,7 @@ const PersonalDataTab = () => {
           <PhoneInput value={phone} onChange={setPhone} placeholder="(00) 00000-0000" />
         </div>
         <div>
-          <label className="text-sm text-muted-foreground mb-1 block">CPF</label>
+          <label className="text-sm text-muted-foreground mb-1 block">CPF {role === "teacher" && <span className="text-xs text-primary font-medium">(obrigatório para contrato)</span>}</label>
           <CpfInput value={cpf} onChange={setCpf} className="bg-secondary" />
         </div>
         <div className="flex items-start gap-2 pt-2">
@@ -202,7 +202,7 @@ const PersonalDataTab = () => {
               />
             </div>
             <div>
-              <label className="text-sm text-muted-foreground mb-1 block">Endereço Completo</label>
+              <label className="text-sm text-muted-foreground mb-1 block">Endereço Completo <span className="text-xs text-primary font-medium">(obrigatório para contrato)</span></label>
               <Input
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}

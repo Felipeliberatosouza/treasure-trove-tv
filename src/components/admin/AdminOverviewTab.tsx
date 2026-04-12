@@ -33,6 +33,9 @@ const AdminOverviewTab = () => {
   const [kpis, setKpis] = useState<KPIs | null>(null);
   const [revenueByMonth, setRevenueByMonth] = useState<{ month: string; amount: number }[]>([]);
   const [loading, setLoading] = useState(true);
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [detailKey, setDetailKey] = useState("");
+  const [detailTitle, setDetailTitle] = useState("");
 
   useEffect(() => {
     fetchData();

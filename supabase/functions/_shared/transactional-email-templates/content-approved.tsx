@@ -51,8 +51,8 @@ export const template = {
 
 const main = { backgroundColor: '#ffffff', fontFamily: 'Arial, sans-serif' }
 const container = { padding: '20px 25px', maxWidth: '600px', margin: '0 auto' }
-const h1 = { fontSize: '22px', fontWeight: 'bold' as const, color: '#16a34a', margin: '0 0 20px' }
+const h1 = { fontSize: '22px', fontWeight: 'bold' as const, color: '#dc2626', margin: '0 0 20px' }
 const text = { fontSize: '14px', color: '#374151', lineHeight: '1.6', margin: '0 0 16px' }
-const contentBox = { fontSize: '15px', color: '#1f2937', backgroundColor: '#f0fdf4', padding: '12px 16px', borderRadius: '6px', margin: '0 0 16px' }
+const contentBox = { fontSize: '15px', color: '#1f2937', backgroundColor: '#f9fafb', padding: '12px 16px', borderRadius: '6px', margin: '0 0 16px' }
 const hr = { borderColor: '#e5e7eb', margin: '16px 0' }
 const footer = { fontSize: '12px', color: '#9ca3af', margin: '30px 0 0' }

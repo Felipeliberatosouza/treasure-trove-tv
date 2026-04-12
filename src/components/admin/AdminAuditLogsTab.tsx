@@ -29,6 +29,12 @@ const actionLabels: Record<string, { label: string; color: string }> = {
   profile_update: { label: "Atualização de Perfil", color: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400" },
   data_access: { label: "Acesso a Dados", color: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400" },
   admin_action: { label: "Ação Admin", color: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400" },
+  content_approved: { label: "Conteúdo Aprovado", color: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" },
+  content_rejected: { label: "Conteúdo Rejeitado", color: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400" },
+  content_revoked: { label: "Aprovação Revogada", color: "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400" },
+  user_activated: { label: "Usuário Ativado", color: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" },
+  user_deactivated: { label: "Usuário Desativado", color: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400" },
+  user_deleted: { label: "Usuário Excluído", color: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400" },
 };
 
 const actionIcons: Record<string, typeof LogIn> = {
@@ -38,6 +44,12 @@ const actionIcons: Record<string, typeof LogIn> = {
   profile_update: UserCog,
   data_access: Eye,
   admin_action: ShieldAlert,
+  content_approved: Eye,
+  content_rejected: ShieldAlert,
+  content_revoked: ShieldAlert,
+  user_activated: UserCog,
+  user_deactivated: UserCog,
+  user_deleted: ShieldAlert,
 };
 
 const AdminAuditLogsTab = () => {

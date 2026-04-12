@@ -6,6 +6,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useAuditLog } from "@/hooks/useAuditLog";
 import { useCourseAreas } from "@/hooks/useCourseAreas";
 import AreaSelector from "@/components/AreaSelector";
 import PhoneInput, { isValidBrazilianPhone } from "@/components/PhoneInput";
@@ -15,6 +16,7 @@ import { Camera, Loader2 } from "lucide-react";
 
 const PersonalDataTab = () => {
   const { user, profile, role, refreshProfile } = useAuth();
+  const { logAction } = useAuditLog();
   const [name, setName] = useState("");
   const [bio, setBio] = useState("");
   const [expertiseAreas, setExpertiseAreas] = useState<string[]>([]);
@@ -124,6 +126,7 @@ const PersonalDataTab = () => {
     if (error) {
       toast.error("Erro ao salvar dados");
     } else {
+      await logAction("profile_update", { targetTable: "profiles", metadata: { fields: Object.keys(updateData) } });
       toast.success("Dados atualizados com sucesso!");
       refreshProfile();
     }

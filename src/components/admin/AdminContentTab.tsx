@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, CheckCircle, XCircle, Video, FileText, DollarSign, Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuditLog } from "@/hooks/useAuditLog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -28,6 +29,7 @@ interface ContentItem {
 
 const AdminContentTab = () => {
   const navigate = useNavigate();
+  const { logAction } = useAuditLog();
   const [items, setItems] = useState<ContentItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -102,6 +104,7 @@ const AdminContentTab = () => {
     }
 
     await sendDecisionEmail(item, true);
+    await logAction("content_approved", { targetTable: table, targetId: item.id, metadata: { title: item.title } });
     toast({ title: "Aprovado", description: `"${item.title}" foi aprovado e publicado.` });
     fetchContent();
   };
@@ -119,6 +122,7 @@ const AdminContentTab = () => {
     }
 
     await sendDecisionEmail(item, false, reason);
+    await logAction("content_rejected", { targetTable: table, targetId: item.id, metadata: { title: item.title, reason } });
     toast({ title: "Rejeitado", description: `"${item.title}" foi rejeitado e voltou para rascunho.` });
     setRejectItem(null);
     setRejectReason("");
@@ -137,6 +141,7 @@ const AdminContentTab = () => {
       return;
     }
 
+    await logAction("content_revoked", { targetTable: table, targetId: item.id, metadata: { title: item.title } });
     toast({ title: "Aprovação revogada", description: `"${item.title}" voltou para pendente.` });
     fetchContent();
   };

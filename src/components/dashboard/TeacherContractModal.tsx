@@ -54,6 +54,7 @@ const TeacherContractModal = ({ open, onClose, onSigned }: TeacherContractModalP
   const teacherName = profile?.name || "";
   const teacherCpf = (profile as any)?.cpf || "";
   const teacherAddress = (profile as any)?.address || "";
+  const teacherPixKey = (profile as any)?.pix_key || "";
   const teacherPercentage = template ? 100 - template.platform_percentage : 70;
   const platformPercentage = template?.platform_percentage || 30;
 
@@ -83,7 +84,8 @@ const TeacherContractModal = ({ open, onClose, onSigned }: TeacherContractModalP
       .replace(/\{\{platform_percentage\}\}/g, String(platformPercentage))
       .replace(/\{\{platform_percentage_text\}\}/g, numberToText(platformPercentage))
       .replace(/\{\{data\}\}/g, now.toLocaleDateString("pt-BR"))
-      .replace(/\{\{hora\}\}/g, now.toLocaleTimeString("pt-BR"));
+      .replace(/\{\{hora\}\}/g, now.toLocaleTimeString("pt-BR"))
+      .replace(/\{\{teacher_pix\}\}/g, teacherPixKey);
   };
 
   const handleSign = async () => {

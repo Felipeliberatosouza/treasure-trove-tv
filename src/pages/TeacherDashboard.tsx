@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, User, Lock, Video, FileText, DollarSign, HelpCircle, BookOpen } from "lucide-react";
+import { ArrowLeft, User, Lock, Video, FileText, DollarSign, HelpCircle, BookOpen, FileSignature } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
@@ -10,6 +10,7 @@ import LessonsTab from "@/components/dashboard/LessonsTab";
 import ExamSolutionsTab from "@/components/dashboard/ExamSolutionsTab";
 import TeacherDoubtsTab from "@/components/dashboard/TeacherDoubtsTab";
 import TeacherInstructionsTab from "@/components/dashboard/TeacherInstructionsTab";
+import TeacherContractTab from "@/components/dashboard/TeacherContractTab";
 
 const tabs = [
   { id: "instructions", label: "Instruções", icon: BookOpen },
@@ -18,6 +19,7 @@ const tabs = [
   { id: "lessons", label: "Minhas Aulas", icon: Video },
   { id: "exams", label: "Resoluções de Provas", icon: FileText },
   { id: "doubts", label: "Dúvidas de Alunos", icon: HelpCircle },
+  { id: "contract", label: "Meu Contrato", icon: FileSignature },
   { id: "sales", label: "Vendas e Recebimentos", icon: DollarSign },
 ] as const;
 
@@ -68,6 +70,7 @@ const TeacherDashboard = () => {
             {activeTab === "lessons" && <LessonsTab />}
             {activeTab === "exams" && <ExamSolutionsTab />}
             {activeTab === "doubts" && <TeacherDoubtsTab />}
+            {activeTab === "contract" && <TeacherContractTab />}
             {activeTab === "sales" && (
               <div>
                 <h2 className="font-display text-lg font-semibold mb-4">Vendas e Recebimentos</h2>

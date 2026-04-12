@@ -4,12 +4,15 @@ import { Plus, Video } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import ContentForm from "./ContentForm";
+import TeacherContractModal from "./TeacherContractModal";
 
 const LessonsTab = () => {
   const { user } = useAuth();
   const [lessons, setLessons] = useState<any[]>([]);
   const [showForm, setShowForm] = useState(false);
+  const [showContract, setShowContract] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [hasValidContract, setHasValidContract] = useState<boolean | null>(null);
 
   const fetchLessons = async () => {
     if (!user) return;
@@ -23,20 +26,58 @@ const LessonsTab = () => {
     setLoading(false);
   };
 
+  const checkContract = async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from("teacher_contracts" as any)
+      .select("id, expires_at")
+      .eq("teacher_id", user.id)
+      .eq("status", "active")
+      .order("signed_at", { ascending: false })
+      .limit(1);
+
+    const contracts = data as any[] | null;
+    if (!contracts || contracts.length === 0) {
+      setHasValidContract(false);
+      return;
+    }
+    const expiresAt = new Date(contracts[0].expires_at);
+    setHasValidContract(expiresAt > new Date());
+  };
+
   useEffect(() => {
     fetchLessons();
+    checkContract();
   }, [user]);
+
+  const handleNewLesson = () => {
+    if (!hasValidContract) {
+      setShowContract(true);
+    } else {
+      setShowForm(true);
+    }
+  };
 
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
         <h2 className="font-display text-lg font-semibold">Minhas Aulas</h2>
         {!showForm && (
-          <Button size="sm" onClick={() => setShowForm(true)} className="font-display gap-1">
+          <Button size="sm" onClick={handleNewLesson} className="font-display gap-1">
             <Plus className="h-4 w-4" /> Nova Aula
           </Button>
         )}
       </div>
+
+      <TeacherContractModal
+        open={showContract}
+        onClose={() => setShowContract(false)}
+        onSigned={() => {
+          setShowContract(false);
+          setHasValidContract(true);
+          setShowForm(true);
+        }}
+      />
 
       {showForm ? (
         <ContentForm

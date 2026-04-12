@@ -7,7 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import { formatCPF, isValidCPF } from "@/lib/cpfValidator";
 import { toast } from "sonner";
-import { FileSignature, CheckCircle } from "lucide-react";
+import { FileSignature, CheckCircle, Loader2 } from "lucide-react";
 
 interface TeacherContractModalProps {
   open: boolean;

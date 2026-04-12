@@ -38,6 +38,7 @@ import EmailSecurityNotification from "./pages/EmailSecurityNotification.tsx";
 import PaymentSuccess from "./pages/PaymentSuccess.tsx";
 import PaymentCanceled from "./pages/PaymentCanceled.tsx";
 import DynamicBranding from "./components/DynamicBranding.tsx";
+import InactivityGuard from "./components/InactivityGuard.tsx";
 
 const queryClient = new QueryClient();
 
@@ -84,6 +85,7 @@ const App = () => (
           </Routes>
           <DynamicBranding />
           <CookieConsent />
+          <InactivityGuard />
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

@@ -9,7 +9,6 @@ import { lovable } from "@/integrations/lovable/index";
 import { toast } from "sonner";
 import { translateAuthError } from "@/lib/translateAuthError";
 
-
 const Login = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
@@ -17,6 +16,7 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [deactivatedMsg, setDeactivatedMsg] = useState(false);
+  const [blockedMsg, setBlockedMsg] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,7 +27,33 @@ const Login = () => {
 
     setLoading(true);
     setDeactivatedMsg(false);
+    setBlockedMsg(false);
+
+    // Check if login is blocked (brute-force protection)
+    try {
+      const { data: blocked } = await supabase.rpc("is_login_blocked", {
+        check_email: email.toLowerCase(),
+      });
+      if (blocked) {
+        setBlockedMsg(true);
+        setLoading(false);
+        return;
+      }
+    } catch (err) {
+      // If function doesn't exist yet, skip check
+    }
+
     const { data: signInData, error } = await supabase.auth.signInWithPassword({ email, password });
+
+    // Record login attempt
+    try {
+      await supabase.from("login_attempts").insert([{
+        email: email.toLowerCase(),
+        success: !error,
+      }] as any);
+    } catch {
+      // Non-critical
+    }
 
     if (error) {
       toast.error(translateAuthError(error.message));
@@ -48,6 +74,17 @@ const Login = () => {
         setDeactivatedMsg(true);
         setLoading(false);
         return;
+      }
+
+      // Log successful login to audit
+      try {
+        await supabase.from("audit_logs").insert([{
+          user_id: signInData.user.id,
+          action: "login",
+          metadata: { method: "password" },
+        }] as any);
+      } catch {
+        // Non-critical
       }
     }
 
@@ -103,6 +140,13 @@ const Login = () => {
             <span className="bg-background px-2 text-muted-foreground">ou</span>
           </div>
         </div>
+
+        {blockedMsg && (
+          <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive space-y-1">
+            <p className="font-semibold">Login bloqueado temporariamente</p>
+            <p>Muitas tentativas de login falharam. Aguarde 15 minutos antes de tentar novamente, ou use a opção "Esqueci minha senha" para redefinir sua senha.</p>
+          </div>
+        )}
 
         {deactivatedMsg && (
           <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive space-y-1">

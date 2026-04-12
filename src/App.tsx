@@ -78,6 +78,7 @@ const App = () => (
             <Route path="/payment-success" element={<PaymentSuccess />} />
             <Route path="/payment-canceled" element={<PaymentCanceled />} />
             <Route path="/unsubscribe" element={<Unsubscribe />} />
+            <Route path="/email-seguranca" element={<EmailSecurityNotification />} />
             <Route path="/:slug" element={<TeacherProfile />} />
             <Route path="*" element={<NotFound />} />
           </Routes>

@@ -20,6 +20,7 @@ const TeacherDataModal = ({ open, onClose, onComplete }: TeacherDataModalProps) 
   const { user, profile, refreshProfile } = useAuth();
   const [cpf, setCpf] = useState((profile as any)?.cpf || "");
   const [address, setAddress] = useState((profile as any)?.address || "");
+  const [pixKey, setPixKey] = useState((profile as any)?.pix_key || "");
   const [saving, setSaving] = useState(false);
 
   const handleSave = async () => {
@@ -32,11 +33,15 @@ const TeacherDataModal = ({ open, onClose, onComplete }: TeacherDataModalProps) 
       toast.error("Informe seu endereço completo");
       return;
     }
+    if (!pixKey.trim()) {
+      toast.error("Informe sua chave PIX para recebimento");
+      return;
+    }
 
     setSaving(true);
     const { error } = await supabase
       .from("profiles")
-      .update({ cpf, address: address.trim() })
+      .update({ cpf, address: address.trim(), pix_key: pixKey.trim() } as any)
       .eq("user_id", user.id);
 
     if (error) {
@@ -77,6 +82,17 @@ const TeacherDataModal = ({ open, onClose, onComplete }: TeacherDataModalProps) 
               placeholder="Rua, número, bairro, cidade - UF, CEP"
               className="bg-secondary border-border"
             />
+          </div>
+
+          <div>
+            <Label>Chave PIX *</Label>
+            <Input
+              value={pixKey}
+              onChange={(e) => setPixKey(e.target.value)}
+              placeholder="CPF, e-mail, telefone ou chave aleatória"
+              className="bg-secondary border-border"
+            />
+            <p className="text-xs text-muted-foreground mt-1">Será utilizada para o pagamento mensal</p>
           </div>
 
           <div className="flex gap-2">

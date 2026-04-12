@@ -24,6 +24,7 @@ const PersonalDataTab = () => {
   const [slug, setSlug] = useState("");
   const [profileTitle, setProfileTitle] = useState("");
   const [address, setAddress] = useState("");
+  const [pixKey, setPixKey] = useState("");
   const [acceptsMarketing, setAcceptsMarketing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
@@ -41,6 +42,7 @@ const PersonalDataTab = () => {
       setSlug((profile as any).slug || "");
       setProfileTitle((profile as any).profile_title || "");
       setAddress((profile as any).address || "");
+      setPixKey((profile as any).pix_key || "");
       setAcceptsMarketing((profile as any).accepts_marketing || false);
     }
   }, [profile]);

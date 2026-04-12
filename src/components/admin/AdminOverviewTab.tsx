@@ -18,6 +18,7 @@ interface KPIs {
   pendingPayments: number;
   totalViews: number;
   avgRating: number;
+  unsubscribedEmails: number;
 }
 
 const COLORS = [

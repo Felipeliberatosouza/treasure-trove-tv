@@ -130,13 +130,13 @@ const AdminOverviewTab = () => {
   ];
 
   const kpiCards = [
-    { label: "Total de Usuários", value: kpis.totalUsers, icon: Users, color: "text-primary" },
-    { label: "Conteúdos Pendentes", value: kpis.pendingLessons + kpis.pendingExams, icon: Clock, color: "text-yellow-500" },
-    { label: "Receita da Plataforma", value: `R$ ${kpis.totalRevenue.toFixed(2)}`, icon: DollarSign, color: "text-green-500" },
-    { label: "Visualizações", value: kpis.totalViews, icon: TrendingUp, color: "text-blue-500" },
-    { label: "Pagamentos Pendentes", value: kpis.pendingPayments, icon: DollarSign, color: "text-orange-500" },
-    { label: "Avaliação Média", value: kpis.avgRating.toFixed(1) + " ★", icon: Star, color: "text-amber-500" },
-    { label: "Descadastros de E-mail", value: kpis.unsubscribedEmails, icon: MailX, color: "text-destructive" },
+    { label: "Total de Usuários", value: kpis.totalUsers, icon: Users, color: "text-primary", key: "users" },
+    { label: "Conteúdos Pendentes", value: kpis.pendingLessons + kpis.pendingExams, icon: Clock, color: "text-yellow-500", key: "pending_content" },
+    { label: "Receita da Plataforma", value: `R$ ${kpis.totalRevenue.toFixed(2)}`, icon: DollarSign, color: "text-green-500", key: "revenue" },
+    { label: "Visualizações", value: kpis.totalViews, icon: TrendingUp, color: "text-blue-500", key: "views" },
+    { label: "Pagamentos Pendentes", value: kpis.pendingPayments, icon: DollarSign, color: "text-orange-500", key: "pending_payments" },
+    { label: "Avaliação Média", value: kpis.avgRating.toFixed(1) + " ★", icon: Star, color: "text-amber-500", key: "avg_rating" },
+    { label: "Descadastros de E-mail", value: kpis.unsubscribedEmails, icon: MailX, color: "text-destructive", key: "unsubscribed" },
   ];
 
   const chartConfig = {

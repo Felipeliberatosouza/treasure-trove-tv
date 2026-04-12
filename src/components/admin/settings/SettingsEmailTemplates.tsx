@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Save, Upload, X, Eye, Mail, Shield } from "lucide-react";
+import { Save, Upload, X, Eye, Mail, Shield, Copy } from "lucide-react";
 import { toast } from "sonner";
 
 interface EmailTemplate {
@@ -103,6 +103,7 @@ const SettingsEmailTemplates = () => {
   const [activeKey, setActiveKey] = useState<string>("");
   const [saving, setSaving] = useState(false);
   const [previewing, setPreviewing] = useState(false);
+  const [applyingAll, setApplyingAll] = useState(false);
   const { upload, uploading } = useStorageUpload("platform-assets");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { data: contactData } = usePlatformSettings("contact");
@@ -167,6 +168,40 @@ const SettingsEmailTemplates = () => {
     if (error) toast.error("Erro ao salvar template.");
     else toast.success("Template salvo com sucesso!");
     setSaving(false);
+  };
+
+  const handleApplyStyleToAll = async () => {
+    if (!active) return;
+    const confirmApply = window.confirm(
+      `Deseja aplicar o estilo visual de "${TEMPLATE_LABELS[activeKey] || activeKey}" a todos os outros templates? Isso sobrescreverá as cores, fonte e logo de todos os templates.`
+    );
+    if (!confirmApply) return;
+
+    setApplyingAll(true);
+    const styleFields = {
+      text_color: active.text_color,
+      link_color: active.link_color,
+      heading_color: active.heading_color,
+      button_color: active.button_color,
+      font_family: active.font_family,
+      logo_url: active.logo_url,
+      use_uploaded_logo: active.use_uploaded_logo,
+    };
+
+    const { error } = await supabase
+      .from("email_templates")
+      .update(styleFields as any)
+      .neq("id", active.id);
+
+    if (error) {
+      toast.error("Erro ao aplicar estilo aos outros templates.");
+    } else {
+      setTemplates((prev) =>
+        prev.map((t) => (t.id === active.id ? t : { ...t, ...styleFields }))
+      );
+      toast.success("Estilo visual aplicado a todos os templates!");
+    }
+    setApplyingAll(false);
   };
 
   const buildFooterHtml = () => {
@@ -456,8 +491,18 @@ const SettingsEmailTemplates = () => {
                     className="flex-1 text-xs"
                     maxLength={7}
                   />
-                </div>
-              </div>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="mt-2"
+              disabled={applyingAll}
+              onClick={handleApplyStyleToAll}
+            >
+              <Copy className="h-4 w-4 mr-1" />
+              {applyingAll ? "Aplicando..." : "Aplicar este estilo a todos os templates"}
+            </Button>
+          </div>
               <div>
                 <Label className="text-xs">Fonte</Label>
                 <Select

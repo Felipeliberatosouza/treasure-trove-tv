@@ -38,12 +38,8 @@ const SettingsContact = () => {
         <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
       </div>
       <div>
-        <Label>Endereço de Contato</Label>
-        <Input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
-      </div>
-      <div>
-        <Label>Endereço da Empresa (para contratos)</Label>
-        <Input value={form.platform_address || ""} onChange={(e) => setForm({ ...form, platform_address: e.target.value })} placeholder="Endereço completo da Revisão Fácil para uso em contratos" />
+        <Label>Endereço da Empresa</Label>
+        <Input value={form.platform_address || ""} onChange={(e) => setForm({ ...form, platform_address: e.target.value, address: e.target.value })} placeholder="Endereço completo da empresa" />
       </div>
       <div>
         <Label>Razão Social</Label>

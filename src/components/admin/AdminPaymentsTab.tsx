@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 interface TeacherMetrics {
   teacher_id: string;
   teacher_name: string;
+  pix_key: string;
   total_views: number;
   avg_rating: number;
   total_purchases: number;
@@ -59,7 +60,7 @@ const AdminPaymentsTab = () => {
     setLoading(true);
 
     const [profilesRes, viewsRes, ratingsRes, purchasesRes, paymentsRes] = await Promise.all([
-      supabase.from("profiles").select("user_id, name"),
+      supabase.from("profiles").select("user_id, name, pix_key"),
       supabase.from("video_views").select("content_id, content_type, user_id"),
       supabase.from("video_ratings").select("content_id, content_type, rating"),
       supabase.from("video_purchases").select("content_id, content_type, amount, user_id"),
@@ -68,6 +69,7 @@ const AdminPaymentsTab = () => {
 
     const profiles = profilesRes.data || [];
     const profileMap = new Map(profiles.map((p) => [p.user_id, p.name]));
+    const pixMap = new Map(profiles.map((p) => [p.user_id, (p as any).pix_key || ""]));
 
     // Get all teachers
     const { data: teacherRoles } = await supabase.from("user_roles").select("user_id").eq("role", "teacher");
@@ -89,6 +91,7 @@ const AdminPaymentsTab = () => {
       metricsMap.set(tid, {
         teacher_id: tid,
         teacher_name: profileMap.get(tid) || "Desconhecido",
+        pix_key: pixMap.get(tid) || "",
         total_views: 0,
         avg_rating: 0,
         total_purchases: 0,
@@ -208,6 +211,7 @@ const AdminPaymentsTab = () => {
             <TableHeader>
               <TableRow>
                 <TableHead>Professor</TableHead>
+                <TableHead>Chave PIX</TableHead>
                 <TableHead className="text-center"><Eye className="h-4 w-4 inline mr-1" />Views</TableHead>
                 <TableHead className="text-center"><Star className="h-4 w-4 inline mr-1" />Avaliação</TableHead>
                 <TableHead className="text-center">Compras</TableHead>
@@ -218,6 +222,7 @@ const AdminPaymentsTab = () => {
               {metrics.map((m) => (
                 <TableRow key={m.teacher_id}>
                   <TableCell className="font-medium">{m.teacher_name}</TableCell>
+                  <TableCell className="text-xs text-muted-foreground font-mono">{m.pix_key || <span className="text-destructive">Não informado</span>}</TableCell>
                   <TableCell className="text-center">{m.total_views}</TableCell>
                   <TableCell className="text-center">{m.avg_rating > 0 ? m.avg_rating.toFixed(1) : "—"}</TableCell>
                   <TableCell className="text-center">{m.total_purchases}</TableCell>
@@ -226,7 +231,7 @@ const AdminPaymentsTab = () => {
               ))}
               {metrics.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center text-muted-foreground py-8">Nenhum professor encontrado.</TableCell>
+                  <TableCell colSpan={6} className="text-center text-muted-foreground py-8">Nenhum professor encontrado.</TableCell>
                 </TableRow>
               )}
             </TableBody>

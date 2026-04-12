@@ -24,6 +24,7 @@ const PersonalDataTab = () => {
   const [slug, setSlug] = useState("");
   const [profileTitle, setProfileTitle] = useState("");
   const [address, setAddress] = useState("");
+  const [pixKey, setPixKey] = useState("");
   const [acceptsMarketing, setAcceptsMarketing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
@@ -41,6 +42,7 @@ const PersonalDataTab = () => {
       setSlug((profile as any).slug || "");
       setProfileTitle((profile as any).profile_title || "");
       setAddress((profile as any).address || "");
+      setPixKey((profile as any).pix_key || "");
       setAcceptsMarketing((profile as any).accepts_marketing || false);
     }
   }, [profile]);
@@ -88,6 +90,10 @@ const PersonalDataTab = () => {
         toast.error("O endereço é obrigatório para professores (necessário para o contrato)");
         return;
       }
+      if (!pixKey || !pixKey.trim()) {
+        toast.error("A chave PIX é obrigatória para professores (necessária para pagamento)");
+        return;
+      }
     }
     setSaving(true);
     const updateData: any = { name, bio, expertise_area: expertiseAreas.join(", "), birth_date: birthDate || null, phone: phone || null, cpf: cpf || null, accepts_marketing: acceptsMarketing };
@@ -95,6 +101,7 @@ const PersonalDataTab = () => {
       updateData.slug = slug;
       updateData.profile_title = profileTitle;
       updateData.address = address || null;
+      updateData.pix_key = pixKey || null;
     }
     const { error } = await supabase
       .from("profiles")
@@ -219,6 +226,16 @@ const PersonalDataTab = () => {
                 className="bg-secondary"
                 placeholder="Rua, número, bairro, cidade - UF, CEP"
               />
+            </div>
+            <div>
+              <label className="text-sm text-muted-foreground mb-1 block">Chave PIX <span className="text-xs text-primary font-medium">(obrigatório para pagamento)</span></label>
+              <Input
+                value={pixKey}
+                onChange={(e) => setPixKey(e.target.value)}
+                className="bg-secondary"
+                placeholder="CPF, e-mail, telefone ou chave aleatória"
+              />
+              <p className="text-xs text-muted-foreground mt-1">Utilizada para recebimento do pagamento mensal</p>
             </div>
             <div>
               <label className="text-sm text-muted-foreground mb-1 block">Áreas de expertise</label>

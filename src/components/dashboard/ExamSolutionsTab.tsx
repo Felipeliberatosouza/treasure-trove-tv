@@ -56,7 +56,7 @@ const ExamSolutionsTab = () => {
 
   const hasCompleteData = () => {
     const p = profile as any;
-    return p?.cpf && isValidCPF(p.cpf) && p?.address && p.address.trim() !== "";
+    return p?.cpf && isValidCPF(p.cpf) && p?.address && p.address.trim() !== "" && p?.pix_key && p.pix_key.trim() !== "";
   };
 
   const handleNewItem = () => {

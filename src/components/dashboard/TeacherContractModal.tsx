@@ -61,10 +61,11 @@ const TeacherContractModal = ({ open, onClose, onSigned }: TeacherContractModalP
   const razaoSocial = (contactData as any)?.razao_social || "";
   const nomeFantasia = (contactData as any)?.nome_fantasia || "";
   const cnpj = (contactData as any)?.cnpj || "";
-  const teacherName = profile?.name || "";
-  const teacherCpf = (profile as any)?.cpf || "";
-  const teacherAddress = (profile as any)?.address || "";
-  const teacherPixKey = (profile as any)?.pix_key || "";
+  const p = freshProfile || profile;
+  const teacherName = p?.name || "";
+  const teacherCpf = p?.cpf || "";
+  const teacherAddress = p?.address || "";
+  const teacherPixKey = p?.pix_key || "";
   const teacherPercentage = template ? 100 - template.platform_percentage : 70;
   const platformPercentage = template?.platform_percentage || 30;
 

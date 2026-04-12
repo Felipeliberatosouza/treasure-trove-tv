@@ -16,13 +16,13 @@ export function useAuditLog() {
     ) => {
       if (!user) return;
       try {
-        await supabase.from("audit_logs").insert({
+        await supabase.from("audit_logs").insert([{
           user_id: user.id,
           action,
           target_table: options?.targetTable ?? null,
           target_id: options?.targetId ?? null,
           metadata: options?.metadata ?? {},
-        });
+        }] as any);
       } catch (err) {
         console.error("Audit log error:", err);
       }

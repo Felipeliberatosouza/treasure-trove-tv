@@ -26,7 +26,7 @@ const tabs = [
   { id: "subscriptions", label: "Assinaturas", icon: CalendarClock },
   { id: "pricing", label: "Preço de Recursos", icon: Tag },
   { id: "usage", label: "Histórico de Uso", icon: BarChart3 },
-  { id: "emails", label: "E-mails", icon: Mail },
+  { id: "emails", label: "Monitoramento de E-mails", icon: Mail },
   { id: "settings", label: "Configurações", icon: Settings },
 ] as const;
 

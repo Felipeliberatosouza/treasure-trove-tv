@@ -12,6 +12,10 @@ const SettingsContact = () => {
     email: "", phone: "", address: "", platform_address: "", razao_social: "", nome_fantasia: "", cnpj: "", instagram: "", youtube: "", facebook: "", twitter: "", tiktok: "", linkedin: "", whatsapp: "", whatsapp_message: "", whatsapp_hours: "",
   });
   const [saving, setSaving] = useState(false);
+  const [cnpjTouched, setCnpjTouched] = useState(false);
+  const cnpjCleaned = (form.cnpj || "").replace(/\D/g, "");
+  const cnpjComplete = cnpjCleaned.length === 14;
+  const cnpjValid = !cnpjComplete || isValidCNPJ(cnpjCleaned);
 
   useEffect(() => { if (data) setForm({ ...form, ...data }); }, [data]);
 

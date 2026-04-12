@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Save } from "lucide-react";
+import { formatCNPJ, isValidCNPJ } from "@/lib/cnpjValidator";
 
 const SettingsContact = () => {
   const { data, loading, update } = usePlatformSettings("contact");
@@ -11,6 +12,10 @@ const SettingsContact = () => {
     email: "", phone: "", address: "", platform_address: "", razao_social: "", nome_fantasia: "", cnpj: "", instagram: "", youtube: "", facebook: "", twitter: "", tiktok: "", linkedin: "", whatsapp: "", whatsapp_message: "", whatsapp_hours: "",
   });
   const [saving, setSaving] = useState(false);
+  const [cnpjTouched, setCnpjTouched] = useState(false);
+  const cnpjCleaned = (form.cnpj || "").replace(/\D/g, "");
+  const cnpjComplete = cnpjCleaned.length === 14;
+  const cnpjValid = !cnpjComplete || isValidCNPJ(cnpjCleaned);
 
   useEffect(() => { if (data) setForm({ ...form, ...data }); }, [data]);
 
@@ -49,8 +54,19 @@ const SettingsContact = () => {
         <Input value={form.nome_fantasia || ""} onChange={(e) => setForm({ ...form, nome_fantasia: e.target.value })} placeholder="Nome fantasia da empresa" />
       </div>
       <div>
+      <div>
         <Label>CNPJ</Label>
-        <Input value={form.cnpj || ""} onChange={(e) => setForm({ ...form, cnpj: e.target.value })} placeholder="00.000.000/0000-00" />
+        <Input
+          value={formatCNPJ(form.cnpj || "")}
+          onChange={(e) => setForm({ ...form, cnpj: e.target.value.replace(/\D/g, "").slice(0, 14) })}
+          onBlur={() => setCnpjTouched(true)}
+          placeholder="00.000.000/0000-00"
+          maxLength={18}
+        />
+        {cnpjTouched && cnpjComplete && !cnpjValid && (
+          <p className="text-xs text-destructive mt-1">CNPJ inválido</p>
+        )}
+      </div>
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div>

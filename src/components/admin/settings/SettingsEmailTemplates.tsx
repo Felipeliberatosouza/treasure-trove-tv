@@ -42,6 +42,7 @@ const TEMPLATE_LABELS: Record<string, string> = {
   content_approved: "Conteúdo Aprovado",
   content_rejected: "Conteúdo Rejeitado",
   contract_signed: "Contrato Assinado",
+  subscription_expiring: "Lembrete de Vencimento",
 };
 
 const TEMPLATE_DESCRIPTIONS: Record<string, string> = {
@@ -59,6 +60,7 @@ const TEMPLATE_DESCRIPTIONS: Record<string, string> = {
   content_approved: "Enviado ao professor quando seu conteúdo é aprovado pelo administrador.",
   content_rejected: "Enviado ao professor quando seu conteúdo precisa de ajustes.",
   contract_signed: "Confirmação enviada ao professor após assinar o contrato.",
+  subscription_expiring: "Enviado automaticamente alguns dias antes do vencimento da assinatura do aluno.",
 };
 
 const TEMPLATE_VARS: Record<string, string[]> = {
@@ -76,6 +78,7 @@ const TEMPLATE_VARS: Record<string, string[]> = {
   content_approved: ["{{teacher_name}}", "{{content_title}}", "{{content_type}}", "{{dashboard_link}}"],
   content_rejected: ["{{teacher_name}}", "{{content_title}}", "{{rejection_reason}}", "{{dashboard_link}}"],
   contract_signed: ["{{teacher_name}}", "{{signed_date}}", "{{expiry_date}}", "{{dashboard_link}}"],
+  subscription_expiring: ["{{name}}", "{{plan_name}}", "{{days_remaining}}", "{{expiry_date}}", "{{subscription_status}}", "{{renew_link}}"],
 };
 
 const FONT_OPTIONS = [

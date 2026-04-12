@@ -47,6 +47,7 @@ const AdminOverviewTab = () => {
       { data: payments },
       { data: views },
       { data: ratings },
+      { count: unsubCount },
     ] = await Promise.all([
       supabase.from("user_roles").select("role"),
       supabase.from("lessons").select("admin_approved, published"),
@@ -54,6 +55,7 @@ const AdminOverviewTab = () => {
       supabase.from("teacher_payments").select("gross_amount, net_amount, platform_fee, status, period_start"),
       supabase.from("video_views").select("id"),
       supabase.from("video_ratings").select("rating"),
+      supabase.from("profiles").select("*", { count: "exact", head: true }).eq("accepts_marketing", false),
     ]);
 
     const students = roles?.filter((r) => r.role === "student").length ?? 0;

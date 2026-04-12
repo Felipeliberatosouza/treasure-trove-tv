@@ -484,6 +484,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          accepts_marketing: boolean
           active: boolean
           address: string | null
           areas: string[] | null
@@ -505,6 +506,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          accepts_marketing?: boolean
           active?: boolean
           address?: string | null
           areas?: string[] | null
@@ -526,6 +528,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          accepts_marketing?: boolean
           active?: boolean
           address?: string | null
           areas?: string[] | null

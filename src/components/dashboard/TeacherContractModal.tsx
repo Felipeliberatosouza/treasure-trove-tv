@@ -29,6 +29,7 @@ const TeacherContractModal = ({ open, onClose, onSigned }: TeacherContractModalP
   const [signing, setSigning] = useState(false);
   const [agreed, setAgreed] = useState(false);
   const [signed, setSigned] = useState(false);
+  const [freshProfile, setFreshProfile] = useState<any>(null);
 
   useEffect(() => {
     const fetchTemplate = async () => {

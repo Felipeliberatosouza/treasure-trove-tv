@@ -8,7 +8,7 @@ import { Save } from "lucide-react";
 const SettingsContact = () => {
   const { data, loading, update } = usePlatformSettings("contact");
   const [form, setForm] = useState<ContactSettings>({
-    email: "", phone: "", address: "", platform_address: "", instagram: "", youtube: "", facebook: "", twitter: "", tiktok: "", linkedin: "", whatsapp: "", whatsapp_message: "", whatsapp_hours: "",
+    email: "", phone: "", address: "", platform_address: "", razao_social: "", nome_fantasia: "", cnpj: "", instagram: "", youtube: "", facebook: "", twitter: "", tiktok: "", linkedin: "", whatsapp: "", whatsapp_message: "", whatsapp_hours: "",
   });
   const [saving, setSaving] = useState(false);
 
@@ -39,6 +39,18 @@ const SettingsContact = () => {
       <div>
         <Label>Endereço da Empresa (para contratos)</Label>
         <Input value={form.platform_address || ""} onChange={(e) => setForm({ ...form, platform_address: e.target.value })} placeholder="Endereço completo da Revisão Fácil para uso em contratos" />
+      </div>
+      <div>
+        <Label>Razão Social</Label>
+        <Input value={form.razao_social || ""} onChange={(e) => setForm({ ...form, razao_social: e.target.value })} placeholder="Razão social da empresa" />
+      </div>
+      <div>
+        <Label>Nome Fantasia</Label>
+        <Input value={form.nome_fantasia || ""} onChange={(e) => setForm({ ...form, nome_fantasia: e.target.value })} placeholder="Nome fantasia da empresa" />
+      </div>
+      <div>
+        <Label>CNPJ</Label>
+        <Input value={form.cnpj || ""} onChange={(e) => setForm({ ...form, cnpj: e.target.value })} placeholder="00.000.000/0000-00" />
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div>

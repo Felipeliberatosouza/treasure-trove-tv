@@ -45,6 +45,9 @@ const TeacherContractModal = ({ open, onClose, onSigned }: TeacherContractModalP
 
   const platformName = brandingData?.platform_name || "Revisão Fácil";
   const platformAddress = (contactData as any)?.platform_address || "";
+  const razaoSocial = (contactData as any)?.razao_social || "";
+  const nomeFantasia = (contactData as any)?.nome_fantasia || "";
+  const cnpj = (contactData as any)?.cnpj || "";
   const teacherName = profile?.name || "";
   const teacherAddress = (profile as any)?.address || "";
   const teacherPercentage = template ? 100 - template.platform_percentage : 70;
@@ -64,6 +67,9 @@ const TeacherContractModal = ({ open, onClose, onSigned }: TeacherContractModalP
     const now = new Date();
     return template.contract_body
       .replace(/\{\{platform_name\}\}/g, platformName)
+      .replace(/\{\{razao_social\}\}/g, razaoSocial)
+      .replace(/\{\{nome_fantasia\}\}/g, nomeFantasia)
+      .replace(/\{\{cnpj\}\}/g, cnpj)
       .replace(/\{\{teacher_name\}\}/g, teacherName)
       .replace(/\{\{teacher_cpf\}\}/g, formatCPF(signatureCpf || (profile as any)?.cpf || ""))
       .replace(/\{\{teacher_address\}\}/g, teacherAddress)

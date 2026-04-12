@@ -17,7 +17,7 @@ interface TeacherDataModalProps {
 }
 
 const TeacherDataModal = ({ open, onClose, onComplete }: TeacherDataModalProps) => {
-  const { user, profile } = useAuth();
+  const { user, profile, refreshProfile } = useAuth();
   const [cpf, setCpf] = useState((profile as any)?.cpf || "");
   const [address, setAddress] = useState((profile as any)?.address || "");
   const [saving, setSaving] = useState(false);
@@ -43,6 +43,7 @@ const TeacherDataModal = ({ open, onClose, onComplete }: TeacherDataModalProps) 
       toast.error("Erro ao salvar dados");
     } else {
       toast.success("Dados salvos com sucesso!");
+      await refreshProfile();
       onComplete();
     }
     setSaving(false);

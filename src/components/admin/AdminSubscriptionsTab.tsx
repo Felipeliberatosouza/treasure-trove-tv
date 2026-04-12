@@ -114,6 +114,27 @@ const AdminSubscriptionsTab = () => {
     return true;
   });
 
+  const exportCsv = () => {
+    const header = "Aluno,E-mail,Plano,Vencimento,Dias Restantes,Status";
+    const rows = filteredSubs.map((s) =>
+      [
+        `"${s.userName}"`,
+        `"${s.userEmail}"`,
+        `"${s.planName}"`,
+        s.expires_at ? new Date(s.expires_at).toLocaleDateString("pt-BR") : "—",
+        s.daysRemaining,
+        s.status,
+      ].join(",")
+    );
+    const blob = new Blob([header + "\n" + rows.join("\n")], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `assinaturas-vencendo-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const stats = {
     total: expiringSubs.length,
     critical: expiringSubs.filter((s) => s.daysRemaining <= 3).length,

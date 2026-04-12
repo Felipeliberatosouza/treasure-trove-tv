@@ -7,7 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import { formatCPF, isValidCPF } from "@/lib/cpfValidator";
 import { toast } from "sonner";
-import { FileSignature, CheckCircle } from "lucide-react";
+import { FileSignature, CheckCircle, Loader2 } from "lucide-react";
 
 interface TeacherContractModalProps {
   open: boolean;
@@ -30,9 +30,11 @@ const TeacherContractModal = ({ open, onClose, onSigned }: TeacherContractModalP
   const [agreed, setAgreed] = useState(false);
   const [signed, setSigned] = useState(false);
   const [freshProfile, setFreshProfile] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
+      setLoading(true);
       const { data: templateData } = await supabase
         .from("platform_settings")
         .select("value")
@@ -48,6 +50,7 @@ const TeacherContractModal = ({ open, onClose, onSigned }: TeacherContractModalP
           .maybeSingle();
         if (profileData) setFreshProfile(profileData);
       }
+      setLoading(false);
     };
     if (open) {
       fetchData();
@@ -215,14 +218,21 @@ const TeacherContractModal = ({ open, onClose, onSigned }: TeacherContractModalP
           className="flex-1 rounded-lg border border-border p-4 bg-secondary/30 overflow-auto"
           style={{ maxHeight: "55vh" }}
         >
-          <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-line text-sm leading-relaxed min-w-max">
-            {renderContract().split("\n").map((line, i) => {
-              if (line.startsWith("**") && line.endsWith("**")) {
-                return <p key={i} className="font-bold mt-3 mb-1">{line.replace(/\*\*/g, "")}</p>;
-              }
-              return <p key={i} className="my-0.5">{line.replace(/\*\*/g, "")}</p>;
-            })}
-          </div>
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <span className="ml-3 text-sm text-muted-foreground">Carregando contrato...</span>
+            </div>
+          ) : (
+            <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-line text-sm leading-relaxed min-w-max">
+              {renderContract().split("\n").map((line, i) => {
+                if (line.startsWith("**") && line.endsWith("**")) {
+                  return <p key={i} className="font-bold mt-3 mb-1">{line.replace(/\*\*/g, "")}</p>;
+                }
+                return <p key={i} className="my-0.5">{line.replace(/\*\*/g, "")}</p>;
+              })}
+            </div>
+          )}
         </div>
 
         <div className="space-y-3 pt-2">

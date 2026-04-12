@@ -159,13 +159,15 @@ const SectionsEditor = ({ settingsKey, label }: { settingsKey: "terms_of_use" | 
 const SettingsPages = () => {
   return (
     <Tabs defaultValue="about" className="w-full">
-      <TabsList className="mb-4">
+      <TabsList className="mb-4 flex-wrap">
         <TabsTrigger value="about">Sobre Nós</TabsTrigger>
-        <TabsTrigger value="terms">Termos de Uso</TabsTrigger>
+        <TabsTrigger value="terms_students">Termos (Alunos)</TabsTrigger>
+        <TabsTrigger value="terms_teachers">Termos (Professores)</TabsTrigger>
         <TabsTrigger value="privacy">Política de Privacidade</TabsTrigger>
       </TabsList>
       <TabsContent value="about"><AboutUsEditor /></TabsContent>
-      <TabsContent value="terms"><SectionsEditor settingsKey="terms_of_use" label="Termos de Uso" /></TabsContent>
+      <TabsContent value="terms_students"><SectionsEditor settingsKey="terms_of_use_students" label="Termos de Uso dos Alunos" /></TabsContent>
+      <TabsContent value="terms_teachers"><SectionsEditor settingsKey="terms_of_use_teachers" label="Termos de Uso dos Professores" /></TabsContent>
       <TabsContent value="privacy"><SectionsEditor settingsKey="privacy_policy" label="Política de Privacidade" /></TabsContent>
     </Tabs>
   );

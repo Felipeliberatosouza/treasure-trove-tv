@@ -107,6 +107,8 @@ type SettingsMap = {
   free_trial: FreeTrialSettings;
   about_us: AboutUsSettings;
   terms_of_use: TermsOfUseSettings;
+  terms_of_use_students: TermsOfUseSettings;
+  terms_of_use_teachers: TermsOfUseSettings;
   privacy_policy: PrivacyPolicySettings;
   doubt_response_deadline_days: number;
   product_config: ProductConfigSettings;

@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Search, Trash2, UserCog, UserCheck, UserX, FileSignature, Eye, Download } from "lucide-react";
+import { Search, Trash2, UserCog, UserCheck, UserX, FileSignature, Eye, Download, Mail, MailCheck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface UserWithRole {
@@ -18,6 +18,7 @@ interface UserWithRole {
   created_at: string;
   referral_code: number | null;
   active: boolean;
+  accepts_marketing: boolean;
   contract_signed_at?: string | null;
   contract_expires_at?: string | null;
   contract_status?: string | null;
@@ -37,7 +38,7 @@ const AdminUsersTab = () => {
 
   const fetchUsers = async () => {
     setLoading(true);
-    const { data: profiles } = await supabase.from("profiles").select("user_id, name, email, created_at, referral_code, active");
+    const { data: profiles } = await supabase.from("profiles").select("user_id, name, email, created_at, referral_code, active, accepts_marketing");
     const { data: roles } = await supabase.from("user_roles").select("user_id, role");
     const { data: contracts } = await supabase.from("teacher_contracts" as any).select("teacher_id, signed_at, expires_at, status, contract_text, signature_name, signature_cpf").eq("status", "active");
 
@@ -51,6 +52,7 @@ const AdminUsersTab = () => {
           role: roleMap.get(p.user_id) || "student",
           referral_code: p.referral_code ?? null,
           active: p.active ?? true,
+          accepts_marketing: p.accepts_marketing ?? false,
           contract_signed_at: contract?.signed_at || null,
           contract_expires_at: contract?.expires_at || null,
           contract_status: contract?.status || null,
@@ -102,6 +104,19 @@ const AdminUsersTab = () => {
         title: newActive ? "Ativado" : "Desativado",
         description: `Usuário "${user.name}" foi ${newActive ? "ativado" : "desativado"}.`,
       });
+      fetchUsers();
+    }
+  };
+
+  const handleReactivateEmail = async (user: UserWithRole) => {
+    if (!confirm(`Reativar o recebimento de e-mails promocionais para "${user.name}" (${user.email})?`)) return;
+    const { error } = await supabase.functions.invoke("reactivate-email-marketing", {
+      body: { email: user.email, user_id: user.user_id },
+    });
+    if (error) {
+      toast({ title: "Erro", description: "Não foi possível reativar os e-mails.", variant: "destructive" });
+    } else {
+      toast({ title: "Reativado", description: `E-mails promocionais reativados para "${user.name}".` });
       fetchUsers();
     }
   };
@@ -236,6 +251,17 @@ const AdminUsersTab = () => {
                           <SelectItem value="admin">Admin</SelectItem>
                         </SelectContent>
                       </Select>
+                      {!u.accepts_marketing && (
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-8 w-8 text-primary hover:text-primary"
+                          onClick={() => handleReactivateEmail(u)}
+                          title="Reativar e-mails promocionais"
+                        >
+                          <MailCheck className="h-4 w-4" />
+                        </Button>
+                      )}
                       <Button
                         size="sm"
                         variant="ghost"

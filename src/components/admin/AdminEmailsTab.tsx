@@ -4,8 +4,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Mail, CheckCircle, XCircle, AlertTriangle, Clock, ChevronLeft, ChevronRight, ShieldAlert } from "lucide-react";
+import { Mail, CheckCircle, XCircle, AlertTriangle, Clock, ChevronLeft, ChevronRight, ShieldAlert, Ban, Search, RefreshCw, Download } from "lucide-react";
+import { maskEmail } from "@/lib/maskData";
 
 interface EmailLog {
   id: string;
@@ -25,6 +27,14 @@ interface SecurityNotification {
   user_agent: string | null;
   status: string;
   notes: string | null;
+  created_at: string;
+}
+
+interface SuppressedEmail {
+  id: string;
+  email: string;
+  reason: string;
+  metadata: any;
   created_at: string;
 }
 
@@ -52,6 +62,13 @@ const securityStatusConfig: Record<string, { label: string; color: string }> = {
   resolved: { label: "Resolvido", color: "border-green-500/30 text-green-500" },
 };
 
+const reasonLabels: Record<string, string> = {
+  unsubscribe: "Descadastro",
+  bounce: "Bounce",
+  complaint: "Reclamação (spam)",
+  manual: "Manual",
+};
+
 const AdminEmailsTab = () => {
   const [logs, setLogs] = useState<EmailLog[]>([]);
   const [loading, setLoading] = useState(true);
@@ -59,21 +76,22 @@ const AdminEmailsTab = () => {
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterTemplate, setFilterTemplate] = useState("all");
   const [page, setPage] = useState(0);
-  const [activeView, setActiveView] = useState<"emails" | "security">("emails");
+  const [activeView, setActiveView] = useState<"emails" | "security" | "suppressed">("emails");
   const [securityNotifs, setSecurityNotifs] = useState<SecurityNotification[]>([]);
   const [securityLoading, setSecurityLoading] = useState(false);
+  const [suppressedEmails, setSuppressedEmails] = useState<SuppressedEmail[]>([]);
+  const [suppressedLoading, setSuppressedLoading] = useState(false);
+  const [suppressedSearch, setSuppressedSearch] = useState("");
 
   const fetchLogs = async () => {
     setLoading(true);
     const since = new Date(Date.now() - rangeDays * 86400000).toISOString();
-
     const { data } = await supabase
       .from("email_send_log")
       .select("*")
       .gte("created_at", since)
       .order("created_at", { ascending: false })
       .limit(1000);
-
     setLogs((data as EmailLog[]) || []);
     setLoading(false);
     setPage(0);
@@ -86,20 +104,33 @@ const AdminEmailsTab = () => {
       .select("*")
       .order("created_at", { ascending: false })
       .limit(100);
-
     setSecurityNotifs((data as unknown as SecurityNotification[]) || []);
     setSecurityLoading(false);
   };
 
+  const fetchSuppressedEmails = async () => {
+    setSuppressedLoading(true);
+    const { data } = await supabase
+      .from("suppressed_emails")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(500);
+    setSuppressedEmails((data as SuppressedEmail[]) || []);
+    setSuppressedLoading(false);
+  };
+
   useEffect(() => { fetchLogs(); }, [rangeDays]);
-  useEffect(() => { if (activeView === "security") fetchSecurityNotifs(); }, [activeView]);
+  useEffect(() => {
+    if (activeView === "security") fetchSecurityNotifs();
+    if (activeView === "suppressed") fetchSuppressedEmails();
+  }, [activeView]);
 
   const updateSecurityStatus = async (id: string, status: string) => {
     await supabase.from("security_notifications").update({ status }).eq("id", id);
     setSecurityNotifs(prev => prev.map(n => n.id === id ? { ...n, status } : n));
   };
 
-  // Deduplicate by message_id (keep latest status per message_id)
+  // Deduplicate by message_id
   const deduplicated = useMemo(() => {
     const map = new Map<string, EmailLog>();
     for (const log of logs) {
@@ -141,6 +172,37 @@ const AdminEmailsTab = () => {
 
   const pendingSecurityCount = securityNotifs.filter(n => n.status === "pending").length;
 
+  const filteredSuppressed = useMemo(() => {
+    if (!suppressedSearch.trim()) return suppressedEmails;
+    const q = suppressedSearch.toLowerCase();
+    return suppressedEmails.filter(s => s.email.toLowerCase().includes(q) || s.reason.toLowerCase().includes(q));
+  }, [suppressedEmails, suppressedSearch]);
+
+  const suppressedStats = useMemo(() => {
+    const counts: Record<string, number> = {};
+    suppressedEmails.forEach(s => {
+      counts[s.reason] = (counts[s.reason] || 0) + 1;
+    });
+    return counts;
+  }, [suppressedEmails]);
+
+  const exportSuppressedCsv = () => {
+    const headers = ["E-mail", "Motivo", "Data"];
+    const rows = filteredSuppressed.map(s => [
+      s.email,
+      reasonLabels[s.reason] || s.reason,
+      new Date(s.created_at).toLocaleString("pt-BR"),
+    ]);
+    const csv = "\uFEFF" + [headers, ...rows].map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `suppressed-emails-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div>
       <h2 className="font-display text-lg font-semibold mb-4 flex items-center gap-2">
@@ -148,7 +210,7 @@ const AdminEmailsTab = () => {
       </h2>
 
       {/* View toggle */}
-      <div className="flex gap-2 mb-4">
+      <div className="flex gap-2 mb-4 flex-wrap">
         <Button
           size="sm"
           variant={activeView === "emails" ? "default" : "outline"}
@@ -156,6 +218,19 @@ const AdminEmailsTab = () => {
           className="text-xs"
         >
           <Mail className="h-3.5 w-3.5 mr-1" /> E-mails Enviados
+        </Button>
+        <Button
+          size="sm"
+          variant={activeView === "suppressed" ? "default" : "outline"}
+          onClick={() => setActiveView("suppressed")}
+          className="text-xs"
+        >
+          <Ban className="h-3.5 w-3.5 mr-1" /> E-mails Suprimidos
+          {suppressedEmails.length > 0 && (
+            <span className="ml-1 bg-muted text-muted-foreground text-[10px] rounded-full px-1.5">
+              {suppressedEmails.length}
+            </span>
+          )}
         </Button>
         <Button
           size="sm"
@@ -302,6 +377,96 @@ const AdminEmailsTab = () => {
             </>
           )}
         </>
+      ) : activeView === "suppressed" ? (
+        /* Suppressed Emails View */
+        <div className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            E-mails que foram bloqueados por descadastro, bounce ou reclamação de spam. Esses endereços não receberão mais e-mails da plataforma.
+          </p>
+
+          {/* Suppressed stats */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <Card>
+              <CardContent className="pt-4 pb-3 px-4 text-center">
+                <p className="text-2xl font-bold">{suppressedEmails.length}</p>
+                <p className="text-xs text-muted-foreground">Total Suprimidos</p>
+              </CardContent>
+            </Card>
+            {Object.entries(suppressedStats).map(([reason, count]) => (
+              <Card key={reason}>
+                <CardContent className="pt-4 pb-3 px-4 text-center">
+                  <p className="text-2xl font-bold text-destructive">{count}</p>
+                  <p className="text-xs text-muted-foreground">{reasonLabels[reason] || reason}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {/* Search + Actions */}
+          <div className="flex gap-2 flex-wrap">
+            <div className="relative flex-1 min-w-[200px]">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar por e-mail ou motivo..."
+                value={suppressedSearch}
+                onChange={(e) => setSuppressedSearch(e.target.value)}
+                className="pl-10 h-8 text-sm"
+              />
+            </div>
+            <Button variant="outline" size="sm" onClick={fetchSuppressedEmails} disabled={suppressedLoading}>
+              <RefreshCw className={`h-4 w-4 mr-1 ${suppressedLoading ? "animate-spin" : ""}`} />
+              Atualizar
+            </Button>
+            <Button variant="outline" size="sm" onClick={exportSuppressedCsv} disabled={filteredSuppressed.length === 0}>
+              <Download className="h-4 w-4 mr-1" />
+              CSV
+            </Button>
+          </div>
+
+          {suppressedLoading ? (
+            <p className="text-sm text-muted-foreground text-center py-8">Carregando...</p>
+          ) : filteredSuppressed.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-8">Nenhum e-mail suprimido encontrado.</p>
+          ) : (
+            <div className="rounded-lg border border-border overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>E-mail</TableHead>
+                    <TableHead>Motivo</TableHead>
+                    <TableHead>Data</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredSuppressed.map((s) => (
+                    <TableRow key={s.id}>
+                      <TableCell className="text-sm">{maskEmail(s.email)}</TableCell>
+                      <TableCell>
+                        <Badge
+                          variant="outline"
+                          className={
+                            s.reason === "bounce"
+                              ? "border-destructive/30 text-destructive"
+                              : s.reason === "complaint"
+                              ? "border-orange-500/30 text-orange-600"
+                              : s.reason === "unsubscribe"
+                              ? "border-yellow-500/30 text-yellow-600"
+                              : "border-muted text-muted-foreground"
+                          }
+                        >
+                          {reasonLabels[s.reason] || s.reason}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
+                        {new Date(s.created_at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </div>
       ) : (
         /* Security Notifications View */
         <div>

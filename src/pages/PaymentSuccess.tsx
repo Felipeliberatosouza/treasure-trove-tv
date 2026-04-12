@@ -1,15 +1,17 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { CheckCircle2, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 
 const PaymentSuccess = () => {
   const navigate = useNavigate();
-  const { refreshSubscription, user } = useAuth();
+  const { refreshSubscription, user, profile } = useAuth();
   const [verified, setVerified] = useState(false);
   const [checking, setChecking] = useState(true);
+  const emailSentRef = useRef(false);
 
   useEffect(() => {
     let attempts = 0;
@@ -18,7 +20,6 @@ const PaymentSuccess = () => {
     const verify = async () => {
       await refreshSubscription();
       attempts++;
-      // Give Stripe a moment to process
       if (attempts < maxAttempts) {
         setTimeout(() => {
           setVerified(true);
@@ -36,6 +37,51 @@ const PaymentSuccess = () => {
       setChecking(false);
     }
   }, [user, refreshSubscription]);
+
+  // Send payment confirmation email once verified
+  useEffect(() => {
+    if (!verified || !user || emailSentRef.current) return;
+    emailSentRef.current = true;
+
+    const sendConfirmationEmail = async () => {
+      try {
+        // Get subscription info
+        const { data: sub } = await supabase
+          .from("student_subscriptions")
+          .select("plan_id, started_at, subscription_plans(name, price)")
+          .eq("user_id", user.id)
+          .eq("status", "active")
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        const planName = (sub as any)?.subscription_plans?.name || "Plano";
+        const amount = (sub as any)?.subscription_plans?.price
+          ? Number((sub as any).subscription_plans.price).toFixed(2)
+          : "—";
+        const paymentDate = new Date().toLocaleDateString("pt-BR");
+
+        await supabase.functions.invoke("send-transactional-email", {
+          body: {
+            templateName: "payment-confirmation",
+            recipientEmail: profile?.email || user.email,
+            idempotencyKey: `payment-confirm-${user.id}-${Date.now()}`,
+            templateData: {
+              name: profile?.name || "",
+              planName,
+              amount,
+              paymentDate,
+              dashboardLink: `${window.location.origin}/dashboard/student`,
+            },
+          },
+        });
+      } catch (err) {
+        console.error("Erro ao enviar e-mail de confirmação de pagamento:", err);
+      }
+    };
+
+    sendConfirmationEmail();
+  }, [verified, user, profile]);
 
   useEffect(() => {
     if (verified) {

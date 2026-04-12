@@ -32,20 +32,29 @@ const TeacherContractModal = ({ open, onClose, onSigned }: TeacherContractModalP
   const [freshProfile, setFreshProfile] = useState<any>(null);
 
   useEffect(() => {
-    const fetchTemplate = async () => {
-      const { data } = await supabase
+    const fetchData = async () => {
+      const { data: templateData } = await supabase
         .from("platform_settings")
         .select("value")
         .eq("key", "teacher_contract_template")
         .maybeSingle();
-      if (data) setTemplate(data.value as unknown as ContractTemplate);
+      if (templateData) setTemplate(templateData.value as unknown as ContractTemplate);
+
+      if (user) {
+        const { data: profileData } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("user_id", user.id)
+          .maybeSingle();
+        if (profileData) setFreshProfile(profileData);
+      }
     };
     if (open) {
-      fetchTemplate();
+      fetchData();
       setSigned(false);
       setAgreed(false);
     }
-  }, [open]);
+  }, [open, user]);
 
   const platformName = brandingData?.platform_name || "Revisão Fácil";
   const platformAddress = (contactData as any)?.platform_address || "";

@@ -100,7 +100,7 @@ const AboutUsEditor = () => {
 /* ───── Sections Editor (Terms / Privacy) ───── */
 const defaultSections = [{ title: "", content: "" }];
 
-const SectionsEditor = ({ settingsKey, label }: { settingsKey: "terms_of_use" | "privacy_policy"; label: string }) => {
+const SectionsEditor = ({ settingsKey, label }: { settingsKey: "terms_of_use" | "terms_of_use_students" | "terms_of_use_teachers" | "privacy_policy"; label: string }) => {
   const { data, loading, update } = usePlatformSettings(settingsKey);
   const [sections, setSections] = useState<{ title: string; content: string }[]>(defaultSections);
   const [saving, setSaving] = useState(false);

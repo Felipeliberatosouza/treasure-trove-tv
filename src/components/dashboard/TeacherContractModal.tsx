@@ -9,6 +9,8 @@ import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import { isValidCPF, formatCPF } from "@/lib/cpfValidator";
 import { toast } from "sonner";
 import { FileSignature, CheckCircle } from "lucide-react";
+import { toast } from "sonner";
+import { FileSignature, CheckCircle } from "lucide-react";
 
 interface TeacherContractModalProps {
   open: boolean;
@@ -25,6 +27,7 @@ interface ContractTemplate {
 const TeacherContractModal = ({ open, onClose, onSigned }: TeacherContractModalProps) => {
   const { user, profile } = useAuth();
   const { data: brandingData } = usePlatformSettings("branding");
+  const { data: contactData } = usePlatformSettings("contact");
   const [template, setTemplate] = useState<ContractTemplate | null>(null);
   const [signing, setSigning] = useState(false);
   const [agreed, setAgreed] = useState(false);
@@ -43,7 +46,9 @@ const TeacherContractModal = ({ open, onClose, onSigned }: TeacherContractModalP
   }, [open]);
 
   const platformName = brandingData?.platform_name || "Revisão Fácil";
+  const platformAddress = (contactData as any)?.platform_address || "";
   const teacherName = profile?.name || "";
+  const teacherAddress = (profile as any)?.address || "";
   const teacherPercentage = template ? 100 - template.platform_percentage : 70;
   const platformPercentage = template?.platform_percentage || 30;
 
@@ -63,6 +68,8 @@ const TeacherContractModal = ({ open, onClose, onSigned }: TeacherContractModalP
       .replace(/\{\{platform_name\}\}/g, platformName)
       .replace(/\{\{teacher_name\}\}/g, teacherName)
       .replace(/\{\{teacher_cpf\}\}/g, formatCPF(signatureCpf || (profile as any)?.cpf || ""))
+      .replace(/\{\{teacher_address\}\}/g, teacherAddress)
+      .replace(/\{\{platform_address\}\}/g, platformAddress)
       .replace(/\{\{teacher_percentage\}\}/g, String(teacherPercentage))
       .replace(/\{\{teacher_percentage_text\}\}/g, numberToText(teacherPercentage))
       .replace(/\{\{platform_percentage\}\}/g, String(platformPercentage))

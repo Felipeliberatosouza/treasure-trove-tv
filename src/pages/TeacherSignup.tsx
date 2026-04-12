@@ -281,7 +281,37 @@ const TeacherSignup = () => {
             onChange={(e) => setBio(e.target.value)}
             className="min-h-[100px] bg-secondary border-border"
           />
-          <Button className="w-full font-display font-semibold" size="lg" disabled={loading}>
+
+          <div className="space-y-3 pt-2">
+            <div className="flex items-start gap-2">
+              <Checkbox
+                id="terms"
+                checked={acceptsTerms}
+                onCheckedChange={(v) => setAcceptsTerms(v === true)}
+                className="mt-0.5"
+              />
+              <label htmlFor="terms" className="text-sm text-muted-foreground leading-tight">
+                Li e concordo com os{" "}
+                <Link to="/termos-de-uso" target="_blank" className="text-primary hover:underline font-medium">
+                  Termos de Uso
+                </Link>{" "}
+                *
+              </label>
+            </div>
+            <div className="flex items-start gap-2">
+              <Checkbox
+                id="marketing"
+                checked={acceptsMarketing}
+                onCheckedChange={(v) => setAcceptsMarketing(v === true)}
+                className="mt-0.5"
+              />
+              <label htmlFor="marketing" className="text-sm text-muted-foreground leading-tight">
+                Aceito receber mensagens e e-mails com promoções e novidades da Revisão Fácil
+              </label>
+            </div>
+          </div>
+
+          <Button className="w-full font-display font-semibold" size="lg" disabled={loading || !acceptsTerms}>
             {loading ? "Criando..." : "Criar Conta de Professor"}
           </Button>
         </form>

@@ -170,6 +170,40 @@ const SettingsEmailTemplates = () => {
     setSaving(false);
   };
 
+  const handleApplyStyleToAll = async () => {
+    if (!active) return;
+    const confirmApply = window.confirm(
+      `Deseja aplicar o estilo visual de "${TEMPLATE_LABELS[activeKey] || activeKey}" a todos os outros templates? Isso sobrescreverá as cores, fonte e logo de todos os templates.`
+    );
+    if (!confirmApply) return;
+
+    setApplyingAll(true);
+    const styleFields = {
+      text_color: active.text_color,
+      link_color: active.link_color,
+      heading_color: active.heading_color,
+      button_color: active.button_color,
+      font_family: active.font_family,
+      logo_url: active.logo_url,
+      use_uploaded_logo: active.use_uploaded_logo,
+    };
+
+    const { error } = await supabase
+      .from("email_templates")
+      .update(styleFields as any)
+      .neq("id", active.id);
+
+    if (error) {
+      toast.error("Erro ao aplicar estilo aos outros templates.");
+    } else {
+      setTemplates((prev) =>
+        prev.map((t) => (t.id === active.id ? t : { ...t, ...styleFields }))
+      );
+      toast.success("Estilo visual aplicado a todos os templates!");
+    }
+    setApplyingAll(false);
+  };
+
   const buildFooterHtml = () => {
     if (!contactData || !active) return "";
     const linkColor = active.link_color || "#6366f1";

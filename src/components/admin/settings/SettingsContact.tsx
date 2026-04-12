@@ -54,8 +54,19 @@ const SettingsContact = () => {
         <Input value={form.nome_fantasia || ""} onChange={(e) => setForm({ ...form, nome_fantasia: e.target.value })} placeholder="Nome fantasia da empresa" />
       </div>
       <div>
+      <div>
         <Label>CNPJ</Label>
-        <Input value={form.cnpj || ""} onChange={(e) => setForm({ ...form, cnpj: e.target.value })} placeholder="00.000.000/0000-00" />
+        <Input
+          value={formatCNPJ(form.cnpj || "")}
+          onChange={(e) => setForm({ ...form, cnpj: e.target.value.replace(/\D/g, "").slice(0, 14) })}
+          onBlur={() => setCnpjTouched(true)}
+          placeholder="00.000.000/0000-00"
+          maxLength={18}
+        />
+        {cnpjTouched && cnpjComplete && !cnpjValid && (
+          <p className="text-xs text-destructive mt-1">CNPJ inválido</p>
+        )}
+      </div>
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div>

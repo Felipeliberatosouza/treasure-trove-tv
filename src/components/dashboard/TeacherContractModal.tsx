@@ -218,8 +218,14 @@ const TeacherContractModal = ({ open, onClose, onSigned }: TeacherContractModalP
           className="flex-1 rounded-lg border border-border p-4 bg-secondary/30 overflow-auto"
           style={{ maxHeight: "55vh" }}
         >
-          <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-line text-sm leading-relaxed min-w-max">
-            {renderContract().split("\n").map((line, i) => {
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <span className="ml-3 text-sm text-muted-foreground">Carregando contrato...</span>
+            </div>
+          ) : (
+            <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-line text-sm leading-relaxed min-w-max">
+              {renderContract().split("\n").map((line, i) => {
               if (line.startsWith("**") && line.endsWith("**")) {
                 return <p key={i} className="font-bold mt-3 mb-1">{line.replace(/\*\*/g, "")}</p>;
               }

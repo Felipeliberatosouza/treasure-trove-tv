@@ -1,8 +1,10 @@
 import { useState, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Mail, Lock, User, Eye, EyeOff, BookOpen, ArrowLeft, CalendarDays, Camera } from "lucide-react";
+import { Mail, Lock, User, Eye, EyeOff, BookOpen, ArrowLeft, CalendarDays, Camera, CreditCard } from "lucide-react";
 import PhoneInput, { isValidBrazilianPhone } from "@/components/PhoneInput";
+import CpfInput from "@/components/CpfInput";
+import { isValidCPF } from "@/lib/cpfValidator";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -24,6 +26,7 @@ const TeacherSignup = () => {
   const [expertise, setExpertise] = useState<string[]>([]);
   const [birthDate, setBirthDate] = useState("");
   const [phone, setPhone] = useState("");
+  const [cpf, setCpf] = useState("");
   
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
@@ -45,8 +48,12 @@ const TeacherSignup = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !email.trim() || !password.trim() || !birthDate || !phone) {
+    if (!name.trim() || !email.trim() || !password.trim() || !birthDate || !phone || !cpf) {
       toast.error("Preencha todos os campos obrigatórios");
+      return;
+    }
+    if (!isValidCPF(cpf)) {
+      toast.error("Informe um CPF válido");
       return;
     }
     if (!acceptsTerms) {
@@ -93,7 +100,7 @@ const TeacherSignup = () => {
       }
       // Save phone and marketing preference to profile
       if (userId) {
-        await supabase.from("profiles").update({ phone, accepts_marketing: acceptsMarketing }).eq("user_id", userId);
+        await supabase.from("profiles").update({ phone, accepts_marketing: acceptsMarketing, cpf }).eq("user_id", userId);
       }
       // Send welcome email
       if (userId) {
@@ -239,6 +246,12 @@ const TeacherSignup = () => {
             />
           </div>
           <PhoneInput value={phone} onChange={setPhone} />
+          <div className="relative">
+            <CreditCard className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <div className="pl-10">
+              <CpfInput value={cpf} onChange={setCpf} placeholder="CPF *" className="bg-secondary border-border" />
+            </div>
+          </div>
           
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />

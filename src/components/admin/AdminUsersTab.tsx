@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { maskEmail, maskCPF, maskPhone } from "@/lib/maskData";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -211,7 +212,7 @@ const AdminUsersTab = () => {
                 <TableRow key={u.user_id} className={!u.active ? "opacity-60" : ""}>
                   <TableCell className="font-mono text-sm">{u.referral_code || "—"}</TableCell>
                   <TableCell className="font-medium">{u.name}</TableCell>
-                  <TableCell className="text-muted-foreground">{u.email}</TableCell>
+                  <TableCell className="text-muted-foreground">{maskEmail(u.email)}</TableCell>
                   <TableCell>{roleBadge(u.role)}</TableCell>
                   <TableCell>
                     {u.active ? (

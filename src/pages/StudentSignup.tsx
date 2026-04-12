@@ -1,8 +1,10 @@
 import { useState, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Mail, Lock, User, Eye, EyeOff, GraduationCap, ArrowLeft, CalendarDays, Camera } from "lucide-react";
+import { Mail, Lock, User, Eye, EyeOff, GraduationCap, ArrowLeft, CalendarDays, Camera, CreditCard } from "lucide-react";
 import PhoneInput, { isValidBrazilianPhone } from "@/components/PhoneInput";
+import CpfInput from "@/components/CpfInput";
+import { isValidCPF } from "@/lib/cpfValidator";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -22,6 +24,7 @@ const StudentSignup = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [birthDate, setBirthDate] = useState("");
   const [phone, setPhone] = useState("");
+  const [cpf, setCpf] = useState("");
   
   const [selectedAreas, setSelectedAreas] = useState<string[]>([]);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
@@ -41,8 +44,12 @@ const StudentSignup = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !email.trim() || !password.trim() || !birthDate || !phone) {
+    if (!name.trim() || !email.trim() || !password.trim() || !birthDate || !phone || !cpf) {
       toast.error("Preencha todos os campos obrigatórios");
+      return;
+    }
+    if (!isValidCPF(cpf)) {
+      toast.error("Informe um CPF válido");
       return;
     }
     if (!acceptsTerms) {
@@ -88,7 +95,7 @@ const StudentSignup = () => {
       }
       // Save areas, phone and marketing preference to profile if signup succeeded
       if (signUpData?.user) {
-        const updateData: any = { accepts_marketing: acceptsMarketing };
+        const updateData: any = { accepts_marketing: acceptsMarketing, cpf };
         if (selectedAreas.length > 0) updateData.areas = selectedAreas;
         if (phone) updateData.phone = phone;
         await supabase.from("profiles").update(updateData).eq("user_id", signUpData.user.id);
@@ -236,6 +243,12 @@ const StudentSignup = () => {
             />
           </div>
           <PhoneInput value={phone} onChange={setPhone} />
+          <div className="relative">
+            <CreditCard className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <div className="pl-10">
+              <CpfInput value={cpf} onChange={setCpf} placeholder="CPF *" className="bg-secondary border-border" />
+            </div>
+          </div>
           
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />

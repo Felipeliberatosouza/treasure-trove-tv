@@ -31,6 +31,7 @@ interface UserWithRole {
 
 const AdminUsersTab = () => {
   const [users, setUsers] = useState<UserWithRole[]>([]);
+  const { logAction } = useAuditLog();
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filterRole, setFilterRole] = useState("all");
@@ -102,6 +103,7 @@ const AdminUsersTab = () => {
           reason: "deactivated",
         });
       }
+      await logAction(newActive ? "user_activated" : "user_deactivated", { targetTable: "profiles", targetId: user.user_id, metadata: { name: user.name, email: user.email } });
       toast({
         title: newActive ? "Ativado" : "Desativado",
         description: `Usuário "${user.name}" foi ${newActive ? "ativado" : "desativado"}.`,
@@ -133,6 +135,8 @@ const AdminUsersTab = () => {
     if (res.error) {
       toast({ title: "Erro", description: "Não foi possível remover o usuário.", variant: "destructive" });
     } else {
+      const deletedUser = users.find((u) => u.user_id === userId);
+      await logAction("user_deleted", { targetTable: "profiles", targetId: userId, metadata: { name: deletedUser?.name, email: deletedUser?.email } });
       toast({ title: "Removido", description: "Usuário removido completamente." });
       fetchUsers();
     }

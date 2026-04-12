@@ -124,7 +124,21 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: 'Failed to process unsubscribe' }, 500)
   }
 
-  console.log('Email unsubscribed', { email: tokenRecord.email })
+  // Also update accepts_marketing = false on the user's profile
+  const { error: profileError } = await supabase
+    .from('profiles')
+    .update({ accepts_marketing: false })
+    .eq('email', tokenRecord.email.toLowerCase())
+
+  if (profileError) {
+    console.error('Failed to update accepts_marketing on profile', {
+      error: profileError,
+      email: tokenRecord.email,
+    })
+    // Non-fatal: suppression already happened, log but don't fail
+  }
+
+  console.log('Email unsubscribed and marketing preference updated', { email: tokenRecord.email })
 
   return jsonResponse({ success: true })
 })

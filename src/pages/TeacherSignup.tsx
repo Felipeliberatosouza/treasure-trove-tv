@@ -91,9 +91,9 @@ const TeacherSignup = () => {
           await supabase.from("profiles").update({ avatar_url: urlData.publicUrl }).eq("user_id", userId);
         }
       }
-      // Save phone to profile
-      if (userId && phone) {
-        await supabase.from("profiles").update({ phone }).eq("user_id", userId);
+      // Save phone and marketing preference to profile
+      if (userId) {
+        await supabase.from("profiles").update({ phone, accepts_marketing: acceptsMarketing }).eq("user_id", userId);
       }
       // Send welcome email
       if (userId) {

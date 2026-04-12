@@ -86,13 +86,12 @@ const StudentSignup = () => {
           await supabase.from("profiles").update({ avatar_url: urlData.publicUrl }).eq("user_id", signUpData.user.id);
         }
       }
-      // Save areas and phone to profile if signup succeeded
+      // Save areas, phone and marketing preference to profile if signup succeeded
       if (signUpData?.user) {
-        const updateData: any = {};
+        const updateData: any = { accepts_marketing: acceptsMarketing };
         if (selectedAreas.length > 0) updateData.areas = selectedAreas;
         if (phone) updateData.phone = phone;
-        if (Object.keys(updateData).length > 0) {
-          await supabase.from("profiles").update(updateData).eq("user_id", signUpData.user.id);
+        await supabase.from("profiles").update(updateData).eq("user_id", signUpData.user.id);
         }
       }
       // Send welcome email and notify admins

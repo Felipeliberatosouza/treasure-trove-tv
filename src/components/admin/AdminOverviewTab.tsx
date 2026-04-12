@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, PieChart, Pie, Cell, LineChart, Line, CartesianGrid, ResponsiveContainer } from "recharts";
-import { Users, Video, DollarSign, Clock, TrendingUp, Star } from "lucide-react";
+import { Users, Video, DollarSign, Clock, TrendingUp, Star, MailX } from "lucide-react";
 
 interface KPIs {
   totalUsers: number;

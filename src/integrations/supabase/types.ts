@@ -192,8 +192,10 @@ export type Database = {
         Row: {
           always_send: boolean
           body_html: string
+          button_color: string
           created_at: string
           font_family: string
+          heading_color: string
           id: string
           link_color: string
           logo_url: string | null
@@ -208,8 +210,10 @@ export type Database = {
         Insert: {
           always_send?: boolean
           body_html?: string
+          button_color?: string
           created_at?: string
           font_family?: string
+          heading_color?: string
           id?: string
           link_color?: string
           logo_url?: string | null
@@ -224,8 +228,10 @@ export type Database = {
         Update: {
           always_send?: boolean
           body_html?: string
+          button_color?: string
           created_at?: string
           font_family?: string
+          heading_color?: string
           id?: string
           link_color?: string
           logo_url?: string | null

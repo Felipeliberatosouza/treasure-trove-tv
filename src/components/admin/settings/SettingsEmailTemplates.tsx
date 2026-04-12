@@ -23,6 +23,8 @@ interface EmailTemplate {
   respect_marketing_preference: boolean;
   text_color: string;
   link_color: string;
+  heading_color: string;
+  button_color: string;
   font_family: string;
   use_uploaded_logo: boolean;
 }
@@ -155,9 +157,11 @@ const SettingsEmailTemplates = () => {
         respect_marketing_preference: active.respect_marketing_preference,
         text_color: active.text_color,
         link_color: active.link_color,
+        heading_color: active.heading_color,
+        button_color: active.button_color,
         font_family: active.font_family,
         use_uploaded_logo: active.use_uploaded_logo,
-      })
+      } as any)
       .eq("id", active.id);
 
     if (error) toast.error("Erro ao salvar template.");
@@ -215,6 +219,8 @@ const SettingsEmailTemplates = () => {
   const buildPreviewHtml = () => {
     if (!active) return "";
     const textColor = active.text_color || "#333333";
+    const headingColor = active.heading_color || "#dc2626";
+    const buttonColor = active.button_color || "#6366f1";
     const fontFamily = active.font_family || "Arial, sans-serif";
 
     const platformName = brandingData?.platform_name || "Revisão Fácil";
@@ -222,7 +228,7 @@ const SettingsEmailTemplates = () => {
     if (active.use_uploaded_logo && active.logo_url) {
       logoHtml = `<div style="text-align:center;margin-bottom:16px;"><img src="${active.logo_url}" alt="Logo" style="max-height:60px;max-width:200px;" /></div>`;
     } else {
-      logoHtml = `<div style="text-align:center;margin-bottom:16px;font-size:24px;font-weight:bold;background:linear-gradient(135deg,#6366f1,#8b5cf6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">${platformName}</div>`;
+      logoHtml = `<div style="text-align:center;margin-bottom:16px;font-size:24px;font-weight:bold;color:${headingColor};">${platformName}</div>`;
     }
 
     const footerHtml = active.show_social_footer ? buildFooterHtml() : "";
@@ -240,6 +246,18 @@ const SettingsEmailTemplates = () => {
       .replace(/\{\{answer\}\}/g, "Você precisa aplicar a fórmula de Bhaskara...")
       .replace(/\{\{content_title\}\}/g, "Matemática - Equações")
       .replace(/\{\{deadline_days\}\}/g, "3");
+
+    // Apply heading color to h1, h2, h3 tags in body
+    body = body.replace(/<h([1-3])([^>]*)>/gi, (match, level, attrs) => {
+      if (attrs.includes('style=')) {
+        return match.replace(/color:[^;"']*/i, `color:${headingColor}`);
+      }
+      return `<h${level}${attrs} style="color:${headingColor};">`;
+    });
+
+    // Apply button color to elements with button-like styling
+    body = body.replace(/background-color:\s*#[0-9a-fA-F]{3,6}/gi, `background-color:${buttonColor}`);
+    body = body.replace(/background:\s*#[0-9a-fA-F]{3,6}/gi, `background:${buttonColor}`);
 
     return `
       <div style="max-width:600px;margin:0 auto;font-family:${fontFamily};background:#ffffff;padding:24px;border-radius:8px;color:${textColor};">
@@ -369,10 +387,9 @@ const SettingsEmailTemplates = () => {
             )}
           </div>
 
-          {/* Styling options */}
           <div className="rounded-lg border border-border p-4 space-y-3">
             <h4 className="text-sm font-semibold">Estilo Visual</h4>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               <div>
                 <Label className="text-xs">Cor do Texto</Label>
                 <div className="flex gap-2 items-center">
@@ -391,6 +408,23 @@ const SettingsEmailTemplates = () => {
                 </div>
               </div>
               <div>
+                <Label className="text-xs">Cor do Título</Label>
+                <div className="flex gap-2 items-center">
+                  <input
+                    type="color"
+                    value={active.heading_color || "#dc2626"}
+                    onChange={(e) => updateField("heading_color", e.target.value)}
+                    className="w-8 h-8 rounded border border-border cursor-pointer"
+                  />
+                  <Input
+                    value={active.heading_color || "#dc2626"}
+                    onChange={(e) => updateField("heading_color", e.target.value)}
+                    className="flex-1 text-xs"
+                    maxLength={7}
+                  />
+                </div>
+              </div>
+              <div>
                 <Label className="text-xs">Cor dos Links</Label>
                 <div className="flex gap-2 items-center">
                   <input
@@ -402,6 +436,23 @@ const SettingsEmailTemplates = () => {
                   <Input
                     value={active.link_color || "#6366f1"}
                     onChange={(e) => updateField("link_color", e.target.value)}
+                    className="flex-1 text-xs"
+                    maxLength={7}
+                  />
+                </div>
+              </div>
+              <div>
+                <Label className="text-xs">Cor dos Botões</Label>
+                <div className="flex gap-2 items-center">
+                  <input
+                    type="color"
+                    value={active.button_color || "#6366f1"}
+                    onChange={(e) => updateField("button_color", e.target.value)}
+                    className="w-8 h-8 rounded border border-border cursor-pointer"
+                  />
+                  <Input
+                    value={active.button_color || "#6366f1"}
+                    onChange={(e) => updateField("button_color", e.target.value)}
                     className="flex-1 text-xs"
                     maxLength={7}
                   />

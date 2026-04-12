@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, PieChart, Pie, Cell, LineChart, Line, CartesianGrid, ResponsiveContainer } from "recharts";
-import { Users, Video, DollarSign, Clock, TrendingUp, Star } from "lucide-react";
+import { Users, Video, DollarSign, Clock, TrendingUp, Star, MailX } from "lucide-react";
 
 interface KPIs {
   totalUsers: number;
@@ -18,6 +18,7 @@ interface KPIs {
   pendingPayments: number;
   totalViews: number;
   avgRating: number;
+  unsubscribedEmails: number;
 }
 
 const COLORS = [
@@ -46,6 +47,7 @@ const AdminOverviewTab = () => {
       { data: payments },
       { data: views },
       { data: ratings },
+      { count: unsubCount },
     ] = await Promise.all([
       supabase.from("user_roles").select("role"),
       supabase.from("lessons").select("admin_approved, published"),
@@ -53,6 +55,7 @@ const AdminOverviewTab = () => {
       supabase.from("teacher_payments").select("gross_amount, net_amount, platform_fee, status, period_start"),
       supabase.from("video_views").select("id"),
       supabase.from("video_ratings").select("rating"),
+      supabase.from("profiles").select("*", { count: "exact", head: true }).eq("accepts_marketing", false),
     ]);
 
     const students = roles?.filter((r) => r.role === "student").length ?? 0;
@@ -86,6 +89,7 @@ const AdminOverviewTab = () => {
       pendingPayments,
       totalViews,
       avgRating,
+      unsubscribedEmails: unsubCount ?? 0,
     });
 
     // Revenue by month
@@ -131,6 +135,7 @@ const AdminOverviewTab = () => {
     { label: "Visualizações", value: kpis.totalViews, icon: TrendingUp, color: "text-blue-500" },
     { label: "Pagamentos Pendentes", value: kpis.pendingPayments, icon: DollarSign, color: "text-orange-500" },
     { label: "Avaliação Média", value: kpis.avgRating.toFixed(1) + " ★", icon: Star, color: "text-amber-500" },
+    { label: "Descadastros de E-mail", value: kpis.unsubscribedEmails, icon: MailX, color: "text-destructive" },
   ];
 
   const chartConfig = {

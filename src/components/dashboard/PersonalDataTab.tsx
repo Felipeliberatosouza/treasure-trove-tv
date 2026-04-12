@@ -8,6 +8,8 @@ import { toast } from "sonner";
 import { useCourseAreas } from "@/hooks/useCourseAreas";
 import AreaSelector from "@/components/AreaSelector";
 import PhoneInput, { isValidBrazilianPhone } from "@/components/PhoneInput";
+import CpfInput from "@/components/CpfInput";
+import { isValidCPF } from "@/lib/cpfValidator";
 import { Camera, Loader2 } from "lucide-react";
 
 const PersonalDataTab = () => {
@@ -17,6 +19,7 @@ const PersonalDataTab = () => {
   const [expertiseAreas, setExpertiseAreas] = useState<string[]>([]);
   const [birthDate, setBirthDate] = useState("");
   const [phone, setPhone] = useState("");
+  const [cpf, setCpf] = useState("");
   const [slug, setSlug] = useState("");
   const [profileTitle, setProfileTitle] = useState("");
   const [saving, setSaving] = useState(false);
@@ -31,6 +34,7 @@ const PersonalDataTab = () => {
       setExpertiseAreas(profile.expertise_area ? profile.expertise_area.split(", ").filter(Boolean) : []);
       setBirthDate(profile.birth_date || "");
       setPhone(profile.phone || "");
+      setCpf((profile as any).cpf || "");
       setSlug((profile as any).slug || "");
       setProfileTitle((profile as any).profile_title || "");
     }
@@ -66,8 +70,12 @@ const PersonalDataTab = () => {
       toast.error("Informe um celular válido com DDD (11 dígitos)");
       return;
     }
+    if (cpf && !isValidCPF(cpf)) {
+      toast.error("Informe um CPF válido");
+      return;
+    }
     setSaving(true);
-    const updateData: any = { name, bio, expertise_area: expertiseAreas.join(", "), birth_date: birthDate || null, phone: phone || null };
+    const updateData: any = { name, bio, expertise_area: expertiseAreas.join(", "), birth_date: birthDate || null, phone: phone || null, cpf: cpf || null };
     if (role === "teacher") {
       updateData.slug = slug;
       updateData.profile_title = profileTitle;
@@ -148,6 +156,10 @@ const PersonalDataTab = () => {
         <div>
           <label className="text-sm text-muted-foreground mb-1 block">Celular</label>
           <PhoneInput value={phone} onChange={setPhone} placeholder="(00) 00000-0000" />
+        </div>
+        <div>
+          <label className="text-sm text-muted-foreground mb-1 block">CPF</label>
+          <CpfInput value={cpf} onChange={setCpf} className="bg-secondary" />
         </div>
         {role === "teacher" && (
           <>

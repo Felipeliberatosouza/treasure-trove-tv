@@ -5,7 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Trash2, UserCog, UserCheck, UserX } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Search, Trash2, UserCog, UserCheck, UserX, FileSignature, Eye, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface UserWithRole {
@@ -16,6 +18,12 @@ interface UserWithRole {
   created_at: string;
   referral_code: number | null;
   active: boolean;
+  contract_signed_at?: string | null;
+  contract_expires_at?: string | null;
+  contract_status?: string | null;
+  contract_text?: string | null;
+  contract_signature_name?: string | null;
+  contract_signature_cpf?: string | null;
 }
 
 const AdminUsersTab = () => {
@@ -24,21 +32,33 @@ const AdminUsersTab = () => {
   const [search, setSearch] = useState("");
   const [filterRole, setFilterRole] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
+  const [viewContract, setViewContract] = useState<UserWithRole | null>(null);
   const { toast } = useToast();
 
   const fetchUsers = async () => {
     setLoading(true);
     const { data: profiles } = await supabase.from("profiles").select("user_id, name, email, created_at, referral_code, active");
     const { data: roles } = await supabase.from("user_roles").select("user_id, role");
+    const { data: contracts } = await supabase.from("teacher_contracts" as any).select("teacher_id, signed_at, expires_at, status, contract_text, signature_name, signature_cpf").eq("status", "active");
 
     if (profiles && roles) {
       const roleMap = new Map(roles.map((r) => [r.user_id, r.role]));
-      const merged: UserWithRole[] = profiles.map((p) => ({
-        ...p,
-        role: roleMap.get(p.user_id) || "student",
-        referral_code: p.referral_code ?? null,
-        active: p.active ?? true,
-      }));
+      const contractMap = new Map((contracts as any[] || []).map((c: any) => [c.teacher_id, c]));
+      const merged: UserWithRole[] = profiles.map((p) => {
+        const contract = contractMap.get(p.user_id) as any;
+        return {
+          ...p,
+          role: roleMap.get(p.user_id) || "student",
+          referral_code: p.referral_code ?? null,
+          active: p.active ?? true,
+          contract_signed_at: contract?.signed_at || null,
+          contract_expires_at: contract?.expires_at || null,
+          contract_status: contract?.status || null,
+          contract_text: contract?.contract_text || null,
+          contract_signature_name: contract?.signature_name || null,
+          contract_signature_cpf: contract?.signature_cpf || null,
+        };
+      });
       setUsers(merged);
     }
     setLoading(false);
@@ -166,6 +186,7 @@ const AdminUsersTab = () => {
                 <TableHead>Email</TableHead>
                 <TableHead>Papel</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Contrato</TableHead>
                 <TableHead>Cadastro</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
@@ -182,6 +203,22 @@ const AdminUsersTab = () => {
                       <Badge variant="outline" className="border-green-500/30 text-green-500">Ativo</Badge>
                     ) : (
                       <Badge variant="outline" className="border-destructive/30 text-destructive">Inativo</Badge>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {u.role === "teacher" ? (
+                      u.contract_signed_at ? (
+                        <div className="flex items-center gap-1">
+                          <span className="text-xs text-muted-foreground">{new Date(u.contract_signed_at).toLocaleDateString("pt-BR")}</span>
+                          <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => setViewContract(u)} title="Ver contrato">
+                            <Eye className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      )
+                    ) : (
+                      <span className="text-xs text-muted-foreground">—</span>
                     )}
                   </TableCell>
                   <TableCell className="text-muted-foreground text-xs">
@@ -223,7 +260,7 @@ const AdminUsersTab = () => {
               ))}
               {filtered.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
                     Nenhum usuário encontrado.
                   </TableCell>
                 </TableRow>
@@ -232,6 +269,51 @@ const AdminUsersTab = () => {
           </Table>
         </div>
       )}
+
+      <Dialog open={!!viewContract} onOpenChange={() => setViewContract(null)}>
+        <DialogContent className="max-w-2xl max-h-[90vh]">
+          <DialogHeader>
+            <DialogTitle className="font-display flex items-center gap-2">
+              <FileSignature className="h-5 w-5" /> Contrato — {viewContract?.name}
+            </DialogTitle>
+          </DialogHeader>
+          <ScrollArea className="max-h-[60vh] rounded-lg border border-border p-4 bg-secondary/30">
+            <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-line text-sm leading-relaxed">
+              {viewContract?.contract_text?.split("\n").map((line, i) => {
+                if (line.startsWith("**") && line.endsWith("**")) {
+                  return <p key={i} className="font-bold mt-3 mb-1">{line.replace(/\*\*/g, "")}</p>;
+                }
+                return <p key={i} className="my-0.5">{line.replace(/\*\*/g, "")}</p>;
+              })}
+            </div>
+            {viewContract?.contract_signature_name && (
+              <div className="mt-6 pt-4 border-t border-border text-center">
+                <p className="text-xl italic font-serif">{viewContract.contract_signature_name}</p>
+                <p className="text-xs text-muted-foreground mt-1">CPF: {viewContract.contract_signature_cpf}</p>
+              </div>
+            )}
+          </ScrollArea>
+          <Button
+            variant="outline"
+            className="gap-1"
+            onClick={() => {
+              if (!viewContract?.contract_text) return;
+              const printWindow = window.open("", "_blank");
+              if (!printWindow) return;
+              printWindow.document.write(`<html><head><title>Contrato - ${viewContract.name}</title>
+              <style>body { font-family: Georgia, serif; max-width: 700px; margin: 40px auto; padding: 20px; line-height: 1.6; font-size: 14px; }
+              .signature { text-align: center; margin-top: 40px; border-top: 1px solid #ccc; padding-top: 20px; font-style: italic; font-size: 20px; }
+              .meta { font-size: 11px; color: #666; margin-top: 10px; }</style></head>
+              <body><div>${viewContract.contract_text.replace(/\n/g, "<br/>").replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")}</div>
+              <div class="signature">${viewContract.contract_signature_name}<br/><span class="meta">CPF: ${viewContract.contract_signature_cpf}</span></div></body></html>`);
+              printWindow.document.close();
+              setTimeout(() => printWindow.print(), 500);
+            }}
+          >
+            <Download className="h-4 w-4" /> Download PDF
+          </Button>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

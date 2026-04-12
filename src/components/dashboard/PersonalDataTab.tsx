@@ -96,6 +96,19 @@ const PersonalDataTab = () => {
       }
     }
     setSaving(true);
+
+    // If re-enabling marketing, call the reactivation function to clear suppression
+    if (acceptsMarketing && !(profile as any)?.accepts_marketing) {
+      const { error: reactivateErr } = await supabase.functions.invoke("reactivate-email-marketing", {
+        body: { email: user.email },
+      });
+      if (reactivateErr) {
+        toast.error("Erro ao reativar e-mails promocionais");
+        setSaving(false);
+        return;
+      }
+    }
+
     const updateData: any = { name, bio, expertise_area: expertiseAreas.join(", "), birth_date: birthDate || null, phone: phone || null, cpf: cpf || null, accepts_marketing: acceptsMarketing };
     if (role === "teacher") {
       updateData.slug = slug;

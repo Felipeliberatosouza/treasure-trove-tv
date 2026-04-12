@@ -8,7 +8,7 @@ import { Save } from "lucide-react";
 const SettingsContact = () => {
   const { data, loading, update } = usePlatformSettings("contact");
   const [form, setForm] = useState<ContactSettings>({
-    email: "", phone: "", address: "", instagram: "", youtube: "", facebook: "", twitter: "", tiktok: "", linkedin: "", whatsapp: "", whatsapp_message: "", whatsapp_hours: "",
+    email: "", phone: "", address: "", platform_address: "", instagram: "", youtube: "", facebook: "", twitter: "", tiktok: "", linkedin: "", whatsapp: "", whatsapp_message: "", whatsapp_hours: "",
   });
   const [saving, setSaving] = useState(false);
 
@@ -33,8 +33,12 @@ const SettingsContact = () => {
         <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
       </div>
       <div>
-        <Label>Endereço</Label>
+        <Label>Endereço de Contato</Label>
         <Input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
+      </div>
+      <div>
+        <Label>Endereço da Empresa (para contratos)</Label>
+        <Input value={form.platform_address || ""} onChange={(e) => setForm({ ...form, platform_address: e.target.value })} placeholder="Endereço completo da Revisão Fácil para uso em contratos" />
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div>

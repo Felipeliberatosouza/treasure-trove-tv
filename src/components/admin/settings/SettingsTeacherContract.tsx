@@ -56,7 +56,7 @@ const SettingsTeacherContract = () => {
         <FileSignature className="h-4 w-4" /> Contrato do Professor
       </h3>
       <p className="text-xs text-muted-foreground">
-        Variáveis disponíveis: {"{{platform_name}}"}, {"{{teacher_name}}"}, {"{{teacher_cpf}}"}, {"{{teacher_percentage}}"}, {"{{teacher_percentage_text}}"}, {"{{platform_percentage}}"}, {"{{platform_percentage_text}}"}, {"{{data}}"}, {"{{hora}}"}
+        Variáveis disponíveis: {"{{platform_name}}"}, {"{{platform_address}}"}, {"{{teacher_name}}"}, {"{{teacher_cpf}}"}, {"{{teacher_address}}"}, {"{{teacher_percentage}}"}, {"{{teacher_percentage_text}}"}, {"{{platform_percentage}}"}, {"{{platform_percentage_text}}"}, {"{{data}}"}, {"{{hora}}"}
       </p>
 
       <div>

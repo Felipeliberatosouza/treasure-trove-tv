@@ -190,7 +190,7 @@ const TeacherContractModal = ({ open, onClose, onSigned }: TeacherContractModalP
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
+      <DialogContent className="max-w-3xl max-h-[95vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 font-display">
             <FileSignature className="h-5 w-5" />
@@ -198,8 +198,11 @@ const TeacherContractModal = ({ open, onClose, onSigned }: TeacherContractModalP
           </DialogTitle>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 max-h-[55vh] rounded-lg border border-border p-4 bg-secondary/30">
-          <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-line text-sm leading-relaxed">
+        <div
+          className="flex-1 rounded-lg border border-border p-4 bg-secondary/30 overflow-auto"
+          style={{ maxHeight: "55vh" }}
+        >
+          <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-line text-sm leading-relaxed min-w-max">
             {renderContract().split("\n").map((line, i) => {
               if (line.startsWith("**") && line.endsWith("**")) {
                 return <p key={i} className="font-bold mt-3 mb-1">{line.replace(/\*\*/g, "")}</p>;
@@ -207,7 +210,7 @@ const TeacherContractModal = ({ open, onClose, onSigned }: TeacherContractModalP
               return <p key={i} className="my-0.5">{line.replace(/\*\*/g, "")}</p>;
             })}
           </div>
-        </ScrollArea>
+        </div>
 
         <div className="space-y-3 pt-2">
           <div className="rounded-lg border-2 border-dashed border-primary/30 bg-primary/5 p-4 text-center">

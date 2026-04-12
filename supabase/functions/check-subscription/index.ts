@@ -157,12 +157,65 @@ serve(async (req) => {
     } else {
       logStep("No active subscription found");
 
-      // Mark any local active subs as expired
-      await supabaseClient
+      // Check if there were active subs that we're now expiring
+      const { data: activeSubs } = await supabaseClient
         .from("student_subscriptions")
-        .update({ status: "expired" })
+        .select("id, plan_id, expires_at, subscription_plans(name)")
         .eq("user_id", user.id)
         .eq("status", "active");
+
+      if (activeSubs && activeSubs.length > 0) {
+        // Mark as expired
+        await supabaseClient
+          .from("student_subscriptions")
+          .update({ status: "expired" })
+          .eq("user_id", user.id)
+          .eq("status", "active");
+
+        // Send cancellation email for the first expired sub
+        const expiredSub = activeSubs[0];
+        const planData = expiredSub.subscription_plans as any;
+        const { data: profile } = await supabaseClient
+          .from("profiles")
+          .select("name, email")
+          .eq("user_id", user.id)
+          .maybeSingle();
+
+        if (profile?.email) {
+          const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+          const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+
+          await fetch(`${supabaseUrl}/functions/v1/send-transactional-email`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${serviceKey}`,
+            },
+            body: JSON.stringify({
+              templateName: "subscription-cancelled",
+              recipientEmail: profile.email,
+              idempotencyKey: `sub-cancelled-${expiredSub.id}`,
+              templateData: {
+                name: profile.name || "Aluno(a)",
+                planName: planData?.name || "Plano",
+                expiryDate: expiredSub.expires_at
+                  ? new Date(expiredSub.expires_at).toLocaleDateString("pt-BR")
+                  : "",
+                reason: "expirada",
+                renewLink: "https://revisaofacil.com/#pricing",
+              },
+            }),
+          });
+          logStep("Sent subscription cancelled email", { email: profile.email });
+        }
+      } else {
+        // No active subs to expire
+        await supabaseClient
+          .from("student_subscriptions")
+          .update({ status: "expired" })
+          .eq("user_id", user.id)
+          .eq("status", "active");
+      }
     }
 
     return new Response(

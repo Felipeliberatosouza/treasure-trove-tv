@@ -135,6 +135,7 @@ const AdminOverviewTab = () => {
     { label: "Visualizações", value: kpis.totalViews, icon: TrendingUp, color: "text-blue-500" },
     { label: "Pagamentos Pendentes", value: kpis.pendingPayments, icon: DollarSign, color: "text-orange-500" },
     { label: "Avaliação Média", value: kpis.avgRating.toFixed(1) + " ★", icon: Star, color: "text-amber-500" },
+    { label: "Descadastros de E-mail", value: kpis.unsubscribedEmails, icon: MailX, color: "text-destructive" },
   ];
 
   const chartConfig = {

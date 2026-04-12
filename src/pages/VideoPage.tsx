@@ -18,6 +18,8 @@ import type { Video } from "@/data/courses";
 import DoubtForm from "@/components/DoubtForm";
 import { RatingStars } from "@/components/VideoDetailModal";
 import ResourceLimitModal from "@/components/ResourceLimitModal";
+import CpfRequiredModal from "@/components/CpfRequiredModal";
+import { useCpfGuard } from "@/hooks/useCpfGuard";
 import VLibrasWidget from "@/components/VLibrasWidget";
 
 const DEMO_VIDEO_URL = "/demo-course.mp4";
@@ -29,6 +31,7 @@ const VideoPage = () => {
   const trial = useFreeTrial();
   const { data: branding } = usePlatformSettings("branding");
   const resourceLimit = useResourceLimit();
+  const { requireCpf, showCpfModal, setShowCpfModal, onCpfComplete } = useCpfGuard();
   const [showLimitModal, setShowLimitModal] = useState(false);
   const [limitInfo, setLimitInfo] = useState<{ resourceType: string; used: number; total: number; hasSubscription: boolean; individualPrice: number | null } | null>(null);
 
@@ -395,13 +398,17 @@ const VideoPage = () => {
 
   const handleBuyUnit = () => {
     if (!user) { navigate("/login"); return; }
-    toast.info("Compra unitária será integrada com Stripe em breve.");
+    requireCpf(() => {
+      toast.info("Compra unitária será integrada com Stripe em breve.");
+    });
   };
 
   const handleSubscribe = () => {
     if (!user) { navigate("/login"); return; }
-    navigate("/");
-    setTimeout(() => document.getElementById("pricing")?.scrollIntoView({ behavior: "smooth" }), 300);
+    requireCpf(() => {
+      navigate("/");
+      setTimeout(() => document.getElementById("pricing")?.scrollIntoView({ behavior: "smooth" }), 300);
+    });
   };
 
   const handleGoToSignup = () => navigate("/signup/student");
@@ -440,6 +447,8 @@ const VideoPage = () => {
       <VLibrasWidget />
       <Navbar />
 
+      <CpfRequiredModal open={showCpfModal} onClose={() => setShowCpfModal(false)} onComplete={onCpfComplete} />
+
       {limitInfo && (
         <ResourceLimitModal
           open={showLimitModal}
@@ -450,7 +459,9 @@ const VideoPage = () => {
           hasSubscription={limitInfo.hasSubscription}
           individualPrice={limitInfo.individualPrice}
           onBuyIndividual={() => {
-            toast.info("Compra individual será integrada com Stripe em breve.");
+            requireCpf(() => {
+              toast.info("Compra individual será integrada com Stripe em breve.");
+            });
           }}
         />
       )}

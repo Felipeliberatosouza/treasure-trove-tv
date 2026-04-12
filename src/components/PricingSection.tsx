@@ -7,6 +7,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import CpfRequiredModal from "@/components/CpfRequiredModal";
+import { useCpfGuard } from "@/hooks/useCpfGuard";
 
 interface PlanData {
   name: string;
@@ -89,15 +91,9 @@ const PricingSection = () => {
     fetchPlans();
   }, []);
 
-  const handleCheckout = async (plan: PlanData) => {
-    if (!user) {
-      navigate("/login");
-      return;
-    }
-    if (!plan.stripe_price_id) {
-      toast.error("Este plano ainda não está disponível para compra.");
-      return;
-    }
+  const { requireCpf, showCpfModal, setShowCpfModal, onCpfComplete } = useCpfGuard();
+
+  const doCheckout = async (plan: PlanData) => {
     setLoadingPlan(plan.name);
     try {
       const { data, error } = await supabase.functions.invoke("create-checkout", {
@@ -116,7 +112,21 @@ const PricingSection = () => {
     }
   };
 
+  const handleCheckout = async (plan: PlanData) => {
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+    if (!plan.stripe_price_id) {
+      toast.error("Este plano ainda não está disponível para compra.");
+      return;
+    }
+    requireCpf(() => doCheckout(plan));
+  };
+
   return (
+    <>
+    <CpfRequiredModal open={showCpfModal} onClose={() => setShowCpfModal(false)} onComplete={onCpfComplete} />
     <section className="px-6 py-20 md:px-12 lg:px-20">
       <div className="mx-auto max-w-5xl text-center">
         <motion.div
@@ -214,6 +224,7 @@ const PricingSection = () => {
         </div>
       </div>
     </section>
+    </>
   );
 };
 

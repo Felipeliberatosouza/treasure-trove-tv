@@ -8,6 +8,8 @@ import { useFreeTrial } from "@/hooks/useFreeTrial";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import VideoPlayer from "@/components/VideoPlayer";
+import CpfRequiredModal from "@/components/CpfRequiredModal";
+import { useCpfGuard } from "@/hooks/useCpfGuard";
 import type { Video } from "@/data/courses";
 
 interface VideoDetailModalProps {
@@ -28,6 +30,7 @@ const VideoDetailModal = ({ video, open, onClose }: VideoDetailModalProps) => {
   const { user } = useAuth();
   const trial = useFreeTrial();
   const navigate = useNavigate();
+  const { requireCpf, showCpfModal, setShowCpfModal, onCpfComplete } = useCpfGuard();
   const [rating, setRating] = useState(0);
   const [hoveredStar, setHoveredStar] = useState(0);
   const [ratingData, setRatingData] = useState<RatingData>({ average: 0, count: 0, userRating: null });
@@ -220,7 +223,9 @@ const VideoDetailModal = ({ video, open, onClose }: VideoDetailModalProps) => {
       navigate("/login");
       return;
     }
-    toast.info("Compra unitária será integrada com Stripe em breve.");
+    requireCpf(() => {
+      toast.info("Compra unitária será integrada com Stripe em breve.");
+    });
   };
 
   const handleSubscribe = () => {
@@ -229,9 +234,11 @@ const VideoDetailModal = ({ video, open, onClose }: VideoDetailModalProps) => {
       navigate("/login");
       return;
     }
-    const el = document.getElementById("pricing");
-    onClose();
-    setTimeout(() => el?.scrollIntoView({ behavior: "smooth" }), 300);
+    requireCpf(() => {
+      const el = document.getElementById("pricing");
+      onClose();
+      setTimeout(() => el?.scrollIntoView({ behavior: "smooth" }), 300);
+    });
   };
 
   const handleGoToSignup = () => {
@@ -246,6 +253,8 @@ const VideoDetailModal = ({ video, open, onClose }: VideoDetailModalProps) => {
   const previewLimit = hasFullAccess ? undefined : 20;
 
   return (
+    <>
+    <CpfRequiredModal open={showCpfModal} onClose={() => setShowCpfModal(false)} onComplete={onCpfComplete} />
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-w-lg gap-0 overflow-hidden p-0 border-border bg-card">
         {/* Video area */}
@@ -429,6 +438,7 @@ const VideoDetailModal = ({ video, open, onClose }: VideoDetailModalProps) => {
         </div>
       </DialogContent>
     </Dialog>
+    </>
   );
 };
 

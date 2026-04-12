@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Save, Upload, X, Eye, Mail } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Save, Upload, X, Eye, Mail, Shield } from "lucide-react";
 import { toast } from "sonner";
 
 interface EmailTemplate {
@@ -18,6 +19,12 @@ interface EmailTemplate {
   body_html: string;
   logo_url: string | null;
   show_social_footer: boolean;
+  always_send: boolean;
+  respect_marketing_preference: boolean;
+  text_color: string;
+  link_color: string;
+  font_family: string;
+  use_uploaded_logo: boolean;
 }
 
 const TEMPLATE_LABELS: Record<string, string> = {
@@ -50,6 +57,17 @@ const TEMPLATE_VARS: Record<string, string[]> = {
   doubt_submitted: ["{{student_name}}"],
 };
 
+const FONT_OPTIONS = [
+  { value: "Arial, sans-serif", label: "Arial" },
+  { value: "'Helvetica Neue', Helvetica, sans-serif", label: "Helvetica" },
+  { value: "Georgia, serif", label: "Georgia" },
+  { value: "'Times New Roman', serif", label: "Times New Roman" },
+  { value: "Verdana, sans-serif", label: "Verdana" },
+  { value: "Tahoma, sans-serif", label: "Tahoma" },
+  { value: "'Trebuchet MS', sans-serif", label: "Trebuchet MS" },
+  { value: "'Courier New', monospace", label: "Courier New" },
+];
+
 const SettingsEmailTemplates = () => {
   const [templates, setTemplates] = useState<EmailTemplate[]>([]);
   const [loading, setLoading] = useState(true);
@@ -71,7 +89,7 @@ const SettingsEmailTemplates = () => {
     if (error) {
       toast.error("Erro ao carregar templates de e-mail.");
     } else if (data) {
-      setTemplates(data);
+      setTemplates(data as unknown as EmailTemplate[]);
       if (!activeKey && data.length > 0) setActiveKey(data[0].template_key);
     }
     setLoading(false);
@@ -106,6 +124,12 @@ const SettingsEmailTemplates = () => {
         body_html: active.body_html,
         logo_url: active.logo_url,
         show_social_footer: active.show_social_footer,
+        always_send: active.always_send,
+        respect_marketing_preference: active.respect_marketing_preference,
+        text_color: active.text_color,
+        link_color: active.link_color,
+        font_family: active.font_family,
+        use_uploaded_logo: active.use_uploaded_logo,
       })
       .eq("id", active.id);
 
@@ -115,7 +139,8 @@ const SettingsEmailTemplates = () => {
   };
 
   const buildFooterHtml = () => {
-    if (!contactData) return "";
+    if (!contactData || !active) return "";
+    const linkColor = active.link_color || "#6366f1";
     const lines: string[] = [];
 
     if (contactData.email) lines.push(`📧 ${contactData.email}`);
@@ -123,12 +148,12 @@ const SettingsEmailTemplates = () => {
     if (contactData.whatsapp) lines.push(`💬 WhatsApp: ${contactData.whatsapp}`);
 
     const socials: string[] = [];
-    if (contactData.instagram) socials.push(`<a href="https://instagram.com/${contactData.instagram.replace("@", "")}" style="color:#6366f1;text-decoration:none;">Instagram</a>`);
-    if (contactData.youtube) socials.push(`<a href="${contactData.youtube}" style="color:#6366f1;text-decoration:none;">YouTube</a>`);
-    if (contactData.facebook) socials.push(`<a href="${contactData.facebook}" style="color:#6366f1;text-decoration:none;">Facebook</a>`);
-    if (contactData.twitter) socials.push(`<a href="https://x.com/${contactData.twitter.replace("@", "")}" style="color:#6366f1;text-decoration:none;">X</a>`);
-    if (contactData.tiktok) socials.push(`<a href="https://tiktok.com/@${contactData.tiktok.replace("@", "")}" style="color:#6366f1;text-decoration:none;">TikTok</a>`);
-    if (contactData.linkedin) socials.push(`<a href="${contactData.linkedin}" style="color:#6366f1;text-decoration:none;">LinkedIn</a>`);
+    if (contactData.instagram) socials.push(`<a href="https://instagram.com/${contactData.instagram.replace("@", "")}" style="color:${linkColor};text-decoration:none;">Instagram</a>`);
+    if (contactData.youtube) socials.push(`<a href="${contactData.youtube}" style="color:${linkColor};text-decoration:none;">YouTube</a>`);
+    if (contactData.facebook) socials.push(`<a href="${contactData.facebook}" style="color:${linkColor};text-decoration:none;">Facebook</a>`);
+    if (contactData.twitter) socials.push(`<a href="https://x.com/${contactData.twitter.replace("@", "")}" style="color:${linkColor};text-decoration:none;">X</a>`);
+    if (contactData.tiktok) socials.push(`<a href="https://tiktok.com/@${contactData.tiktok.replace("@", "")}" style="color:${linkColor};text-decoration:none;">TikTok</a>`);
+    if (contactData.linkedin) socials.push(`<a href="${contactData.linkedin}" style="color:${linkColor};text-decoration:none;">LinkedIn</a>`);
 
     return `
       <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0;" />
@@ -140,14 +165,42 @@ const SettingsEmailTemplates = () => {
     `;
   };
 
+  const buildAlwaysSendFooter = () => {
+    if (!active || !active.always_send) return "";
+    const linkColor = active.link_color || "#6366f1";
+    const textColor = active.text_color || "#333333";
+    const platformName = brandingData?.platform_name || "Revisão Fácil";
+    const subject = active.subject || "serviço solicitado";
+
+    const securityUrl = `${window.location.origin}/email-seguranca?email=usuario@exemplo.com&template=${active.template_key}&subject=${encodeURIComponent(subject)}`;
+
+    return `
+      <div style="margin-top:24px;padding-top:16px;border-top:1px solid #e5e7eb;font-size:11px;color:${textColor};line-height:1.6;">
+        <p style="margin:0;">
+          Este e-mail foi enviado por <a href="https://revisaofacil.com" style="color:${linkColor};text-decoration:none;font-weight:600;">${platformName}</a> para atender ao seu pedido de: <strong>${subject}</strong>.
+          Se você não fez esse pedido, pedimos desculpas. Neste caso, por favor clique em: 
+          <a href="${securityUrl}" style="color:${linkColor};text-decoration:underline;">eu não solicitei esse e-mail.</a>
+        </p>
+      </div>
+    `;
+  };
+
   const buildPreviewHtml = () => {
     if (!active) return "";
-    const logoHtml = active.logo_url
-      ? `<div style="text-align:center;margin-bottom:16px;"><img src="${active.logo_url}" alt="Logo" style="max-height:60px;max-width:200px;" /></div>`
-      : "";
-    const footerHtml = active.show_social_footer ? buildFooterHtml() : "";
+    const textColor = active.text_color || "#333333";
+    const fontFamily = active.font_family || "Arial, sans-serif";
 
-    // Replace template vars with sample data
+    const platformName = brandingData?.platform_name || "Revisão Fácil";
+    let logoHtml = "";
+    if (active.use_uploaded_logo && active.logo_url) {
+      logoHtml = `<div style="text-align:center;margin-bottom:16px;"><img src="${active.logo_url}" alt="Logo" style="max-height:60px;max-width:200px;" /></div>`;
+    } else {
+      logoHtml = `<div style="text-align:center;margin-bottom:16px;font-size:24px;font-weight:bold;background:linear-gradient(135deg,#6366f1,#8b5cf6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">${platformName}</div>`;
+    }
+
+    const footerHtml = active.show_social_footer ? buildFooterHtml() : "";
+    const alwaysSendFooter = buildAlwaysSendFooter();
+
     let body = active.body_html
       .replace(/\{\{name\}\}/g, "João Silva")
       .replace(/\{\{confirmation_link\}\}/g, "#")
@@ -162,10 +215,11 @@ const SettingsEmailTemplates = () => {
       .replace(/\{\{deadline_days\}\}/g, "3");
 
     return `
-      <div style="max-width:600px;margin:0 auto;font-family:Arial,sans-serif;background:#ffffff;padding:24px;border-radius:8px;">
+      <div style="max-width:600px;margin:0 auto;font-family:${fontFamily};background:#ffffff;padding:24px;border-radius:8px;color:${textColor};">
         ${logoHtml}
         ${body}
         ${footerHtml}
+        ${alwaysSendFooter}
       </div>
     `;
   };
@@ -211,32 +265,140 @@ const SettingsEmailTemplates = () => {
             </p>
           )}
 
+          {/* Send control flags */}
+          <div className="rounded-lg border border-border p-4 space-y-3">
+            <h4 className="text-sm font-semibold flex items-center gap-2">
+              <Shield className="h-4 w-4" /> Controle de Envio
+            </h4>
+
+            <div className="flex items-center gap-3">
+              <Switch
+                checked={active.always_send}
+                onCheckedChange={(v) => updateField("always_send", v)}
+              />
+              <div>
+                <Label className="cursor-pointer text-sm">Sempre enviar (obrigatório)</Label>
+                <p className="text-xs text-muted-foreground">
+                  Envia independente da preferência de marketing do usuário. Adiciona rodapé de segurança.
+                </p>
+              </div>
+            </div>
+
+            {!active.always_send && (
+              <div className="flex items-center gap-3">
+                <Switch
+                  checked={active.respect_marketing_preference}
+                  onCheckedChange={(v) => updateField("respect_marketing_preference", v)}
+                />
+                <div>
+                  <Label className="cursor-pointer text-sm">Respeitar preferência de marketing</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Só envia se o usuário aceitou receber comunicações no cadastro.
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+
           {/* Logo */}
           <div className="space-y-2">
             <Label>Logomarca do E-mail</Label>
-            {active.logo_url && (
-              <div className="relative inline-block rounded-lg border border-border bg-muted/30 p-2">
-                <img src={active.logo_url} alt="Logo" className="h-12 max-w-[180px] object-contain" />
-                <button
-                  onClick={() => updateField("logo_url", "")}
-                  className="absolute -right-2 -top-2 rounded-full bg-destructive p-1 text-destructive-foreground hover:opacity-80"
-                >
-                  <X className="h-3 w-3" />
-                </button>
-              </div>
-            )}
-            <div className="flex gap-2">
-              <Button type="button" variant="outline" size="sm" disabled={uploading} onClick={() => fileInputRef.current?.click()}>
-                <Upload className="h-4 w-4 mr-1" /> {uploading ? "Enviando..." : "Enviar Imagem"}
-              </Button>
-              <Input
-                value={active.logo_url || ""}
-                onChange={(e) => updateField("logo_url", e.target.value)}
-                placeholder="ou cole uma URL..."
-                className="flex-1 text-xs"
+            <div className="flex items-center gap-3 mb-2">
+              <Switch
+                checked={active.use_uploaded_logo}
+                onCheckedChange={(v) => updateField("use_uploaded_logo", v)}
               />
+              <Label className="cursor-pointer text-sm">
+                {active.use_uploaded_logo ? "Usar imagem de logomarca" : "Usar logomarca em texto da plataforma"}
+              </Label>
             </div>
-            <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
+
+            {active.use_uploaded_logo && (
+              <>
+                {active.logo_url && (
+                  <div className="relative inline-block rounded-lg border border-border bg-muted/30 p-2">
+                    <img src={active.logo_url} alt="Logo" className="h-12 max-w-[180px] object-contain" />
+                    <button
+                      onClick={() => updateField("logo_url", "")}
+                      className="absolute -right-2 -top-2 rounded-full bg-destructive p-1 text-destructive-foreground hover:opacity-80"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                )}
+                <div className="flex gap-2">
+                  <Button type="button" variant="outline" size="sm" disabled={uploading} onClick={() => fileInputRef.current?.click()}>
+                    <Upload className="h-4 w-4 mr-1" /> {uploading ? "Enviando..." : "Enviar Imagem"}
+                  </Button>
+                  <Input
+                    value={active.logo_url || ""}
+                    onChange={(e) => updateField("logo_url", e.target.value)}
+                    placeholder="ou cole uma URL..."
+                    className="flex-1 text-xs"
+                  />
+                </div>
+                <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
+              </>
+            )}
+          </div>
+
+          {/* Styling options */}
+          <div className="rounded-lg border border-border p-4 space-y-3">
+            <h4 className="text-sm font-semibold">Estilo Visual</h4>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <Label className="text-xs">Cor do Texto</Label>
+                <div className="flex gap-2 items-center">
+                  <input
+                    type="color"
+                    value={active.text_color || "#333333"}
+                    onChange={(e) => updateField("text_color", e.target.value)}
+                    className="w-8 h-8 rounded border border-border cursor-pointer"
+                  />
+                  <Input
+                    value={active.text_color || "#333333"}
+                    onChange={(e) => updateField("text_color", e.target.value)}
+                    className="flex-1 text-xs"
+                    maxLength={7}
+                  />
+                </div>
+              </div>
+              <div>
+                <Label className="text-xs">Cor dos Links</Label>
+                <div className="flex gap-2 items-center">
+                  <input
+                    type="color"
+                    value={active.link_color || "#6366f1"}
+                    onChange={(e) => updateField("link_color", e.target.value)}
+                    className="w-8 h-8 rounded border border-border cursor-pointer"
+                  />
+                  <Input
+                    value={active.link_color || "#6366f1"}
+                    onChange={(e) => updateField("link_color", e.target.value)}
+                    className="flex-1 text-xs"
+                    maxLength={7}
+                  />
+                </div>
+              </div>
+              <div>
+                <Label className="text-xs">Fonte</Label>
+                <Select
+                  value={active.font_family || "Arial, sans-serif"}
+                  onValueChange={(v) => updateField("font_family", v)}
+                >
+                  <SelectTrigger className="text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {FONT_OPTIONS.map((f) => (
+                      <SelectItem key={f.value} value={f.value} className="text-xs">
+                        <span style={{ fontFamily: f.value }}>{f.label}</span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
           </div>
 
           {/* Subject */}

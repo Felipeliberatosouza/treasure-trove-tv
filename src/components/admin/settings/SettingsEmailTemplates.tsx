@@ -373,10 +373,9 @@ const SettingsEmailTemplates = () => {
             )}
           </div>
 
-          {/* Styling options */}
           <div className="rounded-lg border border-border p-4 space-y-3">
             <h4 className="text-sm font-semibold">Estilo Visual</h4>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               <div>
                 <Label className="text-xs">Cor do Texto</Label>
                 <div className="flex gap-2 items-center">
@@ -395,6 +394,23 @@ const SettingsEmailTemplates = () => {
                 </div>
               </div>
               <div>
+                <Label className="text-xs">Cor do Título</Label>
+                <div className="flex gap-2 items-center">
+                  <input
+                    type="color"
+                    value={active.heading_color || "#dc2626"}
+                    onChange={(e) => updateField("heading_color", e.target.value)}
+                    className="w-8 h-8 rounded border border-border cursor-pointer"
+                  />
+                  <Input
+                    value={active.heading_color || "#dc2626"}
+                    onChange={(e) => updateField("heading_color", e.target.value)}
+                    className="flex-1 text-xs"
+                    maxLength={7}
+                  />
+                </div>
+              </div>
+              <div>
                 <Label className="text-xs">Cor dos Links</Label>
                 <div className="flex gap-2 items-center">
                   <input
@@ -406,6 +422,23 @@ const SettingsEmailTemplates = () => {
                   <Input
                     value={active.link_color || "#6366f1"}
                     onChange={(e) => updateField("link_color", e.target.value)}
+                    className="flex-1 text-xs"
+                    maxLength={7}
+                  />
+                </div>
+              </div>
+              <div>
+                <Label className="text-xs">Cor dos Botões</Label>
+                <div className="flex gap-2 items-center">
+                  <input
+                    type="color"
+                    value={active.button_color || "#6366f1"}
+                    onChange={(e) => updateField("button_color", e.target.value)}
+                    className="w-8 h-8 rounded border border-border cursor-pointer"
+                  />
+                  <Input
+                    value={active.button_color || "#6366f1"}
+                    onChange={(e) => updateField("button_color", e.target.value)}
                     className="flex-1 text-xs"
                     maxLength={7}
                   />

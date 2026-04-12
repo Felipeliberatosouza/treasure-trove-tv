@@ -1,12 +1,11 @@
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
-import { isValidCPF, formatCPF } from "@/lib/cpfValidator";
+import { formatCPF, isValidCPF } from "@/lib/cpfValidator";
 import { toast } from "sonner";
 import { FileSignature, CheckCircle } from "lucide-react";
 
@@ -29,7 +28,7 @@ const TeacherContractModal = ({ open, onClose, onSigned }: TeacherContractModalP
   const [template, setTemplate] = useState<ContractTemplate | null>(null);
   const [signing, setSigning] = useState(false);
   const [agreed, setAgreed] = useState(false);
-  const [signatureCpf, setSignatureCpf] = useState("");
+  const [signed, setSigned] = useState(false);
 
   useEffect(() => {
     const fetchTemplate = async () => {
@@ -40,7 +39,11 @@ const TeacherContractModal = ({ open, onClose, onSigned }: TeacherContractModalP
         .maybeSingle();
       if (data) setTemplate(data.value as unknown as ContractTemplate);
     };
-    if (open) fetchTemplate();
+    if (open) {
+      fetchTemplate();
+      setSigned(false);
+      setAgreed(false);
+    }
   }, [open]);
 
   const platformName = brandingData?.platform_name || "Revisão Fácil";
@@ -49,6 +52,7 @@ const TeacherContractModal = ({ open, onClose, onSigned }: TeacherContractModalP
   const nomeFantasia = (contactData as any)?.nome_fantasia || "";
   const cnpj = (contactData as any)?.cnpj || "";
   const teacherName = profile?.name || "";
+  const teacherCpf = (profile as any)?.cpf || "";
   const teacherAddress = (profile as any)?.address || "";
   const teacherPercentage = template ? 100 - template.platform_percentage : 70;
   const platformPercentage = template?.platform_percentage || 30;
@@ -71,7 +75,7 @@ const TeacherContractModal = ({ open, onClose, onSigned }: TeacherContractModalP
       .replace(/\{\{nome_fantasia\}\}/g, nomeFantasia)
       .replace(/\{\{cnpj\}\}/g, cnpj)
       .replace(/\{\{teacher_name\}\}/g, teacherName)
-      .replace(/\{\{teacher_cpf\}\}/g, formatCPF(signatureCpf || (profile as any)?.cpf || ""))
+      .replace(/\{\{teacher_cpf\}\}/g, formatCPF(teacherCpf))
       .replace(/\{\{teacher_address\}\}/g, teacherAddress)
       .replace(/\{\{platform_address\}\}/g, platformAddress)
       .replace(/\{\{teacher_percentage\}\}/g, String(teacherPercentage))
@@ -84,9 +88,8 @@ const TeacherContractModal = ({ open, onClose, onSigned }: TeacherContractModalP
 
   const handleSign = async () => {
     if (!user || !template) return;
-    const cpf = signatureCpf || (profile as any)?.cpf || "";
-    if (!isValidCPF(cpf)) {
-      toast.error("Informe um CPF válido para assinar o contrato");
+    if (!isValidCPF(teacherCpf)) {
+      toast.error("CPF inválido. Atualize seus dados pessoais antes de assinar.");
       return;
     }
     if (!agreed) {
@@ -96,7 +99,6 @@ const TeacherContractModal = ({ open, onClose, onSigned }: TeacherContractModalP
 
     setSigning(true);
     try {
-      // Get IP address
       let ipAddress = "";
       try {
         const res = await fetch("https://api.ipify.org?format=json");
@@ -111,9 +113,6 @@ const TeacherContractModal = ({ open, onClose, onSigned }: TeacherContractModalP
       const contractText = renderContract() +
         `\n\n---\n\nEste contrato foi assinado digitalmente em ${new Date().toLocaleDateString("pt-BR")} às ${new Date().toLocaleTimeString("pt-BR")}, a partir do IP ${ipAddress}, dispositivo: ${deviceInfo}.`;
 
-      // Save CPF to profile
-      await supabase.from("profiles").update({ cpf: cpf }).eq("user_id", user.id);
-
       // Expire old contracts
       await supabase
         .from("teacher_contracts" as any)
@@ -126,7 +125,7 @@ const TeacherContractModal = ({ open, onClose, onSigned }: TeacherContractModalP
         teacher_id: user.id,
         contract_text: contractText,
         signature_name: teacherName,
-        signature_cpf: cpf,
+        signature_cpf: teacherCpf,
         ip_address: ipAddress,
         device_info: deviceInfo,
         signed_at: now,
@@ -136,8 +135,8 @@ const TeacherContractModal = ({ open, onClose, onSigned }: TeacherContractModalP
 
       if (error) throw error;
 
-      // Send contract signed email to teacher
-      const maskedCpf = cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '***.$2.***-$4');
+      // Send contract signed email
+      const maskedCpf = teacherCpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '***.$2.***-$4');
       await supabase.functions.invoke('send-transactional-email', {
         body: {
           templateName: 'contract-signed',
@@ -155,13 +154,39 @@ const TeacherContractModal = ({ open, onClose, onSigned }: TeacherContractModalP
         },
       });
 
+      setSigned(true);
       toast.success("Contrato assinado com sucesso! Uma cópia foi enviada para seu e-mail.");
-      onSigned();
     } catch (err: any) {
       toast.error(err.message || "Erro ao assinar contrato");
     }
     setSigning(false);
   };
+
+  const handleContinue = () => {
+    onSigned();
+  };
+
+  // Success state after signing
+  if (signed) {
+    return (
+      <Dialog open={open} onOpenChange={() => {}}>
+        <DialogContent className="max-w-md text-center" onPointerDownOutside={(e) => e.preventDefault()}>
+          <div className="flex flex-col items-center gap-4 py-6">
+            <div className="rounded-full bg-green-500/10 p-4">
+              <CheckCircle className="h-12 w-12 text-green-500" />
+            </div>
+            <h2 className="font-display text-xl font-semibold">Contrato Assinado com Sucesso!</h2>
+            <p className="text-sm text-muted-foreground">
+              Uma cópia do contrato foi enviada para o seu e-mail. Agora você pode criar suas aulas e resoluções de provas.
+            </p>
+            <Button onClick={handleContinue} className="font-display gap-2 mt-2">
+              Continuar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
@@ -173,7 +198,7 @@ const TeacherContractModal = ({ open, onClose, onSigned }: TeacherContractModalP
           </DialogTitle>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 max-h-[50vh] rounded-lg border border-border p-4 bg-secondary/30">
+        <ScrollArea className="flex-1 max-h-[55vh] rounded-lg border border-border p-4 bg-secondary/30">
           <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-line text-sm leading-relaxed">
             {renderContract().split("\n").map((line, i) => {
               if (line.startsWith("**") && line.endsWith("**")) {
@@ -185,26 +210,12 @@ const TeacherContractModal = ({ open, onClose, onSigned }: TeacherContractModalP
         </ScrollArea>
 
         <div className="space-y-3 pt-2">
-          <div>
-            <label className="text-sm text-muted-foreground mb-1 block">CPF para assinatura</label>
-            <Input
-              value={formatCPF(signatureCpf || (profile as any)?.cpf || "")}
-              onChange={(e) => setSignatureCpf(e.target.value.replace(/\D/g, "").slice(0, 11))}
-              placeholder="000.000.000-00"
-              maxLength={14}
-              className="bg-secondary"
-            />
-            {signatureCpf && signatureCpf.length === 11 && !isValidCPF(signatureCpf) && (
-              <p className="text-xs text-destructive mt-1">CPF inválido</p>
-            )}
-          </div>
-
           <div className="rounded-lg border-2 border-dashed border-primary/30 bg-primary/5 p-4 text-center">
             <p className="text-xs text-muted-foreground mb-2">Assinatura Digital</p>
             <p className="text-xl italic font-serif text-foreground" style={{ fontFamily: "'Georgia', 'Times New Roman', serif" }}>
               {teacherName}
             </p>
-            <p className="text-xs text-muted-foreground mt-1">CPF: {formatCPF(signatureCpf || (profile as any)?.cpf || "")}</p>
+            <p className="text-xs text-muted-foreground mt-1">CPF: {formatCPF(teacherCpf)}</p>
           </div>
 
           <label className="flex items-start gap-2 cursor-pointer">

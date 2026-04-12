@@ -29,32 +29,43 @@ const TeacherContractModal = ({ open, onClose, onSigned }: TeacherContractModalP
   const [signing, setSigning] = useState(false);
   const [agreed, setAgreed] = useState(false);
   const [signed, setSigned] = useState(false);
+  const [freshProfile, setFreshProfile] = useState<any>(null);
 
   useEffect(() => {
-    const fetchTemplate = async () => {
-      const { data } = await supabase
+    const fetchData = async () => {
+      const { data: templateData } = await supabase
         .from("platform_settings")
         .select("value")
         .eq("key", "teacher_contract_template")
         .maybeSingle();
-      if (data) setTemplate(data.value as unknown as ContractTemplate);
+      if (templateData) setTemplate(templateData.value as unknown as ContractTemplate);
+
+      if (user) {
+        const { data: profileData } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("user_id", user.id)
+          .maybeSingle();
+        if (profileData) setFreshProfile(profileData);
+      }
     };
     if (open) {
-      fetchTemplate();
+      fetchData();
       setSigned(false);
       setAgreed(false);
     }
-  }, [open]);
+  }, [open, user]);
 
   const platformName = brandingData?.platform_name || "Revisão Fácil";
   const platformAddress = (contactData as any)?.platform_address || "";
   const razaoSocial = (contactData as any)?.razao_social || "";
   const nomeFantasia = (contactData as any)?.nome_fantasia || "";
   const cnpj = (contactData as any)?.cnpj || "";
-  const teacherName = profile?.name || "";
-  const teacherCpf = (profile as any)?.cpf || "";
-  const teacherAddress = (profile as any)?.address || "";
-  const teacherPixKey = (profile as any)?.pix_key || "";
+  const p = freshProfile || profile;
+  const teacherName = p?.name || "";
+  const teacherCpf = p?.cpf || "";
+  const teacherAddress = p?.address || "";
+  const teacherPixKey = p?.pix_key || "";
   const teacherPercentage = template ? 100 - template.platform_percentage : 70;
   const platformPercentage = template?.platform_percentage || 30;
 

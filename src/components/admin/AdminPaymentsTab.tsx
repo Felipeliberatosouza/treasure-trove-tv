@@ -60,7 +60,7 @@ const AdminPaymentsTab = () => {
     setLoading(true);
 
     const [profilesRes, viewsRes, ratingsRes, purchasesRes, paymentsRes] = await Promise.all([
-      supabase.from("profiles").select("user_id, name"),
+      supabase.from("profiles").select("user_id, name, pix_key"),
       supabase.from("video_views").select("content_id, content_type, user_id"),
       supabase.from("video_ratings").select("content_id, content_type, rating"),
       supabase.from("video_purchases").select("content_id, content_type, amount, user_id"),
@@ -69,6 +69,7 @@ const AdminPaymentsTab = () => {
 
     const profiles = profilesRes.data || [];
     const profileMap = new Map(profiles.map((p) => [p.user_id, p.name]));
+    const pixMap = new Map(profiles.map((p) => [p.user_id, (p as any).pix_key || ""]));
 
     // Get all teachers
     const { data: teacherRoles } = await supabase.from("user_roles").select("user_id").eq("role", "teacher");
@@ -90,6 +91,7 @@ const AdminPaymentsTab = () => {
       metricsMap.set(tid, {
         teacher_id: tid,
         teacher_name: profileMap.get(tid) || "Desconhecido",
+        pix_key: pixMap.get(tid) || "",
         total_views: 0,
         avg_rating: 0,
         total_purchases: 0,

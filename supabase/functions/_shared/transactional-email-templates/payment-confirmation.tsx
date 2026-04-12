@@ -71,13 +71,13 @@ export const template = {
 } satisfies TemplateEntry
 
 const main = { backgroundColor: '#ffffff', fontFamily: 'Arial, sans-serif' }
-const container = { padding: '20px 25px' }
-const h1 = { fontSize: '22px', fontWeight: 'bold' as const, color: '#1a1a2e', margin: '0 0 20px' }
-const text = { fontSize: '14px', color: '#333333', lineHeight: '1.6', margin: '0 0 16px' }
-const infoBox = { backgroundColor: '#f8f9fa', borderRadius: '8px', padding: '16px', margin: '0 0 16px' }
-const infoText = { fontSize: '14px', color: '#333333', margin: '0 0 4px' }
+const container = { padding: '20px 25px', maxWidth: '600px', margin: '0 auto' }
+const h1 = { fontSize: '22px', fontWeight: 'bold' as const, color: '#dc2626', margin: '0 0 20px' }
+const text = { fontSize: '14px', color: '#374151', lineHeight: '1.6', margin: '0 0 16px' }
+const infoBox = { backgroundColor: '#f9fafb', borderRadius: '8px', padding: '16px', margin: '0 0 16px' }
+const infoText = { fontSize: '14px', color: '#374151', margin: '0 0 4px' }
 const button = {
-  backgroundColor: '#6366f1',
+  backgroundColor: '#dc2626',
   color: '#ffffff',
   padding: '12px 24px',
   borderRadius: '8px',
@@ -86,5 +86,5 @@ const button = {
   fontSize: '14px',
   display: 'inline-block' as const,
 }
-const hr = { borderTop: '1px solid #e5e7eb', margin: '24px 0' }
-const footer = { fontSize: '12px', color: '#999999', margin: '0' }
+const hr = { borderColor: '#e5e7eb', margin: '16px 0' }
+const footer = { fontSize: '12px', color: '#9ca3af', margin: '30px 0 0' }

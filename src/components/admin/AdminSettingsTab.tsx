@@ -14,7 +14,7 @@ import SettingsTeacherContract from "./settings/SettingsTeacherContract";
 
 const sections = [
   { id: "branding", label: "Identidade Visual", icon: Palette },
-  { id: "contact", label: "Contato", icon: Phone },
+  { id: "contact", label: "Dados e Contatos", icon: Phone },
   { id: "emails", label: "E-mails", icon: Mail },
   { id: "pages", label: "Páginas Institucionais", icon: FileText },
   { id: "hero", label: "Banner Principal", icon: Layout },

@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import { Skeleton } from "@/components/ui/skeleton";
 import Navbar from "@/components/Navbar";

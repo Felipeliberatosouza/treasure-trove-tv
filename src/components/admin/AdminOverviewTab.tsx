@@ -89,6 +89,7 @@ const AdminOverviewTab = () => {
       pendingPayments,
       totalViews,
       avgRating,
+      unsubscribedEmails: unsubCount ?? 0,
     });
 
     // Revenue by month

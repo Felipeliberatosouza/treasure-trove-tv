@@ -228,6 +228,16 @@ const PersonalDataTab = () => {
               />
             </div>
             <div>
+              <label className="text-sm text-muted-foreground mb-1 block">Chave PIX <span className="text-xs text-primary font-medium">(obrigatório para pagamento)</span></label>
+              <Input
+                value={pixKey}
+                onChange={(e) => setPixKey(e.target.value)}
+                className="bg-secondary"
+                placeholder="CPF, e-mail, telefone ou chave aleatória"
+              />
+              <p className="text-xs text-muted-foreground mt-1">Utilizada para recebimento do pagamento mensal</p>
+            </div>
+            <div>
               <label className="text-sm text-muted-foreground mb-1 block">Áreas de expertise</label>
               <AreaSelector selected={expertiseAreas} onChange={setExpertiseAreas} max={areas.length || 10} />
             </div>

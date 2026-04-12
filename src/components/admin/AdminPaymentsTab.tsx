@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 interface TeacherMetrics {
   teacher_id: string;
   teacher_name: string;
+  pix_key: string;
   total_views: number;
   avg_rating: number;
   total_purchases: number;

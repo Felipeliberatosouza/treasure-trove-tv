@@ -92,7 +92,6 @@ const StudentSignup = () => {
         if (selectedAreas.length > 0) updateData.areas = selectedAreas;
         if (phone) updateData.phone = phone;
         await supabase.from("profiles").update(updateData).eq("user_id", signUpData.user.id);
-        }
       }
       // Send welcome email and notify admins
       if (signUpData?.user) {

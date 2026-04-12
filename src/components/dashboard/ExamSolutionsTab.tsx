@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Plus, FileText } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -91,7 +92,16 @@ const ExamSolutionsTab = () => {
                 </div>
               )}
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">{item.title}</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-medium truncate">{item.title}</p>
+                  {item.published && item.admin_approved ? (
+                    <Badge variant="default" className="shrink-0 bg-green-600 text-xs">Aprovado</Badge>
+                  ) : item.published && !item.admin_approved ? (
+                    <Badge variant="secondary" className="shrink-0 bg-yellow-500/20 text-yellow-700 dark:text-yellow-400 text-xs">Pendente</Badge>
+                  ) : (
+                    <Badge variant="destructive" className="shrink-0 text-xs">Rejeitado</Badge>
+                  )}
+                </div>
                 <p className="text-xs text-muted-foreground truncate">{item.description || "Sem descrição"}</p>
               </div>
             </div>

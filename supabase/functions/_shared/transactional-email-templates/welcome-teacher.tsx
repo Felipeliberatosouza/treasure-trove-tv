@@ -3,14 +3,16 @@ import {
   Body, Container, Head, Heading, Html, Preview, Text, Hr,
 } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
+import MarketingFooter from './marketing-footer.tsx'
 
 const SITE_NAME = "Revisão Fácil"
 
 interface WelcomeTeacherProps {
   name?: string
+  unsubscribeUrl?: string
 }
 
-const WelcomeTeacherEmail = ({ name }: WelcomeTeacherProps) => (
+const WelcomeTeacherEmail = ({ name, unsubscribeUrl }: WelcomeTeacherProps) => (
   <Html lang="pt-BR" dir="ltr">
     <Head />
     <Preview>Bem-vindo(a) à {SITE_NAME}! 📚</Preview>
@@ -29,6 +31,7 @@ const WelcomeTeacherEmail = ({ name }: WelcomeTeacherProps) => (
           Acesse seu painel de professor para começar a cadastrar seus conteúdos.
         </Text>
         <Text style={footer}>Equipe {SITE_NAME}</Text>
+        <MarketingFooter unsubscribeUrl={unsubscribeUrl} />
       </Container>
     </Body>
   </Html>

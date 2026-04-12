@@ -3,6 +3,7 @@ import {
   Body, Container, Head, Heading, Html, Preview, Text, Hr, Section,
 } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
+import MarketingFooter from './marketing-footer.tsx'
 
 const SITE_NAME = "Revisão Fácil"
 
@@ -14,9 +15,10 @@ interface ContractSignedProps {
   deviceInfo?: string
   cpf?: string
   contractText?: string
+  unsubscribeUrl?: string
 }
 
-const ContractSignedEmail = ({ name, signedAt, expiresAt, ipAddress, deviceInfo, cpf, contractText }: ContractSignedProps) => (
+const ContractSignedEmail = ({ name, signedAt, expiresAt, ipAddress, deviceInfo, cpf, contractText, unsubscribeUrl }: ContractSignedProps) => (
   <Html lang="pt-BR" dir="ltr">
     <Head />
     <Preview>Seu contrato com a {SITE_NAME} foi assinado com sucesso ✅</Preview>
@@ -54,6 +56,7 @@ const ContractSignedEmail = ({ name, signedAt, expiresAt, ipAddress, deviceInfo,
         </Text>
 
         <Text style={footer}>Equipe {SITE_NAME}</Text>
+        <MarketingFooter unsubscribeUrl={unsubscribeUrl} />
       </Container>
     </Body>
   </Html>

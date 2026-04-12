@@ -4,6 +4,7 @@ import {
   Body, Container, Head, Heading, Html, Preview, Text, Button, Section, Hr,
 } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
+import MarketingFooter from './marketing-footer.tsx'
 
 const SITE_NAME = 'Revisão Fácil'
 
@@ -13,6 +14,7 @@ interface PaymentConfirmationProps {
   amount?: string
   paymentDate?: string
   dashboardLink?: string
+  unsubscribeUrl?: string
 }
 
 const PaymentConfirmationEmail = ({
@@ -21,6 +23,7 @@ const PaymentConfirmationEmail = ({
   amount = '—',
   paymentDate = '',
   dashboardLink = 'https://revisaofacil.com/dashboard/student',
+  unsubscribeUrl,
 }: PaymentConfirmationProps) => (
   <Html lang="pt-BR" dir="ltr">
     <Head />
@@ -47,6 +50,7 @@ const PaymentConfirmationEmail = ({
         </Button>
         <Hr style={hr} />
         <Text style={footer}>Equipe {SITE_NAME}</Text>
+        <MarketingFooter unsubscribeUrl={unsubscribeUrl} />
       </Container>
     </Body>
   </Html>

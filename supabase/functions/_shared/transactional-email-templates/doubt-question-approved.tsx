@@ -3,15 +3,17 @@ import {
   Body, Container, Head, Heading, Html, Preview, Text, Hr,
 } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
+import MarketingFooter from './marketing-footer.tsx'
 
 const SITE_NAME = "Revisão Fácil"
 
 interface DoubtQuestionApprovedProps {
   studentName?: string
   question?: string
+  unsubscribeUrl?: string
 }
 
-const DoubtQuestionApprovedEmail = ({ studentName, question }: DoubtQuestionApprovedProps) => (
+const DoubtQuestionApprovedEmail = ({ studentName, question, unsubscribeUrl }: DoubtQuestionApprovedProps) => (
   <Html lang="pt-BR" dir="ltr">
     <Head />
     <Preview>Sua dúvida foi aprovada - {SITE_NAME}</Preview>
@@ -35,6 +37,7 @@ const DoubtQuestionApprovedEmail = ({ studentName, question }: DoubtQuestionAppr
           Te avisaremos por e-mail assim que a resposta estiver disponível. Fique de olho! 📚
         </Text>
         <Text style={footer}>Equipe {SITE_NAME}</Text>
+        <MarketingFooter unsubscribeUrl={unsubscribeUrl} />
       </Container>
     </Body>
   </Html>

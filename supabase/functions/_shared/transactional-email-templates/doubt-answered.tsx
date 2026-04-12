@@ -3,6 +3,7 @@ import {
   Body, Container, Head, Heading, Html, Preview, Text, Hr,
 } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
+import MarketingFooter from './marketing-footer.tsx'
 
 const SITE_NAME = "Revisão Fácil"
 
@@ -11,9 +12,10 @@ interface DoubtAnsweredProps {
   question?: string
   answer?: string
   teacherName?: string
+  unsubscribeUrl?: string
 }
 
-const DoubtAnsweredEmail = ({ studentName, question, answer, teacherName }: DoubtAnsweredProps) => (
+const DoubtAnsweredEmail = ({ studentName, question, answer, teacherName, unsubscribeUrl }: DoubtAnsweredProps) => (
   <Html lang="pt-BR" dir="ltr">
     <Head />
     <Preview>Sua dúvida foi respondida - {SITE_NAME}</Preview>
@@ -43,6 +45,7 @@ const DoubtAnsweredEmail = ({ studentName, question, answer, teacherName }: Doub
           Acesse sua área de aluno para ver a resposta completa.
         </Text>
         <Text style={footer}>Equipe {SITE_NAME}</Text>
+        <MarketingFooter unsubscribeUrl={unsubscribeUrl} />
       </Container>
     </Body>
   </Html>

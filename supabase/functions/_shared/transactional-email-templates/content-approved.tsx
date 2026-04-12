@@ -3,6 +3,7 @@ import {
   Body, Container, Head, Heading, Html, Preview, Text, Hr,
 } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
+import MarketingFooter from './marketing-footer.tsx'
 
 const SITE_NAME = "Revisão Fácil"
 
@@ -10,9 +11,10 @@ interface ContentApprovedProps {
   teacherName?: string
   contentTitle?: string
   contentType?: string
+  unsubscribeUrl?: string
 }
 
-const ContentApprovedEmail = ({ teacherName, contentTitle, contentType }: ContentApprovedProps) => (
+const ContentApprovedEmail = ({ teacherName, contentTitle, contentType, unsubscribeUrl }: ContentApprovedProps) => (
   <Html lang="pt-BR" dir="ltr">
     <Head />
     <Preview>Seu conteúdo foi aprovado! - {SITE_NAME}</Preview>
@@ -34,6 +36,7 @@ const ContentApprovedEmail = ({ teacherName, contentTitle, contentType }: Conten
           Seu conteúdo já está disponível para os alunos. Continue produzindo conteúdos de qualidade!
         </Text>
         <Text style={footer}>Equipe {SITE_NAME}</Text>
+        <MarketingFooter unsubscribeUrl={unsubscribeUrl} />
       </Container>
     </Body>
   </Html>

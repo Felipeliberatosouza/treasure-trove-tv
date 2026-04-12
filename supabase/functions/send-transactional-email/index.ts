@@ -300,12 +300,26 @@ Deno.serve(async (req) => {
     )
   }
 
-  // 4. Render React Email template to HTML and plain text
+  // 4. Check accepts_marketing and inject unsubscribeUrl into templateData
+  const { data: recipientProfile } = await supabase
+    .from('profiles')
+    .select('accepts_marketing')
+    .eq('email', normalizedEmail)
+    .maybeSingle()
+
+  const enrichedTemplateData = { ...templateData }
+  if (recipientProfile?.accepts_marketing) {
+    const baseUrl = Deno.env.get('SUPABASE_URL')
+    enrichedTemplateData.unsubscribeUrl =
+      `${baseUrl}/functions/v1/handle-email-unsubscribe?token=${unsubscribeToken}`
+  }
+
+  // 5. Render React Email template to HTML and plain text
   const html = await renderAsync(
-    React.createElement(template.component, templateData)
+    React.createElement(template.component, enrichedTemplateData)
   )
   const plainText = await renderAsync(
-    React.createElement(template.component, templateData),
+    React.createElement(template.component, enrichedTemplateData),
     { plainText: true }
   )
 

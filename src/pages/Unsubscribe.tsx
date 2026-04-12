@@ -79,9 +79,10 @@ const Unsubscribe = () => {
           {status === "success" && (
             <>
               <CheckCircle className="h-12 w-12 mx-auto text-green-500" />
-              <h1 className="text-xl font-bold">Inscrição cancelada</h1>
+              <h1 className="text-xl font-bold">E-mail descadastrado</h1>
               <p className="text-muted-foreground">
-                Você não receberá mais e-mails desta plataforma.
+                Seu e-mail foi descadastrado com sucesso. Você não receberá mais
+                e-mails promocionais da Revisão Fácil a partir de hoje.
               </p>
             </>
           )}

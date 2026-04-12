@@ -253,6 +253,8 @@ const VideoDetailModal = ({ video, open, onClose }: VideoDetailModalProps) => {
   const previewLimit = hasFullAccess ? undefined : 20;
 
   return (
+    <>
+    <CpfRequiredModal open={showCpfModal} onClose={() => setShowCpfModal(false)} onComplete={onCpfComplete} />
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-w-lg gap-0 overflow-hidden p-0 border-border bg-card">
         {/* Video area */}

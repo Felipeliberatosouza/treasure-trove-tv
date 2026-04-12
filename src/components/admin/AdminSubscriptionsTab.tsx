@@ -2,10 +2,11 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Bell, AlertTriangle, CheckCircle, XCircle, Calendar, Users } from "lucide-react";
+import { Bell, AlertTriangle, CheckCircle, XCircle, Calendar, Users, Download } from "lucide-react";
 
 interface ExpiringSubscription {
   id: string;
@@ -113,6 +114,27 @@ const AdminSubscriptionsTab = () => {
     return true;
   });
 
+  const exportCsv = () => {
+    const header = "Aluno,E-mail,Plano,Vencimento,Dias Restantes,Status";
+    const rows = filteredSubs.map((s) =>
+      [
+        `"${s.userName}"`,
+        `"${s.userEmail}"`,
+        `"${s.planName}"`,
+        s.expires_at ? new Date(s.expires_at).toLocaleDateString("pt-BR") : "—",
+        s.daysRemaining,
+        s.status,
+      ].join(",")
+    );
+    const blob = new Blob([header + "\n" + rows.join("\n")], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `assinaturas-vencendo-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const stats = {
     total: expiringSubs.length,
     critical: expiringSubs.filter((s) => s.daysRemaining <= 3).length,
@@ -164,17 +186,23 @@ const AdminSubscriptionsTab = () => {
           <Calendar className="h-5 w-5 text-primary" />
           Assinaturas & Lembretes
         </h2>
-        <Select value={reminderDays} onValueChange={setReminderDays}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="7">Próximos 7 dias</SelectItem>
-            <SelectItem value="14">Próximos 14 dias</SelectItem>
-            <SelectItem value="30">Próximos 30 dias</SelectItem>
-            <SelectItem value="60">Próximos 60 dias</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={exportCsv} disabled={filteredSubs.length === 0}>
+            <Download className="h-4 w-4 mr-1" />
+            Exportar CSV
+          </Button>
+          <Select value={reminderDays} onValueChange={setReminderDays}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="7">Próximos 7 dias</SelectItem>
+              <SelectItem value="14">Próximos 14 dias</SelectItem>
+              <SelectItem value="30">Próximos 30 dias</SelectItem>
+              <SelectItem value="60">Próximos 60 dias</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* Stats Cards */}

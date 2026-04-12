@@ -269,6 +269,51 @@ const AdminUsersTab = () => {
           </Table>
         </div>
       )}
+
+      <Dialog open={!!viewContract} onOpenChange={() => setViewContract(null)}>
+        <DialogContent className="max-w-2xl max-h-[90vh]">
+          <DialogHeader>
+            <DialogTitle className="font-display flex items-center gap-2">
+              <FileSignature className="h-5 w-5" /> Contrato — {viewContract?.name}
+            </DialogTitle>
+          </DialogHeader>
+          <ScrollArea className="max-h-[60vh] rounded-lg border border-border p-4 bg-secondary/30">
+            <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-line text-sm leading-relaxed">
+              {viewContract?.contract_text?.split("\n").map((line, i) => {
+                if (line.startsWith("**") && line.endsWith("**")) {
+                  return <p key={i} className="font-bold mt-3 mb-1">{line.replace(/\*\*/g, "")}</p>;
+                }
+                return <p key={i} className="my-0.5">{line.replace(/\*\*/g, "")}</p>;
+              })}
+            </div>
+            {viewContract?.contract_signature_name && (
+              <div className="mt-6 pt-4 border-t border-border text-center">
+                <p className="text-xl italic font-serif">{viewContract.contract_signature_name}</p>
+                <p className="text-xs text-muted-foreground mt-1">CPF: {viewContract.contract_signature_cpf}</p>
+              </div>
+            )}
+          </ScrollArea>
+          <Button
+            variant="outline"
+            className="gap-1"
+            onClick={() => {
+              if (!viewContract?.contract_text) return;
+              const printWindow = window.open("", "_blank");
+              if (!printWindow) return;
+              printWindow.document.write(`<html><head><title>Contrato - ${viewContract.name}</title>
+              <style>body { font-family: Georgia, serif; max-width: 700px; margin: 40px auto; padding: 20px; line-height: 1.6; font-size: 14px; }
+              .signature { text-align: center; margin-top: 40px; border-top: 1px solid #ccc; padding-top: 20px; font-style: italic; font-size: 20px; }
+              .meta { font-size: 11px; color: #666; margin-top: 10px; }</style></head>
+              <body><div>${viewContract.contract_text.replace(/\n/g, "<br/>").replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")}</div>
+              <div class="signature">${viewContract.contract_signature_name}<br/><span class="meta">CPF: ${viewContract.contract_signature_cpf}</span></div></body></html>`);
+              printWindow.document.close();
+              setTimeout(() => printWindow.print(), 500);
+            }}
+          >
+            <Download className="h-4 w-4" /> Download PDF
+          </Button>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

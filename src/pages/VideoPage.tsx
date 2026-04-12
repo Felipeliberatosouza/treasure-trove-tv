@@ -31,6 +31,7 @@ const VideoPage = () => {
   const trial = useFreeTrial();
   const { data: branding } = usePlatformSettings("branding");
   const resourceLimit = useResourceLimit();
+  const { requireCpf, showCpfModal, setShowCpfModal, onCpfComplete } = useCpfGuard();
   const [showLimitModal, setShowLimitModal] = useState(false);
   const [limitInfo, setLimitInfo] = useState<{ resourceType: string; used: number; total: number; hasSubscription: boolean; individualPrice: number | null } | null>(null);
 
@@ -397,13 +398,17 @@ const VideoPage = () => {
 
   const handleBuyUnit = () => {
     if (!user) { navigate("/login"); return; }
-    toast.info("Compra unitária será integrada com Stripe em breve.");
+    requireCpf(() => {
+      toast.info("Compra unitária será integrada com Stripe em breve.");
+    });
   };
 
   const handleSubscribe = () => {
     if (!user) { navigate("/login"); return; }
-    navigate("/");
-    setTimeout(() => document.getElementById("pricing")?.scrollIntoView({ behavior: "smooth" }), 300);
+    requireCpf(() => {
+      navigate("/");
+      setTimeout(() => document.getElementById("pricing")?.scrollIntoView({ behavior: "smooth" }), 300);
+    });
   };
 
   const handleGoToSignup = () => navigate("/signup/student");

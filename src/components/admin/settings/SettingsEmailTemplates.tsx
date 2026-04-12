@@ -491,8 +491,18 @@ const SettingsEmailTemplates = () => {
                     className="flex-1 text-xs"
                     maxLength={7}
                   />
-                </div>
-              </div>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="mt-2"
+              disabled={applyingAll}
+              onClick={handleApplyStyleToAll}
+            >
+              <Copy className="h-4 w-4 mr-1" />
+              {applyingAll ? "Aplicando..." : "Aplicar este estilo a todos os templates"}
+            </Button>
+          </div>
               <div>
                 <Label className="text-xs">Fonte</Label>
                 <Select

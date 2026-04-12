@@ -5,7 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Trash2, UserCog, UserCheck, UserX } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Search, Trash2, UserCog, UserCheck, UserX, FileSignature, Eye, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface UserWithRole {
@@ -16,6 +18,12 @@ interface UserWithRole {
   created_at: string;
   referral_code: number | null;
   active: boolean;
+  contract_signed_at?: string | null;
+  contract_expires_at?: string | null;
+  contract_status?: string | null;
+  contract_text?: string | null;
+  contract_signature_name?: string | null;
+  contract_signature_cpf?: string | null;
 }
 
 const AdminUsersTab = () => {
@@ -24,21 +32,33 @@ const AdminUsersTab = () => {
   const [search, setSearch] = useState("");
   const [filterRole, setFilterRole] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
+  const [viewContract, setViewContract] = useState<UserWithRole | null>(null);
   const { toast } = useToast();
 
   const fetchUsers = async () => {
     setLoading(true);
     const { data: profiles } = await supabase.from("profiles").select("user_id, name, email, created_at, referral_code, active");
     const { data: roles } = await supabase.from("user_roles").select("user_id, role");
+    const { data: contracts } = await supabase.from("teacher_contracts" as any).select("teacher_id, signed_at, expires_at, status, contract_text, signature_name, signature_cpf").eq("status", "active");
 
     if (profiles && roles) {
       const roleMap = new Map(roles.map((r) => [r.user_id, r.role]));
-      const merged: UserWithRole[] = profiles.map((p) => ({
-        ...p,
-        role: roleMap.get(p.user_id) || "student",
-        referral_code: p.referral_code ?? null,
-        active: p.active ?? true,
-      }));
+      const contractMap = new Map((contracts as any[] || []).map((c: any) => [c.teacher_id, c]));
+      const merged: UserWithRole[] = profiles.map((p) => {
+        const contract = contractMap.get(p.user_id) as any;
+        return {
+          ...p,
+          role: roleMap.get(p.user_id) || "student",
+          referral_code: p.referral_code ?? null,
+          active: p.active ?? true,
+          contract_signed_at: contract?.signed_at || null,
+          contract_expires_at: contract?.expires_at || null,
+          contract_status: contract?.status || null,
+          contract_text: contract?.contract_text || null,
+          contract_signature_name: contract?.signature_name || null,
+          contract_signature_cpf: contract?.signature_cpf || null,
+        };
+      });
       setUsers(merged);
     }
     setLoading(false);

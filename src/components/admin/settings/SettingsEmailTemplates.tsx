@@ -219,6 +219,8 @@ const SettingsEmailTemplates = () => {
   const buildPreviewHtml = () => {
     if (!active) return "";
     const textColor = active.text_color || "#333333";
+    const headingColor = active.heading_color || "#dc2626";
+    const buttonColor = active.button_color || "#6366f1";
     const fontFamily = active.font_family || "Arial, sans-serif";
 
     const platformName = brandingData?.platform_name || "Revisão Fácil";
@@ -226,7 +228,7 @@ const SettingsEmailTemplates = () => {
     if (active.use_uploaded_logo && active.logo_url) {
       logoHtml = `<div style="text-align:center;margin-bottom:16px;"><img src="${active.logo_url}" alt="Logo" style="max-height:60px;max-width:200px;" /></div>`;
     } else {
-      logoHtml = `<div style="text-align:center;margin-bottom:16px;font-size:24px;font-weight:bold;background:linear-gradient(135deg,#6366f1,#8b5cf6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">${platformName}</div>`;
+      logoHtml = `<div style="text-align:center;margin-bottom:16px;font-size:24px;font-weight:bold;color:${headingColor};">${platformName}</div>`;
     }
 
     const footerHtml = active.show_social_footer ? buildFooterHtml() : "";
@@ -244,6 +246,18 @@ const SettingsEmailTemplates = () => {
       .replace(/\{\{answer\}\}/g, "Você precisa aplicar a fórmula de Bhaskara...")
       .replace(/\{\{content_title\}\}/g, "Matemática - Equações")
       .replace(/\{\{deadline_days\}\}/g, "3");
+
+    // Apply heading color to h1, h2, h3 tags in body
+    body = body.replace(/<h([1-3])([^>]*)>/gi, (match, level, attrs) => {
+      if (attrs.includes('style=')) {
+        return match.replace(/color:[^;"']*/i, `color:${headingColor}`);
+      }
+      return `<h${level}${attrs} style="color:${headingColor};">`;
+    });
+
+    // Apply button color to elements with button-like styling
+    body = body.replace(/background-color:\s*#[0-9a-fA-F]{3,6}/gi, `background-color:${buttonColor}`);
+    body = body.replace(/background:\s*#[0-9a-fA-F]{3,6}/gi, `background:${buttonColor}`);
 
     return `
       <div style="max-width:600px;margin:0 auto;font-family:${fontFamily};background:#ffffff;padding:24px;border-radius:8px;color:${textColor};">

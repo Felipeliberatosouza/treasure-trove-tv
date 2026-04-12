@@ -23,6 +23,7 @@ const PersonalDataTab = () => {
   const [cpf, setCpf] = useState("");
   const [slug, setSlug] = useState("");
   const [profileTitle, setProfileTitle] = useState("");
+  const [address, setAddress] = useState("");
   const [acceptsMarketing, setAcceptsMarketing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
@@ -39,6 +40,7 @@ const PersonalDataTab = () => {
       setCpf((profile as any).cpf || "");
       setSlug((profile as any).slug || "");
       setProfileTitle((profile as any).profile_title || "");
+      setAddress((profile as any).address || "");
       setAcceptsMarketing((profile as any).accepts_marketing || false);
     }
   }, [profile]);
@@ -82,6 +84,7 @@ const PersonalDataTab = () => {
     if (role === "teacher") {
       updateData.slug = slug;
       updateData.profile_title = profileTitle;
+      updateData.address = address || null;
     }
     const { error } = await supabase
       .from("profiles")
@@ -196,6 +199,15 @@ const PersonalDataTab = () => {
                 onChange={(e) => setProfileTitle(e.target.value)}
                 className="bg-secondary"
                 placeholder="Ex: Aulas de Matemática com Prof. João"
+              />
+            </div>
+            <div>
+              <label className="text-sm text-muted-foreground mb-1 block">Endereço Completo</label>
+              <Input
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                className="bg-secondary"
+                placeholder="Rua, número, bairro, cidade - UF, CEP"
               />
             </div>
             <div>

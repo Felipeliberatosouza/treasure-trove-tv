@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import { Skeleton } from "@/components/ui/skeleton";
 import Navbar from "@/components/Navbar";
@@ -13,7 +14,9 @@ const fallbackTeacherSections = [
 ];
 
 const TermsOfUse = () => {
-  const [tab, setTab] = useState<"students" | "teachers">("students");
+  const [searchParams] = useSearchParams();
+  const initialTab = searchParams.get("tipo") === "professores" ? "teachers" : "students";
+  const [tab, setTab] = useState<"students" | "teachers">(initialTab);
   const { data: studentData, loading: loadingStudents } = usePlatformSettings("terms_of_use_students");
   const { data: teacherData, loading: loadingTeachers } = usePlatformSettings("terms_of_use_teachers");
 

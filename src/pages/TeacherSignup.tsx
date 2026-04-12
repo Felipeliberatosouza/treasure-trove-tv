@@ -292,7 +292,7 @@ const TeacherSignup = () => {
               />
               <label htmlFor="terms" className="text-sm text-muted-foreground leading-tight">
                 Li e concordo com os{" "}
-                <Link to="/termos" target="_blank" className="text-primary hover:underline font-medium">
+                <Link to="/termos?tipo=professores" target="_blank" className="text-primary hover:underline font-medium">
                   Termos de Uso
                 </Link>{" "}
                 *

@@ -3,8 +3,6 @@ import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Mail, Lock, User, Eye, EyeOff, BookOpen, ArrowLeft, CalendarDays, Camera } from "lucide-react";
 import PhoneInput, { isValidBrazilianPhone } from "@/components/PhoneInput";
-import CpfInput from "@/components/CpfInput";
-import { isValidCPF } from "@/lib/cpfValidator";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -25,7 +23,7 @@ const TeacherSignup = () => {
   const [expertise, setExpertise] = useState<string[]>([]);
   const [birthDate, setBirthDate] = useState("");
   const [phone, setPhone] = useState("");
-  const [cpf, setCpf] = useState("");
+  
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
@@ -44,12 +42,8 @@ const TeacherSignup = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !email.trim() || !password.trim() || !birthDate || !phone || !cpf) {
+    if (!name.trim() || !email.trim() || !password.trim() || !birthDate || !phone) {
       toast.error("Preencha todos os campos obrigatórios");
-      return;
-    }
-    if (!isValidCPF(cpf)) {
-      toast.error("Informe um CPF válido");
       return;
     }
     if (!isValidBrazilianPhone(phone)) {
@@ -90,14 +84,9 @@ const TeacherSignup = () => {
           await supabase.from("profiles").update({ avatar_url: urlData.publicUrl }).eq("user_id", userId);
         }
       }
-      // Save phone and CPF to profile
-      if (userId) {
-        const updateData: any = {};
-        if (phone) updateData.phone = phone;
-        if (cpf) updateData.cpf = cpf;
-        if (Object.keys(updateData).length > 0) {
-          await supabase.from("profiles").update(updateData).eq("user_id", userId);
-        }
+      // Save phone to profile
+      if (userId && phone) {
+        await supabase.from("profiles").update({ phone }).eq("user_id", userId);
       }
       // Send welcome email
       if (userId) {
@@ -243,7 +232,7 @@ const TeacherSignup = () => {
             />
           </div>
           <PhoneInput value={phone} onChange={setPhone} />
-          <CpfInput value={cpf} onChange={setCpf} className="bg-secondary border-border" />
+          
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input

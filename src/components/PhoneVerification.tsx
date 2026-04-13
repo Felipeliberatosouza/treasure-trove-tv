@@ -66,11 +66,22 @@ const PhoneVerification = ({ phone, onPhoneChange, onVerified, verified = false,
         body: { phone, channel },
       });
       if (error) {
-        // Handle rate-limit (429) gracefully — extract message from context if available
-        const errorMsg = typeof error === "object" && "context" in error
-          ? (await (error as any).context?.json?.().catch(() => null))?.error || error.message
-          : error.message;
-        toast.error(errorMsg || "Erro ao enviar código");
+        // Handle non-2xx (e.g. 429 rate-limit) gracefully
+        let errorMsg = "Erro ao enviar código";
+        try {
+          if (typeof error === "object" && "context" in error) {
+            const ctx = (error as any).context;
+            if (ctx && typeof ctx.json === "function") {
+              const body = await ctx.json();
+              if (body?.error) errorMsg = body.error;
+            }
+          } else if (error.message) {
+            errorMsg = error.message;
+          }
+        } catch {
+          // ignore parse errors
+        }
+        toast.error(errorMsg);
         setSending(false);
         return;
       }

@@ -1,13 +1,14 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Video } from "lucide-react";
+import { Plus, Video, Pencil, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import ContentForm from "./ContentForm";
 import TeacherContractModal from "./TeacherContractModal";
 import TeacherDataModal from "./TeacherDataModal";
 import { isValidCPF } from "@/lib/cpfValidator";
+import { toast } from "sonner";
 
 const LessonsTab = () => {
   const { user, profile } = useAuth();

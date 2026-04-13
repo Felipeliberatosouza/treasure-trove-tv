@@ -30,6 +30,7 @@ const PersonalDataTab = () => {
   const [address, setAddress] = useState("");
   const [pixKey, setPixKey] = useState("");
   const [acceptsMarketing, setAcceptsMarketing] = useState(false);
+  const [phoneVerified, setPhoneVerified] = useState(false);
   const [saving, setSaving] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [slugStatus, setSlugStatus] = useState<"idle" | "checking" | "available" | "taken">("idle");

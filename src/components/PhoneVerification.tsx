@@ -65,7 +65,15 @@ const PhoneVerification = ({ phone, onPhoneChange, onVerified, verified = false,
       const { data, error } = await supabase.functions.invoke("send-phone-code", {
         body: { phone, channel },
       });
-      if (error) throw error;
+      if (error) {
+        // Handle rate-limit (429) gracefully — extract message from context if available
+        const errorMsg = typeof error === "object" && "context" in error
+          ? (await (error as any).context?.json?.().catch(() => null))?.error || error.message
+          : error.message;
+        toast.error(errorMsg || "Erro ao enviar código");
+        setSending(false);
+        return;
+      }
       if (data?.error) {
         toast.error(data.error);
       } else {

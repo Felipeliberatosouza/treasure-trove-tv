@@ -55,7 +55,11 @@ serve(async (req) => {
       // Check for active subscription
       const subs = await stripe.subscriptions.list({ customer: customerId, status: "active", limit: 1 });
       if (subs.data.length > 0) {
-        throw new Error("Você já possui uma assinatura ativa. Gerencie-a pelo painel.");
+        logStep("User already has active subscription");
+        return new Response(
+          JSON.stringify({ error: "Você já possui uma assinatura ativa. Gerencie-a pelo painel." }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
+        );
       }
     }
 

@@ -35,6 +35,10 @@ const actionLabels: Record<string, { label: string; color: string }> = {
   user_activated: { label: "Usuário Ativado", color: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" },
   user_deactivated: { label: "Usuário Desativado", color: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400" },
   user_deleted: { label: "Usuário Excluído", color: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400" },
+  plan_changed: { label: "Mudança de Plano", color: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400" },
+  plan_upgrade: { label: "Upgrade de Plano", color: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400" },
+  plan_downgrade: { label: "Downgrade de Plano", color: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400" },
+  subscription_cancelled: { label: "Assinatura Cancelada", color: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400" },
 };
 
 const actionIcons: Record<string, typeof LogIn> = {
@@ -50,6 +54,10 @@ const actionIcons: Record<string, typeof LogIn> = {
   user_activated: UserCog,
   user_deactivated: UserCog,
   user_deleted: ShieldAlert,
+  plan_changed: RefreshCw,
+  plan_upgrade: RefreshCw,
+  plan_downgrade: RefreshCw,
+  subscription_cancelled: ShieldAlert,
 };
 
 const AdminAuditLogsTab = () => {

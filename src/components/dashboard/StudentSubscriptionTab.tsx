@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BookOpen, FileText, ClipboardList, Award, StickyNote, HelpCircle, GraduationCap, AlertTriangle, Settings, Loader2, ArrowLeftRight, XCircle, History } from "lucide-react";
 import { toast } from "sonner";
+import { useAuditLog } from "@/hooks/useAuditLog";
 import SubscriptionStatement from "./subscription/SubscriptionStatement";
 import PlanChangeModal from "./subscription/PlanChangeModal";
 import CancelSubscriptionModal from "./subscription/CancelSubscriptionModal";
@@ -54,6 +55,7 @@ interface Purchase {
 
 export default function StudentSubscriptionTab() {
   const { user } = useAuth();
+  const { logAction } = useAuditLog();
   const [activeSubscription, setActiveSubscription] = useState<SubscriptionData | null>(null);
   const [allSubscriptions, setAllSubscriptions] = useState<SubscriptionData[]>([]);
   const [usageCounts, setUsageCounts] = useState<Record<string, number>>({});
@@ -209,6 +211,16 @@ export default function StudentSubscriptionTab() {
         }
       }
 
+      logAction("plan_changed", {
+        targetTable: "student_subscriptions",
+        targetId: activeSubscription?.id,
+        metadata: {
+          previous_plan: plan?.name,
+          new_plan: newPlan?.name,
+          change_type: newPlan && plan ? (newPlan.price > plan.price ? "upgrade" : "downgrade") : "unknown",
+        },
+      });
+
       toast.success("Redirecionando para o portal de gerenciamento...");
     } catch {
       toast.error("Não foi possível processar a mudança de plano.");
@@ -281,6 +293,13 @@ export default function StudentSubscriptionTab() {
           }
         }
       }
+
+      const cancelledPlan = activeSubscription?.subscription_plans as unknown as PlanData;
+      logAction("subscription_cancelled", {
+        targetTable: "student_subscriptions",
+        targetId: activeSubscription?.id,
+        metadata: { plan_name: cancelledPlan?.name },
+      });
 
       toast.success("Redirecionando para o portal de cancelamento...");
     } catch {

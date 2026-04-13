@@ -148,8 +148,8 @@ const PhoneVerification = ({ phone, onPhoneChange, onVerified, verified = false,
           <p className="text-xs text-muted-foreground">
             Digite o código de 6 dígitos enviado via {channel === "sms" ? "SMS" : "WhatsApp"}:
           </p>
-          <div className="flex justify-center">
-            <InputOTP maxLength={6} value={code} onChange={setCode}>
+          <div className="flex justify-center" onFocus={(e) => { e.preventDefault(); }}>
+            <InputOTP maxLength={6} value={code} onChange={setCode} autoFocus={false}>
               <InputOTPGroup>
                 <InputOTPSlot index={0} />
                 <InputOTPSlot index={1} />

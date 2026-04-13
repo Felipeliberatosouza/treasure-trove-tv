@@ -8,7 +8,6 @@ import Footer from "@/components/Footer";
 import WhatsAppFloat from "@/components/WhatsAppFloat";
 import TeacherBanner from "@/components/TeacherBanner";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
-import { usePlatformSettings as usePlatformSettingsHook } from "@/hooks/usePlatformSettings";
 import { useHomepageAreas } from "@/hooks/useCourseAreas";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -27,7 +26,6 @@ interface SearchResult {
 const Index = () => {
   const navigate = useNavigate();
   const { user, profile, role } = useAuth();
-  const ratings = useVideoRatings(videos.map((v) => v.id));
   const { data: trialSettings } = usePlatformSettings("free_trial");
   const showTrialBadge = trialSettings?.enabled ?? false;
   const { areas } = useHomepageAreas();

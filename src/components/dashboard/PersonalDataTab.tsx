@@ -130,7 +130,11 @@ const PersonalDataTab = () => {
 
     if (error) {
       console.error("Profile update error:", error);
-      toast.error("Erro ao salvar dados: " + (error.message || error.code));
+      if (error.code === "23505" && error.message?.includes("slug")) {
+        toast.error("Esta URL de perfil já está em uso. Escolha outra.");
+      } else {
+        toast.error("Erro ao salvar dados: " + (error.message || error.code));
+      }
     } else {
       await logAction("profile_update", { targetTable: "profiles", metadata: { fields: Object.keys(updateData) } });
       toast.success("Dados atualizados com sucesso!");

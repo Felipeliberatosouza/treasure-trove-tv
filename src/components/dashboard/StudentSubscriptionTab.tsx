@@ -294,11 +294,11 @@ export default function StudentSubscriptionTab() {
         }
       }
 
-      const plan = activeSubscription?.subscription_plans as unknown as PlanData;
+      const cancelledPlan = activeSubscription?.subscription_plans as unknown as PlanData;
       logAction("subscription_cancelled", {
         targetTable: "student_subscriptions",
         targetId: activeSubscription?.id,
-        metadata: { plan_name: plan?.name },
+        metadata: { plan_name: cancelledPlan?.name },
       });
 
       toast.success("Redirecionando para o portal de cancelamento...");

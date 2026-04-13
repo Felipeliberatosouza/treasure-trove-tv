@@ -90,6 +90,7 @@ const PhoneVerification = ({ phone, onPhoneChange, onVerified, verified = false,
           // ignore parse errors
         }
         toast.error(errorMsg);
+        setSendCooldown(60);
         setSending(false);
         return;
       }

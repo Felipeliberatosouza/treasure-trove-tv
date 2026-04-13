@@ -1,12 +1,16 @@
 import { useEffect, useState } from "react";
+import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Search, Download, ShieldAlert, LogIn, UserCog, Eye, KeyRound, RefreshCw } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Search, Download, ShieldAlert, LogIn, UserCog, Eye, KeyRound, RefreshCw, CalendarIcon, X } from "lucide-react";
 import { maskEmail } from "@/lib/maskData";
+import { cn } from "@/lib/utils";
 
 interface AuditLog {
   id: string;
@@ -65,16 +69,28 @@ const AdminAuditLogsTab = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filterAction, setFilterAction] = useState("all");
+  const [dateFrom, setDateFrom] = useState<Date | undefined>();
+  const [dateTo, setDateTo] = useState<Date | undefined>();
   const [page, setPage] = useState(0);
   const pageSize = 50;
 
   const fetchLogs = async () => {
     setLoading(true);
-    const { data } = await supabase
+    let query = supabase
       .from("audit_logs" as any)
       .select("*")
-      .order("created_at", { ascending: false })
-      .range(page * pageSize, (page + 1) * pageSize - 1);
+      .order("created_at", { ascending: false });
+
+    if (dateFrom) {
+      query = query.gte("created_at", dateFrom.toISOString());
+    }
+    if (dateTo) {
+      const endOfDay = new Date(dateTo);
+      endOfDay.setHours(23, 59, 59, 999);
+      query = query.lte("created_at", endOfDay.toISOString());
+    }
+
+    const { data } = await query.range(page * pageSize, (page + 1) * pageSize - 1);
 
     if (data && (data as any[]).length > 0) {
       const userIds = [...new Set((data as any[]).map((l: any) => l.user_id).filter(Boolean))];
@@ -103,7 +119,7 @@ const AdminAuditLogsTab = () => {
 
   useEffect(() => {
     fetchLogs();
-  }, [page]);
+  }, [page, dateFrom, dateTo]);
 
   const filtered = logs.filter((l) => {
     const matchSearch =
@@ -157,7 +173,7 @@ const AdminAuditLogsTab = () => {
         </div>
       </div>
 
-      <div className="flex gap-3 flex-wrap">
+      <div className="flex gap-3 flex-wrap items-end">
         <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
@@ -180,6 +196,34 @@ const AdminAuditLogsTab = () => {
             ))}
           </SelectContent>
         </Select>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="outline" size="sm" className={cn("w-[140px] justify-start text-left font-normal", !dateFrom && "text-muted-foreground")}>
+              <CalendarIcon className="h-4 w-4 mr-1" />
+              {dateFrom ? format(dateFrom, "dd/MM/yyyy") : "De"}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar mode="single" selected={dateFrom} onSelect={(d) => { setDateFrom(d); setPage(0); }} initialFocus className="p-3 pointer-events-auto" />
+          </PopoverContent>
+        </Popover>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="outline" size="sm" className={cn("w-[140px] justify-start text-left font-normal", !dateTo && "text-muted-foreground")}>
+              <CalendarIcon className="h-4 w-4 mr-1" />
+              {dateTo ? format(dateTo, "dd/MM/yyyy") : "Até"}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar mode="single" selected={dateTo} onSelect={(d) => { setDateTo(d); setPage(0); }} initialFocus className="p-3 pointer-events-auto" />
+          </PopoverContent>
+        </Popover>
+        {(dateFrom || dateTo) && (
+          <Button variant="ghost" size="sm" onClick={() => { setDateFrom(undefined); setDateTo(undefined); setPage(0); }}>
+            <X className="h-4 w-4 mr-1" />
+            Limpar datas
+          </Button>
+        )}
       </div>
 
       {loading ? (

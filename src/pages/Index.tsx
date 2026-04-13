@@ -7,8 +7,6 @@ import PricingSection from "@/components/PricingSection";
 import Footer from "@/components/Footer";
 import WhatsAppFloat from "@/components/WhatsAppFloat";
 import TeacherBanner from "@/components/TeacherBanner";
-import { videos } from "@/data/courses";
-import { useVideoRatings } from "@/hooks/useVideoRatings";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import { useHomepageAreas } from "@/hooks/useCourseAreas";
 import { supabase } from "@/integrations/supabase/client";
@@ -28,7 +26,6 @@ interface SearchResult {
 const Index = () => {
   const navigate = useNavigate();
   const { user, profile, role } = useAuth();
-  const ratings = useVideoRatings(videos.map((v) => v.id));
   const { data: trialSettings } = usePlatformSettings("free_trial");
   const showTrialBadge = trialSettings?.enabled ?? false;
   const { areas } = useHomepageAreas();
@@ -273,14 +270,15 @@ const Index = () => {
               <span className="text-sm">Carregando vídeos populares...</span>
             </div>
           ) : (
-            <VideoCarousel
-              title="🔥 Mais Populares"
-              videos={popularVideos.length > 0 ? popularVideos : videos}
-              onVideoClick={handleVideoClick}
-              ratings={popularVideos.length > 0 ? undefined : ratings}
-              showTrialBadge={showTrialBadge}
-              watchedIds={watchedIds}
-            />
+            popularVideos.length > 0 && (
+              <VideoCarousel
+                title="🔥 Mais Populares"
+                videos={popularVideos}
+                onVideoClick={handleVideoClick}
+                showTrialBadge={showTrialBadge}
+                watchedIds={watchedIds}
+              />
+            )
           )}
         </div>
 

@@ -37,13 +37,31 @@ const PersonalDataTab = () => {
   const { areas } = useCourseAreas(true);
   const originalSlug = useRef("");
 
+  const [slugSuggestions, setSlugSuggestions] = useState<string[]>([]);
+
+  const generateSuggestions = useCallback(async (base: string) => {
+    const candidates = [
+      `${base}1`, `${base}2`, `${base}3`,
+      `${base}.prof`, `prof.${base}`,
+      `${base}.aulas`, `${base}.edu`,
+    ];
+    const { data } = await supabase
+      .from("profiles")
+      .select("slug")
+      .in("slug", candidates);
+    const taken = new Set((data || []).map((r: any) => r.slug));
+    setSlugSuggestions(candidates.filter(c => !taken.has(c)).slice(0, 3));
+  }, []);
+
   const checkSlugAvailability = useCallback(async (value: string) => {
     if (!value || value.length < 3) {
       setSlugStatus("idle");
+      setSlugSuggestions([]);
       return;
     }
     if (value === originalSlug.current) {
       setSlugStatus("available");
+      setSlugSuggestions([]);
       return;
     }
     setSlugStatus("checking");
@@ -53,8 +71,14 @@ const PersonalDataTab = () => {
       .eq("slug", value)
       .neq("user_id", user?.id || "")
       .limit(1);
-    setSlugStatus(data && data.length > 0 ? "taken" : "available");
-  }, [user?.id]);
+    const isTaken = data && data.length > 0;
+    setSlugStatus(isTaken ? "taken" : "available");
+    if (isTaken) {
+      generateSuggestions(value);
+    } else {
+      setSlugSuggestions([]);
+    }
+  }, [user?.id, generateSuggestions]);
 
   const handleSlugChange = (value: string) => {
     const sanitized = value.toLowerCase().replace(/[^a-z0-9.]/g, "");
@@ -286,7 +310,24 @@ const PersonalDataTab = () => {
                 </div>
               </div>
               {slugStatus === "taken" && (
-                <p className="text-xs text-destructive mt-1">Esta URL já está em uso. Escolha outra.</p>
+                <div className="mt-1 space-y-1">
+                  <p className="text-xs text-destructive">Esta URL já está em uso. Escolha outra.</p>
+                  {slugSuggestions.length > 0 && (
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span className="text-xs text-muted-foreground">Sugestões:</span>
+                      {slugSuggestions.map((s) => (
+                        <button
+                          key={s}
+                          type="button"
+                          onClick={() => { setSlug(s); checkSlugAvailability(s); }}
+                          className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                        >
+                          {s}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               )}
               {slugStatus === "available" && slug !== originalSlug.current && (
                 <p className="text-xs text-green-500 mt-1">URL disponível!</p>

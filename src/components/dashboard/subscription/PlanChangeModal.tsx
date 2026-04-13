@@ -21,6 +21,7 @@ export interface PlanOption {
   name: string;
   price: number;
   highlighted: boolean;
+  features?: string[];
   service_revisoes?: boolean;
   service_revisoes_qty?: number;
   service_resumos?: boolean;
@@ -160,23 +161,63 @@ export default function PlanChangeModal({
           })}
         </div>
 
-        {/* Service comparison */}
-        {showComparison && (
-          <div className="rounded-lg bg-muted/50 border border-border/50 p-3 space-y-1">
-            <p className="font-medium text-sm mb-2">Comparação de serviços</p>
-            <div className="grid grid-cols-[1fr_auto_auto] gap-x-3 items-center pb-1 border-b border-border/30">
-              <span className="text-[10px] uppercase text-muted-foreground font-semibold tracking-wider">Serviço</span>
-              <span className="w-16 text-center text-[10px] uppercase text-muted-foreground font-semibold tracking-wider">Atual</span>
-              <span className="w-16 text-center text-[10px] uppercase text-muted-foreground font-semibold tracking-wider">Novo</span>
-            </div>
-            {SERVICE_KEYS.map(key => (
-              <ServiceComparisonRow
-                key={key}
-                serviceKey={key}
-                currentPlan={currentPlanServices}
-                newPlan={selectedPlan!}
-              />
-            ))}
+        {/* Features & Service comparison */}
+        {selected && selectedPlan && (
+          <div className="rounded-lg bg-muted/50 border border-border/50 p-3 space-y-3">
+            {/* Features comparison */}
+            {(() => {
+              const curFeatures = currentPlanServices.features || [];
+              const newFeatures = selectedPlan.features || [];
+              const allFeatures = Array.from(new Set([...curFeatures, ...newFeatures]));
+              if (allFeatures.length === 0) return null;
+              return (
+                <div className="space-y-1">
+                  <p className="font-medium text-sm">Benefícios do plano</p>
+                  <div className="grid grid-cols-[1fr_auto_auto] gap-x-3 items-center pb-1 border-b border-border/30">
+                    <span className="text-[10px] uppercase text-muted-foreground font-semibold tracking-wider">Benefício</span>
+                    <span className="w-16 text-center text-[10px] uppercase text-muted-foreground font-semibold tracking-wider">Atual</span>
+                    <span className="w-16 text-center text-[10px] uppercase text-muted-foreground font-semibold tracking-wider">Novo</span>
+                  </div>
+                  {allFeatures.map(feature => {
+                    const inCurrent = curFeatures.includes(feature);
+                    const inNew = newFeatures.includes(feature);
+                    const added = !inCurrent && inNew;
+                    const removed = inCurrent && !inNew;
+                    return (
+                      <div key={feature} className="grid grid-cols-[1fr_auto_auto] gap-x-3 items-center py-1 text-xs">
+                        <span className="text-muted-foreground">{feature}</span>
+                        <span className="w-16 text-center">
+                          {inCurrent ? <Check className="h-3 w-3 text-primary mx-auto" /> : <X className="h-3 w-3 text-muted-foreground/40 mx-auto" />}
+                        </span>
+                        <span className="w-16 text-center">
+                          {inNew ? <Check className={`h-3 w-3 mx-auto ${added ? "text-green-600" : "text-primary"}`} /> : <X className={`h-3 w-3 mx-auto ${removed ? "text-amber-600" : "text-muted-foreground/40"}`} />}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
+
+            {/* Services comparison */}
+            {(hasAnyService(currentPlanServices) || hasAnyService(selectedPlan)) && (
+              <div className="space-y-1">
+                <p className="font-medium text-sm">Serviços inclusos</p>
+                <div className="grid grid-cols-[1fr_auto_auto] gap-x-3 items-center pb-1 border-b border-border/30">
+                  <span className="text-[10px] uppercase text-muted-foreground font-semibold tracking-wider">Serviço</span>
+                  <span className="w-16 text-center text-[10px] uppercase text-muted-foreground font-semibold tracking-wider">Atual</span>
+                  <span className="w-16 text-center text-[10px] uppercase text-muted-foreground font-semibold tracking-wider">Novo</span>
+                </div>
+                {SERVICE_KEYS.map(key => (
+                  <ServiceComparisonRow
+                    key={key}
+                    serviceKey={key}
+                    currentPlan={currentPlanServices}
+                    newPlan={selectedPlan}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         )}
 

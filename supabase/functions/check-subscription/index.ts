@@ -51,7 +51,7 @@ serve(async (req) => {
     if (!user?.email) throw new Error("User not authenticated or email not available");
     logStep("User authenticated", { userId: user.id, email: user.email });
 
-    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
+    const stripe = new Stripe(stripeKey, { apiVersion: "2025-04-30.basil" });
 
     // Find Stripe customer
     const customers = await stripe.customers.list({
@@ -86,11 +86,15 @@ serve(async (req) => {
     if (hasActiveSub) {
       const subscription = subscriptions.data[0];
       stripeSubscriptionId = subscription.id;
-      subscriptionEnd = new Date(
-        subscription.current_period_end * 1000
-      ).toISOString();
-      priceId = subscription.items.data[0].price.id;
-      productId = subscription.items.data[0].price.product as string;
+
+      // Safely convert timestamp to ISO string
+      const endTimestamp = subscription.current_period_end;
+      if (endTimestamp && typeof endTimestamp === "number") {
+        subscriptionEnd = new Date(endTimestamp * 1000).toISOString();
+      }
+
+      priceId = subscription.items.data[0]?.price?.id ?? null;
+      productId = (subscription.items.data[0]?.price?.product as string) ?? null;
       logStep("Active subscription found", {
         subscriptionId: subscription.id,
         priceId,
@@ -98,21 +102,18 @@ serve(async (req) => {
         endDate: subscriptionEnd,
       });
 
-      // Sync to local DB: find matching plan and upsert student_subscriptions
+      // Sync to local DB
       const { data: plans } = await supabaseClient
         .from("subscription_plans")
-        .select("id, checkout_url")
+        .select("id, stripe_price_id")
         .eq("active", true);
 
-      // Match plan by checking if its checkout_url contains the price_id or product
-      // For simplicity, we'll pick the first active plan (admin can configure)
       let matchedPlanId: string | null = null;
 
       if (plans && plans.length > 0) {
-        // Try to match by Stripe price to known plans
-        // Map price IDs to plan IDs
-        const PRICE_PLAN_MAP: Record<string, string> = {};
-        // We'll do a simpler approach: check existing subscription in DB
+        // Try to match by stripe_price_id
+        const matched = plans.find((p: any) => p.stripe_price_id === priceId);
+        
         const { data: existingSub } = await supabaseClient
           .from("student_subscriptions")
           .select("id, plan_id")
@@ -132,9 +133,9 @@ serve(async (req) => {
           matchedPlanId = existingSub.plan_id;
           logStep("Updated existing local subscription");
         } else {
-          // Create new local subscription - use first plan as default
-          matchedPlanId = plans[0].id;
-          
+          // Create new local subscription
+          matchedPlanId = matched?.id || plans[0].id;
+
           // Deactivate old subscriptions
           await supabaseClient
             .from("student_subscriptions")
@@ -185,6 +186,15 @@ serve(async (req) => {
           const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
           const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 
+          let expiryDateStr = "";
+          if (expiredSub.expires_at) {
+            try {
+              expiryDateStr = new Date(expiredSub.expires_at).toLocaleDateString("pt-BR");
+            } catch {
+              expiryDateStr = "";
+            }
+          }
+
           await fetch(`${supabaseUrl}/functions/v1/send-transactional-email`, {
             method: "POST",
             headers: {
@@ -198,9 +208,7 @@ serve(async (req) => {
               templateData: {
                 name: profile.name || "Aluno(a)",
                 planName: planData?.name || "Plano",
-                expiryDate: expiredSub.expires_at
-                  ? new Date(expiredSub.expires_at).toLocaleDateString("pt-BR")
-                  : "",
+                expiryDate: expiryDateStr,
                 reason: "expirada",
                 renewLink: "https://revisaofacil.com/#pricing",
               },
@@ -209,7 +217,6 @@ serve(async (req) => {
           logStep("Sent subscription cancelled email", { email: profile.email });
         }
       } else {
-        // No active subs to expire
         await supabaseClient
           .from("student_subscriptions")
           .update({ status: "expired" })

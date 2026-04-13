@@ -151,7 +151,12 @@ const LessonsTab = () => {
                     size="icon"
                     variant="ghost"
                     className="h-8 w-8"
-                    onClick={() => { setEditingLesson(lesson); setShowForm(true); }}
+                    onClick={() => {
+                      if (lesson.admin_approved) {
+                        if (!confirm("Ao editar um conteúdo já aprovado, ele voltará para pendência de aprovação. Deseja continuar?")) return;
+                      }
+                      setEditingLesson(lesson); setShowForm(true);
+                    }}
                     title="Editar"
                   >
                     <Pencil className="h-4 w-4" />

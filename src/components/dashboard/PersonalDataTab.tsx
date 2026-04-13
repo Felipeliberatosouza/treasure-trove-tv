@@ -31,8 +31,41 @@ const PersonalDataTab = () => {
   const [acceptsMarketing, setAcceptsMarketing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [slugStatus, setSlugStatus] = useState<"idle" | "checking" | "available" | "taken">("idle");
+  const slugCheckTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const { areas } = useCourseAreas(true);
+  const originalSlug = useRef("");
+
+  const checkSlugAvailability = useCallback(async (value: string) => {
+    if (!value || value.length < 3) {
+      setSlugStatus("idle");
+      return;
+    }
+    if (value === originalSlug.current) {
+      setSlugStatus("available");
+      return;
+    }
+    setSlugStatus("checking");
+    const { data } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("slug", value)
+      .neq("user_id", user?.id || "")
+      .limit(1);
+    setSlugStatus(data && data.length > 0 ? "taken" : "available");
+  }, [user?.id]);
+
+  const handleSlugChange = (value: string) => {
+    const sanitized = value.toLowerCase().replace(/[^a-z0-9.]/g, "");
+    setSlug(sanitized);
+    if (slugCheckTimeout.current) clearTimeout(slugCheckTimeout.current);
+    if (!sanitized || sanitized.length < 3) {
+      setSlugStatus("idle");
+      return;
+    }
+    slugCheckTimeout.current = setTimeout(() => checkSlugAvailability(sanitized), 500);
+  };
 
   useEffect(() => {
     if (profile) {

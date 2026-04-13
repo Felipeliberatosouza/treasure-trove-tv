@@ -20,6 +20,7 @@ const PersonalDataTab = () => {
   const [name, setName] = useState("");
   const [bio, setBio] = useState("");
   const [expertiseAreas, setExpertiseAreas] = useState<string[]>([]);
+  const [studentAreas, setStudentAreas] = useState<string[]>([]);
   const [birthDate, setBirthDate] = useState("");
   const [phone, setPhone] = useState("");
   const [cpf, setCpf] = useState("");
@@ -38,6 +39,7 @@ const PersonalDataTab = () => {
       setName(profile.name || "");
       setBio(profile.bio || "");
       setExpertiseAreas(profile.expertise_area ? profile.expertise_area.split(", ").filter(Boolean) : []);
+      setStudentAreas((profile as any).areas || []);
       setBirthDate(profile.birth_date || "");
       setPhone(profile.phone || "");
       setCpf((profile as any).cpf || "");
@@ -112,6 +114,9 @@ const PersonalDataTab = () => {
     }
 
     const updateData: any = { name, bio, expertise_area: expertiseAreas.join(", "), birth_date: birthDate || null, phone: phone || null, cpf: cpf || null, accepts_marketing: acceptsMarketing };
+    if (role === "student") {
+      updateData.areas = studentAreas;
+    }
     if (role === "teacher") {
       updateData.slug = slug;
       updateData.profile_title = profileTitle;
@@ -200,6 +205,12 @@ const PersonalDataTab = () => {
           <label className="text-sm text-muted-foreground mb-1 block">CPF {role === "teacher" && <span className="text-xs text-primary font-medium">(obrigatório para contrato)</span>}</label>
           <CpfInput value={cpf} onChange={setCpf} className="bg-secondary" />
         </div>
+        {role === "student" && (
+          <div>
+            <label className="text-sm text-muted-foreground mb-1 block">Áreas de Interesse</label>
+            <AreaSelector selected={studentAreas} onChange={setStudentAreas} max={3} />
+          </div>
+        )}
         <div className="flex items-start gap-2 pt-2">
           <Checkbox
             id="acceptsMarketing"

@@ -1,18 +1,20 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, FileText } from "lucide-react";
+import { Plus, FileText, Pencil, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import ContentForm from "./ContentForm";
 import TeacherContractModal from "./TeacherContractModal";
 import TeacherDataModal from "./TeacherDataModal";
 import { isValidCPF } from "@/lib/cpfValidator";
+import { toast } from "sonner";
 
 const ExamSolutionsTab = () => {
   const { user, profile } = useAuth();
   const [items, setItems] = useState<any[]>([]);
   const [showForm, setShowForm] = useState(false);
+  const [editingItem, setEditingItem] = useState<any>(null);
   const [showContract, setShowContract] = useState(false);
   const [showDataModal, setShowDataModal] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -92,8 +94,9 @@ const ExamSolutionsTab = () => {
       {showForm ? (
         <ContentForm
           table="exam_solutions"
-          onSaved={() => { setShowForm(false); fetchItems(); }}
-          onCancel={() => setShowForm(false)}
+          editData={editingItem}
+          onSaved={() => { setShowForm(false); setEditingItem(null); fetchItems(); }}
+          onCancel={() => { setShowForm(false); setEditingItem(null); }}
         />
       ) : loading ? (
         <p className="text-sm text-muted-foreground">Carregando...</p>
@@ -101,30 +104,62 @@ const ExamSolutionsTab = () => {
         <p className="text-sm text-muted-foreground">Nenhuma resolução cadastrada. Clique em "Nova Resolução" para começar.</p>
       ) : (
         <div className="space-y-3">
-          {items.map((item) => (
-            <div key={item.id} className="flex items-center gap-3 rounded-lg border border-border bg-secondary/50 p-3">
-              {item.thumbnail_url ? (
-                <img src={item.thumbnail_url} alt="" className="h-14 w-20 rounded object-cover" />
-              ) : (
-                <div className="flex h-14 w-20 items-center justify-center rounded bg-muted">
-                  <FileText className="h-5 w-5 text-muted-foreground" />
+          {items.map((item) => {
+            const isPending = item.published && !item.admin_approved;
+            const canModify = isPending || (!item.published && !item.admin_approved);
+            return (
+              <div key={item.id} className="flex items-center gap-3 rounded-lg border border-border bg-secondary/50 p-3">
+                {item.thumbnail_url ? (
+                  <img src={item.thumbnail_url} alt="" className="h-14 w-20 rounded object-cover" />
+                ) : (
+                  <div className="flex h-14 w-20 items-center justify-center rounded bg-muted">
+                    <FileText className="h-5 w-5 text-muted-foreground" />
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-medium truncate">{item.title}</p>
+                    {item.published && item.admin_approved ? (
+                      <Badge variant="default" className="shrink-0 bg-green-600 text-xs">Aprovado</Badge>
+                    ) : isPending ? (
+                      <Badge variant="secondary" className="shrink-0 bg-yellow-500/20 text-yellow-700 dark:text-yellow-400 text-xs">Pendente</Badge>
+                    ) : (
+                      <Badge variant="destructive" className="shrink-0 text-xs">Rejeitado</Badge>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground truncate">{item.description || "Sem descrição"}</p>
                 </div>
-              )}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <p className="text-sm font-medium truncate">{item.title}</p>
-                  {item.published && item.admin_approved ? (
-                    <Badge variant="default" className="shrink-0 bg-green-600 text-xs">Aprovado</Badge>
-                  ) : item.published && !item.admin_approved ? (
-                    <Badge variant="secondary" className="shrink-0 bg-yellow-500/20 text-yellow-700 dark:text-yellow-400 text-xs">Pendente</Badge>
-                  ) : (
-                    <Badge variant="destructive" className="shrink-0 text-xs">Rejeitado</Badge>
-                  )}
-                </div>
-                <p className="text-xs text-muted-foreground truncate">{item.description || "Sem descrição"}</p>
+                {canModify && (
+                  <div className="flex items-center gap-1 shrink-0">
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-8 w-8"
+                      onClick={() => { setEditingItem(item); setShowForm(true); }}
+                      title="Editar"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-8 w-8 text-destructive hover:text-destructive"
+                      onClick={async () => {
+                        if (!confirm("Tem certeza que deseja excluir esta resolução?")) return;
+                        const { error } = await supabase.from("exam_solutions").delete().eq("id", item.id);
+                        if (error) { toast.error("Erro ao excluir"); return; }
+                        toast.success("Resolução excluída");
+                        fetchItems();
+                      }}
+                      title="Excluir"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 

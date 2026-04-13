@@ -180,8 +180,12 @@ const PhoneVerification = ({ phone, onPhoneChange, onVerified, verified = false,
 
       {!isVerified && step === "code" && (
         <div className="space-y-3">
+          <div className="flex items-center gap-2 rounded-md bg-primary/10 px-3 py-2 text-xs text-primary">
+            <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
+            Código enviado para o celular via {channel === "sms" ? "SMS" : "WhatsApp"}
+          </div>
           <p className="text-xs text-muted-foreground">
-            Digite o código de 6 dígitos enviado via {channel === "sms" ? "SMS" : "WhatsApp"}:
+            Digite o código de 6 dígitos:
           </p>
           <div className="flex justify-center">
             <InputOTP maxLength={6} value={code} onChange={setCode} autoFocus={false} data-no-autofocus>

@@ -3,6 +3,7 @@ import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
 type UserRole = "student" | "teacher" | "admin" | null;
+type AllRoles = ("student" | "teacher" | "admin")[];
 
 interface Profile {
   name: string;
@@ -27,12 +28,14 @@ interface AuthContextType {
   session: Session | null;
   user: User | null;
   role: UserRole;
+  allRoles: AllRoles;
   profile: Profile | null;
   loading: boolean;
   subscription: SubscriptionStatus;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
   refreshSubscription: () => Promise<void>;
+  addStudentRole: () => Promise<void>;
 }
 
 const defaultSubscription: SubscriptionStatus = {
@@ -46,12 +49,14 @@ const AuthContext = createContext<AuthContextType>({
   session: null,
   user: null,
   role: null,
+  allRoles: [],
   profile: null,
   loading: true,
   subscription: defaultSubscription,
   signOut: async () => {},
   refreshProfile: async () => {},
   refreshSubscription: async () => {},
+  addStudentRole: async () => {},
 });
 
 export const useAuth = () => useContext(AuthContext);

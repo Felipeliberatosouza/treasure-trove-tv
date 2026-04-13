@@ -99,7 +99,7 @@ const AdminDashboard = () => {
           </motion.div>
         </div>
       </div>
-    </div>
+    </MandatoryMfaGuard>
   );
 };
 

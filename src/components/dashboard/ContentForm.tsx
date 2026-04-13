@@ -14,6 +14,7 @@ import { compositeVideo, type ImpactWord } from "@/utils/videoCompositor";
 
 interface ContentFormProps {
   table: "lessons" | "exam_solutions";
+  editData?: any;
   onSaved: () => void;
   onCancel: () => void;
 }

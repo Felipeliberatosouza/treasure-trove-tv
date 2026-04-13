@@ -14,6 +14,7 @@ const LessonsTab = () => {
   const { user, profile } = useAuth();
   const [lessons, setLessons] = useState<any[]>([]);
   const [showForm, setShowForm] = useState(false);
+  const [showContract, setShowContract] = useState(false);
   const [editingLesson, setEditingLesson] = useState<any>(null);
   const [showDataModal, setShowDataModal] = useState(false);
   const [loading, setLoading] = useState(true);

@@ -118,29 +118,43 @@ const TwoFactorSetup = ({ onSetupComplete }: TwoFactorSetupProps = {}) => {
 
   const startEnroll = async () => {
     setEnrolling(true);
+    setQrCode(null);
+    setSecret(null);
+    setFactorId(null);
+    setChallengeId(null);
+    setVerifyCode("");
+
     try {
-      // Remove any existing unverified TOTP factors first
-      const { data: existingFactors } = await supabase.auth.mfa.listFactors();
-      if (existingFactors?.totp) {
-        for (const factor of existingFactors.totp) {
-          if ((factor.status as string) !== "verified") {
-            await supabase.auth.mfa.unenroll({ factorId: factor.id });
-          }
-        }
+      const { data: userData } = await supabase.auth.getUser();
+      const pendingTotpFactors = ((userData.user?.factors ?? []) as Array<{
+        id: string;
+        factor_type?: string;
+        status?: string;
+      }>).filter((factor) => factor.factor_type === "totp" && factor.status !== "verified");
+
+      for (const factor of pendingTotpFactors) {
+        await supabase.auth.mfa.unenroll({ factorId: factor.id }).catch(() => undefined);
       }
+
+      const friendlyName = pendingTotpFactors.length > 0
+        ? `Authenticator App ${Date.now()}`
+        : "Authenticator App";
 
       const { data, error } = await supabase.auth.mfa.enroll({
         factorType: "totp",
-        friendlyName: "Authenticator App",
+        friendlyName,
       });
       if (error) throw error;
+
       setFactorId(data.id);
       setQrCode(data.totp.qr_code);
       setSecret(data.totp.secret);
 
-      const { data: challengeData, error: challengeError } =
-        await supabase.auth.mfa.challenge({ factorId: data.id });
+      const { data: challengeData, error: challengeError } = await supabase.auth.mfa.challenge({
+        factorId: data.id,
+      });
       if (challengeError) throw challengeError;
+
       setChallengeId(challengeData.id);
     } catch (err: any) {
       toast.error(err.message || "Erro ao iniciar configuração 2FA");

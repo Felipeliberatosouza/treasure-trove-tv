@@ -24,6 +24,7 @@ import { template as paymentConfirmation } from './payment-confirmation.tsx'
 import { template as subscriptionCancelled } from './subscription-cancelled.tsx'
 import { template as suspiciousLoginAdminNotify } from './suspicious-login-admin-notify.tsx'
 import { template as planChanged } from './plan-changed.tsx'
+import { template as subscriptionChangeAdminNotify } from './subscription-change-admin-notify.tsx'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'doubt-approved': doubtApproved,

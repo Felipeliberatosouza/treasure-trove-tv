@@ -69,10 +69,18 @@ const AdminAuditLogsTab = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filterAction, setFilterAction] = useState("all");
+  const [filterUserId, setFilterUserId] = useState("all");
+  const [userOptions, setUserOptions] = useState<{ user_id: string; name: string; email: string }[]>([]);
   const [dateFrom, setDateFrom] = useState<Date | undefined>();
   const [dateTo, setDateTo] = useState<Date | undefined>();
   const [page, setPage] = useState(0);
   const pageSize = 50;
+
+  useEffect(() => {
+    supabase.from("profiles").select("user_id, name, email").order("name").then(({ data }) => {
+      setUserOptions(data || []);
+    });
+  }, []);
 
   const fetchLogs = async () => {
     setLoading(true);
@@ -88,6 +96,9 @@ const AdminAuditLogsTab = () => {
       const endOfDay = new Date(dateTo);
       endOfDay.setHours(23, 59, 59, 999);
       query = query.lte("created_at", endOfDay.toISOString());
+    }
+    if (filterUserId !== "all") {
+      query = query.eq("user_id", filterUserId);
     }
 
     const { data } = await query.range(page * pageSize, (page + 1) * pageSize - 1);
@@ -119,7 +130,7 @@ const AdminAuditLogsTab = () => {
 
   useEffect(() => {
     fetchLogs();
-  }, [page, dateFrom, dateTo]);
+  }, [page, dateFrom, dateTo, filterUserId]);
 
   const filtered = logs.filter((l) => {
     const matchSearch =
@@ -192,6 +203,19 @@ const AdminAuditLogsTab = () => {
             {uniqueActions.map((a) => (
               <SelectItem key={a} value={a}>
                 {actionLabels[a]?.label || a}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={filterUserId} onValueChange={(v) => { setFilterUserId(v); setPage(0); }}>
+          <SelectTrigger className="w-[200px]">
+            <SelectValue placeholder="Filtrar usuário" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos os usuários</SelectItem>
+            {userOptions.map((u) => (
+              <SelectItem key={u.user_id} value={u.user_id}>
+                {u.name || u.email}
               </SelectItem>
             ))}
           </SelectContent>

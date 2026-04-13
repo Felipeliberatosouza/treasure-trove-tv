@@ -97,6 +97,9 @@ const AdminAuditLogsTab = () => {
       endOfDay.setHours(23, 59, 59, 999);
       query = query.lte("created_at", endOfDay.toISOString());
     }
+    if (filterUserId !== "all") {
+      query = query.eq("user_id", filterUserId);
+    }
 
     const { data } = await query.range(page * pageSize, (page + 1) * pageSize - 1);
 

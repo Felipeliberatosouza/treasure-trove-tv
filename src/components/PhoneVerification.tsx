@@ -21,6 +21,7 @@ const PhoneVerification = ({ phone, onPhoneChange, onVerified, verified = false,
   const [sending, setSending] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [countdown, setCountdown] = useState(0);
+  const [sendCooldown, setSendCooldown] = useState(0);
   const [isVerified, setIsVerified] = useState(verified);
   const originalPhone = useRef(phone);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -45,6 +46,13 @@ const PhoneVerification = ({ phone, onPhoneChange, onVerified, verified = false,
     const timer = setTimeout(() => setCountdown(c => c - 1), 1000);
     return () => clearTimeout(timer);
   }, [countdown]);
+
+  // Send cooldown timer (initial send button)
+  useEffect(() => {
+    if (sendCooldown <= 0) return;
+    const timer = setTimeout(() => setSendCooldown(c => c - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [sendCooldown]);
 
   // Scroll container into view when switching to code step (prevents auto-focus scroll jump)
   useEffect(() => {
@@ -82,6 +90,7 @@ const PhoneVerification = ({ phone, onPhoneChange, onVerified, verified = false,
           // ignore parse errors
         }
         toast.error(errorMsg);
+        setSendCooldown(60);
         setSending(false);
         return;
       }
@@ -91,6 +100,7 @@ const PhoneVerification = ({ phone, onPhoneChange, onVerified, verified = false,
         toast.success(`Código enviado via ${channel === "sms" ? "SMS" : "WhatsApp"}!`);
         setStep("code");
         setCountdown(60);
+        setSendCooldown(60);
       }
     } catch (err: any) {
       toast.error(err.message || "Erro ao enviar código");
@@ -163,11 +173,17 @@ const PhoneVerification = ({ phone, onPhoneChange, onVerified, verified = false,
           <Button
             type="button"
             onClick={sendCode}
-            disabled={sending}
+            disabled={sending || sendCooldown > 0}
             size="sm"
             className="w-full"
           >
-            {sending ? <><Loader2 className="h-4 w-4 animate-spin mr-1" /> Enviando...</> : "Enviar código"}
+            {sending ? (
+              <><Loader2 className="h-4 w-4 animate-spin mr-1" /> Enviando...</>
+            ) : sendCooldown > 0 ? (
+              `Aguarde ${sendCooldown}s para reenviar`
+            ) : (
+              "Enviar código"
+            )}
           </Button>
         </div>
       )}

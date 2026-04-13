@@ -55,6 +55,7 @@ interface Purchase {
 
 export default function StudentSubscriptionTab() {
   const { user } = useAuth();
+  const { logAction } = useAuditLog();
   const [activeSubscription, setActiveSubscription] = useState<SubscriptionData | null>(null);
   const [allSubscriptions, setAllSubscriptions] = useState<SubscriptionData[]>([]);
   const [usageCounts, setUsageCounts] = useState<Record<string, number>>({});

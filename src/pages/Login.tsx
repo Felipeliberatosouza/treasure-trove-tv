@@ -18,6 +18,7 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [deactivatedMsg, setDeactivatedMsg] = useState(false);
   const [blockedMsg, setBlockedMsg] = useState(false);
+  const [showMfaChallenge, setShowMfaChallenge] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

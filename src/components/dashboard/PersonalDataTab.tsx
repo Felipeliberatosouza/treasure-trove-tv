@@ -132,6 +132,10 @@ const PersonalDataTab = () => {
         toast.error("A chave PIX é obrigatória para professores (necessária para pagamento)");
         return;
       }
+      if (slugStatus === "taken") {
+        toast.error("A URL do perfil já está em uso. Escolha outra antes de salvar.");
+        return;
+      }
     }
     setSaving(true);
 

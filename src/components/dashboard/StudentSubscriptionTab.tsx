@@ -150,6 +150,12 @@ export default function StudentSubscriptionTab() {
         const dailyRateNew = cycleInfo.totalDays > 0 ? newPlan.price / cycleInfo.totalDays : 0;
         const costRemaining = dailyRateNew * (cycleInfo.totalDays - cycleInfo.daysUsed);
         const proRata = Math.abs(costRemaining - creditRemaining);
+        const studentName = user.user_metadata?.name || "";
+        const effectiveDate = new Date().toLocaleDateString("pt-BR");
+        const proRataAmount = `R$ ${proRata.toFixed(2)}`;
+        const proRataExplanation = isUpgrade
+          ? `Diferença proporcional de ${cycleInfo.totalDays - cycleInfo.daysUsed} dias restantes no ciclo atual.`
+          : `Crédito de ${cycleInfo.totalDays - cycleInfo.daysUsed} dias restantes será aplicado na próxima fatura.`;
 
         await supabase.functions.invoke("send-transactional-email", {
           body: {
@@ -157,18 +163,50 @@ export default function StudentSubscriptionTab() {
             recipientEmail: user.email,
             idempotencyKey: `plan-change-${activeSubscription!.id}-${newPlanId}-${Date.now()}`,
             templateData: {
-              name: user.user_metadata?.name || "",
+              name: studentName,
               previousPlan: plan.name,
               newPlan: newPlan.name,
               changeType: isUpgrade ? "upgrade" : "downgrade",
-              proRataAmount: `R$ ${proRata.toFixed(2)}`,
-              proRataExplanation: isUpgrade
-                ? `Diferença proporcional de ${cycleInfo.totalDays - cycleInfo.daysUsed} dias restantes no ciclo atual.`
-                : `Crédito de ${cycleInfo.totalDays - cycleInfo.daysUsed} dias restantes será aplicado na próxima fatura.`,
-              effectiveDate: new Date().toLocaleDateString("pt-BR"),
+              proRataAmount,
+              proRataExplanation,
+              effectiveDate,
             },
           },
         });
+
+        // Notify admins
+        const { data: admins } = await supabase
+          .from("user_roles")
+          .select("user_id")
+          .eq("role", "admin");
+
+        if (admins) {
+          const { data: adminProfiles } = await supabase
+            .from("profiles")
+            .select("email")
+            .in("user_id", admins.map(a => a.user_id));
+
+          for (const admin of adminProfiles || []) {
+            await supabase.functions.invoke("send-transactional-email", {
+              body: {
+                templateName: "subscription-change-admin-notify",
+                recipientEmail: admin.email,
+                idempotencyKey: `plan-change-admin-${admin.email}-${activeSubscription!.id}-${Date.now()}`,
+                templateData: {
+                  studentName,
+                  studentEmail: user.email,
+                  actionType: "plan-change",
+                  previousPlan: plan.name,
+                  newPlan: newPlan.name,
+                  changeType: isUpgrade ? "upgrade" : "downgrade",
+                  proRataAmount,
+                  proRataExplanation,
+                  effectiveDate,
+                },
+              },
+            });
+          }
+        }
       }
 
       toast.success("Redirecionando para o portal de gerenciamento...");
@@ -192,6 +230,10 @@ export default function StudentSubscriptionTab() {
         const usedAmount = dailyRate * cycleInfo.daysUsed;
         const minCharge = ((plan.min_usage_charge_pct || 0) / 100) * plan.price;
         const chargeAmount = Math.max(usedAmount, minCharge);
+        const studentName = user.user_metadata?.name || "";
+        const effectiveDate = new Date().toLocaleDateString("pt-BR");
+        const proRataAmount = `R$ ${chargeAmount.toFixed(2)}`;
+        const proRataExplanation = `Cobrança proporcional: ${cycleInfo.daysUsed} dias usados de ${cycleInfo.totalDays}. Mínimo: ${plan.min_usage_charge_pct || 0}% do plano.`;
 
         await supabase.functions.invoke("send-transactional-email", {
           body: {
@@ -199,13 +241,45 @@ export default function StudentSubscriptionTab() {
             recipientEmail: user.email,
             idempotencyKey: `cancel-${activeSubscription!.id}-${Date.now()}`,
             templateData: {
-              name: user.user_metadata?.name || "",
+              name: studentName,
               planName: plan.name,
-              expiryDate: new Date().toLocaleDateString("pt-BR"),
+              expiryDate: effectiveDate,
               reason: "cancelada",
             },
           },
         });
+
+        // Notify admins
+        const { data: admins } = await supabase
+          .from("user_roles")
+          .select("user_id")
+          .eq("role", "admin");
+
+        if (admins) {
+          const { data: adminProfiles } = await supabase
+            .from("profiles")
+            .select("email")
+            .in("user_id", admins.map(a => a.user_id));
+
+          for (const admin of adminProfiles || []) {
+            await supabase.functions.invoke("send-transactional-email", {
+              body: {
+                templateName: "subscription-change-admin-notify",
+                recipientEmail: admin.email,
+                idempotencyKey: `cancel-admin-${admin.email}-${activeSubscription!.id}-${Date.now()}`,
+                templateData: {
+                  studentName,
+                  studentEmail: user.email,
+                  actionType: "cancellation",
+                  previousPlan: plan.name,
+                  proRataAmount,
+                  proRataExplanation,
+                  effectiveDate,
+                },
+              },
+            });
+          }
+        }
       }
 
       toast.success("Redirecionando para o portal de cancelamento...");

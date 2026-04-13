@@ -63,39 +63,30 @@ const PhoneVerification = ({ phone, onPhoneChange, onVerified, verified = false,
       const { data, error } = await supabase.functions.invoke("send-phone-code", {
         body: { phone, channel },
       });
+
       if (error) {
-        // Handle non-2xx (e.g. 429 rate-limit) gracefully
-        let errorMsg = "Erro ao enviar código";
-        try {
-          if (typeof error === "object" && "context" in error) {
-            const ctx = (error as any).context;
-            if (ctx && typeof ctx.json === "function") {
-              const body = await ctx.json();
-              if (body?.error) errorMsg = body.error;
-            }
-          } else if (error.message) {
-            errorMsg = error.message;
-          }
-        } catch {
-          // ignore parse errors
-        }
-        toast.error(errorMsg);
+        toast.error(error.message || "Erro ao enviar código");
         setSendCooldown(60);
-        setSending(false);
         return;
       }
-      if (data?.error) {
-        toast.error(data.error);
-      } else {
-        toast.success(`Código enviado via ${channel === "sms" ? "SMS" : "WhatsApp"}!`);
-        setStep("code");
-        setCountdown(60);
-        setSendCooldown(60);
+
+      if (!data?.ok) {
+        toast.error(data?.error || "Erro ao enviar código");
+        if (data?.diagnostics?.rateLimit) {
+          setSendCooldown(60);
+        }
+        return;
       }
+
+      toast.success(`Código enviado via ${channel === "sms" ? "SMS" : "WhatsApp"}!`);
+      setStep("code");
+      setCountdown(60);
+      setSendCooldown(60);
     } catch (err: any) {
       toast.error(err.message || "Erro ao enviar código");
+    } finally {
+      setSending(false);
     }
-    setSending(false);
   };
 
   const verifyCode = async () => {
@@ -108,10 +99,18 @@ const PhoneVerification = ({ phone, onPhoneChange, onVerified, verified = false,
       const { data, error } = await supabase.functions.invoke("verify-phone-code", {
         body: { phone, code },
       });
-      if (error) throw error;
-      if (data?.error) {
-        toast.error(data.error);
-      } else if (data?.verified) {
+
+      if (error) {
+        toast.error(error.message || "Erro ao verificar código");
+        return;
+      }
+
+      if (!data?.ok) {
+        toast.error(data?.error || "Erro ao verificar código");
+        return;
+      }
+
+      if (data?.verified) {
         toast.success("Celular verificado com sucesso!");
         setIsVerified(true);
         originalPhone.current = phone;
@@ -119,8 +118,9 @@ const PhoneVerification = ({ phone, onPhoneChange, onVerified, verified = false,
       }
     } catch (err: any) {
       toast.error(err.message || "Erro ao verificar código");
+    } finally {
+      setVerifying(false);
     }
-    setVerifying(false);
   };
 
   return (

@@ -69,16 +69,28 @@ const AdminAuditLogsTab = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filterAction, setFilterAction] = useState("all");
+  const [dateFrom, setDateFrom] = useState<Date | undefined>();
+  const [dateTo, setDateTo] = useState<Date | undefined>();
   const [page, setPage] = useState(0);
   const pageSize = 50;
 
   const fetchLogs = async () => {
     setLoading(true);
-    const { data } = await supabase
+    let query = supabase
       .from("audit_logs" as any)
       .select("*")
-      .order("created_at", { ascending: false })
-      .range(page * pageSize, (page + 1) * pageSize - 1);
+      .order("created_at", { ascending: false });
+
+    if (dateFrom) {
+      query = query.gte("created_at", dateFrom.toISOString());
+    }
+    if (dateTo) {
+      const endOfDay = new Date(dateTo);
+      endOfDay.setHours(23, 59, 59, 999);
+      query = query.lte("created_at", endOfDay.toISOString());
+    }
+
+    const { data } = await query.range(page * pageSize, (page + 1) * pageSize - 1);
 
     if (data && (data as any[]).length > 0) {
       const userIds = [...new Set((data as any[]).map((l: any) => l.user_id).filter(Boolean))];

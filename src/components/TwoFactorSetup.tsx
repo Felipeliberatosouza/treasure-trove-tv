@@ -119,6 +119,16 @@ const TwoFactorSetup = ({ onSetupComplete }: TwoFactorSetupProps = {}) => {
   const startEnroll = async () => {
     setEnrolling(true);
     try {
+      // Remove any existing unverified TOTP factors first
+      const { data: existingFactors } = await supabase.auth.mfa.listFactors();
+      if (existingFactors?.totp) {
+        for (const factor of existingFactors.totp) {
+          if (factor.status === "unverified") {
+            await supabase.auth.mfa.unenroll({ factorId: factor.id });
+          }
+        }
+      }
+
       const { data, error } = await supabase.auth.mfa.enroll({
         factorType: "totp",
         friendlyName: "Authenticator App",

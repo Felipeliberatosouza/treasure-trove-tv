@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import PhoneInput, { isValidBrazilianPhone } from "@/components/PhoneInput";
@@ -24,7 +24,6 @@ const PhoneVerification = ({ phone, onPhoneChange, onVerified, verified = false,
   const [sendCooldown, setSendCooldown] = useState(0);
   const [isVerified, setIsVerified] = useState(verified);
   const originalPhone = useRef(phone);
-  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setIsVerified(verified);
@@ -53,15 +52,6 @@ const PhoneVerification = ({ phone, onPhoneChange, onVerified, verified = false,
     const timer = setTimeout(() => setSendCooldown(c => c - 1), 1000);
     return () => clearTimeout(timer);
   }, [sendCooldown]);
-
-  // Scroll container into view when switching to code step (prevents auto-focus scroll jump)
-  useEffect(() => {
-    if (step === "code" && containerRef.current) {
-      requestAnimationFrame(() => {
-        containerRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-      });
-    }
-  }, [step]);
 
   const sendCode = async () => {
     if (!isValidBrazilianPhone(phone)) {
@@ -134,7 +124,7 @@ const PhoneVerification = ({ phone, onPhoneChange, onVerified, verified = false,
   };
 
   return (
-    <div className={`space-y-3 ${className}`} ref={containerRef}>
+    <div className={`space-y-3 ${className}`}>
       <div>
         <label className="text-sm text-muted-foreground mb-1 block">
           Celular <span className="text-destructive">*</span>

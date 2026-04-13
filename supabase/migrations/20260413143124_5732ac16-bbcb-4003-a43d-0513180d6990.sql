@@ -1,0 +1,1 @@
+ALTER TABLE public.subscription_plans ADD COLUMN IF NOT EXISTS min_usage_charge_pct numeric NOT NULL DEFAULT 0;

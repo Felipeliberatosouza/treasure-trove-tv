@@ -438,7 +438,7 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
       <div className="flex gap-3 pt-2">
         <Button type="submit" disabled={saving} className="font-display">
           <Upload className="h-4 w-4 mr-1" />
-          {saving ? (processingUpload ? processingStep || "Processando..." : "Enviando...") : "Submeter para Aprovação"}
+          {saving ? (processingUpload ? processingStep || "Processando..." : "Enviando...") : editData?.id ? "Salvar Alterações" : "Submeter para Aprovação"}
         </Button>
         <Button type="button" variant="secondary" onClick={onCancel} className="font-display">
           Cancelar

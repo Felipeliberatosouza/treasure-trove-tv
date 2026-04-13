@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import PhoneInput, { isValidBrazilianPhone } from "@/components/PhoneInput";
@@ -23,6 +23,7 @@ const PhoneVerification = ({ phone, onPhoneChange, onVerified, verified = false,
   const [countdown, setCountdown] = useState(0);
   const [isVerified, setIsVerified] = useState(verified);
   const originalPhone = useRef(phone);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setIsVerified(verified);

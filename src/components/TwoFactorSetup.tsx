@@ -76,6 +76,7 @@ const TwoFactorSetup = ({ onSetupComplete }: TwoFactorSetupProps = {}) => {
       });
       if (error) throw error;
       toast.success("2FA ativado com sucesso!");
+      onSetupComplete?.();
       await logAction("mfa_enabled");
       setIsEnrolled(true);
       setQrCode(null);

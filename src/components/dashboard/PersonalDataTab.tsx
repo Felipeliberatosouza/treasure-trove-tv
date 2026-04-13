@@ -39,6 +39,7 @@ const PersonalDataTab = () => {
       setName(profile.name || "");
       setBio(profile.bio || "");
       setExpertiseAreas(profile.expertise_area ? profile.expertise_area.split(", ").filter(Boolean) : []);
+      setStudentAreas((profile as any).areas || []);
       setBirthDate(profile.birth_date || "");
       setPhone(profile.phone || "");
       setCpf((profile as any).cpf || "");

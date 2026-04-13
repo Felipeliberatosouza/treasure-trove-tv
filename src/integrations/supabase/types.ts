@@ -1244,6 +1244,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_student_role_to_self: { Args: never; Returns: boolean }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean

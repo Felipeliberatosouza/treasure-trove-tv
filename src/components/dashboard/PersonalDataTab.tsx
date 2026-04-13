@@ -131,6 +131,10 @@ const PersonalDataTab = () => {
 
   const handleSave = async () => {
     if (!user) return;
+    if (!name || !name.trim()) {
+      toast.error("O nome completo é obrigatório");
+      return;
+    }
     if (!birthDate) {
       toast.error("A data de nascimento é obrigatória");
       return;

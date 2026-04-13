@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -12,7 +12,7 @@ import AreaSelector from "@/components/AreaSelector";
 import PhoneInput, { isValidBrazilianPhone } from "@/components/PhoneInput";
 import CpfInput from "@/components/CpfInput";
 import { isValidCPF } from "@/lib/cpfValidator";
-import { Camera, Loader2 } from "lucide-react";
+import { Camera, Loader2, CheckCircle2, XCircle, AlertCircle } from "lucide-react";
 
 const PersonalDataTab = () => {
   const { user, profile, role, refreshProfile } = useAuth();

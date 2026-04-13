@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Settings, Palette, Phone, FileText, Star, Layout, Gift, FolderOpen, Mail, Package, FileSignature } from "lucide-react";
+import { Settings, Palette, Phone, FileText, Star, Layout, Gift, FolderOpen, Mail, Package, FileSignature, ShieldCheck } from "lucide-react";
 import SettingsBranding from "./settings/SettingsBranding";
 import SettingsContact from "./settings/SettingsContact";
 import SettingsPages from "./settings/SettingsPages";
@@ -11,6 +11,7 @@ import SettingsEmailTemplates from "./settings/SettingsEmailTemplates";
 import SettingsTeacherBanner from "./settings/SettingsTeacherBanner";
 import SettingsProductConfig from "./settings/SettingsProductConfig";
 import SettingsTeacherContract from "./settings/SettingsTeacherContract";
+import TwoFactorSetup from "@/components/TwoFactorSetup";
 
 const sections = [
   { id: "branding", label: "Identidade Visual", icon: Palette },
@@ -24,6 +25,7 @@ const sections = [
   { id: "trial", label: "Teste Grátis", icon: Gift },
   { id: "products", label: "Config. de Produtos", icon: Package },
   { id: "contract", label: "Contrato do Professor", icon: FileSignature },
+  { id: "security", label: "Segurança (2FA)", icon: ShieldCheck },
 ] as const;
 
 type SectionId = (typeof sections)[number]["id"];
@@ -65,6 +67,14 @@ const AdminSettingsTab = () => {
       {activeSection === "trial" && <SettingsFreeTrial />}
       {activeSection === "products" && <SettingsProductConfig />}
       {activeSection === "contract" && <SettingsTeacherContract />}
+      {activeSection === "security" && (
+        <div className="rounded-xl border bg-card p-6 space-y-4">
+          <h3 className="font-display font-semibold flex items-center gap-2">
+            <ShieldCheck className="h-5 w-5" /> Autenticação de Dois Fatores (2FA)
+          </h3>
+          <TwoFactorSetup />
+        </div>
+      )}
     </div>
   );
 };

@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { toast } from "sonner";
 import { translateAuthError } from "@/lib/translateAuthError";
+import TwoFactorChallenge from "@/components/TwoFactorChallenge";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -17,6 +18,7 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [deactivatedMsg, setDeactivatedMsg] = useState(false);
   const [blockedMsg, setBlockedMsg] = useState(false);
+  const [showMfaChallenge, setShowMfaChallenge] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -101,6 +103,15 @@ const Login = () => {
         return;
       }
 
+      // Check if MFA is enrolled
+      const { data: factors } = await supabase.auth.mfa.listFactors();
+      const hasVerifiedTotp = factors?.totp?.some((f) => f.status === "verified");
+      if (hasVerifiedTotp) {
+        setShowMfaChallenge(true);
+        setLoading(false);
+        return;
+      }
+
       // Log successful login to audit
       try {
         await supabase.from("audit_logs").insert([{
@@ -117,6 +128,36 @@ const Login = () => {
     navigate("/");
     setLoading(false);
   };
+
+  const handleMfaVerified = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase.from("audit_logs").insert([{
+          user_id: user.id,
+          action: "login",
+          metadata: { method: "password", mfa: true },
+        }] as any);
+      }
+    } catch {
+      // Non-critical
+    }
+    toast.success("Login realizado com sucesso!");
+    navigate("/");
+  };
+
+  const handleMfaCancel = async () => {
+    await supabase.auth.signOut();
+    setShowMfaChallenge(false);
+  };
+
+  if (showMfaChallenge) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background px-4">
+        <TwoFactorChallenge onVerified={handleMfaVerified} onCancel={handleMfaCancel} />
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">

@@ -6,9 +6,6 @@ import { Label } from "@/components/ui/label";
 import { Save, Smartphone } from "lucide-react";
 
 type TwilioConfig = TwilioConfigSettings;
-  sms_from_number: string;
-  whatsapp_from_number: string;
-}
 
 const defaultConfig: TwilioConfig = {
   sms_from_number: "",

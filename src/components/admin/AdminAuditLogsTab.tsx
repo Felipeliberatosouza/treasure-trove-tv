@@ -1,12 +1,16 @@
 import { useEffect, useState } from "react";
+import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Search, Download, ShieldAlert, LogIn, UserCog, Eye, KeyRound, RefreshCw } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Search, Download, ShieldAlert, LogIn, UserCog, Eye, KeyRound, RefreshCw, CalendarIcon, X } from "lucide-react";
 import { maskEmail } from "@/lib/maskData";
+import { cn } from "@/lib/utils";
 
 interface AuditLog {
   id: string;

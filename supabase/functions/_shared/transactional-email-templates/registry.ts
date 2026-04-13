@@ -25,6 +25,7 @@ import { template as subscriptionCancelled } from './subscription-cancelled.tsx'
 import { template as suspiciousLoginAdminNotify } from './suspicious-login-admin-notify.tsx'
 import { template as planChanged } from './plan-changed.tsx'
 import { template as subscriptionChangeAdminNotify } from './subscription-change-admin-notify.tsx'
+import { template as contentEditedAdminNotify } from './content-edited-admin-notify.tsx'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'doubt-approved': doubtApproved,
@@ -43,4 +44,5 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'suspicious-login-admin-notify': suspiciousLoginAdminNotify,
   'plan-changed': planChanged,
   'subscription-change-admin-notify': subscriptionChangeAdminNotify,
+  'content-edited-admin-notify': contentEditedAdminNotify,
 }

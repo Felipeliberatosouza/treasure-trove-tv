@@ -919,6 +919,7 @@ export type Database = {
           highlighted: boolean
           id: string
           min_commitment_days: number
+          min_usage_charge_pct: number
           name: string
           price: number
           service_aula_particular: boolean
@@ -948,6 +949,7 @@ export type Database = {
           highlighted?: boolean
           id?: string
           min_commitment_days?: number
+          min_usage_charge_pct?: number
           name: string
           price?: number
           service_aula_particular?: boolean
@@ -977,6 +979,7 @@ export type Database = {
           highlighted?: boolean
           id?: string
           min_commitment_days?: number
+          min_usage_charge_pct?: number
           name?: string
           price?: number
           service_aula_particular?: boolean

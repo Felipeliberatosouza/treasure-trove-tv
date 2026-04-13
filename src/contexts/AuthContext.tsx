@@ -3,6 +3,7 @@ import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
 type UserRole = "student" | "teacher" | "admin" | null;
+type AllRoles = ("student" | "teacher" | "admin")[];
 
 interface Profile {
   name: string;
@@ -27,12 +28,14 @@ interface AuthContextType {
   session: Session | null;
   user: User | null;
   role: UserRole;
+  allRoles: AllRoles;
   profile: Profile | null;
   loading: boolean;
   subscription: SubscriptionStatus;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
   refreshSubscription: () => Promise<void>;
+  addStudentRole: () => Promise<void>;
 }
 
 const defaultSubscription: SubscriptionStatus = {
@@ -46,12 +49,14 @@ const AuthContext = createContext<AuthContextType>({
   session: null,
   user: null,
   role: null,
+  allRoles: [],
   profile: null,
   loading: true,
   subscription: defaultSubscription,
   signOut: async () => {},
   refreshProfile: async () => {},
   refreshSubscription: async () => {},
+  addStudentRole: async () => {},
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -60,6 +65,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [role, setRole] = useState<UserRole>(null);
+  const [allRoles, setAllRoles] = useState<AllRoles>([]);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [subscription, setSubscription] = useState<SubscriptionStatus>(defaultSubscription);
@@ -71,11 +77,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       .eq("user_id", userId);
     if (data && data.length > 0) {
       const roles = data.map((r) => r.role);
+      setAllRoles(roles as AllRoles);
       if (roles.includes("admin")) setRole("admin");
       else if (roles.includes("teacher")) setRole("teacher");
       else setRole("student");
     } else {
       setRole(null);
+      setAllRoles([]);
     }
   };
 
@@ -90,6 +98,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       await supabase.auth.signOut();
       setProfile(null);
       setRole(null);
+      setAllRoles([]);
       setUser(null);
       setSession(null);
       return;
@@ -129,6 +138,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     await checkSubscription();
   }, [checkSubscription]);
 
+  const addStudentRole = useCallback(async () => {
+    if (!user) return;
+    if (allRoles.includes("student")) return;
+    const { error } = await supabase.rpc("add_student_role_to_self" as any);
+    if (!error) {
+      await fetchRole(user.id);
+    }
+  }, [user, allRoles]);
+
   useEffect(() => {
     const { data: { subscription: authSub } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
@@ -141,6 +159,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           }, 0);
         } else {
           setRole(null);
+          setAllRoles([]);
           setProfile(null);
           setSubscription(defaultSubscription);
         }
@@ -161,14 +180,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => authSub.unsubscribe();
   }, []);
 
-  // Check subscription after user is set
   useEffect(() => {
     if (user) {
       checkSubscription();
     }
   }, [user, checkSubscription]);
 
-  // Periodic refresh every 60s
   useEffect(() => {
     if (!user) return;
     const interval = setInterval(checkSubscription, 60_000);
@@ -180,6 +197,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setSession(null);
     setUser(null);
     setRole(null);
+    setAllRoles([]);
     setProfile(null);
     setSubscription(defaultSubscription);
   };
@@ -190,12 +208,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         session,
         user,
         role,
+        allRoles,
         profile,
         loading,
         subscription,
         signOut,
         refreshProfile,
         refreshSubscription,
+        addStudentRole,
       }}
     >
       {children}

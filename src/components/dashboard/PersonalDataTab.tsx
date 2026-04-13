@@ -310,7 +310,24 @@ const PersonalDataTab = () => {
                 </div>
               </div>
               {slugStatus === "taken" && (
-                <p className="text-xs text-destructive mt-1">Esta URL já está em uso. Escolha outra.</p>
+                <div className="mt-1 space-y-1">
+                  <p className="text-xs text-destructive">Esta URL já está em uso. Escolha outra.</p>
+                  {slugSuggestions.length > 0 && (
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span className="text-xs text-muted-foreground">Sugestões:</span>
+                      {slugSuggestions.map((s) => (
+                        <button
+                          key={s}
+                          type="button"
+                          onClick={() => { setSlug(s); checkSlugAvailability(s); }}
+                          className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                        >
+                          {s}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               )}
               {slugStatus === "available" && slug !== originalSlug.current && (
                 <p className="text-xs text-green-500 mt-1">URL disponível!</p>

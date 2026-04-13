@@ -6,7 +6,11 @@ import { toast } from "sonner";
 import { Shield, ShieldCheck, ShieldOff, Copy, Loader2 } from "lucide-react";
 import { useAuditLog } from "@/hooks/useAuditLog";
 
-const TwoFactorSetup = () => {
+interface TwoFactorSetupProps {
+  onSetupComplete?: () => void;
+}
+
+const TwoFactorSetup = ({ onSetupComplete }: TwoFactorSetupProps = {}) => {
   const [loading, setLoading] = useState(true);
   const [enrolling, setEnrolling] = useState(false);
   const [factorId, setFactorId] = useState<string | null>(null);
@@ -72,6 +76,7 @@ const TwoFactorSetup = () => {
       });
       if (error) throw error;
       toast.success("2FA ativado com sucesso!");
+      onSetupComplete?.();
       await logAction("mfa_enabled");
       setIsEnrolled(true);
       setQrCode(null);

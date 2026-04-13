@@ -58,6 +58,7 @@ const UserMenu = forwardRef<HTMLDivElement>((_, forwardedRef) => {
       )}
     </div>
   );
-};
+});
+UserMenu.displayName = "UserMenu";
 
 export default UserMenu;

@@ -294,6 +294,13 @@ export default function StudentSubscriptionTab() {
         }
       }
 
+      const plan = activeSubscription?.subscription_plans as unknown as PlanData;
+      logAction("subscription_cancelled", {
+        targetTable: "student_subscriptions",
+        targetId: activeSubscription?.id,
+        metadata: { plan_name: plan?.name },
+      });
+
       toast.success("Redirecionando para o portal de cancelamento...");
     } catch {
       toast.error("Não foi possível processar o cancelamento.");

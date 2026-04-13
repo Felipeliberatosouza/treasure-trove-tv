@@ -67,6 +67,14 @@ const AdminSettingsTab = () => {
       {activeSection === "trial" && <SettingsFreeTrial />}
       {activeSection === "products" && <SettingsProductConfig />}
       {activeSection === "contract" && <SettingsTeacherContract />}
+      {activeSection === "security" && (
+        <div className="rounded-xl border bg-card p-6 space-y-4">
+          <h3 className="font-display font-semibold flex items-center gap-2">
+            <ShieldCheck className="h-5 w-5" /> Autenticação de Dois Fatores (2FA)
+          </h3>
+          <TwoFactorSetup />
+        </div>
+      )}
     </div>
   );
 };

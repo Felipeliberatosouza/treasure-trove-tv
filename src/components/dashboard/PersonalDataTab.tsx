@@ -20,6 +20,7 @@ const PersonalDataTab = () => {
   const [name, setName] = useState("");
   const [bio, setBio] = useState("");
   const [expertiseAreas, setExpertiseAreas] = useState<string[]>([]);
+  const [studentAreas, setStudentAreas] = useState<string[]>([]);
   const [birthDate, setBirthDate] = useState("");
   const [phone, setPhone] = useState("");
   const [cpf, setCpf] = useState("");

@@ -212,8 +212,8 @@ const PhoneVerification = ({ phone, onPhoneChange, onVerified, verified = false,
             >
               ← Alterar número
             </button>
-            {countdown > 0 ? (
-              <span className="text-xs text-muted-foreground">Reenviar em {countdown}s</span>
+            {countdown > 0 || sendCooldown > 0 ? (
+              <span className="text-xs text-muted-foreground">Reenviar em {Math.max(countdown, sendCooldown)}s</span>
             ) : (
               <button
                 type="button"

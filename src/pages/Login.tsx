@@ -151,6 +151,14 @@ const Login = () => {
     setShowMfaChallenge(false);
   };
 
+  if (showMfaChallenge) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background px-4">
+        <TwoFactorChallenge onVerified={handleMfaVerified} onCancel={handleMfaCancel} />
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <motion.div

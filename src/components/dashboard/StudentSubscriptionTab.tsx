@@ -110,7 +110,7 @@ export default function StudentSubscriptionTab() {
       // Fetch available plans for plan change (with service fields)
       const { data: plansData } = await supabase
         .from("subscription_plans")
-        .select("id, name, price, highlighted, service_revisoes, service_revisoes_qty, service_resumos, service_resumos_qty, service_simulados, service_simulados_qty, service_top_questoes, service_top_questoes_qty, service_colinhas, service_colinhas_qty, service_duvidas, service_duvidas_qty, service_aula_particular, service_aula_particular_qty")
+        .select("id, name, price, highlighted, features, service_revisoes, service_revisoes_qty, service_resumos, service_resumos_qty, service_simulados, service_simulados_qty, service_top_questoes, service_top_questoes_qty, service_colinhas, service_colinhas_qty, service_duvidas, service_duvidas_qty, service_aula_particular, service_aula_particular_qty")
         .eq("active", true)
         .order("sort_order");
 

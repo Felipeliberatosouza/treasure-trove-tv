@@ -16,7 +16,7 @@ interface CpfRequiredModalProps {
 
 const CpfRequiredModal = ({ open, onClose, onComplete }: CpfRequiredModalProps) => {
   const { user, profile, refreshProfile } = useAuth();
-  const [cpf, setCpf] = useState((profile as any)?.cpf || "");
+  const [cpf, setCpf] = useState(profile?.cpf || "");
   const [saving, setSaving] = useState(false);
 
   const handleSave = async () => {
@@ -27,12 +27,14 @@ const CpfRequiredModal = ({ open, onClose, onComplete }: CpfRequiredModalProps) 
     }
 
     setSaving(true);
+    const cleanedCpf = cpf.replace(/\D/g, "");
     const { error } = await supabase
       .from("profiles")
-      .update({ cpf })
+      .update({ cpf: cleanedCpf })
       .eq("user_id", user.id);
 
     if (error) {
+      console.error("CPF save error:", error);
       toast.error("Erro ao salvar CPF");
     } else {
       toast.success("CPF salvo com sucesso!");

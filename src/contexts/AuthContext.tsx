@@ -141,7 +141,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const addStudentRole = useCallback(async () => {
     if (!user) return;
     if (allRoles.includes("student")) return;
-    const { error } = await supabase.from("user_roles").insert({ user_id: user.id, role: "student" });
+    const { error } = await supabase.rpc("add_student_role_to_self");
     if (!error) {
       await fetchRole(user.id);
     }

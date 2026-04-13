@@ -16,7 +16,7 @@ export function useCpfGuard() {
 
   const requireCpf = useCallback(
     (action: () => void) => {
-      const cpf = (profile as any)?.cpf;
+      const cpf = profile?.cpf;
       if (cpf && isValidCPF(cpf)) {
         action();
       } else {

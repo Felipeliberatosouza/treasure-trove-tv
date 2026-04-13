@@ -1,5 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Settings, Palette, Phone, FileText, Star, Layout, Gift, FolderOpen, Mail, Package, FileSignature, ShieldCheck } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import SettingsBranding from "./settings/SettingsBranding";
 import SettingsContact from "./settings/SettingsContact";
 import SettingsPages from "./settings/SettingsPages";
@@ -12,6 +16,68 @@ import SettingsTeacherBanner from "./settings/SettingsTeacherBanner";
 import SettingsProductConfig from "./settings/SettingsProductConfig";
 import SettingsTeacherContract from "./settings/SettingsTeacherContract";
 import TwoFactorSetup from "@/components/TwoFactorSetup";
+
+const SecuritySection = () => {
+  const [mandatory, setMandatory] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    supabase
+      .from("platform_settings")
+      .select("value")
+      .eq("key", "admin_2fa_required")
+      .maybeSingle()
+      .then(({ data }) => {
+        setMandatory(data?.value === true);
+        setLoading(false);
+      });
+  }, []);
+
+  const toggleMandatory = async (checked: boolean) => {
+    setMandatory(checked);
+    const { error } = await supabase
+      .from("platform_settings")
+      .update({ value: JSON.parse(JSON.stringify(checked)) })
+      .eq("key", "admin_2fa_required");
+    if (error) {
+      toast.error("Erro ao salvar configuração");
+      setMandatory(!checked);
+    } else {
+      toast.success(checked ? "2FA obrigatório ativado para admins" : "2FA obrigatório desativado");
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="rounded-xl border bg-card p-6 space-y-4">
+        <h3 className="font-display font-semibold flex items-center gap-2">
+          <ShieldCheck className="h-5 w-5" /> Autenticação de Dois Fatores (2FA)
+        </h3>
+        <TwoFactorSetup />
+      </div>
+
+      <div className="rounded-xl border bg-card p-6 space-y-4">
+        <h3 className="font-display font-semibold flex items-center gap-2">
+          <ShieldCheck className="h-5 w-5" /> Política de 2FA para Administradores
+        </h3>
+        <p className="text-sm text-muted-foreground">
+          Quando ativado, todos os administradores serão obrigados a configurar a autenticação de dois fatores antes de acessar o painel administrativo.
+        </p>
+        <div className="flex items-center gap-3">
+          <Switch
+            id="mandatory-2fa"
+            checked={mandatory}
+            onCheckedChange={toggleMandatory}
+            disabled={loading}
+          />
+          <Label htmlFor="mandatory-2fa" className="text-sm font-medium">
+            Exigir 2FA obrigatório para todos os administradores
+          </Label>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const sections = [
   { id: "branding", label: "Identidade Visual", icon: Palette },

@@ -96,7 +96,7 @@ const PhoneVerification = ({ phone, onPhoneChange, onVerified, verified = false,
   };
 
   return (
-    <div className={`space-y-3 ${className}`}>
+    <div className={`space-y-3 ${className}`} ref={containerRef}>
       <div>
         <label className="text-sm text-muted-foreground mb-1 block">
           Celular <span className="text-destructive">*</span>
@@ -149,8 +149,8 @@ const PhoneVerification = ({ phone, onPhoneChange, onVerified, verified = false,
           <p className="text-xs text-muted-foreground">
             Digite o código de 6 dígitos enviado via {channel === "sms" ? "SMS" : "WhatsApp"}:
           </p>
-          <div className="flex justify-center" onFocus={(e) => { e.preventDefault(); }}>
-            <InputOTP maxLength={6} value={code} onChange={setCode} autoFocus={false}>
+          <div className="flex justify-center">
+            <InputOTP maxLength={6} value={code} onChange={setCode} autoFocus={false} data-no-autofocus>
               <InputOTPGroup>
                 <InputOTPSlot index={0} />
                 <InputOTPSlot index={1} />

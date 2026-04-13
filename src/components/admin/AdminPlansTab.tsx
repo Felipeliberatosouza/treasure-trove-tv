@@ -179,6 +179,24 @@ const AdminPlansTab = () => {
                   </p>
                 </div>
               )}
+
+              <div>
+                <Label>% mínimo de cobrança no cancelamento</Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="number"
+                    min={0}
+                    max={100}
+                    className="w-24"
+                    value={(plan.min_usage_charge_pct as number) || 0}
+                    onChange={(e) => updatePlan(pi, "min_usage_charge_pct", parseFloat(e.target.value) || 0)}
+                  />
+                  <span className="text-sm text-muted-foreground">%</span>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Percentual mínimo do valor mensal cobrado ao cancelar, mesmo que o uso proporcional seja menor. Ex: 50% = cobra no mínimo metade do mês.
+                </p>
+              </div>
             </div>
 
 

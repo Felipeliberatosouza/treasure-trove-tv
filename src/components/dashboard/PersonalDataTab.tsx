@@ -108,6 +108,7 @@ const PersonalDataTab = () => {
       setAddress((profile as any).address || "");
       setPixKey((profile as any).pix_key || "");
       setAcceptsMarketing((profile as any).accepts_marketing || false);
+      setPhoneVerified((profile as any).phone_verified || false);
     }
   }, [profile]);
 

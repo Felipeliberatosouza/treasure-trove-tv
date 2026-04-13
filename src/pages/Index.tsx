@@ -273,14 +273,15 @@ const Index = () => {
               <span className="text-sm">Carregando vídeos populares...</span>
             </div>
           ) : (
-            <VideoCarousel
-              title="🔥 Mais Populares"
-              videos={popularVideos.length > 0 ? popularVideos : videos}
-              onVideoClick={handleVideoClick}
-              ratings={popularVideos.length > 0 ? undefined : ratings}
-              showTrialBadge={showTrialBadge}
-              watchedIds={watchedIds}
-            />
+            popularVideos.length > 0 && (
+              <VideoCarousel
+                title="🔥 Mais Populares"
+                videos={popularVideos}
+                onVideoClick={handleVideoClick}
+                showTrialBadge={showTrialBadge}
+                watchedIds={watchedIds}
+              />
+            )
           )}
         </div>
 

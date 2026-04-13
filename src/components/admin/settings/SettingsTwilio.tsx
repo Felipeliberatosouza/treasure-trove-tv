@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
-import { usePlatformSettings } from "@/hooks/usePlatformSettings";
+import { usePlatformSettings, TwilioConfigSettings } from "@/hooks/usePlatformSettings";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Save, Smartphone } from "lucide-react";
 
-interface TwilioConfig {
+type TwilioConfig = TwilioConfigSettings;
   sms_from_number: string;
   whatsapp_from_number: string;
 }

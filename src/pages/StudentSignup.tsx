@@ -61,6 +61,10 @@ const StudentSignup = () => {
       toast.error("Informe um celular válido com DDD (11 dígitos)");
       return;
     }
+    if (!phoneVerified) {
+      toast.error("Verifique seu celular antes de continuar");
+      return;
+    }
     const pwdError = validatePassword(password, birthDate);
     if (pwdError) {
       toast.error(pwdError);
@@ -243,7 +247,7 @@ const StudentSignup = () => {
               max={new Date().toISOString().split("T")[0]}
             />
           </div>
-          <PhoneInput value={phone} onChange={setPhone} />
+          <PhoneVerification phone={phone} onPhoneChange={setPhone} onVerified={() => setPhoneVerified(true)} verified={phoneVerified} />
           <div className="relative">
             <CreditCard className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <div className="pl-10">

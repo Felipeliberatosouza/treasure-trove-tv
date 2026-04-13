@@ -8,35 +8,54 @@ import { Button } from "@/components/ui/button";
 
 const PaymentSuccess = () => {
   const navigate = useNavigate();
-  const { refreshSubscription, user, profile } = useAuth();
+  const { refreshSubscription, subscription, user, profile } = useAuth();
   const [verified, setVerified] = useState(false);
   const [checking, setChecking] = useState(true);
   const emailSentRef = useRef(false);
 
+  // Poll for subscription confirmation
   useEffect(() => {
-    let attempts = 0;
-    const maxAttempts = 10;
+    if (!user) {
+      setChecking(false);
+      return;
+    }
 
-    const verify = async () => {
-      await refreshSubscription();
-      attempts++;
-      if (attempts < maxAttempts) {
-        setTimeout(() => {
-          setVerified(true);
-          setChecking(false);
-        }, 2000);
-      } else {
+    let cancelled = false;
+    let attempts = 0;
+    const maxAttempts = 15;
+    const pollInterval = 2000;
+
+    const poll = async () => {
+      while (!cancelled && attempts < maxAttempts) {
+        attempts++;
+        try {
+          await refreshSubscription();
+          // We check subscription.subscribed in the next render cycle,
+          // so we just wait and let the effect below handle it
+        } catch (err) {
+          console.error("Erro ao verificar assinatura:", err);
+        }
+        await new Promise((r) => setTimeout(r, pollInterval));
+      }
+      if (!cancelled && !verified) {
+        // Timed out but still show success (webhook may be delayed)
         setVerified(true);
         setChecking(false);
       }
     };
 
-    if (user) {
-      verify();
-    } else {
+    poll();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
+
+  // React to subscription becoming active
+  useEffect(() => {
+    if (subscription.subscribed && !verified) {
+      setVerified(true);
       setChecking(false);
     }
-  }, [user, refreshSubscription]);
+  }, [subscription.subscribed, verified]);
 
   // Send payment confirmation email once verified
   useEffect(() => {
@@ -45,7 +64,6 @@ const PaymentSuccess = () => {
 
     const sendConfirmationEmail = async () => {
       try {
-        // Get subscription info
         const { data: sub } = await supabase
           .from("student_subscriptions")
           .select("plan_id, started_at, subscription_plans(name, price)")
@@ -83,6 +101,7 @@ const PaymentSuccess = () => {
     sendConfirmationEmail();
   }, [verified, user, profile]);
 
+  // Redirect after verified
   useEffect(() => {
     if (verified) {
       const timer = setTimeout(() => navigate("/dashboard/student"), 5000);

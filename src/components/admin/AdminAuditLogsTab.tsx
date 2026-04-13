@@ -207,6 +207,19 @@ const AdminAuditLogsTab = () => {
             ))}
           </SelectContent>
         </Select>
+        <Select value={filterUserId} onValueChange={(v) => { setFilterUserId(v); setPage(0); }}>
+          <SelectTrigger className="w-[200px]">
+            <SelectValue placeholder="Filtrar usuário" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos os usuários</SelectItem>
+            {userOptions.map((u) => (
+              <SelectItem key={u.user_id} value={u.user_id}>
+                {u.name || u.email}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         <Popover>
           <PopoverTrigger asChild>
             <Button variant="outline" size="sm" className={cn("w-[140px] justify-start text-left font-normal", !dateFrom && "text-muted-foreground")}>

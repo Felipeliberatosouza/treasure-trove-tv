@@ -46,6 +46,15 @@ const PhoneVerification = ({ phone, onPhoneChange, onVerified, verified = false,
     return () => clearTimeout(timer);
   }, [countdown]);
 
+  // Scroll container into view when switching to code step (prevents auto-focus scroll jump)
+  useEffect(() => {
+    if (step === "code" && containerRef.current) {
+      requestAnimationFrame(() => {
+        containerRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      });
+    }
+  }, [step]);
+
   const sendCode = async () => {
     if (!isValidBrazilianPhone(phone)) {
       toast.error("Informe um celular válido com DDD (11 dígitos)");

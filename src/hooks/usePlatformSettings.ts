@@ -112,7 +112,13 @@ type SettingsMap = {
   privacy_policy: PrivacyPolicySettings;
   doubt_response_deadline_days: number;
   product_config: ProductConfigSettings;
+  twilio_config: TwilioConfigSettings;
 };
+
+export interface TwilioConfigSettings {
+  sms_from_number: string;
+  whatsapp_from_number: string;
+}
 
 export interface ProductConfigSettings {
   revisoes: {

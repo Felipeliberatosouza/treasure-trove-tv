@@ -9,7 +9,8 @@ import { toast } from "sonner";
 import { useAuditLog } from "@/hooks/useAuditLog";
 import { useCourseAreas } from "@/hooks/useCourseAreas";
 import AreaSelector from "@/components/AreaSelector";
-import PhoneInput, { isValidBrazilianPhone } from "@/components/PhoneInput";
+import PhoneVerification from "@/components/PhoneVerification";
+import { isValidBrazilianPhone } from "@/components/PhoneInput";
 import CpfInput from "@/components/CpfInput";
 import { isValidCPF } from "@/lib/cpfValidator";
 import { Camera, Loader2, CheckCircle2, XCircle, AlertCircle } from "lucide-react";
@@ -29,6 +30,7 @@ const PersonalDataTab = () => {
   const [address, setAddress] = useState("");
   const [pixKey, setPixKey] = useState("");
   const [acceptsMarketing, setAcceptsMarketing] = useState(false);
+  const [phoneVerified, setPhoneVerified] = useState(false);
   const [saving, setSaving] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [slugStatus, setSlugStatus] = useState<"idle" | "checking" | "available" | "taken">("idle");
@@ -106,6 +108,7 @@ const PersonalDataTab = () => {
       setAddress((profile as any).address || "");
       setPixKey((profile as any).pix_key || "");
       setAcceptsMarketing((profile as any).accepts_marketing || false);
+      setPhoneVerified((profile as any).phone_verified || false);
     }
   }, [profile]);
 
@@ -142,6 +145,14 @@ const PersonalDataTab = () => {
     }
     if (phone && !isValidBrazilianPhone(phone)) {
       toast.error("Informe um celular válido com DDD (11 dígitos)");
+      return;
+    }
+    if (!phone || !isValidBrazilianPhone(phone)) {
+      toast.error("O celular é obrigatório");
+      return;
+    }
+    if (!phoneVerified) {
+      toast.error("Verifique seu celular antes de salvar");
       return;
     }
     if (cpf && !isValidCPF(cpf)) {
@@ -276,10 +287,12 @@ const PersonalDataTab = () => {
             max={new Date().toISOString().split("T")[0]}
           />
         </div>
-        <div>
-          <label className="text-sm text-muted-foreground mb-1 block">Celular</label>
-          <PhoneInput value={phone} onChange={setPhone} placeholder="(00) 00000-0000" />
-        </div>
+        <PhoneVerification
+          phone={phone}
+          onPhoneChange={(v) => { setPhone(v); if (v !== phone) setPhoneVerified(false); }}
+          onVerified={() => setPhoneVerified(true)}
+          verified={phoneVerified}
+        />
         <div>
           <label className="text-sm text-muted-foreground mb-1 block">CPF {role === "teacher" && <span className="text-xs text-primary font-medium">(obrigatório para contrato)</span>}</label>
           <CpfInput value={cpf} onChange={setCpf} className="bg-secondary" />

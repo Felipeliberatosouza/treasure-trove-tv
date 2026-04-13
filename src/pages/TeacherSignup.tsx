@@ -2,7 +2,8 @@ import { useState, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Mail, Lock, User, Eye, EyeOff, BookOpen, ArrowLeft, CalendarDays, Camera, CreditCard } from "lucide-react";
-import PhoneInput, { isValidBrazilianPhone } from "@/components/PhoneInput";
+import PhoneVerification from "@/components/PhoneVerification";
+import { isValidBrazilianPhone } from "@/components/PhoneInput";
 import CpfInput from "@/components/CpfInput";
 import { isValidCPF } from "@/lib/cpfValidator";
 import { Button } from "@/components/ui/button";
@@ -37,6 +38,7 @@ const TeacherSignup = () => {
   const [acceptsMarketing, setAcceptsMarketing] = useState(false);
   const [alsoStudent, setAlsoStudent] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [phoneVerified, setPhoneVerified] = useState(false);
   const { areas } = useCourseAreas(true);
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -63,6 +65,10 @@ const TeacherSignup = () => {
     }
     if (!isValidBrazilianPhone(phone)) {
       toast.error("Informe um celular válido com DDD (11 dígitos)");
+      return;
+    }
+    if (!phoneVerified) {
+      toast.error("Verifique seu celular antes de continuar");
       return;
     }
     const pwdError = validatePassword(password, birthDate);
@@ -246,7 +252,7 @@ const TeacherSignup = () => {
               max={new Date().toISOString().split("T")[0]}
             />
           </div>
-          <PhoneInput value={phone} onChange={setPhone} />
+          <PhoneVerification phone={phone} onPhoneChange={setPhone} onVerified={() => setPhoneVerified(true)} verified={phoneVerified} />
           <div className="relative">
             <CreditCard className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <div className="pl-10">

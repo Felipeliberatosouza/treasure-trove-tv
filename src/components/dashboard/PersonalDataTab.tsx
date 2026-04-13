@@ -267,13 +267,29 @@ const PersonalDataTab = () => {
               <label className="text-sm text-muted-foreground mb-1 block">URL da sua página</label>
               <div className="flex items-center gap-1">
                 <span className="text-sm text-muted-foreground whitespace-nowrap">revisaofacil.com/</span>
-                <Input
-                  value={slug}
-                  onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9.]/g, ""))}
-                  className="bg-secondary"
-                  placeholder="nome.sobrenome"
-                />
+                <div className="relative flex-1">
+                  <Input
+                    value={slug}
+                    onChange={(e) => handleSlugChange(e.target.value)}
+                    className={`bg-secondary pr-8 ${slugStatus === "taken" ? "border-destructive" : slugStatus === "available" ? "border-green-500" : ""}`}
+                    placeholder="nome.sobrenome"
+                  />
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                    {slugStatus === "checking" && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+                    {slugStatus === "available" && <CheckCircle2 className="h-4 w-4 text-green-500" />}
+                    {slugStatus === "taken" && <XCircle className="h-4 w-4 text-destructive" />}
+                  </div>
+                </div>
               </div>
+              {slugStatus === "taken" && (
+                <p className="text-xs text-destructive mt-1">Esta URL já está em uso. Escolha outra.</p>
+              )}
+              {slugStatus === "available" && slug !== originalSlug.current && (
+                <p className="text-xs text-green-500 mt-1">URL disponível!</p>
+              )}
+              {slug && slug.length < 3 && (
+                <p className="text-xs text-muted-foreground mt-1">Mínimo de 3 caracteres.</p>
+              )}
             </div>
             <div>
               <label className="text-sm text-muted-foreground mb-1 block">Título da sua página</label>

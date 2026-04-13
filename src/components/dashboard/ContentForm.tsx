@@ -232,31 +232,46 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
         subtitles_url = await uploadFile(vttFile, "materials");
       }
 
-      const insertData: any = {
-        teacher_id: user.id,
+      const contentData: any = {
         title,
         description,
-        thumbnail_url,
-        carousel_cover_url,
-        video_url,
         areas: selectedAreas,
         video_type: videoType,
-        resumo_url,
-        simulado_url,
-        top_questoes_url,
-        colinha_url,
-        duvidas_url,
-        aula_particular_url,
         published: true,
         admin_approved: false,
       };
 
-      const { error } = await supabase.from(table).insert(insertData);
+      if (thumbnail_url) contentData.thumbnail_url = thumbnail_url;
+      if (carousel_cover_url) contentData.carousel_cover_url = carousel_cover_url;
+      if (video_url) contentData.video_url = video_url;
+      if (resumo_url) contentData.resumo_url = resumo_url;
+      if (simulado_url) contentData.simulado_url = simulado_url;
+      if (top_questoes_url) contentData.top_questoes_url = top_questoes_url;
+      if (colinha_url) contentData.colinha_url = colinha_url;
+
+      let error;
+      if (editData?.id) {
+        ({ error } = await supabase.from(table).update(contentData).eq("id", editData.id));
+      } else {
+        contentData.teacher_id = user.id;
+        contentData.thumbnail_url = thumbnail_url;
+        contentData.carousel_cover_url = carousel_cover_url;
+        contentData.video_url = video_url;
+        contentData.resumo_url = resumo_url;
+        contentData.simulado_url = simulado_url;
+        contentData.top_questoes_url = top_questoes_url;
+        contentData.colinha_url = colinha_url;
+        contentData.duvidas_url = duvidas_url;
+        contentData.aula_particular_url = aula_particular_url;
+        ({ error } = await supabase.from(table).insert(contentData));
+      }
 
       if (error) throw error;
       toast.success(
-        "Sua aula foi enviada para aprovação da Revisão Fácil! Se estiver de acordo com as regras da plataforma, será publicada em até 3 dias úteis. Você receberá um e-mail com a confirmação da publicação ou com orientações sobre eventuais ajustes necessários.",
-        { duration: 12000 }
+        editData?.id
+          ? "Conteúdo atualizado e reenviado para aprovação!"
+          : "Sua aula foi enviada para aprovação da Revisão Fácil! Se estiver de acordo com as regras da plataforma, será publicada em até 3 dias úteis. Você receberá um e-mail com a confirmação da publicação ou com orientações sobre eventuais ajustes necessários.",
+        { duration: editData?.id ? 5000 : 12000 }
       );
       onSaved();
     } catch (err: any) {

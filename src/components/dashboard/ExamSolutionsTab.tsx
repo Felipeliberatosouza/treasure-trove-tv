@@ -134,7 +134,12 @@ const ExamSolutionsTab = () => {
                     size="icon"
                     variant="ghost"
                     className="h-8 w-8"
-                    onClick={() => { setEditingItem(item); setShowForm(true); }}
+                    onClick={() => {
+                      if (item.admin_approved) {
+                        if (!confirm("Ao editar um conteúdo já aprovado, ele voltará para pendência de aprovação. Deseja continuar?")) return;
+                      }
+                      setEditingItem(item); setShowForm(true);
+                    }}
                     title="Editar"
                   >
                     <Pencil className="h-4 w-4" />

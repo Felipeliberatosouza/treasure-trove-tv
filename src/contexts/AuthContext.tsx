@@ -13,6 +13,7 @@ interface Profile {
   birth_date: string | null;
   phone: string | null;
   areas: string[] | null;
+  cpf: string | null;
 }
 
 interface SubscriptionStatus {

@@ -16,7 +16,7 @@ interface CpfRequiredModalProps {
 
 const CpfRequiredModal = ({ open, onClose, onComplete }: CpfRequiredModalProps) => {
   const { user, profile, refreshProfile } = useAuth();
-  const [cpf, setCpf] = useState((profile as any)?.cpf || "");
+  const [cpf, setCpf] = useState(profile?.cpf || "");
   const [saving, setSaving] = useState(false);
 
   const handleSave = async () => {

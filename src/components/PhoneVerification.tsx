@@ -21,6 +21,7 @@ const PhoneVerification = ({ phone, onPhoneChange, onVerified, verified = false,
   const [sending, setSending] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [countdown, setCountdown] = useState(0);
+  const [sendCooldown, setSendCooldown] = useState(0);
   const [isVerified, setIsVerified] = useState(verified);
   const originalPhone = useRef(phone);
   const containerRef = useRef<HTMLDivElement>(null);

@@ -19,12 +19,12 @@ interface ContentFormProps {
   onCancel: () => void;
 }
 
-const ContentForm = ({ table, onSaved, onCancel }: ContentFormProps) => {
+const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) => {
   const { user } = useAuth();
   const { data: productConfig } = usePlatformSettings("product_config");
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [selectedAreas, setSelectedAreas] = useState<string[]>([]);
+  const [title, setTitle] = useState(editData?.title || "");
+  const [description, setDescription] = useState(editData?.description || "");
+  const [selectedAreas, setSelectedAreas] = useState<string[]>(editData?.areas || []);
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [carouselFile, setCarouselFile] = useState<File | null>(null);
   const [videoFile, setVideoFile] = useState<File | null>(null);
@@ -32,7 +32,7 @@ const ContentForm = ({ table, onSaved, onCancel }: ContentFormProps) => {
   const [simuladoFile, setSimuladoFile] = useState<File | null>(null);
   const [topQuestoesFile, setTopQuestoesFile] = useState<File | null>(null);
   const [colinhaFile, setColinhaFile] = useState<File | null>(null);
-  const [videoType, setVideoType] = useState<string>("revisao");
+  const [videoType, setVideoType] = useState<string>(editData?.video_type || "revisao");
   const [saving, setSaving] = useState(false);
   const [showRecorder, setShowRecorder] = useState(false);
   const [subtitlesVtt, setSubtitlesVtt] = useState<string>("");

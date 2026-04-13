@@ -77,6 +77,7 @@ const PersonalDataTab = () => {
       setPhone(profile.phone || "");
       setCpf((profile as any).cpf || "");
       setSlug((profile as any).slug || "");
+      originalSlug.current = (profile as any).slug || "";
       setProfileTitle((profile as any).profile_title || "");
       setAddress((profile as any).address || "");
       setPixKey((profile as any).pix_key || "");

@@ -147,6 +147,14 @@ const PersonalDataTab = () => {
       toast.error("Informe um celular válido com DDD (11 dígitos)");
       return;
     }
+    if (!phone || !isValidBrazilianPhone(phone)) {
+      toast.error("O celular é obrigatório");
+      return;
+    }
+    if (!phoneVerified) {
+      toast.error("Verifique seu celular antes de salvar");
+      return;
+    }
     if (cpf && !isValidCPF(cpf)) {
       toast.error("Informe um CPF válido");
       return;
@@ -279,9 +287,12 @@ const PersonalDataTab = () => {
             max={new Date().toISOString().split("T")[0]}
           />
         </div>
-        <div>
-          <label className="text-sm text-muted-foreground mb-1 block">Celular</label>
-          <PhoneInput value={phone} onChange={setPhone} placeholder="(00) 00000-0000" />
+        <PhoneVerification
+          phone={phone}
+          onPhoneChange={(v) => { setPhone(v); if (v !== phone) setPhoneVerified(false); }}
+          onVerified={() => setPhoneVerified(true)}
+          verified={phoneVerified}
+        />
         </div>
         <div>
           <label className="text-sm text-muted-foreground mb-1 block">CPF {role === "teacher" && <span className="text-xs text-primary font-medium">(obrigatório para contrato)</span>}</label>

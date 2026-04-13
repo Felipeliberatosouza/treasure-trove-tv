@@ -16,9 +16,9 @@ const HeroBanner = ({ onVideoClick, onExploreClick }: HeroBannerProps) => {
   const featured = getFeaturedVideo();
   const { data: heroBannerSettings } = usePlatformSettings("hero_banner");
 
-  const title = heroBannerSettings?.title || featured.title;
-  const subtitle = heroBannerSettings?.subtitle || featured.description;
-  const ctaText = heroBannerSettings?.cta_text || "Assistir Agora";
+  const title = heroBannerSettings?.title || featured?.title || "Bem-vindo";
+  const subtitle = heroBannerSettings?.subtitle || featured?.description || "";
+  const ctaText = heroBannerSettings?.cta_text || "Comece Agora";
   const bannerImage = heroBannerSettings?.banner_image_url || heroBanner;
 
   const normalizedPrimaryCta = ctaText.trim().toLowerCase();

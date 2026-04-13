@@ -99,6 +99,7 @@ const PhoneVerification = ({ phone, onPhoneChange, onVerified, verified = false,
         toast.success(`Código enviado via ${channel === "sms" ? "SMS" : "WhatsApp"}!`);
         setStep("code");
         setCountdown(60);
+        setSendCooldown(60);
       }
     } catch (err: any) {
       toast.error(err.message || "Erro ao enviar código");
@@ -171,11 +172,17 @@ const PhoneVerification = ({ phone, onPhoneChange, onVerified, verified = false,
           <Button
             type="button"
             onClick={sendCode}
-            disabled={sending}
+            disabled={sending || sendCooldown > 0}
             size="sm"
             className="w-full"
           >
-            {sending ? <><Loader2 className="h-4 w-4 animate-spin mr-1" /> Enviando...</> : "Enviar código"}
+            {sending ? (
+              <><Loader2 className="h-4 w-4 animate-spin mr-1" /> Enviando...</>
+            ) : sendCooldown > 0 ? (
+              `Aguarde ${sendCooldown}s para reenviar`
+            ) : (
+              "Enviar código"
+            )}
           </Button>
         </div>
       )}

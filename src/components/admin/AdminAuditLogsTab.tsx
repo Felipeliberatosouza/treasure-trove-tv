@@ -119,7 +119,7 @@ const AdminAuditLogsTab = () => {
 
   useEffect(() => {
     fetchLogs();
-  }, [page]);
+  }, [page, dateFrom, dateTo]);
 
   const filtered = logs.filter((l) => {
     const matchSearch =

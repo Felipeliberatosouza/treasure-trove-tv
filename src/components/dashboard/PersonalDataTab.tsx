@@ -246,7 +246,7 @@ const PersonalDataTab = () => {
 
         <div>
           <label className="text-sm text-muted-foreground mb-1 block">Nome completo <span className="text-destructive">*</span></label>
-          <Input value={name} onChange={(e) => setName(e.target.value)} className="bg-secondary" />
+          <Input value={name} onChange={(e) => setName(e.target.value.replace(/\b\w/g, (c) => c.toUpperCase()))} className="bg-secondary" />
         </div>
         <div>
           <label className="text-sm text-muted-foreground mb-1 block">E-mail</label>

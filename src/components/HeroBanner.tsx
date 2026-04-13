@@ -30,12 +30,12 @@ const HeroBanner = ({ onVideoClick, onExploreClick }: HeroBannerProps) => {
       return;
     }
 
-    onVideoClick(featured.id);
+    if (featured) onVideoClick(featured.id);
   };
 
   const handleSecondaryClick = () => {
     if (primaryGoesToPopular) {
-      onVideoClick(featured.id);
+      if (featured) onVideoClick(featured.id);
       return;
     }
 
@@ -76,11 +76,13 @@ const HeroBanner = ({ onVideoClick, onExploreClick }: HeroBannerProps) => {
           <p className="text-sm text-muted-foreground md:text-base max-w-lg leading-relaxed">
             {subtitle}
           </p>
-          <div className="flex items-center gap-3 text-sm text-muted-foreground">
-            <span>{featured.lessons} aulas</span>
-            <span className="h-1 w-1 rounded-full bg-muted-foreground" />
-            <span>{featured.duration}</span>
-          </div>
+          {featured && (
+            <div className="flex items-center gap-3 text-sm text-muted-foreground">
+              <span>{featured.lessons} aulas</span>
+              <span className="h-1 w-1 rounded-full bg-muted-foreground" />
+              <span>{featured.duration}</span>
+            </div>
+          )}
           <div className="flex gap-3 pt-2 flex-wrap">
             <Button
               size="lg"

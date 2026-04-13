@@ -3,7 +3,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2'
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers':
-    'authorization, x-client-info, apikey, content-type',
+    'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 }
 
 Deno.serve(async (req) => {
@@ -30,11 +30,17 @@ Deno.serve(async (req) => {
   }
 
   // Validate JWT to get calling user
-  const authHeader = req.headers.get('authorization') ?? ''
-  const anonClient = createClient(supabaseUrl, supabaseAnonKey, {
-    global: { headers: { authorization: authHeader } },
-  })
-  const { data: { user }, error: authError } = await anonClient.auth.getUser()
+  const authHeader = req.headers.get('Authorization') ?? req.headers.get('authorization') ?? ''
+  if (!authHeader) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
+  }
+
+  const token = authHeader.replace('Bearer ', '')
+  const serviceClient = createClient(supabaseUrl, supabaseServiceKey, { auth: { persistSession: false } })
+  const { data: { user }, error: authError } = await serviceClient.auth.getUser(token)
 
   if (authError || !user) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), {
@@ -45,7 +51,7 @@ Deno.serve(async (req) => {
 
   const { email, user_id } = await req.json()
 
-  const serviceClient = createClient(supabaseUrl, supabaseServiceKey)
+  // serviceClient already created above with service role key
 
   // Check if caller is admin
   const { data: isAdmin } = await serviceClient.rpc('has_role', {

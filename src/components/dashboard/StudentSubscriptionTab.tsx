@@ -133,10 +133,44 @@ export default function StudentSubscriptionTab() {
   };
 
   const handlePlanChange = async (newPlanId: string) => {
+    const newPlan = availablePlans.find(p => p.id === newPlanId);
+    const plan = activeSubscription?.subscription_plans as unknown as PlanData;
+    const cycleInfo = activeSubscription ? getCycleInfo(activeSubscription) : null;
+
     try {
       const { data, error } = await supabase.functions.invoke("customer-portal");
       if (error) throw error;
       if (data?.url) window.open(data.url, "_blank");
+
+      // Send plan change notification email
+      if (user?.email && plan && newPlan && cycleInfo) {
+        const isUpgrade = newPlan.price > plan.price;
+        const dailyRateCurrent = cycleInfo.totalDays > 0 ? plan.price / cycleInfo.totalDays : 0;
+        const creditRemaining = dailyRateCurrent * (cycleInfo.totalDays - cycleInfo.daysUsed);
+        const dailyRateNew = cycleInfo.totalDays > 0 ? newPlan.price / cycleInfo.totalDays : 0;
+        const costRemaining = dailyRateNew * (cycleInfo.totalDays - cycleInfo.daysUsed);
+        const proRata = Math.abs(costRemaining - creditRemaining);
+
+        await supabase.functions.invoke("send-transactional-email", {
+          body: {
+            templateName: "plan-changed",
+            recipientEmail: user.email,
+            idempotencyKey: `plan-change-${activeSubscription!.id}-${newPlanId}-${Date.now()}`,
+            templateData: {
+              name: user.user_metadata?.name || "",
+              previousPlan: plan.name,
+              newPlan: newPlan.name,
+              changeType: isUpgrade ? "upgrade" : "downgrade",
+              proRataAmount: `R$ ${proRata.toFixed(2)}`,
+              proRataExplanation: isUpgrade
+                ? `Diferença proporcional de ${cycleInfo.totalDays - cycleInfo.daysUsed} dias restantes no ciclo atual.`
+                : `Crédito de ${cycleInfo.totalDays - cycleInfo.daysUsed} dias restantes será aplicado na próxima fatura.`,
+              effectiveDate: new Date().toLocaleDateString("pt-BR"),
+            },
+          },
+        });
+      }
+
       toast.success("Redirecionando para o portal de gerenciamento...");
     } catch {
       toast.error("Não foi possível processar a mudança de plano.");
@@ -144,10 +178,36 @@ export default function StudentSubscriptionTab() {
   };
 
   const handleCancel = async () => {
+    const plan = activeSubscription?.subscription_plans as unknown as PlanData;
+    const cycleInfo = activeSubscription ? getCycleInfo(activeSubscription) : null;
+
     try {
       const { data, error } = await supabase.functions.invoke("customer-portal");
       if (error) throw error;
       if (data?.url) window.open(data.url, "_blank");
+
+      // Send cancellation notification email
+      if (user?.email && plan && cycleInfo) {
+        const dailyRate = cycleInfo.totalDays > 0 ? plan.price / cycleInfo.totalDays : 0;
+        const usedAmount = dailyRate * cycleInfo.daysUsed;
+        const minCharge = ((plan.min_usage_charge_pct || 0) / 100) * plan.price;
+        const chargeAmount = Math.max(usedAmount, minCharge);
+
+        await supabase.functions.invoke("send-transactional-email", {
+          body: {
+            templateName: "subscription-cancelled",
+            recipientEmail: user.email,
+            idempotencyKey: `cancel-${activeSubscription!.id}-${Date.now()}`,
+            templateData: {
+              name: user.user_metadata?.name || "",
+              planName: plan.name,
+              expiryDate: new Date().toLocaleDateString("pt-BR"),
+              reason: "cancelada",
+            },
+          },
+        });
+      }
+
       toast.success("Redirecionando para o portal de cancelamento...");
     } catch {
       toast.error("Não foi possível processar o cancelamento.");

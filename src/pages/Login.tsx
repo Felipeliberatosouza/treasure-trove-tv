@@ -103,6 +103,15 @@ const Login = () => {
         return;
       }
 
+      // Check if MFA is enrolled
+      const { data: factors } = await supabase.auth.mfa.listFactors();
+      const hasVerifiedTotp = factors?.totp?.some((f) => f.status === "verified");
+      if (hasVerifiedTotp) {
+        setShowMfaChallenge(true);
+        setLoading(false);
+        return;
+      }
+
       // Log successful login to audit
       try {
         await supabase.from("audit_logs").insert([{
@@ -118,6 +127,28 @@ const Login = () => {
     toast.success("Login realizado com sucesso!");
     navigate("/");
     setLoading(false);
+  };
+
+  const handleMfaVerified = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase.from("audit_logs").insert([{
+          user_id: user.id,
+          action: "login",
+          metadata: { method: "password", mfa: true },
+        }] as any);
+      }
+    } catch {
+      // Non-critical
+    }
+    toast.success("Login realizado com sucesso!");
+    navigate("/");
+  };
+
+  const handleMfaCancel = async () => {
+    await supabase.auth.signOut();
+    setShowMfaChallenge(false);
   };
 
   return (

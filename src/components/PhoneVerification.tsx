@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import PhoneInput, { isValidBrazilianPhone } from "@/components/PhoneInput";
@@ -23,6 +23,7 @@ const PhoneVerification = ({ phone, onPhoneChange, onVerified, verified = false,
   const [countdown, setCountdown] = useState(0);
   const [isVerified, setIsVerified] = useState(verified);
   const originalPhone = useRef(phone);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setIsVerified(verified);
@@ -44,6 +45,15 @@ const PhoneVerification = ({ phone, onPhoneChange, onVerified, verified = false,
     const timer = setTimeout(() => setCountdown(c => c - 1), 1000);
     return () => clearTimeout(timer);
   }, [countdown]);
+
+  // Scroll container into view when switching to code step (prevents auto-focus scroll jump)
+  useEffect(() => {
+    if (step === "code" && containerRef.current) {
+      requestAnimationFrame(() => {
+        containerRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      });
+    }
+  }, [step]);
 
   const sendCode = async () => {
     if (!isValidBrazilianPhone(phone)) {
@@ -95,7 +105,7 @@ const PhoneVerification = ({ phone, onPhoneChange, onVerified, verified = false,
   };
 
   return (
-    <div className={`space-y-3 ${className}`}>
+    <div className={`space-y-3 ${className}`} ref={containerRef}>
       <div>
         <label className="text-sm text-muted-foreground mb-1 block">
           Celular <span className="text-destructive">*</span>
@@ -149,7 +159,7 @@ const PhoneVerification = ({ phone, onPhoneChange, onVerified, verified = false,
             Digite o código de 6 dígitos enviado via {channel === "sms" ? "SMS" : "WhatsApp"}:
           </p>
           <div className="flex justify-center">
-            <InputOTP maxLength={6} value={code} onChange={setCode}>
+            <InputOTP maxLength={6} value={code} onChange={setCode} autoFocus={false} data-no-autofocus>
               <InputOTPGroup>
                 <InputOTPSlot index={0} />
                 <InputOTPSlot index={1} />

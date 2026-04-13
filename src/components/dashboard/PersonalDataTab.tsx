@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -12,7 +12,7 @@ import AreaSelector from "@/components/AreaSelector";
 import PhoneInput, { isValidBrazilianPhone } from "@/components/PhoneInput";
 import CpfInput from "@/components/CpfInput";
 import { isValidCPF } from "@/lib/cpfValidator";
-import { Camera, Loader2 } from "lucide-react";
+import { Camera, Loader2, CheckCircle2, XCircle, AlertCircle } from "lucide-react";
 
 const PersonalDataTab = () => {
   const { user, profile, role, refreshProfile } = useAuth();
@@ -31,8 +31,41 @@ const PersonalDataTab = () => {
   const [acceptsMarketing, setAcceptsMarketing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [slugStatus, setSlugStatus] = useState<"idle" | "checking" | "available" | "taken">("idle");
+  const slugCheckTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const { areas } = useCourseAreas(true);
+  const originalSlug = useRef("");
+
+  const checkSlugAvailability = useCallback(async (value: string) => {
+    if (!value || value.length < 3) {
+      setSlugStatus("idle");
+      return;
+    }
+    if (value === originalSlug.current) {
+      setSlugStatus("available");
+      return;
+    }
+    setSlugStatus("checking");
+    const { data } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("slug", value)
+      .neq("user_id", user?.id || "")
+      .limit(1);
+    setSlugStatus(data && data.length > 0 ? "taken" : "available");
+  }, [user?.id]);
+
+  const handleSlugChange = (value: string) => {
+    const sanitized = value.toLowerCase().replace(/[^a-z0-9.]/g, "");
+    setSlug(sanitized);
+    if (slugCheckTimeout.current) clearTimeout(slugCheckTimeout.current);
+    if (!sanitized || sanitized.length < 3) {
+      setSlugStatus("idle");
+      return;
+    }
+    slugCheckTimeout.current = setTimeout(() => checkSlugAvailability(sanitized), 500);
+  };
 
   useEffect(() => {
     if (profile) {
@@ -44,6 +77,7 @@ const PersonalDataTab = () => {
       setPhone(profile.phone || "");
       setCpf((profile as any).cpf || "");
       setSlug((profile as any).slug || "");
+      originalSlug.current = (profile as any).slug || "";
       setProfileTitle((profile as any).profile_title || "");
       setAddress((profile as any).address || "");
       setPixKey((profile as any).pix_key || "");
@@ -96,6 +130,10 @@ const PersonalDataTab = () => {
       }
       if (!pixKey || !pixKey.trim()) {
         toast.error("A chave PIX é obrigatória para professores (necessária para pagamento)");
+        return;
+      }
+      if (slugStatus === "taken") {
+        toast.error("A URL do perfil já está em uso. Escolha outra antes de salvar.");
         return;
       }
     }
@@ -233,13 +271,29 @@ const PersonalDataTab = () => {
               <label className="text-sm text-muted-foreground mb-1 block">URL da sua página</label>
               <div className="flex items-center gap-1">
                 <span className="text-sm text-muted-foreground whitespace-nowrap">revisaofacil.com/</span>
-                <Input
-                  value={slug}
-                  onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9.]/g, ""))}
-                  className="bg-secondary"
-                  placeholder="nome.sobrenome"
-                />
+                <div className="relative flex-1">
+                  <Input
+                    value={slug}
+                    onChange={(e) => handleSlugChange(e.target.value)}
+                    className={`bg-secondary pr-8 ${slugStatus === "taken" ? "border-destructive" : slugStatus === "available" ? "border-green-500" : ""}`}
+                    placeholder="nome.sobrenome"
+                  />
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                    {slugStatus === "checking" && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+                    {slugStatus === "available" && <CheckCircle2 className="h-4 w-4 text-green-500" />}
+                    {slugStatus === "taken" && <XCircle className="h-4 w-4 text-destructive" />}
+                  </div>
+                </div>
               </div>
+              {slugStatus === "taken" && (
+                <p className="text-xs text-destructive mt-1">Esta URL já está em uso. Escolha outra.</p>
+              )}
+              {slugStatus === "available" && slug !== originalSlug.current && (
+                <p className="text-xs text-green-500 mt-1">URL disponível!</p>
+              )}
+              {slug && slug.length < 3 && (
+                <p className="text-xs text-muted-foreground mt-1">Mínimo de 3 caracteres.</p>
+              )}
             </div>
             <div>
               <label className="text-sm text-muted-foreground mb-1 block">Título da sua página</label>

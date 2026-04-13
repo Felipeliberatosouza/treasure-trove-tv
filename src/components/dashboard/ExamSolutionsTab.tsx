@@ -106,7 +106,7 @@ const ExamSolutionsTab = () => {
         <div className="space-y-3">
           {items.map((item) => {
             const isPending = item.published && !item.admin_approved;
-            const canModify = isPending || (!item.published && !item.admin_approved);
+            const canDelete = isPending || (!item.published && !item.admin_approved);
             return (
               <div key={item.id} className="flex items-center gap-3 rounded-lg border border-border bg-secondary/50 p-3">
                 {item.thumbnail_url ? (
@@ -129,17 +129,17 @@ const ExamSolutionsTab = () => {
                   </div>
                   <p className="text-xs text-muted-foreground truncate">{item.description || "Sem descrição"}</p>
                 </div>
-                {canModify && (
-                  <div className="flex items-center gap-1 shrink-0">
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="h-8 w-8"
-                      onClick={() => { setEditingItem(item); setShowForm(true); }}
-                      title="Editar"
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
+                <div className="flex items-center gap-1 shrink-0">
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-8 w-8"
+                    onClick={() => { setEditingItem(item); setShowForm(true); }}
+                    title="Editar"
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                  {canDelete && (
                     <Button
                       size="icon"
                       variant="ghost"
@@ -155,8 +155,8 @@ const ExamSolutionsTab = () => {
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             );
           })}

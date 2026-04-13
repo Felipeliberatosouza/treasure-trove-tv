@@ -129,7 +129,8 @@ const PersonalDataTab = () => {
       .eq("user_id", user.id);
 
     if (error) {
-      toast.error("Erro ao salvar dados");
+      console.error("Profile update error:", error);
+      toast.error("Erro ao salvar dados: " + (error.message || error.code));
     } else {
       await logAction("profile_update", { targetTable: "profiles", metadata: { fields: Object.keys(updateData) } });
       toast.success("Dados atualizados com sucesso!");

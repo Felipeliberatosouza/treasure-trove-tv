@@ -45,7 +45,8 @@ const TeacherDataModal = ({ open, onClose, onComplete }: TeacherDataModalProps) 
       .eq("user_id", user.id);
 
     if (error) {
-      toast.error("Erro ao salvar dados");
+      console.error("Teacher data save error:", error);
+      toast.error("Erro ao salvar dados: " + (error.message || error.code));
     } else {
       toast.success("Dados salvos com sucesso!");
       await refreshProfile();

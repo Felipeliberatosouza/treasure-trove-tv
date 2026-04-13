@@ -42,4 +42,5 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'subscription-cancelled': subscriptionCancelled,
   'suspicious-login-admin-notify': suspiciousLoginAdminNotify,
   'plan-changed': planChanged,
+  'subscription-change-admin-notify': subscriptionChangeAdminNotify,
 }

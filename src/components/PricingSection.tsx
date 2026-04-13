@@ -101,7 +101,13 @@ const PricingSection = () => {
       });
       if (error) throw error;
       if (data?.error) {
-        toast.error(data.error);
+        toast.error(data.error, {
+          action: {
+            label: "Gerenciar assinatura",
+            onClick: () => navigate("/dashboard/student"),
+          },
+          duration: 8000,
+        });
         return;
       }
       if (data?.url) {

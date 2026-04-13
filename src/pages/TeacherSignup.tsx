@@ -35,6 +35,7 @@ const TeacherSignup = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [acceptsTerms, setAcceptsTerms] = useState(false);
   const [acceptsMarketing, setAcceptsMarketing] = useState(false);
+  const [alsoStudent, setAlsoStudent] = useState(false);
   const [loading, setLoading] = useState(false);
   const { areas } = useCourseAreas(true);
 
@@ -79,7 +80,7 @@ const TeacherSignup = () => {
       email,
       password,
       options: {
-        data: { name, role: "teacher", bio, expertise_area: expertise.join(", "), birth_date: birthDate, phone },
+        data: { name, role: "teacher", bio, expertise_area: expertise.join(", "), birth_date: birthDate, phone, also_student: alsoStudent },
         emailRedirectTo: window.location.origin,
       },
     });
@@ -320,6 +321,17 @@ const TeacherSignup = () => {
               />
               <label htmlFor="marketing" className="text-sm text-muted-foreground leading-tight">
                 Aceito receber mensagens e e-mails com promoções e novidades da Revisão Fácil
+              </label>
+            </div>
+            <div className="flex items-start gap-2">
+              <Checkbox
+                id="alsoStudent"
+                checked={alsoStudent}
+                onCheckedChange={(v) => setAlsoStudent(v === true)}
+                className="mt-0.5"
+              />
+              <label htmlFor="alsoStudent" className="text-sm text-muted-foreground leading-tight">
+                Também quero ser aluno na plataforma
               </label>
             </div>
           </div>

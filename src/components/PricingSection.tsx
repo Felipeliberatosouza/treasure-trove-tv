@@ -100,6 +100,10 @@ const PricingSection = () => {
         body: { priceId: plan.stripe_price_id },
       });
       if (error) throw error;
+      if (data?.error) {
+        toast.error(data.error);
+        return;
+      }
       if (data?.url) {
         window.open(data.url, "_blank");
       }

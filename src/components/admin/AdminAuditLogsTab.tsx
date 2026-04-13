@@ -242,10 +242,10 @@ const AdminAuditLogsTab = () => {
             <Calendar mode="single" selected={dateTo} onSelect={(d) => { setDateTo(d); setPage(0); }} initialFocus className="p-3 pointer-events-auto" />
           </PopoverContent>
         </Popover>
-        {(dateFrom || dateTo) && (
-          <Button variant="ghost" size="sm" onClick={() => { setDateFrom(undefined); setDateTo(undefined); setPage(0); }}>
+        {(dateFrom || dateTo || filterAction !== "all" || filterUserId !== "all" || search) && (
+          <Button variant="ghost" size="sm" onClick={() => { setSearch(""); setFilterAction("all"); setFilterUserId("all"); setDateFrom(undefined); setDateTo(undefined); setPage(0); }}>
             <X className="h-4 w-4 mr-1" />
-            Limpar datas
+            Limpar filtros
           </Button>
         )}
       </div>

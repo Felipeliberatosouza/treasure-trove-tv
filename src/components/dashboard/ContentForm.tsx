@@ -267,6 +267,47 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
       }
 
       if (error) throw error;
+
+      // Notify admins when editing previously approved content
+      if (editData?.id && editData?.admin_approved) {
+        const { data: adminRoles } = await supabase
+          .from("user_roles")
+          .select("user_id")
+          .eq("role", "admin");
+
+        if (adminRoles && adminRoles.length > 0) {
+          const { data: teacherProfile } = await supabase
+            .from("profiles")
+            .select("name, email")
+            .eq("user_id", user.id)
+            .maybeSingle();
+
+          for (const admin of adminRoles) {
+            const { data: adminProfile } = await supabase
+              .from("profiles")
+              .select("email")
+              .eq("user_id", admin.user_id)
+              .maybeSingle();
+
+            if (adminProfile?.email) {
+              supabase.functions.invoke("send-transactional-email", {
+                body: {
+                  templateName: "content-edited-admin-notify",
+                  recipientEmail: adminProfile.email,
+                  idempotencyKey: `content-edited-${editData.id}-${Date.now()}`,
+                  templateData: {
+                    teacherName: teacherProfile?.name || "",
+                    teacherEmail: teacherProfile?.email || "",
+                    contentTitle: title,
+                    contentType: table,
+                  },
+                },
+              });
+            }
+          }
+        }
+      }
+
       toast.success(
         editData?.id
           ? "Conteúdo atualizado e reenviado para aprovação!"

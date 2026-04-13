@@ -69,10 +69,18 @@ const AdminAuditLogsTab = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filterAction, setFilterAction] = useState("all");
+  const [filterUserId, setFilterUserId] = useState("all");
+  const [userOptions, setUserOptions] = useState<{ user_id: string; name: string; email: string }[]>([]);
   const [dateFrom, setDateFrom] = useState<Date | undefined>();
   const [dateTo, setDateTo] = useState<Date | undefined>();
   const [page, setPage] = useState(0);
   const pageSize = 50;
+
+  useEffect(() => {
+    supabase.from("profiles").select("user_id, name, email").order("name").then(({ data }) => {
+      setUserOptions(data || []);
+    });
+  }, []);
 
   const fetchLogs = async () => {
     setLoading(true);

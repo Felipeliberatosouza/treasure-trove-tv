@@ -1,4 +1,5 @@
 import { useState } from "react";
+import MandatoryMfaGuard from "@/components/MandatoryMfaGuard";
 import { motion } from "framer-motion";
 import { ArrowLeft, Users, Video, DollarSign, Shield, LayoutDashboard, Settings, HelpCircle, Mail, CreditCard, Tag, BarChart3, CalendarClock, ShieldAlert, LogIn } from "lucide-react";
 import { Link, Navigate } from "react-router-dom";
@@ -44,6 +45,7 @@ const AdminDashboard = () => {
   if (role !== "admin") return <Navigate to="/" replace />;
 
   return (
+    <MandatoryMfaGuard>
     <div className="min-h-screen bg-background">
       <Navbar />
       <div className="mx-auto max-w-6xl px-4 pt-24 pb-12">

@@ -34,7 +34,7 @@ const StudentSignup = () => {
   const [acceptsTerms, setAcceptsTerms] = useState(false);
   const [acceptsMarketing, setAcceptsMarketing] = useState(false);
   const [loading, setLoading] = useState(false);
-
+  const [phoneVerified, setPhoneVerified] = useState(false);
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {

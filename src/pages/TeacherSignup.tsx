@@ -38,6 +38,7 @@ const TeacherSignup = () => {
   const [acceptsMarketing, setAcceptsMarketing] = useState(false);
   const [alsoStudent, setAlsoStudent] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [phoneVerified, setPhoneVerified] = useState(false);
   const { areas } = useCourseAreas(true);
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {

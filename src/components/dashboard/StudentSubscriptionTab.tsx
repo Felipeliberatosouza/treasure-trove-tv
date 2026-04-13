@@ -5,9 +5,13 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { BookOpen, FileText, ClipboardList, Award, StickyNote, HelpCircle, GraduationCap, AlertTriangle, Settings, Loader2 } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { BookOpen, FileText, ClipboardList, Award, StickyNote, HelpCircle, GraduationCap, AlertTriangle, Settings, Loader2, ArrowLeftRight, XCircle, History } from "lucide-react";
 import { toast } from "sonner";
+import SubscriptionStatement from "./subscription/SubscriptionStatement";
+import PlanChangeModal from "./subscription/PlanChangeModal";
+import CancelSubscriptionModal from "./subscription/CancelSubscriptionModal";
+import PurchaseHistory from "./subscription/PurchaseHistory";
 
 const SERVICE_META: Record<string, { label: string; icon: React.ElementType; resourceType: string }> = {
   service_revisoes: { label: "Revisões", icon: BookOpen, resourceType: "revisao" },
@@ -23,6 +27,10 @@ interface PlanData {
   id: string;
   name: string;
   price: number;
+  allow_free_cancel: boolean;
+  min_commitment_days: number;
+  min_usage_charge_pct: number;
+  cancel_text: string;
   [key: string]: unknown;
 }
 
@@ -32,61 +40,54 @@ interface SubscriptionData {
   started_at: string;
   expires_at: string | null;
   plan_id: string;
+  created_at: string;
   subscription_plans: PlanData;
+}
+
+interface Purchase {
+  id: string;
+  content_type: string;
+  amount: number;
+  payment_status: string;
+  created_at: string;
 }
 
 export default function StudentSubscriptionTab() {
   const { user } = useAuth();
-  const [subscription, setSubscription] = useState<SubscriptionData | null>(null);
+  const [activeSubscription, setActiveSubscription] = useState<SubscriptionData | null>(null);
+  const [allSubscriptions, setAllSubscriptions] = useState<SubscriptionData[]>([]);
   const [usageCounts, setUsageCounts] = useState<Record<string, number>>({});
+  const [purchases, setPurchases] = useState<Purchase[]>([]);
+  const [availablePlans, setAvailablePlans] = useState<{ id: string; name: string; price: number; highlighted: boolean }[]>([]);
   const [loading, setLoading] = useState(true);
   const [portalLoading, setPortalLoading] = useState(false);
-  const [commitmentWarning, setCommitmentWarning] = useState<{ daysRemaining: number; url: string } | null>(null);
-
-  const handleManageSubscription = async () => {
-    setPortalLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("customer-portal");
-      if (error) throw error;
-      if (data?.url) {
-        if (!data.can_cancel_freely && data.days_remaining > 0) {
-          setCommitmentWarning({ daysRemaining: data.days_remaining, url: data.url });
-        } else {
-          window.open(data.url, "_blank");
-        }
-      }
-    } catch (err: any) {
-      toast.error("Não foi possível abrir o portal de gerenciamento.");
-      console.error(err);
-    } finally {
-      setPortalLoading(false);
-    }
-  };
+  const [showPlanChange, setShowPlanChange] = useState(false);
+  const [showCancel, setShowCancel] = useState(false);
 
   useEffect(() => {
     if (!user) return;
     const load = async () => {
       setLoading(true);
 
-      // Fetch active subscription with plan details
-      const { data: sub } = await supabase
+      // Fetch all subscriptions (history)
+      const { data: subs } = await supabase
         .from("student_subscriptions")
-        .select("id, status, started_at, expires_at, plan_id, subscription_plans(id, name, price, service_revisoes, service_revisoes_qty, service_resumos, service_resumos_qty, service_simulados, service_simulados_qty, service_top_questoes, service_top_questoes_qty, service_colinhas, service_colinhas_qty, service_duvidas, service_duvidas_qty, service_aula_particular, service_aula_particular_qty)")
+        .select("id, status, started_at, expires_at, plan_id, created_at, subscription_plans(id, name, price, service_revisoes, service_revisoes_qty, service_resumos, service_resumos_qty, service_simulados, service_simulados_qty, service_top_questoes, service_top_questoes_qty, service_colinhas, service_colinhas_qty, service_duvidas, service_duvidas_qty, service_aula_particular, service_aula_particular_qty, allow_free_cancel, min_commitment_days, min_usage_charge_pct, cancel_text)")
         .eq("user_id", user.id)
-        .eq("status", "active")
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
+        .order("created_at", { ascending: false });
 
-      if (sub) {
-        setSubscription(sub as unknown as SubscriptionData);
+      const subscriptions = (subs || []) as unknown as SubscriptionData[];
+      setAllSubscriptions(subscriptions);
 
-        // Fetch usage counts grouped by resource_type for this subscription
+      const active = subscriptions.find(s => s.status === "active") || null;
+      setActiveSubscription(active);
+
+      if (active) {
         const { data: usage } = await supabase
           .from("resource_usage")
           .select("resource_type")
           .eq("user_id", user.id)
-          .eq("subscription_id", sub.id);
+          .eq("subscription_id", active.id);
 
         const counts: Record<string, number> = {};
         (usage || []).forEach((u) => {
@@ -95,10 +96,136 @@ export default function StudentSubscriptionTab() {
         setUsageCounts(counts);
       }
 
+      // Fetch purchases
+      const { data: purchaseData } = await supabase
+        .from("video_purchases")
+        .select("id, content_type, amount, payment_status, created_at")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+
+      setPurchases((purchaseData || []) as Purchase[]);
+
+      // Fetch available plans for plan change
+      const { data: plansData } = await supabase
+        .from("subscription_plans")
+        .select("id, name, price, highlighted")
+        .eq("active", true)
+        .order("sort_order");
+
+      setAvailablePlans((plansData || []) as { id: string; name: string; price: number; highlighted: boolean }[]);
+
       setLoading(false);
     };
     load();
   }, [user]);
+
+  const handleManageSubscription = async () => {
+    setPortalLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("customer-portal");
+      if (error) throw error;
+      if (data?.url) window.open(data.url, "_blank");
+    } catch {
+      toast.error("Não foi possível abrir o portal de gerenciamento.");
+    } finally {
+      setPortalLoading(false);
+    }
+  };
+
+  const handlePlanChange = async (newPlanId: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke("customer-portal");
+      if (error) throw error;
+      if (data?.url) window.open(data.url, "_blank");
+      toast.success("Redirecionando para o portal de gerenciamento...");
+    } catch {
+      toast.error("Não foi possível processar a mudança de plano.");
+    }
+  };
+
+  const handleCancel = async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke("customer-portal");
+      if (error) throw error;
+      if (data?.url) window.open(data.url, "_blank");
+      toast.success("Redirecionando para o portal de cancelamento...");
+    } catch {
+      toast.error("Não foi possível processar o cancelamento.");
+    }
+  };
+
+  // Calculate cycle info
+  const getCycleInfo = (sub: SubscriptionData) => {
+    const startDate = new Date(sub.started_at);
+    const now = new Date();
+    // Assume 30-day cycle
+    const cycleStart = new Date(startDate);
+    while (cycleStart < now) {
+      const nextCycle = new Date(cycleStart);
+      nextCycle.setDate(nextCycle.getDate() + 30);
+      if (nextCycle > now) break;
+      cycleStart.setDate(cycleStart.getDate() + 30);
+    }
+    const daysUsed = Math.floor((now.getTime() - cycleStart.getTime()) / (1000 * 60 * 60 * 24));
+    const totalDays = 30;
+    const totalSubscriptionDays = Math.floor((now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+    return { daysUsed: Math.min(daysUsed, totalDays), totalDays, totalSubscriptionDays };
+  };
+
+  // Build statement entries from subscription history
+  const buildStatementEntries = () => {
+    const entries: { date: string; type: "subscription_start" | "plan_change" | "cancellation" | "renewal" | "purchase"; description: string; amount: number; explanation: string }[] = [];
+
+    allSubscriptions.slice().reverse().forEach(sub => {
+      const plan = sub.subscription_plans as unknown as PlanData;
+      entries.push({
+        date: sub.started_at,
+        type: "subscription_start",
+        description: `Assinatura ${plan.name}`,
+        amount: plan.price,
+        explanation: `Início da assinatura do plano ${plan.name} no valor de R$ ${plan.price.toFixed(2)}/mês.`,
+      });
+
+      if (sub.status === "cancelled" || sub.status === "expired") {
+        const endDate = sub.expires_at || sub.started_at;
+        const start = new Date(sub.started_at);
+        const end = new Date(endDate);
+        const totalDays = 30;
+        const daysUsed = Math.min(Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)), totalDays);
+        const dailyRate = plan.price / totalDays;
+        const usedAmount = dailyRate * daysUsed;
+        const minCharge = ((plan.min_usage_charge_pct || 0) / 100) * plan.price;
+        const chargeAmount = Math.max(usedAmount, minCharge);
+
+        let explanation = `Cancelamento após ${daysUsed} dias de uso. Valor proporcional: R$ ${usedAmount.toFixed(2)}.`;
+        if (minCharge > usedAmount && plan.min_usage_charge_pct > 0) {
+          explanation += ` Cobrança mínima de ${plan.min_usage_charge_pct}% aplicada: R$ ${minCharge.toFixed(2)}.`;
+        }
+        explanation += ` Valor final cobrado: R$ ${chargeAmount.toFixed(2)}.`;
+
+        entries.push({
+          date: endDate,
+          type: "cancellation",
+          description: `Cancelamento ${plan.name}`,
+          amount: chargeAmount,
+          explanation,
+        });
+      }
+    });
+
+    // Add purchases
+    purchases.filter(p => p.payment_status === "completed").forEach(p => {
+      entries.push({
+        date: p.created_at,
+        type: "purchase",
+        description: `Compra avulsa`,
+        amount: p.amount,
+        explanation: `Compra avulsa no valor de R$ ${p.amount.toFixed(2)}.`,
+      });
+    });
+
+    return entries.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  };
 
   if (loading) {
     return (
@@ -109,106 +236,171 @@ export default function StudentSubscriptionTab() {
     );
   }
 
-  if (!subscription) {
-    return (
-      <div>
-        <h2 className="font-display text-lg font-semibold mb-4">Assinatura e Compras</h2>
-        <p className="text-sm text-muted-foreground">Você ainda não possui assinatura ativa. Em breve, planos estarão disponíveis.</p>
-      </div>
-    );
-  }
-
-  const plan = subscription.subscription_plans as unknown as Record<string, unknown>;
+  const plan = activeSubscription ? (activeSubscription.subscription_plans as unknown as PlanData) : null;
+  const cycleInfo = activeSubscription ? getCycleInfo(activeSubscription) : null;
+  const statementEntries = buildStatementEntries();
 
   return (
-    <div>
+    <div className="space-y-6">
       <h2 className="font-display text-lg font-semibold mb-1">Assinatura e Compras</h2>
-      <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-6">
-        <div className="flex items-center gap-2">
-          <Badge variant="default">{plan.name as string}</Badge>
-          <span className="text-xs text-muted-foreground">
-            Desde {new Date(subscription.started_at).toLocaleDateString("pt-BR")}
-            {subscription.expires_at && ` · Expira em ${new Date(subscription.expires_at).toLocaleDateString("pt-BR")}`}
-          </span>
-        </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleManageSubscription}
-          disabled={portalLoading}
-          className="sm:ml-auto"
-        >
-          {portalLoading ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Settings className="h-4 w-4 mr-1" />}
-          Gerenciar Assinatura
-        </Button>
-      </div>
 
-      <h3 className="text-sm font-medium mb-3">Uso dos Recursos</h3>
-      <div className="grid gap-3 sm:grid-cols-2">
-        {Object.entries(SERVICE_META).map(([key, meta]) => {
-          const enabled = plan[key] as boolean;
-          if (!enabled) return null;
+      <Tabs defaultValue="current" className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="current">Plano Atual</TabsTrigger>
+          <TabsTrigger value="history">
+            <History className="h-3.5 w-3.5 mr-1" /> Histórico
+          </TabsTrigger>
+          <TabsTrigger value="purchases">Compras</TabsTrigger>
+        </TabsList>
 
-          const qtyKey = `${key}_qty`;
-          const total = (plan[qtyKey] as number) || 0;
-          const used = usageCounts[meta.resourceType] || 0;
-          const remaining = Math.max(0, total - used);
-          const pct = total > 0 ? Math.min(100, (used / total) * 100) : 0;
-          const isExhausted = total > 0 && used >= total;
-          const Icon = meta.icon;
-
-          return (
-            <Card key={key} className={`border ${isExhausted ? "border-destructive/40" : "border-border"}`}>
-              <CardHeader className="pb-2 pt-4 px-4">
-                <CardTitle className="flex items-center gap-2 text-sm font-medium">
-                  <Icon className="h-4 w-4 text-primary" />
-                  {meta.label}
-                  {isExhausted && <AlertTriangle className="h-3.5 w-3.5 text-destructive ml-auto" />}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="px-4 pb-4 space-y-2">
-                <Progress value={pct} className="h-2" />
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>{used} usado{used !== 1 ? "s" : ""}</span>
-                  <span>{remaining} restante{remaining !== 1 ? "s" : ""} de {total}</span>
+        {/* Current Plan Tab */}
+        <TabsContent value="current" className="space-y-4 mt-4">
+          {!activeSubscription ? (
+            <p className="text-sm text-muted-foreground">Você ainda não possui assinatura ativa.</p>
+          ) : (
+            <>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Badge variant="default">{plan!.name}</Badge>
+                  <span className="text-xs text-muted-foreground">
+                    Desde {new Date(activeSubscription.started_at).toLocaleDateString("pt-BR")}
+                    {activeSubscription.expires_at && ` · Expira em ${new Date(activeSubscription.expires_at).toLocaleDateString("pt-BR")}`}
+                  </span>
                 </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+              </div>
 
-      {Object.entries(SERVICE_META).every(([key]) => !(plan[key] as boolean)) && (
-        <p className="text-sm text-muted-foreground mt-2">Nenhum serviço incluído neste plano.</p>
-      )}
+              {/* Actions */}
+              <div className="flex flex-wrap gap-2">
+                <Button variant="outline" size="sm" onClick={handleManageSubscription} disabled={portalLoading}>
+                  {portalLoading ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Settings className="h-4 w-4 mr-1" />}
+                  Gerenciar
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => setShowPlanChange(true)}>
+                  <ArrowLeftRight className="h-4 w-4 mr-1" />
+                  Mudar Plano
+                </Button>
+                <Button variant="outline" size="sm" className="text-destructive border-destructive/30 hover:bg-destructive/5" onClick={() => setShowCancel(true)}>
+                  <XCircle className="h-4 w-4 mr-1" />
+                  Cancelar
+                </Button>
+              </div>
 
-      <AlertDialog open={!!commitmentWarning} onOpenChange={(open) => !open && setCommitmentWarning(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-destructive" />
-              Período mínimo de permanência
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              Seu plano possui um período mínimo de permanência. Faltam{" "}
-              <strong>{commitmentWarning?.daysRemaining} dia{(commitmentWarning?.daysRemaining ?? 0) !== 1 ? "s" : ""}</strong>{" "}
-              para completá-lo. Se cancelar agora, poderá haver cobrança proporcional ao período restante.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Voltar</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                if (commitmentWarning?.url) window.open(commitmentWarning.url, "_blank");
-                setCommitmentWarning(null);
-              }}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Continuar mesmo assim
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+              {/* Resource usage */}
+              <h3 className="text-sm font-medium">Uso dos Recursos</h3>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {Object.entries(SERVICE_META).map(([key, meta]) => {
+                  const enabled = plan![key as keyof PlanData] as boolean;
+                  if (!enabled) return null;
+
+                  const qtyKey = `${key}_qty`;
+                  const total = (plan![qtyKey as keyof PlanData] as number) || 0;
+                  const used = usageCounts[meta.resourceType] || 0;
+                  const remaining = Math.max(0, total - used);
+                  const pct = total > 0 ? Math.min(100, (used / total) * 100) : 0;
+                  const isExhausted = total > 0 && used >= total;
+                  const Icon = meta.icon;
+
+                  return (
+                    <Card key={key} className={`border ${isExhausted ? "border-destructive/40" : "border-border"}`}>
+                      <CardHeader className="pb-2 pt-4 px-4">
+                        <CardTitle className="flex items-center gap-2 text-sm font-medium">
+                          <Icon className="h-4 w-4 text-primary" />
+                          {meta.label}
+                          {isExhausted && <AlertTriangle className="h-3.5 w-3.5 text-destructive ml-auto" />}
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="px-4 pb-4 space-y-2">
+                        <Progress value={pct} className="h-2" />
+                        <div className="flex justify-between text-xs text-muted-foreground">
+                          <span>{used} usado{used !== 1 ? "s" : ""}</span>
+                          <span>{remaining} restante{remaining !== 1 ? "s" : ""} de {total}</span>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+
+              {Object.entries(SERVICE_META).every(([key]) => !(plan![key as keyof PlanData] as boolean)) && (
+                <p className="text-sm text-muted-foreground">Nenhum serviço incluído neste plano.</p>
+              )}
+
+              {/* Plan Change Modal */}
+              <PlanChangeModal
+                open={showPlanChange}
+                onOpenChange={setShowPlanChange}
+                currentPlanId={plan!.id}
+                currentPlanPrice={plan!.price}
+                currentPlanName={plan!.name}
+                daysUsed={cycleInfo!.daysUsed}
+                totalDays={cycleInfo!.totalDays}
+                plans={availablePlans}
+                onConfirm={handlePlanChange}
+              />
+
+              {/* Cancel Modal */}
+              <CancelSubscriptionModal
+                open={showCancel}
+                onOpenChange={setShowCancel}
+                planName={plan!.name}
+                planPrice={plan!.price}
+                daysUsed={cycleInfo!.daysUsed}
+                totalDays={cycleInfo!.totalDays}
+                minUsageChargePct={plan!.min_usage_charge_pct || 0}
+                allowFreeCancel={plan!.allow_free_cancel}
+                minCommitmentDays={plan!.min_commitment_days}
+                totalSubscriptionDays={cycleInfo!.totalSubscriptionDays}
+                onConfirm={handleCancel}
+              />
+            </>
+          )}
+        </TabsContent>
+
+        {/* History Tab */}
+        <TabsContent value="history" className="space-y-4 mt-4">
+          {allSubscriptions.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Nenhum histórico de assinatura.</p>
+          ) : (
+            <>
+              {/* Subscription list */}
+              <div className="space-y-2">
+                {allSubscriptions.map(sub => {
+                  const subPlan = sub.subscription_plans as unknown as PlanData;
+                  const statusLabel: Record<string, string> = { active: "Ativa", cancelled: "Cancelada", expired: "Expirada", past_due: "Pagamento Pendente" };
+                  const statusVariant: Record<string, "default" | "secondary" | "destructive" | "outline"> = { active: "default", cancelled: "destructive", expired: "secondary", past_due: "outline" };
+                  return (
+                    <Card key={sub.id} className="p-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium">{subPlan.name}</span>
+                          <Badge variant={statusVariant[sub.status] || "outline"} className="text-[10px]">
+                            {statusLabel[sub.status] || sub.status}
+                          </Badge>
+                        </div>
+                        <span className="text-xs text-muted-foreground">
+                          {new Date(sub.started_at).toLocaleDateString("pt-BR")}
+                          {sub.expires_at && ` — ${new Date(sub.expires_at).toLocaleDateString("pt-BR")}`}
+                        </span>
+                      </div>
+                    </Card>
+                  );
+                })}
+              </div>
+
+              {/* Statement */}
+              <SubscriptionStatement
+                planName="Geral"
+                entries={statementEntries}
+              />
+            </>
+          )}
+        </TabsContent>
+
+        {/* Purchases Tab */}
+        <TabsContent value="purchases" className="mt-4">
+          <PurchaseHistory purchases={purchases} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

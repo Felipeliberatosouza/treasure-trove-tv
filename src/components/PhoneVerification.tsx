@@ -47,6 +47,13 @@ const PhoneVerification = ({ phone, onPhoneChange, onVerified, verified = false,
     return () => clearTimeout(timer);
   }, [countdown]);
 
+  // Send cooldown timer (initial send button)
+  useEffect(() => {
+    if (sendCooldown <= 0) return;
+    const timer = setTimeout(() => setSendCooldown(c => c - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [sendCooldown]);
+
   // Scroll container into view when switching to code step (prevents auto-focus scroll jump)
   useEffect(() => {
     if (step === "code" && containerRef.current) {

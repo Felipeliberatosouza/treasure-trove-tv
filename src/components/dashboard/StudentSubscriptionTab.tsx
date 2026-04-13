@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BookOpen, FileText, ClipboardList, Award, StickyNote, HelpCircle, GraduationCap, AlertTriangle, Settings, Loader2, ArrowLeftRight, XCircle, History } from "lucide-react";
 import { toast } from "sonner";
+import { useAuditLog } from "@/hooks/useAuditLog";
 import SubscriptionStatement from "./subscription/SubscriptionStatement";
 import PlanChangeModal from "./subscription/PlanChangeModal";
 import CancelSubscriptionModal from "./subscription/CancelSubscriptionModal";
@@ -208,6 +209,16 @@ export default function StudentSubscriptionTab() {
           }
         }
       }
+
+      logAction("plan_changed", {
+        targetTable: "student_subscriptions",
+        targetId: activeSubscription?.id,
+        metadata: {
+          previous_plan: plan?.name,
+          new_plan: newPlan?.name,
+          change_type: newPlan && plan ? (newPlan.price > plan.price ? "upgrade" : "downgrade") : "unknown",
+        },
+      });
 
       toast.success("Redirecionando para o portal de gerenciamento...");
     } catch {

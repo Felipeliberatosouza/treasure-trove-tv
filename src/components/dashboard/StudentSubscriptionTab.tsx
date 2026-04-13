@@ -60,7 +60,7 @@ export default function StudentSubscriptionTab() {
   const [allSubscriptions, setAllSubscriptions] = useState<SubscriptionData[]>([]);
   const [usageCounts, setUsageCounts] = useState<Record<string, number>>({});
   const [purchases, setPurchases] = useState<Purchase[]>([]);
-  const [availablePlans, setAvailablePlans] = useState<{ id: string; name: string; price: number; highlighted: boolean }[]>([]);
+  const [availablePlans, setAvailablePlans] = useState<import("./subscription/PlanChangeModal").PlanOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [portalLoading, setPortalLoading] = useState(false);
   const [showPlanChange, setShowPlanChange] = useState(false);
@@ -107,14 +107,14 @@ export default function StudentSubscriptionTab() {
 
       setPurchases((purchaseData || []) as Purchase[]);
 
-      // Fetch available plans for plan change
+      // Fetch available plans for plan change (with service fields)
       const { data: plansData } = await supabase
         .from("subscription_plans")
-        .select("id, name, price, highlighted")
+        .select("id, name, price, highlighted, service_revisoes, service_revisoes_qty, service_resumos, service_resumos_qty, service_simulados, service_simulados_qty, service_top_questoes, service_top_questoes_qty, service_colinhas, service_colinhas_qty, service_duvidas, service_duvidas_qty, service_aula_particular, service_aula_particular_qty")
         .eq("active", true)
         .order("sort_order");
 
-      setAvailablePlans((plansData || []) as { id: string; name: string; price: number; highlighted: boolean }[]);
+      setAvailablePlans((plansData || []) as import("./subscription/PlanChangeModal").PlanOption[]);
 
       setLoading(false);
     };
@@ -485,6 +485,7 @@ export default function StudentSubscriptionTab() {
                 currentPlanId={plan!.id}
                 currentPlanPrice={plan!.price}
                 currentPlanName={plan!.name}
+                currentPlanServices={plan as unknown as import("./subscription/PlanChangeModal").PlanOption}
                 daysUsed={cycleInfo!.daysUsed}
                 totalDays={cycleInfo!.totalDays}
                 plans={availablePlans}

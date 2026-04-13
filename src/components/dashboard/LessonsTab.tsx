@@ -123,7 +123,7 @@ const LessonsTab = () => {
         <div className="space-y-3">
           {lessons.map((lesson) => {
             const isPending = lesson.published && !lesson.admin_approved;
-            const canModify = isPending || (!lesson.published && !lesson.admin_approved);
+            const canDelete = isPending || (!lesson.published && !lesson.admin_approved);
             return (
               <div key={lesson.id} className="flex items-center gap-3 rounded-lg border border-border bg-secondary/50 p-3">
                 {lesson.thumbnail_url ? (
@@ -146,17 +146,17 @@ const LessonsTab = () => {
                   </div>
                   <p className="text-xs text-muted-foreground truncate">{lesson.description || "Sem descrição"}</p>
                 </div>
-                {canModify && (
-                  <div className="flex items-center gap-1 shrink-0">
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="h-8 w-8"
-                      onClick={() => { setEditingLesson(lesson); setShowForm(true); }}
-                      title="Editar"
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
+                <div className="flex items-center gap-1 shrink-0">
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-8 w-8"
+                    onClick={() => { setEditingLesson(lesson); setShowForm(true); }}
+                    title="Editar"
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                  {canDelete && (
                     <Button
                       size="icon"
                       variant="ghost"
@@ -172,8 +172,8 @@ const LessonsTab = () => {
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             );
           })}

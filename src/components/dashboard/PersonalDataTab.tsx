@@ -114,6 +114,9 @@ const PersonalDataTab = () => {
     }
 
     const updateData: any = { name, bio, expertise_area: expertiseAreas.join(", "), birth_date: birthDate || null, phone: phone || null, cpf: cpf || null, accepts_marketing: acceptsMarketing };
+    if (role === "student") {
+      updateData.areas = studentAreas;
+    }
     if (role === "teacher") {
       updateData.slug = slug;
       updateData.profile_title = profileTitle;

@@ -80,6 +80,7 @@ const PricingSection = () => {
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { refresh: refreshActiveSub } = useActiveSubscription();
 
   useEffect(() => {
     const fetchPlans = async () => {

@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import CpfRequiredModal from "@/components/CpfRequiredModal";
 import { useCpfGuard } from "@/hooks/useCpfGuard";
+import { useActiveSubscription } from "@/hooks/useActiveSubscription";
 import { redirectTopLevel } from "@/lib/payments";
 
 interface PlanData {

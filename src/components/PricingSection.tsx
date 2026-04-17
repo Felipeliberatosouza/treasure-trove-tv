@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import CpfRequiredModal from "@/components/CpfRequiredModal";
 import { useCpfGuard } from "@/hooks/useCpfGuard";
+import { useActiveSubscription } from "@/hooks/useActiveSubscription";
 import { redirectTopLevel } from "@/lib/payments";
 
 interface PlanData {
@@ -79,6 +80,7 @@ const PricingSection = () => {
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { refresh: refreshActiveSub } = useActiveSubscription();
 
   useEffect(() => {
     const fetchPlans = async () => {
@@ -144,25 +146,17 @@ const PricingSection = () => {
       toast.error("Este plano ainda não está disponível para compra.");
       return;
     }
-    // Pre-check: if the user already has an active subscription in our DB,
-    // skip the Stripe round-trip and send them straight to plan-change.
-    // This avoids triggering the redirect overlay unnecessarily.
+    // Pre-check via shared hook: if the user already has an active sub in
+    // our DB, skip the Stripe round-trip and send them to plan-change.
     setLoadingPlan(plan.name);
     try {
-      const { data: existingSub } = await supabase
-        .from("student_subscriptions")
-        .select("id, status")
-        .eq("user_id", user.id)
-        .eq("status", "active")
-        .maybeSingle();
+      const existingSub = await refreshActiveSub();
       if (existingSub) {
         toast.info("Você já possui uma assinatura ativa. Redirecionando para a troca de plano...");
         navigate("/dashboard/student?tab=subscription&action=change-plan");
         setLoadingPlan(null);
         return;
       }
-    } catch (e) {
-      console.warn("Active subscription pre-check failed:", e);
     } finally {
       setLoadingPlan(null);
     }

@@ -16,6 +16,8 @@ interface Profile {
   areas: string[] | null;
   cpf: string | null;
   phone_verified?: boolean | null;
+  address?: string | null;
+  pix_key?: string | null;
 }
 
 interface SubscriptionStatus {

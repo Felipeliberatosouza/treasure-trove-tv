@@ -153,6 +153,7 @@ const PricingSection = () => {
 
   return (
     <>
+    <RedirectOverlay open={redirecting} />
     <CpfRequiredModal open={showCpfModal} onClose={() => setShowCpfModal(false)} onComplete={onCpfComplete} />
     <section className="px-6 py-20 md:px-12 lg:px-20">
       <div className="mx-auto max-w-5xl text-center">

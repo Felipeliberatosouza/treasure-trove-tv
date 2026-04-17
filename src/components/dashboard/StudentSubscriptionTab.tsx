@@ -147,7 +147,7 @@ export default function StudentSubscriptionTab() {
     try {
       const { data, error } = await supabase.functions.invoke("customer-portal");
       if (error) throw error;
-      if (data?.url) redirectTopLevel(data.url);
+      if (data?.url) redirectTopLevel(data.url, { title: "Abrindo portal de gerenciamento..." });
     } catch {
       toast.error("Não foi possível abrir o portal de gerenciamento.");
     } finally {

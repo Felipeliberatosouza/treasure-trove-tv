@@ -35,7 +35,11 @@ const CpfRequiredModal = ({ open, onClose, onComplete }: CpfRequiredModalProps) 
 
     if (error) {
       console.error("CPF save error:", error);
-      toast.error("Erro ao salvar CPF");
+      if (error.code === "23505") {
+        toast.error("Este CPF já está cadastrado em outra conta. Verifique se digitou corretamente ou entre em contato com o suporte.");
+      } else {
+        toast.error("Erro ao salvar CPF. Tente novamente.");
+      }
     } else {
       toast.success("CPF salvo com sucesso!");
       await refreshProfile();

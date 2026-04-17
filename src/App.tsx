@@ -37,6 +37,7 @@ import Unsubscribe from "./pages/Unsubscribe.tsx";
 import EmailSecurityNotification from "./pages/EmailSecurityNotification.tsx";
 import PaymentSuccess from "./pages/PaymentSuccess.tsx";
 import PaymentCanceled from "./pages/PaymentCanceled.tsx";
+import PreviewPlanChange from "./pages/PreviewPlanChange.tsx";
 import DynamicBranding from "./components/DynamicBranding.tsx";
 import InactivityGuard from "./components/InactivityGuard.tsx";
 import GlobalRedirectOverlay from "./components/GlobalRedirectOverlay.tsx";
@@ -82,6 +83,7 @@ const App = () => (
             <Route path="/payment-canceled" element={<PaymentCanceled />} />
             <Route path="/unsubscribe" element={<Unsubscribe />} />
             <Route path="/email-seguranca" element={<EmailSecurityNotification />} />
+            <Route path="/preview/plan-change" element={<PreviewPlanChange />} />
             <Route path="/:slug" element={<TeacherProfile />} />
             <Route path="*" element={<NotFound />} />
           </Routes>

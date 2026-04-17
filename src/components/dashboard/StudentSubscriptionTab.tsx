@@ -58,7 +58,7 @@ interface Purchase {
 }
 
 export default function StudentSubscriptionTab() {
-  const { user } = useAuth();
+  const { user, refreshSubscription } = useAuth();
   const { logAction } = useAuditLog();
   // Shared lightweight active-subscription state. Used to:
   // - Skip the heavy join query when we already know the user has none

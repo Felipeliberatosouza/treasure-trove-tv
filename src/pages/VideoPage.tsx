@@ -406,8 +406,11 @@ const VideoPage = () => {
 
   const handleBuyUnit = () => {
     if (!user) { navigate("/login"); return; }
-    requireCpf(() => {
-      toast.info("Compra unitária será integrada com Stripe em breve.");
+    if (!video) return;
+    requireCpf(async () => {
+      setBuying(true);
+      const ok = await startUnitCheckout({ contentId: video.id, contentType });
+      if (!ok) setBuying(false);
     });
   };
 
@@ -449,6 +452,13 @@ const VideoPage = () => {
   const trialExpired = trial.trialRow && !trial.hasActiveTrial;
   const canStartTrial = trial.trialEnabled && !trial.trialRow;
   const previewLimit = hasFullAccess ? undefined : 20;
+
+  const minPrice = videoPricing
+    ? (contentType === "lesson" ? videoPricing.default_lesson_price : videoPricing.default_exam_solution_price) ?? 0
+    : 0;
+  const effectivePrice = Math.max(unitPrice ?? 0, minPrice);
+  const priceLabel = effectivePrice > 0 ? `R$ ${effectivePrice.toFixed(2).replace(".", ",")}` : null;
+  const buyDisabled = buying || effectivePrice <= 0;
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
@@ -583,9 +593,11 @@ const VideoPage = () => {
                     <Button onClick={handleSubscribe} variant={!user || canStartTrial ? "outline" : "default"} size="sm" className="w-full gap-2 font-display text-xs font-semibold sm:text-sm">
                       <Zap className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> Assinar — acesso total
                     </Button>
-                    <Button onClick={handleBuyUnit} variant="outline" size="sm" className="w-full gap-2 font-display text-xs font-semibold sm:text-sm">
-                      <ShoppingCart className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> Comprar este vídeo — R$ 19,90
-                    </Button>
+                    {priceLabel && (
+                      <Button onClick={handleBuyUnit} disabled={buyDisabled} variant="outline" size="sm" className="w-full gap-2 font-display text-xs font-semibold sm:text-sm">
+                        <ShoppingCart className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> {buying ? "Processando..." : `Comprar este vídeo — ${priceLabel}`}
+                      </Button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -699,7 +711,9 @@ const VideoPage = () => {
                 </Button>
               )}
               <Button onClick={handleSubscribe} className="w-full gap-2 font-display font-semibold"><Zap className="h-4 w-4" /> Assinar — acesso total</Button>
-              <Button onClick={handleBuyUnit} variant="outline" className="w-full gap-2 font-display font-semibold"><ShoppingCart className="h-4 w-4" /> Comprar este vídeo — R$ 19,90</Button>
+              {priceLabel && (
+                <Button onClick={handleBuyUnit} disabled={buyDisabled} variant="outline" className="w-full gap-2 font-display font-semibold"><ShoppingCart className="h-4 w-4" /> {buying ? "Processando..." : `Comprar este vídeo — ${priceLabel}`}</Button>
+              )}
             </div>
           </div>
         </div>

@@ -186,7 +186,15 @@ const Login = () => {
             });
             if (result.error) {
               toast.error("Erro ao entrar com Google");
+              return;
             }
+            if (result.redirected) {
+              // Browser is being redirected to Google — nothing to do.
+              return;
+            }
+            // Tokens received and session set — go home.
+            toast.success("Login realizado com sucesso!");
+            navigate("/");
           }}
         >
           <svg className="h-5 w-5" viewBox="0 0 24 24">

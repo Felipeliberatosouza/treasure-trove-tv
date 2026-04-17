@@ -1,13 +1,16 @@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-/** Redirect that escapes any iframe (e.g. preview iframe). */
+/**
+ * Navigate to an external URL (e.g. Stripe Checkout).
+ *
+ * We intentionally use window.location (not window.top) because:
+ * - In the Lovable preview iframe, window.top points to the editor shell,
+ *   so navigating it leaves the app frame blank.
+ * - Stripe Checkout works correctly when opened in the same frame.
+ */
 export function redirectTopLevel(url: string) {
-  try {
-    window.top!.location.href = url;
-  } catch {
-    window.location.href = url;
-  }
+  window.location.href = url;
 }
 
 interface BuyUnitParams {

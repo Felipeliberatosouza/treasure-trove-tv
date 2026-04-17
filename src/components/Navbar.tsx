@@ -27,6 +27,11 @@ const publicMenuItems = [
   { label: "Agende uma Aula Particular", href: "/contato" },
 ];
 
+const subscriberMenuItem = {
+  label: "Minha Assinatura",
+  href: "/dashboard/student?tab=subscription",
+};
+
 const loggedMenuItems = [
   { label: "Minhas Revisões", href: "/minhas-revisoes" },
   { label: "Meus Resumos", href: "/meus-resumos" },

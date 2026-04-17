@@ -57,6 +57,7 @@ interface Purchase {
 export default function StudentSubscriptionTab() {
   const { user } = useAuth();
   const { logAction } = useAuditLog();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [activeSubscription, setActiveSubscription] = useState<SubscriptionData | null>(null);
   const [allSubscriptions, setAllSubscriptions] = useState<SubscriptionData[]>([]);
   const [usageCounts, setUsageCounts] = useState<Record<string, number>>({});
@@ -66,6 +67,19 @@ export default function StudentSubscriptionTab() {
   const [portalLoading, setPortalLoading] = useState(false);
   const [showPlanChange, setShowPlanChange] = useState(false);
   const [showCancel, setShowCancel] = useState(false);
+
+  // Auto-open plan change modal when redirected with ?action=change-plan
+  // (e.g. from PricingSection when user already has an active subscription).
+  useEffect(() => {
+    if (loading) return;
+    const action = searchParams.get("action");
+    if (action === "change-plan" && activeSubscription) {
+      setShowPlanChange(true);
+      const next = new URLSearchParams(searchParams);
+      next.delete("action");
+      setSearchParams(next, { replace: true });
+    }
+  }, [loading, activeSubscription, searchParams, setSearchParams]);
 
   useEffect(() => {
     if (!user) return;

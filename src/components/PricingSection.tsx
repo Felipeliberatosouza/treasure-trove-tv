@@ -111,7 +111,9 @@ const PricingSection = () => {
         return;
       }
       if (data?.url) {
-        window.open(data.url, "_blank");
+        // Redirect in the same tab so the Stripe "back" button returns
+        // to our cancel_url with the user session intact.
+        window.location.href = data.url;
       }
     } catch (err: any) {
       const msg = err?.message || "Erro ao iniciar checkout.";

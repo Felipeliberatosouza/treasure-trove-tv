@@ -125,6 +125,7 @@ const PricingSection = () => {
         // Navigate the current window to Stripe checkout.
         // Avoid window.top here: in iframe contexts (Lovable preview), it
         // would navigate the parent frame and leave our app blank.
+        setRedirecting(true);
         window.location.href = data.url;
         return;
       }

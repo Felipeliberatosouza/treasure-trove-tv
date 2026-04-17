@@ -120,14 +120,10 @@ const PricingSection = () => {
         return;
       }
       if (data?.url) {
-        // Redirect in the same tab so the Stripe "back" button returns
-        // to our cancel_url with the user session intact.
-        // Use top-level location to escape any iframe context (preview).
-        try {
-          window.top!.location.href = data.url;
-        } catch {
-          window.location.href = data.url;
-        }
+        // Navigate the current window to Stripe checkout.
+        // Avoid window.top here: in iframe contexts (Lovable preview), it
+        // would navigate the parent frame and leave our app blank.
+        window.location.href = data.url;
         return;
       }
       toast.error("Não foi possível iniciar o checkout. Tente novamente.");

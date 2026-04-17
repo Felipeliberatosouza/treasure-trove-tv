@@ -35,9 +35,9 @@ function ServiceComparisonRow({ serviceKey, currentPlan, newPlan }: RowProps) {
          curVal === true ? <Check className="h-3 w-3 text-primary mx-auto" /> :
          <span className="font-medium">{curVal}</span>}
       </span>
-      <span className={`w-16 text-center ${improved ? "text-green-600 font-semibold" : worsened ? "text-amber-600" : ""}`}>
+      <span className={`w-16 text-center ${improved ? "text-success font-semibold" : worsened ? "text-warning" : ""}`}>
         {newVal === null ? <X className="h-3 w-3 text-muted-foreground/40 mx-auto" /> :
-         newVal === true ? <Check className={`h-3 w-3 mx-auto ${improved ? "text-green-600" : "text-primary"}`} /> :
+         newVal === true ? <Check className={`h-3 w-3 mx-auto ${improved ? "text-success" : "text-primary"}`} /> :
          <span>{newVal}</span>}
         {improved && <ArrowUp className="h-2.5 w-2.5 inline ml-0.5" />}
         {worsened && <ArrowDown className="h-2.5 w-2.5 inline ml-0.5" />}

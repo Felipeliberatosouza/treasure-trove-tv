@@ -420,6 +420,7 @@ export default function StudentSubscriptionTab() {
 
   return (
     <div className="space-y-6">
+      <RedirectOverlay open={redirecting} title="Redirecionando para o portal seguro..." />
       <h2 className="font-display text-lg font-semibold mb-1">Assinatura e Compras</h2>
 
       <Tabs defaultValue="current" className="w-full">

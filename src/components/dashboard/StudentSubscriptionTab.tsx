@@ -252,6 +252,8 @@ export default function StudentSubscriptionTab() {
       });
 
       toast.success("Redirecionando para o portal de gerenciamento...");
+      // Refresh shared subscription state so navbar reflects the change.
+      refreshActiveSub();
       if (data?.url) redirectTopLevel(data.url, { title: "Abrindo troca de plano segura..." });
     } catch {
       toast.error("Não foi possível processar a mudança de plano.");

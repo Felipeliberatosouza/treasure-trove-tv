@@ -6,7 +6,7 @@ import { Star, Play, ShoppingCart, Zap, Clock, BookOpen, Gift, AlertTriangle, Lo
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFreeTrial } from "@/hooks/useFreeTrial";
-import { usePlatformSettings } from "@/hooks/usePlatformSettings";
+import { usePlatformSettings, type VideoPricingSettings } from "@/hooks/usePlatformSettings";
 import { useResourceLimit, type ResourceType } from "@/hooks/useResourceLimit";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
@@ -20,6 +20,7 @@ import { RatingStars } from "@/components/VideoDetailModal";
 import ResourceLimitModal from "@/components/ResourceLimitModal";
 import CpfRequiredModal from "@/components/CpfRequiredModal";
 import { useCpfGuard } from "@/hooks/useCpfGuard";
+import { startUnitCheckout } from "@/lib/payments";
 import VLibrasWidget from "@/components/VLibrasWidget";
 
 const DEMO_VIDEO_URL = "/demo-course.mp4";
@@ -30,6 +31,7 @@ const VideoPage = () => {
   const { user, loading: authLoading } = useAuth();
   const trial = useFreeTrial();
   const { data: branding } = usePlatformSettings("branding");
+  const { data: videoPricing } = usePlatformSettings("video_pricing");
   const resourceLimit = useResourceLimit();
   const { requireCpf, showCpfModal, setShowCpfModal, onCpfComplete } = useCpfGuard();
   const [showLimitModal, setShowLimitModal] = useState(false);
@@ -53,6 +55,8 @@ const VideoPage = () => {
   const [teacherProfile, setTeacherProfile] = useState<{ name: string; avatar_url: string | null; slug: string | null } | null>(null);
   const [teacherId, setTeacherId] = useState<string | null>(null);
   const [videoType, setVideoType] = useState<string | null>(null);
+  const [unitPrice, setUnitPrice] = useState<number | null>(null);
+  const [buying, setBuying] = useState(false);
   const [provaVotePercent, setProvaVotePercent] = useState<number | null>(null);
   const [userProvaVote, setUserProvaVote] = useState<boolean | null>(null);
   const [votingProva, setVotingProva] = useState(false);
@@ -107,6 +111,7 @@ const VideoPage = () => {
         });
         setTeacherId(lesson.teacher_id);
         setVideoType(lesson.video_type);
+        setUnitPrice(Number(lesson.price) || 0);
         setContentType("lesson");
         setLoadingDb(false);
         return;
@@ -132,6 +137,7 @@ const VideoPage = () => {
         });
         setTeacherId(exam.teacher_id);
         setVideoType(exam.video_type);
+        setUnitPrice(Number(exam.price) || 0);
         setContentType("exam_solution");
         setLoadingDb(false);
         return;
@@ -213,24 +219,26 @@ const VideoPage = () => {
 
       const { data: lesson } = await supabase
         .from("lessons")
-        .select("teacher_id, video_type")
+        .select("teacher_id, video_type, price")
         .eq("id", video.id)
         .limit(1)
         .maybeSingle();
       tId = lesson?.teacher_id ?? null;
       setTeacherId(tId);
       vType = lesson?.video_type ?? null;
+      if (lesson) setUnitPrice(Number(lesson.price) || 0);
 
       if (!tId) {
         const { data: exam } = await supabase
           .from("exam_solutions")
-          .select("teacher_id, video_type")
+          .select("teacher_id, video_type, price")
           .eq("id", video.id)
           .limit(1)
           .maybeSingle();
         tId = exam?.teacher_id ?? null;
         setTeacherId(tId);
         vType = exam?.video_type ?? null;
+        if (exam) setUnitPrice(Number(exam.price) || 0);
       }
 
       setVideoType(vType);
@@ -398,8 +406,11 @@ const VideoPage = () => {
 
   const handleBuyUnit = () => {
     if (!user) { navigate("/login"); return; }
-    requireCpf(() => {
-      toast.info("Compra unitária será integrada com Stripe em breve.");
+    if (!video) return;
+    requireCpf(async () => {
+      setBuying(true);
+      const ok = await startUnitCheckout({ contentId: video.id, contentType });
+      if (!ok) setBuying(false);
     });
   };
 
@@ -441,6 +452,13 @@ const VideoPage = () => {
   const trialExpired = trial.trialRow && !trial.hasActiveTrial;
   const canStartTrial = trial.trialEnabled && !trial.trialRow;
   const previewLimit = hasFullAccess ? undefined : 20;
+
+  const minPrice = videoPricing
+    ? (contentType === "lesson" ? videoPricing.default_lesson_price : videoPricing.default_exam_solution_price) ?? 0
+    : 0;
+  const effectivePrice = Math.max(unitPrice ?? 0, minPrice);
+  const priceLabel = effectivePrice > 0 ? `R$ ${effectivePrice.toFixed(2).replace(".", ",")}` : null;
+  const buyDisabled = buying || effectivePrice <= 0;
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
@@ -575,9 +593,11 @@ const VideoPage = () => {
                     <Button onClick={handleSubscribe} variant={!user || canStartTrial ? "outline" : "default"} size="sm" className="w-full gap-2 font-display text-xs font-semibold sm:text-sm">
                       <Zap className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> Assinar — acesso total
                     </Button>
-                    <Button onClick={handleBuyUnit} variant="outline" size="sm" className="w-full gap-2 font-display text-xs font-semibold sm:text-sm">
-                      <ShoppingCart className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> Comprar este vídeo — R$ 19,90
-                    </Button>
+                    {priceLabel && (
+                      <Button onClick={handleBuyUnit} disabled={buyDisabled} variant="outline" size="sm" className="w-full gap-2 font-display text-xs font-semibold sm:text-sm">
+                        <ShoppingCart className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> {buying ? "Processando..." : `Comprar este vídeo — ${priceLabel}`}
+                      </Button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -691,7 +711,9 @@ const VideoPage = () => {
                 </Button>
               )}
               <Button onClick={handleSubscribe} className="w-full gap-2 font-display font-semibold"><Zap className="h-4 w-4" /> Assinar — acesso total</Button>
-              <Button onClick={handleBuyUnit} variant="outline" className="w-full gap-2 font-display font-semibold"><ShoppingCart className="h-4 w-4" /> Comprar este vídeo — R$ 19,90</Button>
+              {priceLabel && (
+                <Button onClick={handleBuyUnit} disabled={buyDisabled} variant="outline" className="w-full gap-2 font-display font-semibold"><ShoppingCart className="h-4 w-4" /> {buying ? "Processando..." : `Comprar este vídeo — ${priceLabel}`}</Button>
+              )}
             </div>
           </div>
         </div>

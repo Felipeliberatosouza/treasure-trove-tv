@@ -5,11 +5,13 @@ import { Star, Play, ShoppingCart, Zap, Clock, BookOpen, Gift, AlertTriangle, Lo
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFreeTrial } from "@/hooks/useFreeTrial";
+import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import VideoPlayer from "@/components/VideoPlayer";
 import CpfRequiredModal from "@/components/CpfRequiredModal";
 import { useCpfGuard } from "@/hooks/useCpfGuard";
+import { startUnitCheckout } from "@/lib/payments";
 import type { Video } from "@/data/courses";
 
 interface VideoDetailModalProps {
@@ -30,6 +32,7 @@ const VideoDetailModal = ({ video, open, onClose }: VideoDetailModalProps) => {
   const { user } = useAuth();
   const trial = useFreeTrial();
   const navigate = useNavigate();
+  const { data: videoPricing } = usePlatformSettings("video_pricing");
   const { requireCpf, showCpfModal, setShowCpfModal, onCpfComplete } = useCpfGuard();
   const [rating, setRating] = useState(0);
   const [hoveredStar, setHoveredStar] = useState(0);
@@ -41,6 +44,9 @@ const VideoDetailModal = ({ video, open, onClose }: VideoDetailModalProps) => {
   const [viewId, setViewId] = useState<string | null>(null);
   const [showPaywall, setShowPaywall] = useState(false);
   const [hasFullAccess, setHasFullAccess] = useState(false);
+  const [unitPrice, setUnitPrice] = useState<number | null>(null);
+  const [contentType, setContentType] = useState<"lesson" | "exam_solution">("lesson");
+  const [buying, setBuying] = useState(false);
 
   // Check if user has full access (subscription, purchase, or active trial)
   useEffect(() => {
@@ -96,6 +102,30 @@ const VideoDetailModal = ({ video, open, onClose }: VideoDetailModalProps) => {
       if (user) {
         startViewTracking(video.id);
       }
+      // Fetch price + content type
+      (async () => {
+        const { data: lesson } = await supabase
+          .from("lessons")
+          .select("price, video_type")
+          .eq("id", video.id)
+          .maybeSingle();
+        if (lesson) {
+          setUnitPrice(Number(lesson.price) || 0);
+          setContentType("lesson");
+          return;
+        }
+        const { data: exam } = await supabase
+          .from("exam_solutions")
+          .select("price, video_type")
+          .eq("id", video.id)
+          .maybeSingle();
+        if (exam) {
+          setUnitPrice(Number(exam.price) || 0);
+          setContentType("exam_solution");
+        } else {
+          setUnitPrice(null);
+        }
+      })();
     } else {
       setIsWatching(false);
       setShowPaywall(false);
@@ -223,8 +253,11 @@ const VideoDetailModal = ({ video, open, onClose }: VideoDetailModalProps) => {
       navigate("/login");
       return;
     }
-    requireCpf(() => {
-      toast.info("Compra unitária será integrada com Stripe em breve.");
+    if (!video) return;
+    requireCpf(async () => {
+      setBuying(true);
+      const ok = await startUnitCheckout({ contentId: video.id, contentType });
+      if (!ok) setBuying(false);
     });
   };
 
@@ -251,6 +284,13 @@ const VideoDetailModal = ({ video, open, onClose }: VideoDetailModalProps) => {
   const trialExpired = trial.trialRow && !trial.hasActiveTrial;
   const canStartTrial = trial.trialEnabled && !trial.trialRow;
   const previewLimit = hasFullAccess ? undefined : 20;
+
+  const minPrice = videoPricing
+    ? (contentType === "lesson" ? videoPricing.default_lesson_price : videoPricing.default_exam_solution_price) ?? 0
+    : 0;
+  const effectivePrice = Math.max(unitPrice ?? 0, minPrice);
+  const priceLabel = effectivePrice > 0 ? `R$ ${effectivePrice.toFixed(2).replace(".", ",")}` : null;
+  const buyDisabled = buying || effectivePrice <= 0;
 
   return (
     <>
@@ -316,9 +356,11 @@ const VideoDetailModal = ({ video, open, onClose }: VideoDetailModalProps) => {
                 <Button onClick={handleSubscribe} variant={!user || canStartTrial ? "outline" : "default"} className="w-full gap-2 font-display font-semibold">
                   <Zap className="h-4 w-4" /> Assinar — acesso total
                 </Button>
-                <Button onClick={handleBuyUnit} variant="outline" className="w-full gap-2 font-display font-semibold">
-                  <ShoppingCart className="h-4 w-4" /> Comprar este vídeo — R$ 19,90
-                </Button>
+                {priceLabel && (
+                  <Button onClick={handleBuyUnit} disabled={buyDisabled} variant="outline" className="w-full gap-2 font-display font-semibold">
+                    <ShoppingCart className="h-4 w-4" /> {buying ? "Processando..." : `Comprar este vídeo — ${priceLabel}`}
+                  </Button>
+                )}
               </div>
             </div>
           )}
@@ -431,9 +473,11 @@ const VideoDetailModal = ({ video, open, onClose }: VideoDetailModalProps) => {
             <Button onClick={handleSubscribe} className="w-full gap-2 font-display font-semibold">
               <Zap className="h-4 w-4" /> Assinar — acesso total
             </Button>
-            <Button onClick={handleBuyUnit} variant="outline" className="w-full gap-2 font-display font-semibold">
-              <ShoppingCart className="h-4 w-4" /> Comprar este vídeo — R$ 19,90
-            </Button>
+            {priceLabel && (
+              <Button onClick={handleBuyUnit} disabled={buyDisabled} variant="outline" className="w-full gap-2 font-display font-semibold">
+                <ShoppingCart className="h-4 w-4" /> {buying ? "Processando..." : `Comprar este vídeo — ${priceLabel}`}
+              </Button>
+            )}
           </div>
         </div>
       </DialogContent>

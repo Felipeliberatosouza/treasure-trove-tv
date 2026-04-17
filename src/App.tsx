@@ -40,6 +40,7 @@ import PaymentCanceled from "./pages/PaymentCanceled.tsx";
 import DynamicBranding from "./components/DynamicBranding.tsx";
 import InactivityGuard from "./components/InactivityGuard.tsx";
 import GlobalRedirectOverlay from "./components/GlobalRedirectOverlay.tsx";
+import OnboardingGuard from "./components/OnboardingGuard.tsx";
 
 const queryClient = new QueryClient();
 
@@ -88,6 +89,7 @@ const App = () => (
           <CookieConsent />
           <InactivityGuard />
           <GlobalRedirectOverlay />
+          <OnboardingGuard />
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

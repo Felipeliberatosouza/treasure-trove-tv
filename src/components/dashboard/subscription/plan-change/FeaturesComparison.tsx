@@ -32,7 +32,7 @@ export function FeaturesComparison({ currentPlan, newPlan }: Props) {
               {inCurrent ? <Check className="h-3 w-3 text-primary mx-auto" /> : <X className="h-3 w-3 text-muted-foreground/40 mx-auto" />}
             </span>
             <span className="w-16 text-center">
-              {inNew ? <Check className={`h-3 w-3 mx-auto ${added ? "text-green-600" : "text-primary"}`} /> : <X className={`h-3 w-3 mx-auto ${removed ? "text-amber-600" : "text-muted-foreground/40"}`} />}
+              {inNew ? <Check className={`h-3 w-3 mx-auto ${added ? "text-success" : "text-primary"}`} /> : <X className={`h-3 w-3 mx-auto ${removed ? "text-warning" : "text-muted-foreground/40"}`} />}
             </span>
           </div>
         );

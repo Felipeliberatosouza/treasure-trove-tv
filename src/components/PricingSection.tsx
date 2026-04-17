@@ -113,8 +113,15 @@ const PricingSection = () => {
       if (data?.url) {
         // Redirect in the same tab so the Stripe "back" button returns
         // to our cancel_url with the user session intact.
-        window.location.href = data.url;
+        // Use top-level location to escape any iframe context (preview).
+        try {
+          window.top!.location.href = data.url;
+        } catch {
+          window.location.href = data.url;
+        }
+        return;
       }
+      toast.error("Não foi possível iniciar o checkout. Tente novamente.");
     } catch (err: any) {
       const msg = err?.message || "Erro ao iniciar checkout.";
       toast.error(msg);

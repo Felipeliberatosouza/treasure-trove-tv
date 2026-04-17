@@ -253,8 +253,11 @@ const VideoDetailModal = ({ video, open, onClose }: VideoDetailModalProps) => {
       navigate("/login");
       return;
     }
-    requireCpf(() => {
-      toast.info("Compra unitária será integrada com Stripe em breve.");
+    if (!video) return;
+    requireCpf(async () => {
+      setBuying(true);
+      const ok = await startUnitCheckout({ contentId: video.id, contentType });
+      if (!ok) setBuying(false);
     });
   };
 
@@ -281,6 +284,13 @@ const VideoDetailModal = ({ video, open, onClose }: VideoDetailModalProps) => {
   const trialExpired = trial.trialRow && !trial.hasActiveTrial;
   const canStartTrial = trial.trialEnabled && !trial.trialRow;
   const previewLimit = hasFullAccess ? undefined : 20;
+
+  const minPrice = videoPricing
+    ? (contentType === "lesson" ? videoPricing.default_lesson_price : videoPricing.default_exam_solution_price) ?? 0
+    : 0;
+  const effectivePrice = Math.max(unitPrice ?? 0, minPrice);
+  const priceLabel = effectivePrice > 0 ? `R$ ${effectivePrice.toFixed(2).replace(".", ",")}` : null;
+  const buyDisabled = buying || effectivePrice <= 0;
 
   return (
     <>

@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { CheckCircle2, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -8,13 +8,37 @@ import { Button } from "@/components/ui/button";
 
 const PaymentSuccess = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const sessionId = searchParams.get("session_id");
+  const contentId = searchParams.get("content_id");
+  const isUnitPurchase = !!sessionId && !!contentId;
   const { refreshSubscription, subscription, user, profile } = useAuth();
   const [verified, setVerified] = useState(false);
   const [checking, setChecking] = useState(true);
   const emailSentRef = useRef(false);
 
-  // Poll for subscription confirmation
+  // Verify one-off payment
   useEffect(() => {
+    if (!isUnitPurchase || !user || !sessionId) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        await supabase.functions.invoke("verify-payment", { body: { sessionId } });
+      } catch (err) {
+        console.error("verify-payment error:", err);
+      } finally {
+        if (!cancelled) {
+          setVerified(true);
+          setChecking(false);
+        }
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [isUnitPurchase, user, sessionId]);
+
+  // Poll for subscription confirmation (only for subscription flow)
+  useEffect(() => {
+    if (isUnitPurchase) return;
     if (!user) {
       setChecking(false);
       return;
@@ -30,15 +54,12 @@ const PaymentSuccess = () => {
         attempts++;
         try {
           await refreshSubscription();
-          // We check subscription.subscribed in the next render cycle,
-          // so we just wait and let the effect below handle it
         } catch (err) {
           console.error("Erro ao verificar assinatura:", err);
         }
         await new Promise((r) => setTimeout(r, pollInterval));
       }
       if (!cancelled && !verified) {
-        // Timed out but still show success (webhook may be delayed)
         setVerified(true);
         setChecking(false);
       }
@@ -47,18 +68,20 @@ const PaymentSuccess = () => {
     poll();
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id]);
+  }, [user?.id, isUnitPurchase]);
 
   // React to subscription becoming active
   useEffect(() => {
+    if (isUnitPurchase) return;
     if (subscription.subscribed && !verified) {
       setVerified(true);
       setChecking(false);
     }
-  }, [subscription.subscribed, verified]);
+  }, [subscription.subscribed, verified, isUnitPurchase]);
 
-  // Send payment confirmation email once verified
+  // Send subscription payment confirmation email once verified
   useEffect(() => {
+    if (isUnitPurchase) return;
     if (!verified || !user || emailSentRef.current) return;
     emailSentRef.current = true;
 
@@ -99,15 +122,15 @@ const PaymentSuccess = () => {
     };
 
     sendConfirmationEmail();
-  }, [verified, user, profile]);
+  }, [verified, user, profile, isUnitPurchase]);
 
   // Redirect after verified
   useEffect(() => {
-    if (verified) {
-      const timer = setTimeout(() => navigate("/dashboard/student"), 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [verified, navigate]);
+    if (!verified) return;
+    const target = isUnitPurchase && contentId ? `/video/${contentId}` : "/dashboard/student";
+    const timer = setTimeout(() => navigate(target), 5000);
+    return () => clearTimeout(timer);
+  }, [verified, navigate, isUnitPurchase, contentId]);
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4">
@@ -120,7 +143,7 @@ const PaymentSuccess = () => {
           <>
             <Loader2 className="h-16 w-16 text-primary mx-auto animate-spin mb-6" />
             <h1 className="font-display text-2xl font-bold mb-2">Confirmando pagamento...</h1>
-            <p className="text-muted-foreground">Aguarde enquanto verificamos sua assinatura.</p>
+            <p className="text-muted-foreground">Aguarde enquanto verificamos sua compra.</p>
           </>
         ) : (
           <>
@@ -133,13 +156,15 @@ const PaymentSuccess = () => {
             </motion.div>
             <h1 className="font-display text-2xl font-bold mb-2">Pagamento confirmado! 🎉</h1>
             <p className="text-muted-foreground mb-6">
-              Sua assinatura foi ativada com sucesso. Você já tem acesso a todo o conteúdo premium.
+              {isUnitPurchase
+                ? "Sua compra foi concluída. Você já pode assistir à aula completa."
+                : "Sua assinatura foi ativada com sucesso. Você já tem acesso a todo o conteúdo premium."}
             </p>
             <p className="text-xs text-muted-foreground mb-6">
-              Redirecionando para o painel em 5 segundos...
+              Redirecionando em 5 segundos...
             </p>
-            <Button onClick={() => navigate("/dashboard/student")}>
-              Ir para o Painel
+            <Button onClick={() => navigate(isUnitPurchase && contentId ? `/video/${contentId}` : "/dashboard/student")}>
+              {isUnitPurchase ? "Ir para a aula" : "Ir para o Painel"}
             </Button>
           </>
         )}

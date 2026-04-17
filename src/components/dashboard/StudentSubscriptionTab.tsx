@@ -142,6 +142,7 @@ export default function StudentSubscriptionTab() {
   // Use window.location (not window.top) so the redirect works inside
   // the Lovable preview iframe; otherwise the app frame goes blank.
   const redirectTopLevel = (url: string) => {
+    setRedirecting(true);
     window.location.href = url;
   };
 

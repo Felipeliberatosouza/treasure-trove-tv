@@ -9,6 +9,7 @@ import UserMenu from "@/components/UserMenu";
 import { useAllPlatformSettings } from "@/hooks/usePlatformSettings";
 import type { BrandingSettings } from "@/hooks/usePlatformSettings";
 import { supabase } from "@/integrations/supabase/client";
+import { useActiveSubscription } from "@/hooks/useActiveSubscription";
 
 interface SearchResult {
   id: string;

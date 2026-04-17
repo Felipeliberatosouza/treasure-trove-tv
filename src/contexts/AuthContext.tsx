@@ -37,7 +37,7 @@ interface AuthContextType {
   subscription: SubscriptionStatus;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
-  refreshSubscription: () => Promise<void>;
+  refreshSubscription: () => Promise<{ subscribed: boolean; priceId: string | null; productId: string | null; subscriptionEnd: string | null } | null>;
   addStudentRole: () => Promise<void>;
 }
 
@@ -58,7 +58,7 @@ const AuthContext = createContext<AuthContextType>({
   subscription: defaultSubscription,
   signOut: async () => {},
   refreshProfile: async () => {},
-  refreshSubscription: async () => {},
+  refreshSubscription: async () => null,
   addStudentRole: async () => {},
 });
 
@@ -113,23 +113,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const checkSubscription = useCallback(async () => {
     try {
       const { data: { session: currentSession } } = await supabase.auth.getSession();
-      if (!currentSession) return;
+      if (!currentSession) return null;
 
       const { data, error } = await supabase.functions.invoke("check-subscription");
       if (error) {
         console.error("Error checking subscription:", error);
-        return;
+        return null;
       }
       if (data) {
-        setSubscription({
+        const next = {
           subscribed: data.subscribed ?? false,
           priceId: data.price_id ?? null,
           productId: data.product_id ?? null,
           subscriptionEnd: data.subscription_end ?? null,
-        });
+        };
+        setSubscription(next);
+        return next;
       }
+      return null;
     } catch (err) {
       console.error("Failed to check subscription:", err);
+      return null;
     }
   }, []);
 
@@ -138,7 +142,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const refreshSubscription = useCallback(async () => {
-    await checkSubscription();
+    return await checkSubscription();
   }, [checkSubscription]);
 
   const addStudentRole = useCallback(async () => {

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowUp, ArrowDown, Loader2, Check, X, Minus } from "lucide-react";
+import { ArrowUp, ArrowDown, Loader2, Check, X, Minus, Wallet, CreditCard } from "lucide-react";
 
 const SERVICE_LABELS: Record<string, string> = {
   service_revisoes: "Revisões",

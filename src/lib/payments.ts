@@ -9,12 +9,18 @@ import { toast } from "sonner";
  *   so navigating it leaves the app frame blank.
  * - Stripe Checkout works correctly when opened in the same frame.
  */
-export function redirectTopLevel(url: string) {
+export function redirectTopLevel(
+  url: string,
+  options?: { title?: string; description?: string }
+) {
   // Notify the global overlay so the user sees a clear loading state
   // during the brief moment before the browser starts the navigation.
   window.dispatchEvent(
     new CustomEvent("lovable:external-redirect", {
-      detail: { title: "Redirecionando para o pagamento seguro..." },
+      detail: {
+        title: options?.title ?? "Redirecionando para o pagamento seguro...",
+        description: options?.description,
+      },
     })
   );
   window.location.href = url;

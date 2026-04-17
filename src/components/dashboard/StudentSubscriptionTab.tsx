@@ -121,12 +121,20 @@ export default function StudentSubscriptionTab() {
     load();
   }, [user]);
 
+  const redirectTopLevel = (url: string) => {
+    try {
+      window.top!.location.href = url;
+    } catch {
+      window.location.href = url;
+    }
+  };
+
   const handleManageSubscription = async () => {
     setPortalLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("customer-portal");
       if (error) throw error;
-      if (data?.url) window.location.href = data.url;
+      if (data?.url) redirectTopLevel(data.url);
     } catch {
       toast.error("Não foi possível abrir o portal de gerenciamento.");
     } finally {
@@ -221,7 +229,7 @@ export default function StudentSubscriptionTab() {
       });
 
       toast.success("Redirecionando para o portal de gerenciamento...");
-      if (data?.url) window.location.href = data.url;
+      if (data?.url) redirectTopLevel(data.url);
     } catch {
       toast.error("Não foi possível processar a mudança de plano.");
     }
@@ -301,7 +309,7 @@ export default function StudentSubscriptionTab() {
       });
 
       toast.success("Redirecionando para o portal de cancelamento...");
-      if (data?.url) window.location.href = data.url;
+      if (data?.url) redirectTopLevel(data.url);
     } catch {
       toast.error("Não foi possível processar o cancelamento.");
     }

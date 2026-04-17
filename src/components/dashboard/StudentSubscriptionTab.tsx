@@ -15,6 +15,7 @@ import PlanChangeModal from "./subscription/PlanChangeModal";
 import CancelSubscriptionModal from "./subscription/CancelSubscriptionModal";
 import PurchaseHistory from "./subscription/PurchaseHistory";
 import RedirectOverlay from "@/components/RedirectOverlay";
+import { redirectTopLevel } from "@/lib/payments";
 
 const SERVICE_META: Record<string, { label: string; icon: React.ElementType; resourceType: string }> = {
   service_revisoes: { label: "Revisões", icon: BookOpen, resourceType: "revisao" },
@@ -67,7 +68,6 @@ export default function StudentSubscriptionTab() {
   const [availablePlans, setAvailablePlans] = useState<import("./subscription/PlanChangeModal").PlanOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [portalLoading, setPortalLoading] = useState(false);
-  const [redirecting, setRedirecting] = useState(false);
   const [showPlanChange, setShowPlanChange] = useState(false);
   const [showCancel, setShowCancel] = useState(false);
 
@@ -139,12 +139,9 @@ export default function StudentSubscriptionTab() {
     load();
   }, [user]);
 
-  // Use window.location (not window.top) so the redirect works inside
-  // the Lovable preview iframe; otherwise the app frame goes blank.
-  const redirectTopLevel = (url: string) => {
-    setRedirecting(true);
-    window.location.href = url;
-  };
+  // Centralized helper from lib/payments dispatches the overlay event
+  // and uses window.location (not window.top), so it works inside the
+  // Lovable preview iframe without leaving the app frame blank.
 
   const handleManageSubscription = async () => {
     setPortalLoading(true);

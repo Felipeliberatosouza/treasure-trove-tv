@@ -9,6 +9,7 @@ import UserMenu from "@/components/UserMenu";
 import { useAllPlatformSettings } from "@/hooks/usePlatformSettings";
 import type { BrandingSettings } from "@/hooks/usePlatformSettings";
 import { supabase } from "@/integrations/supabase/client";
+import { useActiveSubscription } from "@/hooks/useActiveSubscription";
 
 interface SearchResult {
   id: string;
@@ -25,6 +26,11 @@ const publicMenuItems = [
   { label: "Colinhas", href: "/colinhas" },
   { label: "Agende uma Aula Particular", href: "/contato" },
 ];
+
+const subscriberMenuItem = {
+  label: "Minha Assinatura",
+  href: "/dashboard/student?tab=subscription",
+};
 
 const loggedMenuItems = [
   { label: "Minhas Revisões", href: "/minhas-revisoes" },
@@ -48,8 +54,12 @@ const Navbar = () => {
   const { user } = useAuth();
   const { settings } = useAllPlatformSettings();
   const branding = settings.branding as BrandingSettings | undefined;
+  const { isActive: hasActiveSubscription } = useActiveSubscription();
 
-  const menuItems = user ? loggedMenuItems : publicMenuItems;
+  const baseMenu = user ? loggedMenuItems : publicMenuItems;
+  const menuItems = user && hasActiveSubscription
+    ? [subscriberMenuItem, ...baseMenu]
+    : baseMenu;
 
   useEffect(() => {
     if (searchOpen && searchInputRef.current) {

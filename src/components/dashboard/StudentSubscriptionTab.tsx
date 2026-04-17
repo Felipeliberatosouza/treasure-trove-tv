@@ -67,6 +67,7 @@ export default function StudentSubscriptionTab() {
   const [availablePlans, setAvailablePlans] = useState<import("./subscription/PlanChangeModal").PlanOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [portalLoading, setPortalLoading] = useState(false);
+  const [redirecting, setRedirecting] = useState(false);
   const [showPlanChange, setShowPlanChange] = useState(false);
   const [showCancel, setShowCancel] = useState(false);
 

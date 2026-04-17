@@ -60,6 +60,10 @@ interface Purchase {
 export default function StudentSubscriptionTab() {
   const { user } = useAuth();
   const { logAction } = useAuditLog();
+  // Shared lightweight active-subscription state. Used to:
+  // - Skip the heavy join query when we already know the user has none
+  // - Notify the navbar (via refresh) after plan change / cancellation
+  const { isActive: hasActiveSub, loading: activeSubLoading, refresh: refreshActiveSub } = useActiveSubscription();
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeSubscription, setActiveSubscription] = useState<SubscriptionData | null>(null);
   const [allSubscriptions, setAllSubscriptions] = useState<SubscriptionData[]>([]);

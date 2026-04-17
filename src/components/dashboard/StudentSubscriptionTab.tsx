@@ -242,7 +242,7 @@ export default function StudentSubscriptionTab() {
       });
 
       toast.success("Redirecionando para o portal de gerenciamento...");
-      if (data?.url) redirectTopLevel(data.url);
+      if (data?.url) redirectTopLevel(data.url, { title: "Abrindo troca de plano segura..." });
     } catch {
       toast.error("Não foi possível processar a mudança de plano.");
     }
@@ -322,7 +322,7 @@ export default function StudentSubscriptionTab() {
       });
 
       toast.success("Redirecionando para o portal de cancelamento...");
-      if (data?.url) redirectTopLevel(data.url);
+      if (data?.url) redirectTopLevel(data.url, { title: "Abrindo portal de cancelamento..." });
     } catch {
       toast.error("Não foi possível processar o cancelamento.");
     }

@@ -56,7 +56,7 @@ export default function SubscriptionStatement({ planName, entries }: Subscriptio
                     <span className="text-sm">{entry.description}</span>
                   </div>
                   <div className="flex items-start gap-3">
-                    <span className={`text-sm font-semibold ${entry.amount < 0 ? "text-green-600" : entry.amount > 0 ? "text-foreground" : "text-muted-foreground"}`}>
+                    <span className={`text-sm font-semibold ${entry.amount < 0 ? "text-success" : entry.amount > 0 ? "text-foreground" : "text-muted-foreground"}`}>
                       {entry.amount < 0 ? "- " : ""}R$ {Math.abs(entry.amount).toFixed(2)}
                     </span>
                     <ArrowRight className="h-3.5 w-3.5 text-muted-foreground mt-0.5 shrink-0" />

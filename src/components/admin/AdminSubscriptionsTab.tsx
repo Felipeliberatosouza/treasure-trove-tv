@@ -147,21 +147,21 @@ const AdminSubscriptionsTab = () => {
   const getDaysRemainingBadge = (days: number) => {
     if (days <= 0) return <Badge variant="destructive">Expirado</Badge>;
     if (days <= 3) return <Badge variant="destructive">{days}d restante{days > 1 ? "s" : ""}</Badge>;
-    if (days <= 7) return <Badge className="bg-amber-500 text-white hover:bg-amber-600">{days}d restantes</Badge>;
+    if (days <= 7) return <Badge className="bg-warning text-warning-foreground hover:bg-warning/90">{days}d restantes</Badge>;
     return <Badge variant="secondary">{days}d restantes</Badge>;
   };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "sent":
-        return <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">Enviado</Badge>;
+        return <Badge className="bg-success/15 text-success hover:bg-success/25">Enviado</Badge>;
       case "pending":
         return <Badge variant="secondary">Pendente</Badge>;
       case "failed":
       case "dlq":
         return <Badge variant="destructive">Falhou</Badge>;
       case "suppressed":
-        return <Badge className="bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200">Suprimido</Badge>;
+        return <Badge className="bg-warning/15 text-warning hover:bg-warning/25">Suprimido</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -227,7 +227,7 @@ const AdminSubscriptionsTab = () => {
         </Card>
         <Card className="border-border cursor-pointer" onClick={() => setFilter("warning")}>
           <CardContent className="flex items-center gap-3 p-4">
-            <AlertTriangle className="h-6 w-6 text-amber-500 shrink-0" />
+            <AlertTriangle className="h-6 w-6 text-warning shrink-0" />
             <div>
               <p className="text-xs text-muted-foreground">Atenção (4-7d)</p>
               <p className="text-xl font-bold">{stats.warning}</p>
@@ -245,7 +245,7 @@ const AdminSubscriptionsTab = () => {
         </Card>
         <Card className="border-border">
           <CardContent className="flex items-center gap-3 p-4">
-            <Bell className="h-6 w-6 text-green-500 shrink-0" />
+            <Bell className="h-6 w-6 text-success shrink-0" />
             <div>
               <p className="text-xs text-muted-foreground">Lembretes</p>
               <p className="text-xl font-bold">{stats.remindersSent}</p>

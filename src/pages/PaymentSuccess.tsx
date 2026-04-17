@@ -152,7 +152,7 @@ const PaymentSuccess = () => {
               animate={{ scale: 1 }}
               transition={{ type: "spring", delay: 0.2 }}
             >
-              <CheckCircle2 className="h-20 w-20 text-green-500 mx-auto mb-6" />
+              <CheckCircle2 className="h-20 w-20 text-success mx-auto mb-6" />
             </motion.div>
             <h1 className="font-display text-2xl font-bold mb-2">Pagamento confirmado! 🎉</h1>
             <p className="text-muted-foreground mb-6">

@@ -5,11 +5,13 @@ import { Star, Play, ShoppingCart, Zap, Clock, BookOpen, Gift, AlertTriangle, Lo
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFreeTrial } from "@/hooks/useFreeTrial";
+import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import VideoPlayer from "@/components/VideoPlayer";
 import CpfRequiredModal from "@/components/CpfRequiredModal";
 import { useCpfGuard } from "@/hooks/useCpfGuard";
+import { startUnitCheckout } from "@/lib/payments";
 import type { Video } from "@/data/courses";
 
 interface VideoDetailModalProps {
@@ -30,6 +32,7 @@ const VideoDetailModal = ({ video, open, onClose }: VideoDetailModalProps) => {
   const { user } = useAuth();
   const trial = useFreeTrial();
   const navigate = useNavigate();
+  const { data: videoPricing } = usePlatformSettings("video_pricing");
   const { requireCpf, showCpfModal, setShowCpfModal, onCpfComplete } = useCpfGuard();
   const [rating, setRating] = useState(0);
   const [hoveredStar, setHoveredStar] = useState(0);
@@ -41,6 +44,9 @@ const VideoDetailModal = ({ video, open, onClose }: VideoDetailModalProps) => {
   const [viewId, setViewId] = useState<string | null>(null);
   const [showPaywall, setShowPaywall] = useState(false);
   const [hasFullAccess, setHasFullAccess] = useState(false);
+  const [unitPrice, setUnitPrice] = useState<number | null>(null);
+  const [contentType, setContentType] = useState<"lesson" | "exam_solution">("lesson");
+  const [buying, setBuying] = useState(false);
 
   // Check if user has full access (subscription, purchase, or active trial)
   useEffect(() => {

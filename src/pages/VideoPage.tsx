@@ -111,6 +111,7 @@ const VideoPage = () => {
         });
         setTeacherId(lesson.teacher_id);
         setVideoType(lesson.video_type);
+        setUnitPrice(Number(lesson.price) || 0);
         setContentType("lesson");
         setLoadingDb(false);
         return;
@@ -136,6 +137,7 @@ const VideoPage = () => {
         });
         setTeacherId(exam.teacher_id);
         setVideoType(exam.video_type);
+        setUnitPrice(Number(exam.price) || 0);
         setContentType("exam_solution");
         setLoadingDb(false);
         return;
@@ -217,24 +219,26 @@ const VideoPage = () => {
 
       const { data: lesson } = await supabase
         .from("lessons")
-        .select("teacher_id, video_type")
+        .select("teacher_id, video_type, price")
         .eq("id", video.id)
         .limit(1)
         .maybeSingle();
       tId = lesson?.teacher_id ?? null;
       setTeacherId(tId);
       vType = lesson?.video_type ?? null;
+      if (lesson) setUnitPrice(Number(lesson.price) || 0);
 
       if (!tId) {
         const { data: exam } = await supabase
           .from("exam_solutions")
-          .select("teacher_id, video_type")
+          .select("teacher_id, video_type, price")
           .eq("id", video.id)
           .limit(1)
           .maybeSingle();
         tId = exam?.teacher_id ?? null;
         setTeacherId(tId);
         vType = exam?.video_type ?? null;
+        if (exam) setUnitPrice(Number(exam.price) || 0);
       }
 
       setVideoType(vType);

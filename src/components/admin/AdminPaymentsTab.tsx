@@ -181,7 +181,7 @@ const AdminPaymentsTab = () => {
   const statusBadge = (status: string) => {
     const map: Record<string, string> = {
       pending: "border-accent/30 text-accent",
-      paid: "border-green-500/30 text-green-500",
+      paid: "border-success/30 text-success",
       cancelled: "border-destructive/30 text-destructive",
     };
     const labels: Record<string, string> = { pending: "Pendente", paid: "Pago", cancelled: "Cancelado" };

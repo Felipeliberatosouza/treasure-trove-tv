@@ -5,10 +5,13 @@ import { useAuth } from "@/contexts/AuthContext";
 import { isValidCPF } from "@/lib/cpfValidator";
 
 /**
- * Detects users with incomplete onboarding (missing CPF or unverified phone)
- * after they log in (typically via Google OAuth, since signup forms enforce
- * these fields up-front). Redirects them to the student dashboard with the
- * "Dados Pessoais" tab open so they can complete their profile.
+ * Detects users with incomplete onboarding and redirects them to the proper
+ * dashboard tab to complete their profile.
+ *
+ * - Students: missing CPF or unverified phone -> /dashboard/student?tab=personal
+ * - Teachers: missing CPF, address, or PIX key -> /dashboard/teacher?tab=personal
+ *
+ * Admins are never redirected.
  */
 const EXEMPT_PREFIXES = [
   "/login",
@@ -37,29 +40,47 @@ const OnboardingGuard = () => {
       notifiedRef.current = false;
       return;
     }
-    // Only enforce for students. Teachers have their own contract/data flow,
-    // and admins shouldn't be redirected.
-    if (role !== "student") return;
+    if (role !== "student" && role !== "teacher") return;
     if (isExempt(location.pathname)) return;
 
     const cpfMissing = !profile.cpf || !isValidCPF(profile.cpf);
-    const phoneMissing = !profile.phone_verified;
 
-    if (!cpfMissing && !phoneMissing) {
-      notifiedRef.current = false;
-      return;
+    let msg: string | null = null;
+    let target: string | null = null;
+
+    if (role === "student") {
+      const phoneMissing = !profile.phone_verified;
+      if (!cpfMissing && !phoneMissing) {
+        notifiedRef.current = false;
+        return;
+      }
+      msg = cpfMissing && phoneMissing
+        ? "Complete seu CPF e verifique seu telefone para continuar."
+        : cpfMissing
+          ? "Complete seu CPF para continuar."
+          : "Verifique seu telefone para continuar.";
+      target = "/dashboard/student?tab=personal";
+    } else {
+      // teacher
+      const addressMissing = !profile.address || !profile.address.trim();
+      const pixMissing = !profile.pix_key || !profile.pix_key.trim();
+      if (!cpfMissing && !addressMissing && !pixMissing) {
+        notifiedRef.current = false;
+        return;
+      }
+      const missing: string[] = [];
+      if (cpfMissing) missing.push("CPF");
+      if (addressMissing) missing.push("endereço");
+      if (pixMissing) missing.push("chave PIX");
+      msg = `Complete ${missing.join(", ")} para continuar.`;
+      target = "/dashboard/teacher?tab=personal";
     }
 
     if (notifiedRef.current) return;
     notifiedRef.current = true;
 
-    const msg = cpfMissing && phoneMissing
-      ? "Complete seu CPF e verifique seu telefone para continuar."
-      : cpfMissing
-        ? "Complete seu CPF para continuar."
-        : "Verifique seu telefone para continuar.";
     toast.info(msg);
-    navigate("/dashboard/student?tab=personal", { replace: true });
+    navigate(target, { replace: true });
   }, [user, profile, role, loading, location.pathname, navigate]);
 
   return null;

@@ -301,6 +301,7 @@ export default function StudentSubscriptionTab() {
       });
 
       toast.success("Redirecionando para o portal de cancelamento...");
+      if (data?.url) window.location.href = data.url;
     } catch {
       toast.error("Não foi possível processar o cancelamento.");
     }

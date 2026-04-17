@@ -88,65 +88,90 @@ export default function StudentSubscriptionTab() {
     }
   }, [loading, activeSubscription, searchParams, setSearchParams]);
 
+  // Load all subscription data. Extracted into a callback so we can re-run it
+  // after the user returns from the Stripe Customer Portal (a plan change
+  // there only becomes visible after `check-subscription` re-syncs the local
+  // student_subscriptions table).
+  const loadAll = useCallback(async () => {
+    if (!user) return;
+    setLoading(true);
+
+    const { data: subs } = await supabase
+      .from("student_subscriptions")
+      .select("id, status, started_at, expires_at, plan_id, created_at, subscription_plans(id, name, price, service_revisoes, service_revisoes_qty, service_resumos, service_resumos_qty, service_simulados, service_simulados_qty, service_top_questoes, service_top_questoes_qty, service_colinhas, service_colinhas_qty, service_duvidas, service_duvidas_qty, service_aula_particular, service_aula_particular_qty, allow_free_cancel, min_commitment_days, min_usage_charge_pct, cancel_text)")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false });
+
+    const subscriptions = (subs || []) as unknown as SubscriptionData[];
+    setAllSubscriptions(subscriptions);
+
+    const active = subscriptions.find(s => s.status === "active") || null;
+    setActiveSubscription(active);
+
+    if (active) {
+      const { data: usage } = await supabase
+        .from("resource_usage")
+        .select("resource_type")
+        .eq("user_id", user.id)
+        .eq("subscription_id", active.id);
+
+      const counts: Record<string, number> = {};
+      (usage || []).forEach((u) => {
+        counts[u.resource_type] = (counts[u.resource_type] || 0) + 1;
+      });
+      setUsageCounts(counts);
+    }
+
+    const { data: purchaseData } = await supabase
+      .from("video_purchases")
+      .select("id, content_id, content_type, amount, payment_status, created_at")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false });
+
+    setPurchases((purchaseData || []) as Purchase[]);
+
+    const { data: plansData } = await supabase
+      .from("subscription_plans")
+      .select("id, name, price, highlighted, features, service_revisoes, service_revisoes_qty, service_resumos, service_resumos_qty, service_simulados, service_simulados_qty, service_top_questoes, service_top_questoes_qty, service_colinhas, service_colinhas_qty, service_duvidas, service_duvidas_qty, service_aula_particular, service_aula_particular_qty")
+      .eq("active", true)
+      .order("sort_order");
+
+    setAvailablePlans((plansData || []) as import("./subscription/PlanChangeModal").PlanOption[]);
+
+    setLoading(false);
+  }, [user]);
+
   useEffect(() => {
     if (!user) return;
-    // Wait for the shared hook to settle before deciding whether to run the
-    // heavy joined query. This avoids fetching subscription history for users
-    // with no active subscription on first paint.
     if (activeSubLoading) return;
-    const load = async () => {
-      setLoading(true);
+    loadAll();
+  }, [user, activeSubLoading, hasActiveSub, loadAll]);
 
-      // Fetch all subscriptions (history) — required for usage counters,
-      // plan-change pro-rata math, and the statement view.
-      const { data: subs } = await supabase
-        .from("student_subscriptions")
-        .select("id, status, started_at, expires_at, plan_id, created_at, subscription_plans(id, name, price, service_revisoes, service_revisoes_qty, service_resumos, service_resumos_qty, service_simulados, service_simulados_qty, service_top_questoes, service_top_questoes_qty, service_colinhas, service_colinhas_qty, service_duvidas, service_duvidas_qty, service_aula_particular, service_aula_particular_qty, allow_free_cancel, min_commitment_days, min_usage_charge_pct, cancel_text)")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false });
-
-      const subscriptions = (subs || []) as unknown as SubscriptionData[];
-      setAllSubscriptions(subscriptions);
-
-      const active = subscriptions.find(s => s.status === "active") || null;
-      setActiveSubscription(active);
-
-      if (active) {
-        const { data: usage } = await supabase
-          .from("resource_usage")
-          .select("resource_type")
-          .eq("user_id", user.id)
-          .eq("subscription_id", active.id);
-
-        const counts: Record<string, number> = {};
-        (usage || []).forEach((u) => {
-          counts[u.resource_type] = (counts[u.resource_type] || 0) + 1;
-        });
-        setUsageCounts(counts);
-      }
-
-      // Fetch purchases (include content_id so we can link to the video)
-      const { data: purchaseData } = await supabase
-        .from("video_purchases")
-        .select("id, content_id, content_type, amount, payment_status, created_at")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false });
-
-      setPurchases((purchaseData || []) as Purchase[]);
-
-      // Fetch available plans for plan change (with service fields)
-      const { data: plansData } = await supabase
-        .from("subscription_plans")
-        .select("id, name, price, highlighted, features, service_revisoes, service_revisoes_qty, service_resumos, service_resumos_qty, service_simulados, service_simulados_qty, service_top_questoes, service_top_questoes_qty, service_colinhas, service_colinhas_qty, service_duvidas, service_duvidas_qty, service_aula_particular, service_aula_particular_qty")
-        .eq("active", true)
-        .order("sort_order");
-
-      setAvailablePlans((plansData || []) as import("./subscription/PlanChangeModal").PlanOption[]);
-
-      setLoading(false);
+  // When the user returns to this tab after visiting the Stripe Customer
+  // Portal (plan change / cancellation), force a fresh check-subscription
+  // round-trip so the historical record is archived and the new plan shows
+  // up in the history list. We debounce by tracking the last sync time.
+  const lastSyncRef = useRef<number>(0);
+  useEffect(() => {
+    if (!user) return;
+    const onVisible = async () => {
+      if (document.visibilityState !== "visible") return;
+      const now = Date.now();
+      if (now - lastSyncRef.current < 5000) return; // debounce
+      lastSyncRef.current = now;
+      // Re-sync from Stripe → archives old plan, inserts new one if changed.
+      await refreshSubscription();
+      // Re-fetch local DB to refresh the History tab.
+      await loadAll();
+      await refreshActiveSub();
     };
-    load();
-  }, [user, activeSubLoading, hasActiveSub]);
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", onVisible);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", onVisible);
+    };
+  }, [user, refreshSubscription, loadAll, refreshActiveSub]);
 
   // Centralized helper from lib/payments dispatches the overlay event
   // and uses window.location (not window.top), so it works inside the

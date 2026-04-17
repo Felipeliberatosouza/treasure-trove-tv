@@ -112,8 +112,8 @@ export default function PurchaseHistory({ purchases }: { purchases: Purchase[] }
               p.content_id &&
               VIDEO_TYPES.has(p.content_type);
 
-            return (
-              <div key={p.id} className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between">
+            const RowContent = (
+              <>
                 <div className="flex items-center gap-3 min-w-0 flex-1">
                   <div className="relative h-14 w-24 shrink-0 overflow-hidden rounded-md bg-muted border border-border/50">
                     {thumbnail ? (
@@ -128,10 +128,15 @@ export default function PurchaseHistory({ purchases }: { purchases: Purchase[] }
                         <Film className="h-5 w-5 text-muted-foreground/60" />
                       </div>
                     )}
+                    {canWatch && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-background/0 group-hover:bg-background/40 transition-colors">
+                        <PlayCircle className="h-6 w-6 text-foreground opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-lg" />
+                      </div>
+                    )}
                   </div>
                   <div className="min-w-0 space-y-1 flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-sm font-medium truncate">{title}</span>
+                      <span className={`text-sm font-medium truncate ${canWatch ? "group-hover:text-primary transition-colors" : ""}`}>{title}</span>
                       <Badge variant={status.variant} className="text-[10px] px-1.5 py-0">
                         {status.label}
                       </Badge>
@@ -146,13 +151,32 @@ export default function PurchaseHistory({ purchases }: { purchases: Purchase[] }
                   </div>
                 </div>
                 {canWatch && (
-                  <Button asChild size="sm" variant="outline" className="shrink-0 sm:ml-2">
-                    <Link to={`/video/${p.content_id}`}>
+                  <Button asChild size="sm" variant="outline" className="shrink-0 sm:ml-2 pointer-events-none">
+                    <span>
                       <PlayCircle className="h-4 w-4 mr-1" />
                       Assistir
-                    </Link>
+                    </span>
                   </Button>
                 )}
+              </>
+            );
+
+            if (canWatch) {
+              return (
+                <Link
+                  key={p.id}
+                  to={`/video/${p.content_id}`}
+                  className="group flex flex-col gap-2 py-3 -mx-2 px-2 rounded-md hover:bg-muted/50 transition-colors sm:flex-row sm:items-center sm:justify-between cursor-pointer"
+                  aria-label={`Assistir ${title}`}
+                >
+                  {RowContent}
+                </Link>
+              );
+            }
+
+            return (
+              <div key={p.id} className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between">
+                {RowContent}
               </div>
             );
           })}

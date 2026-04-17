@@ -54,8 +54,12 @@ const Navbar = () => {
   const { user } = useAuth();
   const { settings } = useAllPlatformSettings();
   const branding = settings.branding as BrandingSettings | undefined;
+  const { isActive: hasActiveSubscription } = useActiveSubscription();
 
-  const menuItems = user ? loggedMenuItems : publicMenuItems;
+  const baseMenu = user ? loggedMenuItems : publicMenuItems;
+  const menuItems = user && hasActiveSubscription
+    ? [subscriberMenuItem, ...baseMenu]
+    : baseMenu;
 
   useEffect(() => {
     if (searchOpen && searchInputRef.current) {

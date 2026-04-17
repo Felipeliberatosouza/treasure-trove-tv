@@ -6,7 +6,7 @@ import { Star, Play, ShoppingCart, Zap, Clock, BookOpen, Gift, AlertTriangle, Lo
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFreeTrial } from "@/hooks/useFreeTrial";
-import { usePlatformSettings } from "@/hooks/usePlatformSettings";
+import { usePlatformSettings, type VideoPricingSettings } from "@/hooks/usePlatformSettings";
 import { useResourceLimit, type ResourceType } from "@/hooks/useResourceLimit";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
@@ -31,6 +31,7 @@ const VideoPage = () => {
   const { user, loading: authLoading } = useAuth();
   const trial = useFreeTrial();
   const { data: branding } = usePlatformSettings("branding");
+  const { data: videoPricing } = usePlatformSettings("video_pricing");
   const resourceLimit = useResourceLimit();
   const { requireCpf, showCpfModal, setShowCpfModal, onCpfComplete } = useCpfGuard();
   const [showLimitModal, setShowLimitModal] = useState(false);

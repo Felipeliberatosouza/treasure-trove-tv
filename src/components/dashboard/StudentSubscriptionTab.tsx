@@ -14,6 +14,7 @@ import SubscriptionStatement from "./subscription/SubscriptionStatement";
 import PlanChangeModal from "./subscription/PlanChangeModal";
 import CancelSubscriptionModal from "./subscription/CancelSubscriptionModal";
 import PurchaseHistory from "./subscription/PurchaseHistory";
+import RedirectOverlay from "@/components/RedirectOverlay";
 
 const SERVICE_META: Record<string, { label: string; icon: React.ElementType; resourceType: string }> = {
   service_revisoes: { label: "Revisões", icon: BookOpen, resourceType: "revisao" },
@@ -66,6 +67,7 @@ export default function StudentSubscriptionTab() {
   const [availablePlans, setAvailablePlans] = useState<import("./subscription/PlanChangeModal").PlanOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [portalLoading, setPortalLoading] = useState(false);
+  const [redirecting, setRedirecting] = useState(false);
   const [showPlanChange, setShowPlanChange] = useState(false);
   const [showCancel, setShowCancel] = useState(false);
 
@@ -140,6 +142,7 @@ export default function StudentSubscriptionTab() {
   // Use window.location (not window.top) so the redirect works inside
   // the Lovable preview iframe; otherwise the app frame goes blank.
   const redirectTopLevel = (url: string) => {
+    setRedirecting(true);
     window.location.href = url;
   };
 
@@ -417,6 +420,7 @@ export default function StudentSubscriptionTab() {
 
   return (
     <div className="space-y-6">
+      <RedirectOverlay open={redirecting} title="Redirecionando para o portal seguro..." />
       <h2 className="font-display text-lg font-semibold mb-1">Assinatura e Compras</h2>
 
       <Tabs defaultValue="current" className="w-full">

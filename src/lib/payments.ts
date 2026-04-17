@@ -10,6 +10,13 @@ import { toast } from "sonner";
  * - Stripe Checkout works correctly when opened in the same frame.
  */
 export function redirectTopLevel(url: string) {
+  // Notify the global overlay so the user sees a clear loading state
+  // during the brief moment before the browser starts the navigation.
+  window.dispatchEvent(
+    new CustomEvent("lovable:external-redirect", {
+      detail: { title: "Redirecionando para o pagamento seguro..." },
+    })
+  );
   window.location.href = url;
 }
 

@@ -39,6 +39,7 @@ import PaymentSuccess from "./pages/PaymentSuccess.tsx";
 import PaymentCanceled from "./pages/PaymentCanceled.tsx";
 import DynamicBranding from "./components/DynamicBranding.tsx";
 import InactivityGuard from "./components/InactivityGuard.tsx";
+import GlobalRedirectOverlay from "./components/GlobalRedirectOverlay.tsx";
 
 const queryClient = new QueryClient();
 
@@ -86,6 +87,7 @@ const App = () => (
           <DynamicBranding />
           <CookieConsent />
           <InactivityGuard />
+          <GlobalRedirectOverlay />
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

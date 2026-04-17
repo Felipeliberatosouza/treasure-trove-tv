@@ -356,9 +356,11 @@ const VideoDetailModal = ({ video, open, onClose }: VideoDetailModalProps) => {
                 <Button onClick={handleSubscribe} variant={!user || canStartTrial ? "outline" : "default"} className="w-full gap-2 font-display font-semibold">
                   <Zap className="h-4 w-4" /> Assinar — acesso total
                 </Button>
-                <Button onClick={handleBuyUnit} variant="outline" className="w-full gap-2 font-display font-semibold">
-                  <ShoppingCart className="h-4 w-4" /> Comprar este vídeo — R$ 19,90
-                </Button>
+                {priceLabel && (
+                  <Button onClick={handleBuyUnit} disabled={buyDisabled} variant="outline" className="w-full gap-2 font-display font-semibold">
+                    <ShoppingCart className="h-4 w-4" /> {buying ? "Processando..." : `Comprar este vídeo — ${priceLabel}`}
+                  </Button>
+                )}
               </div>
             </div>
           )}
@@ -471,9 +473,11 @@ const VideoDetailModal = ({ video, open, onClose }: VideoDetailModalProps) => {
             <Button onClick={handleSubscribe} className="w-full gap-2 font-display font-semibold">
               <Zap className="h-4 w-4" /> Assinar — acesso total
             </Button>
-            <Button onClick={handleBuyUnit} variant="outline" className="w-full gap-2 font-display font-semibold">
-              <ShoppingCart className="h-4 w-4" /> Comprar este vídeo — R$ 19,90
-            </Button>
+            {priceLabel && (
+              <Button onClick={handleBuyUnit} disabled={buyDisabled} variant="outline" className="w-full gap-2 font-display font-semibold">
+                <ShoppingCart className="h-4 w-4" /> {buying ? "Processando..." : `Comprar este vídeo — ${priceLabel}`}
+              </Button>
+            )}
           </div>
         </div>
       </DialogContent>

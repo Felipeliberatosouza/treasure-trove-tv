@@ -20,6 +20,7 @@ import { RatingStars } from "@/components/VideoDetailModal";
 import ResourceLimitModal from "@/components/ResourceLimitModal";
 import CpfRequiredModal from "@/components/CpfRequiredModal";
 import { useCpfGuard } from "@/hooks/useCpfGuard";
+import { startUnitCheckout } from "@/lib/payments";
 import VLibrasWidget from "@/components/VLibrasWidget";
 
 const DEMO_VIDEO_URL = "/demo-course.mp4";
@@ -53,6 +54,8 @@ const VideoPage = () => {
   const [teacherProfile, setTeacherProfile] = useState<{ name: string; avatar_url: string | null; slug: string | null } | null>(null);
   const [teacherId, setTeacherId] = useState<string | null>(null);
   const [videoType, setVideoType] = useState<string | null>(null);
+  const [unitPrice, setUnitPrice] = useState<number | null>(null);
+  const [buying, setBuying] = useState(false);
   const [provaVotePercent, setProvaVotePercent] = useState<number | null>(null);
   const [userProvaVote, setUserProvaVote] = useState<boolean | null>(null);
   const [votingProva, setVotingProva] = useState(false);

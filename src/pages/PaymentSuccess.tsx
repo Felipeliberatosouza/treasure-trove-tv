@@ -53,13 +53,22 @@ const PaymentSuccess = () => {
       while (!cancelled && attempts < maxAttempts) {
         attempts++;
         try {
-          await refreshSubscription();
+          const result: any = await refreshSubscription();
+          // Exit early if subscription is now active
+          if (result?.subscribed === true) {
+            if (!cancelled) {
+              setVerified(true);
+              setChecking(false);
+            }
+            return;
+          }
         } catch (err) {
           console.error("Erro ao verificar assinatura:", err);
         }
         await new Promise((r) => setTimeout(r, pollInterval));
       }
-      if (!cancelled && !verified) {
+      if (!cancelled) {
+        // Timeout reached — mark as verified anyway so user can proceed
         setVerified(true);
         setChecking(false);
       }

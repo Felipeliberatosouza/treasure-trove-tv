@@ -87,6 +87,7 @@ const App = () => (
           <DynamicBranding />
           <CookieConsent />
           <InactivityGuard />
+          <GlobalRedirectOverlay />
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

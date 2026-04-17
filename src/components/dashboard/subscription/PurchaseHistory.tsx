@@ -43,6 +43,8 @@ interface VideoMeta { title: string; thumbnail_url?: string | null }
 
 export default function PurchaseHistory({ purchases }: { purchases: Purchase[] }) {
   const [meta, setMeta] = useState<Record<string, VideoMeta>>({});
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [searchTerm, setSearchTerm] = useState("");
 
   // Fetch titles + thumbnails for purchased videos
   useEffect(() => {
@@ -75,6 +77,18 @@ export default function PurchaseHistory({ purchases }: { purchases: Purchase[] }
     };
     load();
   }, [purchases]);
+
+  const filteredPurchases = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase();
+    return purchases.filter((p) => {
+      if (statusFilter !== "all" && p.payment_status !== statusFilter) return false;
+      if (!term) return true;
+      const videoMeta = p.content_id ? meta[p.content_id] : undefined;
+      const title = (videoMeta?.title || contentTypeLabel[p.content_type] || p.content_type).toLowerCase();
+      const typeLabel = (contentTypeLabel[p.content_type] || p.content_type).toLowerCase();
+      return title.includes(term) || typeLabel.includes(term);
+    });
+  }, [purchases, meta, statusFilter, searchTerm]);
 
   if (purchases.length === 0) {
     return (

@@ -37,10 +37,12 @@ const contentTypeLabel: Record<string, string> = {
 // content types that map to a watchable video page
 const VIDEO_TYPES = new Set(["lesson", "exam_solution"]);
 
-export default function PurchaseHistory({ purchases }: { purchases: Purchase[] }) {
-  const [titles, setTitles] = useState<Record<string, string>>({});
+interface VideoMeta { title: string; thumbnail_url?: string | null }
 
-  // Fetch titles for purchased videos so we can show what was bought
+export default function PurchaseHistory({ purchases }: { purchases: Purchase[] }) {
+  const [meta, setMeta] = useState<Record<string, VideoMeta>>({});
+
+  // Fetch titles + thumbnails for purchased videos
   useEffect(() => {
     const lessonIds = purchases
       .filter(p => p.content_type === "lesson" && p.content_id)
@@ -52,22 +54,22 @@ export default function PurchaseHistory({ purchases }: { purchases: Purchase[] }
     if (lessonIds.length === 0 && examIds.length === 0) return;
 
     const load = async () => {
-      const next: Record<string, string> = {};
+      const next: Record<string, VideoMeta> = {};
       if (lessonIds.length) {
         const { data } = await supabase
           .from("lessons")
-          .select("id, title")
+          .select("id, title, thumbnail_url")
           .in("id", lessonIds);
-        (data || []).forEach((l) => { next[l.id] = l.title; });
+        (data || []).forEach((l) => { next[l.id] = { title: l.title, thumbnail_url: l.thumbnail_url }; });
       }
       if (examIds.length) {
         const { data } = await supabase
           .from("exam_solutions")
-          .select("id, title")
+          .select("id, title, thumbnail_url")
           .in("id", examIds);
-        (data || []).forEach((e) => { next[e.id] = e.title; });
+        (data || []).forEach((e) => { next[e.id] = { title: e.title, thumbnail_url: e.thumbnail_url }; });
       }
-      setTitles(next);
+      setMeta(next);
     };
     load();
   }, [purchases]);

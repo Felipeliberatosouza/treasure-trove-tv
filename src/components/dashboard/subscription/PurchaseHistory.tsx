@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ShoppingBag, PlayCircle } from "lucide-react";
+import { ShoppingBag, PlayCircle, Film } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Purchase {
@@ -37,10 +37,12 @@ const contentTypeLabel: Record<string, string> = {
 // content types that map to a watchable video page
 const VIDEO_TYPES = new Set(["lesson", "exam_solution"]);
 
-export default function PurchaseHistory({ purchases }: { purchases: Purchase[] }) {
-  const [titles, setTitles] = useState<Record<string, string>>({});
+interface VideoMeta { title: string; thumbnail_url?: string | null }
 
-  // Fetch titles for purchased videos so we can show what was bought
+export default function PurchaseHistory({ purchases }: { purchases: Purchase[] }) {
+  const [meta, setMeta] = useState<Record<string, VideoMeta>>({});
+
+  // Fetch titles + thumbnails for purchased videos
   useEffect(() => {
     const lessonIds = purchases
       .filter(p => p.content_type === "lesson" && p.content_id)
@@ -52,22 +54,22 @@ export default function PurchaseHistory({ purchases }: { purchases: Purchase[] }
     if (lessonIds.length === 0 && examIds.length === 0) return;
 
     const load = async () => {
-      const next: Record<string, string> = {};
+      const next: Record<string, VideoMeta> = {};
       if (lessonIds.length) {
         const { data } = await supabase
           .from("lessons")
-          .select("id, title")
+          .select("id, title, thumbnail_url")
           .in("id", lessonIds);
-        (data || []).forEach((l) => { next[l.id] = l.title; });
+        (data || []).forEach((l) => { next[l.id] = { title: l.title, thumbnail_url: l.thumbnail_url }; });
       }
       if (examIds.length) {
         const { data } = await supabase
           .from("exam_solutions")
-          .select("id, title")
+          .select("id, title, thumbnail_url")
           .in("id", examIds);
-        (data || []).forEach((e) => { next[e.id] = e.title; });
+        (data || []).forEach((e) => { next[e.id] = { title: e.title, thumbnail_url: e.thumbnail_url }; });
       }
-      setTitles(next);
+      setMeta(next);
     };
     load();
   }, [purchases]);
@@ -102,7 +104,9 @@ export default function PurchaseHistory({ purchases }: { purchases: Purchase[] }
         <div className="divide-y divide-border/50">
           {purchases.map((p) => {
             const status = statusMap[p.payment_status] || statusMap.pending;
-            const title = (p.content_id && titles[p.content_id]) || contentTypeLabel[p.content_type] || p.content_type;
+            const videoMeta = p.content_id ? meta[p.content_id] : undefined;
+            const title = videoMeta?.title || contentTypeLabel[p.content_type] || p.content_type;
+            const thumbnail = videoMeta?.thumbnail_url;
             const canWatch =
               p.payment_status === "completed" &&
               p.content_id &&
@@ -110,23 +114,39 @@ export default function PurchaseHistory({ purchases }: { purchases: Purchase[] }
 
             return (
               <div key={p.id} className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between">
-                <div className="min-w-0 space-y-1">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-sm font-medium truncate">{title}</span>
-                    <Badge variant={status.variant} className="text-[10px] px-1.5 py-0">
-                      {status.label}
-                    </Badge>
+                <div className="flex items-center gap-3 min-w-0 flex-1">
+                  <div className="relative h-14 w-24 shrink-0 overflow-hidden rounded-md bg-muted border border-border/50">
+                    {thumbnail ? (
+                      <img
+                        src={thumbnail}
+                        alt={title}
+                        loading="lazy"
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center">
+                        <Film className="h-5 w-5 text-muted-foreground/60" />
+                      </div>
+                    )}
                   </div>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <span>{contentTypeLabel[p.content_type] || p.content_type}</span>
-                    <span>·</span>
-                    <span>{new Date(p.created_at).toLocaleDateString("pt-BR")}</span>
-                    <span>·</span>
-                    <span className="font-medium text-foreground">R$ {p.amount.toFixed(2)}</span>
+                  <div className="min-w-0 space-y-1 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-sm font-medium truncate">{title}</span>
+                      <Badge variant={status.variant} className="text-[10px] px-1.5 py-0">
+                        {status.label}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
+                      <span>{contentTypeLabel[p.content_type] || p.content_type}</span>
+                      <span>·</span>
+                      <span>{new Date(p.created_at).toLocaleDateString("pt-BR")}</span>
+                      <span>·</span>
+                      <span className="font-medium text-foreground">R$ {p.amount.toFixed(2)}</span>
+                    </div>
                   </div>
                 </div>
                 {canWatch && (
-                  <Button asChild size="sm" variant="outline" className="shrink-0">
+                  <Button asChild size="sm" variant="outline" className="shrink-0 sm:ml-2">
                     <Link to={`/video/${p.content_id}`}>
                       <PlayCircle className="h-4 w-4 mr-1" />
                       Assistir

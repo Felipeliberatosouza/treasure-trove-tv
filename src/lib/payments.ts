@@ -4,17 +4,22 @@ import { toast } from "sonner";
 /**
  * Navigate to an external URL (e.g. Stripe Checkout).
  *
- * We intentionally use window.location (not window.top) because:
- * - In the Lovable preview iframe, window.top points to the editor shell,
- *   so navigating it leaves the app frame blank.
- * - Stripe Checkout works correctly when opened in the same frame.
+ * Stripe Checkout sets `X-Frame-Options: DENY`, so it cannot render inside
+ * an iframe (Lovable preview, embedded apps, etc). We must break out of any
+ * iframe before navigating, otherwise the user sees a blank/white screen.
+ *
+ * Strategy:
+ * 1. If we're inside an iframe, try `window.top.location` (same-origin top).
+ * 2. If that throws (cross-origin top, e.g. Lovable editor shell), open the
+ *    URL in a new tab via `window.open(url, "_blank")`.
+ * 3. If even that is blocked (popup blocker), fall back to same-frame nav
+ *    so the user at least sees Stripe's "refused to connect" instead of
+ *    a frozen white screen, and we surface a toast asking them to allow popups.
  */
 export function redirectTopLevel(
   url: string,
   options?: { title?: string; description?: string }
 ) {
-  // Notify the global overlay so the user sees a clear loading state
-  // during the brief moment before the browser starts the navigation.
   window.dispatchEvent(
     new CustomEvent("lovable:external-redirect", {
       detail: {
@@ -23,6 +28,47 @@ export function redirectTopLevel(
       },
     })
   );
+
+  const inIframe = (() => {
+    try {
+      return window.self !== window.top;
+    } catch {
+      return true; // cross-origin access throws → definitely in an iframe
+    }
+  })();
+
+  if (!inIframe) {
+    window.location.href = url;
+    return;
+  }
+
+  // Try to navigate the top-level window (works only if same-origin).
+  try {
+    if (window.top) {
+      window.top.location.href = url;
+      return;
+    }
+  } catch {
+    // cross-origin top (Lovable editor) — fall through to popup
+  }
+
+  // Open in a new tab. This is the most reliable cross-iframe path.
+  const popup = window.open(url, "_blank", "noopener,noreferrer");
+  if (popup) {
+    // Hide our overlay since the user is now interacting with the new tab.
+    setTimeout(() => {
+      window.dispatchEvent(new CustomEvent("lovable:external-redirect-dismiss"));
+    }, 500);
+    return;
+  }
+
+  // Popup blocked — last resort: same-frame nav. Stripe will refuse, but
+  // we let the user know what happened.
+  toast.error(
+    "Permita popups para este site ou clique novamente para abrir o pagamento.",
+    { duration: 6000 }
+  );
+  window.dispatchEvent(new CustomEvent("lovable:external-redirect-dismiss"));
   window.location.href = url;
 }
 

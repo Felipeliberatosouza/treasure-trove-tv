@@ -34,6 +34,8 @@ export default function GlobalRedirectOverlay() {
       setOpen(false);
     };
     window.addEventListener(REDIRECT_EVENT, handler);
+    // Explicit dismiss event (e.g. opened in a new tab → no nav happens here).
+    window.addEventListener("lovable:external-redirect-dismiss", dismiss);
     // pageshow fires when navigating back from Stripe via bfcache — hide overlay.
     window.addEventListener("pageshow", dismiss);
     // If the SPA changes route (popstate / pushState), the redirect was
@@ -42,6 +44,7 @@ export default function GlobalRedirectOverlay() {
     return () => {
       window.clearTimeout(safetyTimer);
       window.removeEventListener(REDIRECT_EVENT, handler);
+      window.removeEventListener("lovable:external-redirect-dismiss", dismiss);
       window.removeEventListener("pageshow", dismiss);
       window.removeEventListener("popstate", dismiss);
     };

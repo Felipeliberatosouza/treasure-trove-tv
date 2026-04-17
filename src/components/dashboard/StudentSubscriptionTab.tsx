@@ -48,6 +48,7 @@ interface SubscriptionData {
 
 interface Purchase {
   id: string;
+  content_id: string | null;
   content_type: string;
   amount: number;
   payment_status: string;
@@ -113,10 +114,10 @@ export default function StudentSubscriptionTab() {
         setUsageCounts(counts);
       }
 
-      // Fetch purchases
+      // Fetch purchases (include content_id so we can link to the video)
       const { data: purchaseData } = await supabase
         .from("video_purchases")
-        .select("id, content_type, amount, payment_status, created_at")
+        .select("id, content_id, content_type, amount, payment_status, created_at")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false });
 
@@ -426,7 +427,7 @@ export default function StudentSubscriptionTab() {
           <TabsTrigger value="history">
             <History className="h-3.5 w-3.5 mr-1" /> Histórico
           </TabsTrigger>
-          <TabsTrigger value="purchases">Compras</TabsTrigger>
+          <TabsTrigger value="purchases">Minhas Compras</TabsTrigger>
         </TabsList>
 
         {/* Current Plan Tab */}

@@ -14,7 +14,6 @@ import SubscriptionStatement from "./subscription/SubscriptionStatement";
 import PlanChangeModal from "./subscription/PlanChangeModal";
 import CancelSubscriptionModal from "./subscription/CancelSubscriptionModal";
 import PurchaseHistory from "./subscription/PurchaseHistory";
-import RedirectOverlay from "@/components/RedirectOverlay";
 import { redirectTopLevel } from "@/lib/payments";
 
 const SERVICE_META: Record<string, { label: string; icon: React.ElementType; resourceType: string }> = {
@@ -417,7 +416,6 @@ export default function StudentSubscriptionTab() {
 
   return (
     <div className="space-y-6">
-      <RedirectOverlay open={redirecting} title="Redirecionando para o portal seguro..." />
       <h2 className="font-display text-lg font-semibold mb-1">Assinatura e Compras</h2>
 
       <Tabs defaultValue="current" className="w-full">

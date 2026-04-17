@@ -334,6 +334,8 @@ export default function StudentSubscriptionTab() {
       });
 
       toast.success("Redirecionando para o portal de cancelamento...");
+      // Refresh shared subscription state so navbar reflects the change.
+      refreshActiveSub();
       if (data?.url) redirectTopLevel(data.url, { title: "Abrindo portal de cancelamento..." });
     } catch {
       toast.error("Não foi possível processar o cancelamento.");

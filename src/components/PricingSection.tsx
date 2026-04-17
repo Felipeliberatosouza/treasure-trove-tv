@@ -101,10 +101,19 @@ const PricingSection = () => {
       });
       if (error) throw error;
       if (data?.error) {
+        // User already has an active subscription → send them to the plan
+        // change flow inside the student dashboard instead of just showing
+        // an error toast.
+        const msg = String(data.error || "");
+        if (/assinatura ativa/i.test(msg)) {
+          toast.info("Você já possui uma assinatura ativa. Redirecionando para a troca de plano...");
+          navigate("/dashboard/student?tab=subscription&action=change-plan");
+          return;
+        }
         toast.error(data.error, {
           action: {
             label: "Gerenciar assinatura",
-            onClick: () => navigate("/dashboard/student"),
+            onClick: () => navigate("/dashboard/student?tab=subscription"),
           },
           duration: 8000,
         });

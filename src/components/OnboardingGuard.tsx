@@ -43,7 +43,7 @@ const OnboardingGuard = () => {
     if (isExempt(location.pathname)) return;
 
     const cpfMissing = !profile.cpf || !isValidCPF(profile.cpf);
-    const phoneMissing = !(profile as any).phone_verified;
+    const phoneMissing = !profile.phone_verified;
 
     if (!cpfMissing && !phoneMissing) {
       notifiedRef.current = false;

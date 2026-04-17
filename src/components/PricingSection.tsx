@@ -77,6 +77,7 @@ const defaultPlans: PlanData[] = [
 const PricingSection = () => {
   const [plans, setPlans] = useState<PlanData[]>(defaultPlans);
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+  const [redirecting, setRedirecting] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
 

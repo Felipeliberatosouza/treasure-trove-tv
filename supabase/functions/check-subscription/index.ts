@@ -121,8 +121,14 @@ serve(async (req) => {
           .eq("stripe_subscription_id", stripeSubscriptionId)
           .maybeSingle();
 
-        if (existingSub) {
-          // Update expiry
+        // Detect plan change: same Stripe subscription, but local plan_id no longer
+        // matches the price returned by Stripe. In that case we expire the old local
+        // record and insert a new one so the history (extrato) preserves both plans.
+        const incomingPlanId = matched?.id || plans[0].id;
+        const isPlanChange = !!existingSub && !!matched && existingSub.plan_id !== incomingPlanId;
+
+        if (existingSub && !isPlanChange) {
+          // Same plan — just refresh expiry
           await supabaseClient
             .from("student_subscriptions")
             .update({
@@ -132,6 +138,31 @@ serve(async (req) => {
             .eq("id", existingSub.id);
           matchedPlanId = existingSub.plan_id;
           logStep("Updated existing local subscription");
+        } else if (existingSub && isPlanChange) {
+          // Plan changed via Stripe portal — close the old record, open a new one
+          await supabaseClient
+            .from("student_subscriptions")
+            .update({
+              status: "expired",
+              expires_at: new Date().toISOString(),
+              stripe_subscription_id: `${stripeSubscriptionId}:prev:${existingSub.id}`,
+            })
+            .eq("id", existingSub.id);
+
+          await supabaseClient
+            .from("student_subscriptions")
+            .insert({
+              user_id: user.id,
+              plan_id: incomingPlanId,
+              status: "active",
+              stripe_subscription_id: stripeSubscriptionId,
+              expires_at: subscriptionEnd,
+            });
+          matchedPlanId = incomingPlanId;
+          logStep("Plan change detected — archived old subscription, created new one", {
+            previousPlanId: existingSub.plan_id,
+            newPlanId: incomingPlanId,
+          });
         } else {
           // Create new local subscription
           matchedPlanId = matched?.id || plans[0].id;

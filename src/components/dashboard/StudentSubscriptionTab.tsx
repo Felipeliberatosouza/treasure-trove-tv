@@ -364,17 +364,52 @@ export default function StudentSubscriptionTab() {
   const buildStatementEntries = () => {
     const entries: { date: string; type: "subscription_start" | "plan_change" | "cancellation" | "renewal" | "purchase"; description: string; amount: number; explanation: string }[] = [];
 
-    allSubscriptions.slice().reverse().forEach(sub => {
-      const plan = sub.subscription_plans as unknown as PlanData;
-      entries.push({
-        date: sub.started_at,
-        type: "subscription_start",
-        description: `Assinatura ${plan.name}`,
-        amount: plan.price,
-        explanation: `Início da assinatura do plano ${plan.name} no valor de R$ ${plan.price.toFixed(2)}/mês.`,
-      });
+    // Chronological order (oldest first) so we can detect plan transitions
+    const chrono = allSubscriptions.slice().sort(
+      (a, b) => new Date(a.started_at).getTime() - new Date(b.started_at).getTime()
+    );
 
-      if (sub.status === "cancelled" || sub.status === "expired") {
+    chrono.forEach((sub, idx) => {
+      const plan = sub.subscription_plans as unknown as PlanData;
+      const prev = idx > 0 ? chrono[idx - 1] : null;
+      const prevPlan = prev ? (prev.subscription_plans as unknown as PlanData) : null;
+
+      // Detect plan change: previous sub was closed and this one started within 24h
+      const isPlanChange =
+        !!prev &&
+        !!prevPlan &&
+        (prev.status === "expired" || prev.status === "cancelled") &&
+        Math.abs(new Date(sub.started_at).getTime() - new Date(prev.expires_at || prev.started_at).getTime()) < 24 * 60 * 60 * 1000 &&
+        prevPlan.id !== plan.id;
+
+      if (isPlanChange) {
+        const diff = plan.price - prevPlan!.price;
+        const direction = diff > 0 ? "Upgrade" : diff < 0 ? "Downgrade" : "Mudança";
+        entries.push({
+          date: sub.started_at,
+          type: "plan_change",
+          description: `${direction}: ${prevPlan!.name} → ${plan.name}`,
+          amount: plan.price,
+          explanation: `Troca do plano ${prevPlan!.name} (R$ ${prevPlan!.price.toFixed(2)}) para ${plan.name} (R$ ${plan.price.toFixed(2)}). Diferença: ${diff >= 0 ? "+" : "-"}R$ ${Math.abs(diff).toFixed(2)}/mês.`,
+        });
+      } else {
+        entries.push({
+          date: sub.started_at,
+          type: "subscription_start",
+          description: `Assinatura ${plan.name}`,
+          amount: plan.price,
+          explanation: `Início da assinatura do plano ${plan.name} no valor de R$ ${plan.price.toFixed(2)}/mês.`,
+        });
+      }
+
+      // Cancellation / expiration entry — only when NOT immediately followed by a plan change
+      const next = idx < chrono.length - 1 ? chrono[idx + 1] : null;
+      const nextIsPlanChange =
+        !!next &&
+        Math.abs(new Date(next.started_at).getTime() - new Date(sub.expires_at || sub.started_at).getTime()) < 24 * 60 * 60 * 1000 &&
+        ((next.subscription_plans as unknown as PlanData).id !== plan.id);
+
+      if ((sub.status === "cancelled" || sub.status === "expired") && !nextIsPlanChange) {
         const endDate = sub.expires_at || sub.started_at;
         const start = new Date(sub.started_at);
         const end = new Date(endDate);

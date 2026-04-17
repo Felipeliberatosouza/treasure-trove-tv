@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BookOpen, FileText, ClipboardList, Award, StickyNote, HelpCircle, GraduationCap, AlertTriangle, Settings, Loader2, ArrowLeftRight, XCircle, History } from "lucide-react";
 import { toast } from "sonner";
 import { useAuditLog } from "@/hooks/useAuditLog";
+import { useActiveSubscription } from "@/hooks/useActiveSubscription";
 import SubscriptionStatement from "./subscription/SubscriptionStatement";
 import PlanChangeModal from "./subscription/PlanChangeModal";
 import CancelSubscriptionModal from "./subscription/CancelSubscriptionModal";
@@ -59,6 +60,10 @@ interface Purchase {
 export default function StudentSubscriptionTab() {
   const { user } = useAuth();
   const { logAction } = useAuditLog();
+  // Shared lightweight active-subscription state. Used to:
+  // - Skip the heavy join query when we already know the user has none
+  // - Notify the navbar (via refresh) after plan change / cancellation
+  const { isActive: hasActiveSub, loading: activeSubLoading, refresh: refreshActiveSub } = useActiveSubscription();
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeSubscription, setActiveSubscription] = useState<SubscriptionData | null>(null);
   const [allSubscriptions, setAllSubscriptions] = useState<SubscriptionData[]>([]);
@@ -85,10 +90,15 @@ export default function StudentSubscriptionTab() {
 
   useEffect(() => {
     if (!user) return;
+    // Wait for the shared hook to settle before deciding whether to run the
+    // heavy joined query. This avoids fetching subscription history for users
+    // with no active subscription on first paint.
+    if (activeSubLoading) return;
     const load = async () => {
       setLoading(true);
 
-      // Fetch all subscriptions (history)
+      // Fetch all subscriptions (history) — required for usage counters,
+      // plan-change pro-rata math, and the statement view.
       const { data: subs } = await supabase
         .from("student_subscriptions")
         .select("id, status, started_at, expires_at, plan_id, created_at, subscription_plans(id, name, price, service_revisoes, service_revisoes_qty, service_resumos, service_resumos_qty, service_simulados, service_simulados_qty, service_top_questoes, service_top_questoes_qty, service_colinhas, service_colinhas_qty, service_duvidas, service_duvidas_qty, service_aula_particular, service_aula_particular_qty, allow_free_cancel, min_commitment_days, min_usage_charge_pct, cancel_text)")
@@ -136,7 +146,7 @@ export default function StudentSubscriptionTab() {
       setLoading(false);
     };
     load();
-  }, [user]);
+  }, [user, activeSubLoading, hasActiveSub]);
 
   // Centralized helper from lib/payments dispatches the overlay event
   // and uses window.location (not window.top), so it works inside the
@@ -242,6 +252,8 @@ export default function StudentSubscriptionTab() {
       });
 
       toast.success("Redirecionando para o portal de gerenciamento...");
+      // Refresh shared subscription state so navbar reflects the change.
+      refreshActiveSub();
       if (data?.url) redirectTopLevel(data.url, { title: "Abrindo troca de plano segura..." });
     } catch {
       toast.error("Não foi possível processar a mudança de plano.");
@@ -322,6 +334,8 @@ export default function StudentSubscriptionTab() {
       });
 
       toast.success("Redirecionando para o portal de cancelamento...");
+      // Refresh shared subscription state so navbar reflects the change.
+      refreshActiveSub();
       if (data?.url) redirectTopLevel(data.url, { title: "Abrindo portal de cancelamento..." });
     } catch {
       toast.error("Não foi possível processar o cancelamento.");

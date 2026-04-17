@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { User, CreditCard, Lock, FileText, BookOpen, HelpCircle, Info } from "lucide-react";
 import PersonalDataTab from "@/components/dashboard/PersonalDataTab";
@@ -18,9 +19,20 @@ const tabs = [
 ] as const;
 
 type TabId = (typeof tabs)[number]["id"];
+const validTabIds: readonly string[] = tabs.map(t => t.id);
 
 const StudentDashboardContent = () => {
-  const [activeTab, setActiveTab] = useState<TabId>("instructions");
+  const [searchParams] = useSearchParams();
+  const tabParam = searchParams.get("tab");
+  const initialTab: TabId = tabParam && validTabIds.includes(tabParam) ? (tabParam as TabId) : "instructions";
+  const [activeTab, setActiveTab] = useState<TabId>(initialTab);
+
+  // React to URL changes (e.g. coming from PricingSection with ?tab=subscription)
+  useEffect(() => {
+    if (tabParam && validTabIds.includes(tabParam)) {
+      setActiveTab(tabParam as TabId);
+    }
+  }, [tabParam]);
 
   return (
     <div className="flex gap-6 flex-col md:flex-row">

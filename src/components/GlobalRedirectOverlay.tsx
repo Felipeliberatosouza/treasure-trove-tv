@@ -18,18 +18,32 @@ export default function GlobalRedirectOverlay() {
   const [detail, setDetail] = useState<RedirectEventDetail>({});
 
   useEffect(() => {
+    let safetyTimer: number | undefined;
     const handler = (e: Event) => {
       const ce = e as CustomEvent<RedirectEventDetail>;
       setDetail(ce.detail || {});
       setOpen(true);
+      // Safety net: if for any reason the navigation doesn't happen
+      // (popup blocked, network error, SPA route instead of full nav),
+      // auto-dismiss after 8s so the user isn't stuck behind the overlay.
+      window.clearTimeout(safetyTimer);
+      safetyTimer = window.setTimeout(() => setOpen(false), 8000);
+    };
+    const dismiss = () => {
+      window.clearTimeout(safetyTimer);
+      setOpen(false);
     };
     window.addEventListener(REDIRECT_EVENT, handler);
     // pageshow fires when navigating back from Stripe via bfcache — hide overlay.
-    const onPageShow = () => setOpen(false);
-    window.addEventListener("pageshow", onPageShow);
+    window.addEventListener("pageshow", dismiss);
+    // If the SPA changes route (popstate / pushState), the redirect was
+    // cancelled or replaced by an in-app navigation — clear the overlay.
+    window.addEventListener("popstate", dismiss);
     return () => {
+      window.clearTimeout(safetyTimer);
       window.removeEventListener(REDIRECT_EVENT, handler);
-      window.removeEventListener("pageshow", onPageShow);
+      window.removeEventListener("pageshow", dismiss);
+      window.removeEventListener("popstate", dismiss);
     };
   }, []);
 

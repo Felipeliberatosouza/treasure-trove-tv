@@ -102,6 +102,30 @@ const VideoDetailModal = ({ video, open, onClose }: VideoDetailModalProps) => {
       if (user) {
         startViewTracking(video.id);
       }
+      // Fetch price + content type
+      (async () => {
+        const { data: lesson } = await supabase
+          .from("lessons")
+          .select("price, video_type")
+          .eq("id", video.id)
+          .maybeSingle();
+        if (lesson) {
+          setUnitPrice(Number(lesson.price) || 0);
+          setContentType("lesson");
+          return;
+        }
+        const { data: exam } = await supabase
+          .from("exam_solutions")
+          .select("price, video_type")
+          .eq("id", video.id)
+          .maybeSingle();
+        if (exam) {
+          setUnitPrice(Number(exam.price) || 0);
+          setContentType("exam_solution");
+        } else {
+          setUnitPrice(null);
+        }
+      })();
     } else {
       setIsWatching(false);
       setShowPaywall(false);

@@ -71,7 +71,7 @@ serve(async (req) => {
       line_items: [{ price: priceId, quantity: 1 }],
       mode: "subscription",
       success_url: `${origin}/payment-success`,
-      cancel_url: `${origin}/payment-canceled`,
+      cancel_url: `${origin}/dashboard/student`,
     });
     logStep("Checkout session created", { sessionId: session.id, url: session.url });
 

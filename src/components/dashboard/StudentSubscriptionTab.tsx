@@ -126,7 +126,7 @@ export default function StudentSubscriptionTab() {
     try {
       const { data, error } = await supabase.functions.invoke("customer-portal");
       if (error) throw error;
-      if (data?.url) window.open(data.url, "_blank");
+      if (data?.url) window.location.href = data.url;
     } catch {
       toast.error("Não foi possível abrir o portal de gerenciamento.");
     } finally {
@@ -142,7 +142,6 @@ export default function StudentSubscriptionTab() {
     try {
       const { data, error } = await supabase.functions.invoke("customer-portal");
       if (error) throw error;
-      if (data?.url) window.open(data.url, "_blank");
 
       // Send plan change notification email
       if (user?.email && plan && newPlan && cycleInfo) {
@@ -222,6 +221,7 @@ export default function StudentSubscriptionTab() {
       });
 
       toast.success("Redirecionando para o portal de gerenciamento...");
+      if (data?.url) window.location.href = data.url;
     } catch {
       toast.error("Não foi possível processar a mudança de plano.");
     }
@@ -234,7 +234,6 @@ export default function StudentSubscriptionTab() {
     try {
       const { data, error } = await supabase.functions.invoke("customer-portal");
       if (error) throw error;
-      if (data?.url) window.open(data.url, "_blank");
 
       // Send cancellation notification email
       if (user?.email && plan && cycleInfo) {
@@ -302,6 +301,7 @@ export default function StudentSubscriptionTab() {
       });
 
       toast.success("Redirecionando para o portal de cancelamento...");
+      if (data?.url) window.location.href = data.url;
     } catch {
       toast.error("Não foi possível processar o cancelamento.");
     }

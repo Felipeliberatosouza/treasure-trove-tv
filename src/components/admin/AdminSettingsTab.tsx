@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Settings, Palette, Phone, FileText, Star, Layout, Gift, FolderOpen, Mail, Package, FileSignature, Smartphone, Heart } from "lucide-react";
+import { Settings, Palette, Phone, FileText, Star, Layout, Gift, FolderOpen, Mail, Package, FileSignature, Smartphone, Heart, GraduationCap, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import SettingsBranding from "./settings/SettingsBranding";
@@ -21,8 +21,10 @@ const sections = [
   { id: "contact", label: "Dados e Contatos", icon: Phone },
   { id: "emails", label: "E-mails", icon: Mail },
   { id: "pages", label: "Páginas Institucionais", icon: FileText },
-  { id: "hero", label: "Banner Principal", icon: Layout },
-  { id: "teacher_banner", label: "Banner Professor", icon: Layout },
+  { id: "hero", label: "Banner Visitante", icon: Layout },
+  { id: "hero_student", label: "Banner Aluno", icon: GraduationCap },
+  { id: "hero_teacher", label: "Banner Professor (logado)", icon: Users },
+  { id: "teacher_banner", label: "Banner Recrutamento", icon: Layout },
   { id: "featured", label: "Vídeos em Destaque", icon: Star },
   { id: "areas", label: "Áreas de Cursos", icon: FolderOpen },
   { id: "trial", label: "Teste Grátis", icon: Gift },
@@ -64,7 +66,24 @@ const AdminSettingsTab = () => {
       {activeSection === "contact" && <SettingsContact />}
       {activeSection === "emails" && <SettingsEmailTemplates />}
       {activeSection === "pages" && <SettingsPages />}
-      {activeSection === "hero" && <SettingsHeroBanner />}
+      {activeSection === "hero" && (
+        <SettingsHeroBanner
+          settingsKey="hero_banner"
+          description="Banner exibido na home para visitantes (não logados). O administrador vê os banners de aluno e professor em um carrossel automático."
+        />
+      )}
+      {activeSection === "hero_student" && (
+        <SettingsHeroBanner
+          settingsKey="hero_banner_student"
+          description="Banner exibido na home para alunos logados. Também aparece como um dos slides do carrossel da home do administrador."
+        />
+      )}
+      {activeSection === "hero_teacher" && (
+        <SettingsHeroBanner
+          settingsKey="hero_banner_teacher"
+          description="Banner exibido na home para professores logados. Também aparece como um dos slides do carrossel da home do administrador."
+        />
+      )}
       {activeSection === "teacher_banner" && <SettingsTeacherBanner />}
       {activeSection === "featured" && <SettingsFeaturedVideos />}
       {activeSection === "areas" && <SettingsCourseAreas />}

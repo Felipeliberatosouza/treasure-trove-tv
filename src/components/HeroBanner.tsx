@@ -1,8 +1,11 @@
-import { motion } from "framer-motion";
-import { Play, BookOpen } from "lucide-react";
+import { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Play, BookOpen, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getFeaturedVideo } from "@/data/courses";
-import { usePlatformSettings } from "@/hooks/usePlatformSettings";
+import { usePlatformSettings, HeroBannerSettings } from "@/hooks/usePlatformSettings";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 import heroBanner from "@/assets/hero-banner.jpg";
 
 interface HeroBannerProps {
@@ -12,50 +15,25 @@ interface HeroBannerProps {
 
 const SEARCH_CTA_TEXTS = new Set(["comece agora", "começar agora"]);
 
-const HeroBanner = ({ onVideoClick, onExploreClick }: HeroBannerProps) => {
-  const featured = getFeaturedVideo();
-  const { data: heroBannerSettings } = usePlatformSettings("hero_banner");
+interface SlideProps {
+  settings: HeroBannerSettings | null;
+  onPrimary: () => void;
+  ctaText: string;
+  bannerImage: string;
+  title: string;
+  subtitle: string;
+  badge: string;
+  featured: ReturnType<typeof getFeaturedVideo>;
+  primaryGoesToPopular: boolean;
+}
 
-  const title = heroBannerSettings?.title || featured?.title || "Bem-vindo";
-  const subtitle = heroBannerSettings?.subtitle || featured?.description || "";
-  const ctaText = heroBannerSettings?.cta_text || "Comece Agora";
-  const bannerImage = heroBannerSettings?.banner_image_url || heroBanner;
-
-  const normalizedPrimaryCta = ctaText.trim().toLowerCase();
-  const primaryGoesToPopular = SEARCH_CTA_TEXTS.has(normalizedPrimaryCta);
-
-  const handlePrimaryClick = () => {
-    if (primaryGoesToPopular && onExploreClick) {
-      onExploreClick();
-      return;
-    }
-
-    if (featured) onVideoClick(featured.id);
-  };
-
-  const handleSecondaryClick = () => {
-    if (primaryGoesToPopular) {
-      if (featured) onVideoClick(featured.id);
-      return;
-    }
-
-    onExploreClick?.();
-  };
-
-  const primaryIcon = primaryGoesToPopular ? BookOpen : Play;
-  const secondaryIcon = primaryGoesToPopular ? Play : BookOpen;
-  const secondaryText = primaryGoesToPopular ? "Assistir Destaque" : "Comece Agora";
-  const PrimaryIcon = primaryIcon;
-  const SecondaryIcon = secondaryIcon;
+const Slide = ({ onPrimary, ctaText, bannerImage, title, subtitle, badge, featured, primaryGoesToPopular }: SlideProps) => {
+  const PrimaryIcon = primaryGoesToPopular ? BookOpen : Play;
 
   return (
-    <section className="relative h-[85vh] min-h-[500px] w-full overflow-hidden">
+    <>
       <div className="absolute inset-0">
-        <img
-          src={bannerImage}
-          alt="Banner principal"
-          className="h-full w-full object-cover"
-        />
+        <img src={bannerImage} alt="Banner principal" className="h-full w-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-r from-background/80 via-transparent to-transparent" />
       </div>
@@ -68,7 +46,7 @@ const HeroBanner = ({ onVideoClick, onExploreClick }: HeroBannerProps) => {
           className="max-w-2xl space-y-5"
         >
           <span className="inline-block rounded-full bg-primary/20 px-4 py-1 text-sm font-medium text-primary">
-            Em destaque
+            {badge}
           </span>
           <h1 className="font-display text-3xl font-bold leading-tight md:text-5xl lg:text-6xl">
             {title}
@@ -84,16 +62,146 @@ const HeroBanner = ({ onVideoClick, onExploreClick }: HeroBannerProps) => {
             </div>
           )}
           <div className="flex gap-3 pt-2 flex-wrap">
-            <Button
-              size="lg"
-              className="gap-2 font-display font-semibold"
-              onClick={handlePrimaryClick}
-            >
+            <Button size="lg" className="gap-2 font-display font-semibold" onClick={onPrimary}>
               <PrimaryIcon className="h-5 w-5" /> {ctaText}
             </Button>
           </div>
         </motion.div>
       </div>
+    </>
+  );
+};
+
+interface ResolvedSlide {
+  settings: HeroBannerSettings | null;
+  badge: string;
+  audience: "visitor" | "student" | "teacher";
+}
+
+const HeroBanner = ({ onVideoClick, onExploreClick }: HeroBannerProps) => {
+  const navigate = useNavigate();
+  const { role } = useAuth();
+  const featured = getFeaturedVideo();
+
+  const { data: visitorSettings } = usePlatformSettings("hero_banner");
+  const { data: studentSettings } = usePlatformSettings("hero_banner_student");
+  const { data: teacherSettings } = usePlatformSettings("hero_banner_teacher");
+
+  // Build the slide list based on role
+  const slides: ResolvedSlide[] =
+    role === "admin"
+      ? [
+          { settings: studentSettings, badge: "Visão do aluno", audience: "student" },
+          { settings: teacherSettings, badge: "Visão do professor", audience: "teacher" },
+        ]
+      : role === "student"
+      ? [{ settings: studentSettings, badge: "Em destaque", audience: "student" }]
+      : role === "teacher"
+      ? [{ settings: teacherSettings, badge: "Em destaque", audience: "teacher" }]
+      : [{ settings: visitorSettings, badge: "Em destaque", audience: "visitor" }];
+
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  // Auto-play only when admin (multiple slides)
+  useEffect(() => {
+    if (slides.length <= 1) return;
+    const interval = setInterval(() => {
+      setCurrentIndex((i) => (i + 1) % slides.length);
+    }, 6000);
+    return () => clearInterval(interval);
+  }, [slides.length]);
+
+  // Reset index if list shrinks
+  useEffect(() => {
+    if (currentIndex >= slides.length) setCurrentIndex(0);
+  }, [slides.length, currentIndex]);
+
+  const active = slides[currentIndex] || slides[0];
+  const settings = active?.settings;
+
+  const title = settings?.title || featured?.title || "Bem-vindo";
+  const subtitle = settings?.subtitle || featured?.description || "";
+  const ctaText = settings?.cta_text || "Comece Agora";
+  const bannerImage = settings?.banner_image_url || heroBanner;
+  const ctaLink = settings?.cta_link || "";
+
+  const normalizedPrimaryCta = ctaText.trim().toLowerCase();
+  const primaryGoesToPopular = SEARCH_CTA_TEXTS.has(normalizedPrimaryCta);
+
+  const handlePrimary = () => {
+    if (primaryGoesToPopular && onExploreClick) {
+      onExploreClick();
+      return;
+    }
+    if (ctaLink) {
+      if (ctaLink.startsWith("http")) {
+        window.open(ctaLink, "_blank");
+      } else {
+        navigate(ctaLink);
+      }
+      return;
+    }
+    if (featured) onVideoClick(featured.id);
+  };
+
+  const goPrev = () => setCurrentIndex((i) => (i - 1 + slides.length) % slides.length);
+  const goNext = () => setCurrentIndex((i) => (i + 1) % slides.length);
+
+  return (
+    <section className="relative h-[85vh] min-h-[500px] w-full overflow-hidden">
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={currentIndex}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.6 }}
+          className="absolute inset-0"
+        >
+          <Slide
+            settings={settings}
+            onPrimary={handlePrimary}
+            ctaText={ctaText}
+            bannerImage={bannerImage}
+            title={title}
+            subtitle={subtitle}
+            badge={active?.badge || "Em destaque"}
+            featured={featured}
+            primaryGoesToPopular={primaryGoesToPopular}
+          />
+        </motion.div>
+      </AnimatePresence>
+
+      {slides.length > 1 && (
+        <>
+          <button
+            onClick={goPrev}
+            aria-label="Banner anterior"
+            className="absolute left-3 md:left-6 top-1/2 -translate-y-1/2 z-20 rounded-full bg-background/60 hover:bg-background/90 backdrop-blur p-2 md:p-3 text-foreground transition-colors"
+          >
+            <ChevronLeft className="h-5 w-5 md:h-6 md:w-6" />
+          </button>
+          <button
+            onClick={goNext}
+            aria-label="Próximo banner"
+            className="absolute right-3 md:right-6 top-1/2 -translate-y-1/2 z-20 rounded-full bg-background/60 hover:bg-background/90 backdrop-blur p-2 md:p-3 text-foreground transition-colors"
+          >
+            <ChevronRight className="h-5 w-5 md:h-6 md:w-6" />
+          </button>
+          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex gap-2">
+            {slides.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setCurrentIndex(i)}
+                aria-label={`Ir para o banner ${i + 1}`}
+                className={`h-2 rounded-full transition-all ${
+                  i === currentIndex ? "w-8 bg-primary" : "w-2 bg-foreground/30 hover:bg-foreground/50"
+                }`}
+              />
+            ))}
+          </div>
+        </>
+      )}
     </section>
   );
 };

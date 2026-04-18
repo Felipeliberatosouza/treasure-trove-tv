@@ -10,8 +10,20 @@ interface HeroBannerSettingsExtended extends HeroBannerSettings {
   banner_image_url?: string;
 }
 
-const SettingsHeroBanner = () => {
-  const { data, loading, update } = usePlatformSettings("hero_banner");
+type HeroSettingsKey = "hero_banner" | "hero_banner_student" | "hero_banner_teacher";
+
+interface SettingsHeroBannerProps {
+  /** Which platform_settings row to edit. Defaults to the visitor banner. */
+  settingsKey?: HeroSettingsKey;
+  /** Optional helper text shown above the form to clarify the audience. */
+  description?: string;
+}
+
+const SettingsHeroBanner = ({
+  settingsKey = "hero_banner",
+  description,
+}: SettingsHeroBannerProps) => {
+  const { data, loading, update } = usePlatformSettings(settingsKey);
   const { upload, uploading } = useStorageUpload("platform-assets");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState<HeroBannerSettingsExtended>({
@@ -27,7 +39,7 @@ const SettingsHeroBanner = () => {
     const file = e.target.files?.[0];
     if (!file) return;
     const ext = file.name.split(".").pop();
-    const path = `banner/banner-${Date.now()}.${ext}`;
+    const path = `${settingsKey}/banner-${Date.now()}.${ext}`;
     const url = await upload(file, path);
     if (url) setForm((prev) => ({ ...prev, banner_image_url: url }));
   };
@@ -42,6 +54,11 @@ const SettingsHeroBanner = () => {
 
   return (
     <div className="space-y-4 max-w-lg">
+      {description && (
+        <p className="text-sm text-muted-foreground bg-secondary/50 border border-border rounded-md p-3">
+          {description}
+        </p>
+      )}
       <div>
         <Label>Título Principal</Label>
         <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />

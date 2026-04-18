@@ -101,6 +101,8 @@ type SettingsMap = {
   branding: BrandingSettings;
   contact: ContactSettings;
   hero_banner: HeroBannerSettings;
+  hero_banner_student: HeroBannerSettings;
+  hero_banner_teacher: HeroBannerSettings;
   featured_videos: FeaturedVideosSettings;
   subscription_plans: SubscriptionPlansSettings;
   video_pricing: VideoPricingSettings;

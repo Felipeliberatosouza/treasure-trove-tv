@@ -604,6 +604,22 @@ export default function StudentSubscriptionTab() {
                 onConfirm={handlePlanChange}
               />
 
+              {/* In-app Stripe checkout for the actual change (Elements) */}
+              {pendingNewPlan && (
+                <PlanChangeCheckoutModal
+                  open={showCheckout}
+                  onOpenChange={(v) => {
+                    setShowCheckout(v);
+                    if (!v) setPendingNewPlan(null);
+                  }}
+                  currentPlan={plan as unknown as import("./subscription/PlanChangeModal").PlanOption}
+                  newPlan={pendingNewPlan}
+                  daysUsed={cycleInfo!.daysUsed}
+                  totalDays={cycleInfo!.totalDays}
+                  onSuccess={handleCheckoutSuccess}
+                />
+              )}
+
               {/* Cancel Modal */}
               <CancelSubscriptionModal
                 open={showCancel}

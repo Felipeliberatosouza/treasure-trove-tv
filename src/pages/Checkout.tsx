@@ -161,6 +161,8 @@ const Checkout = () => {
               criptografado certificado PCI-DSS — seus dados nunca passam pelos nossos servidores.
             </p>
 
+            <CheckoutStepper current={step} />
+
             <Elements
               stripe={stripePromise}
               options={{
@@ -174,7 +176,12 @@ const Checkout = () => {
                 appearance: { theme: "night", labels: "floating" },
               }}
             >
-              <CheckoutForm state={state} initialName={profile?.name || ""} initialCpf={profile?.cpf || ""} />
+              <CheckoutForm
+                state={state}
+                initialName={profile?.name || ""}
+                initialCpf={profile?.cpf || ""}
+                onStepChange={setStep}
+              />
             </Elements>
           </div>
 

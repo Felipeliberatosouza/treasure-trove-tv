@@ -33,6 +33,8 @@ export default function PaymentMethodCard() {
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [replaceMode, setReplaceMode] = useState(false);
+  const [removingId, setRemovingId] = useState<string | null>(null);
+  const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null);
 
   const stripePromise = useMemo(() => getStripe(), []);
 

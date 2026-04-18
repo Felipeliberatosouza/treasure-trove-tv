@@ -1,14 +1,27 @@
 import { supabase } from "@/integrations/supabase/client";
 
+export interface PdfCompany {
+  razaoSocial: string;
+  cnpj: string;
+  address: string;
+}
+
 export interface PdfBranding {
   platformName: string;
   logoDataUrl: string | null;
   logoFormat: "PNG" | "JPEG" | null;
   logoWidth: number;
   logoHeight: number;
+  company: PdfCompany;
 }
 
 const DEFAULT_NAME = "Revisão Fácil";
+
+function formatCnpj(raw: string): string {
+  const d = (raw || "").replace(/\D/g, "");
+  if (d.length !== 14) return raw || "";
+  return `${d.slice(0, 2)}.${d.slice(2, 5)}.${d.slice(5, 8)}/${d.slice(8, 12)}-${d.slice(12, 14)}`;
+}
 
 async function urlToDataUrl(url: string): Promise<{ dataUrl: string; format: "PNG" | "JPEG" } | null> {
   try {

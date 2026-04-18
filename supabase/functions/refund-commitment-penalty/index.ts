@@ -115,6 +115,36 @@ serve(async (req) => {
       .single();
     if (ie) log("DB insert failed", { ie });
 
+    // Send transactional email to the student notifying about the refund
+    try {
+      const fmtBRL = (v: number) =>
+        v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+      const processedAt = new Date().toLocaleDateString("pt-BR", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      });
+      await sb.functions.invoke("send-transactional-email", {
+        body: {
+          templateName: "commitment-penalty-refunded",
+          recipientEmail: profile.email,
+          idempotencyKey: `penalty-refund-${refund.id}`,
+          templateData: {
+            name: profile.name ?? undefined,
+            refundAmount: fmtBRL(body.refund_amount),
+            originalPenaltyAmount: body.original_penalty_amount
+              ? fmtBRL(body.original_penalty_amount)
+              : undefined,
+            refundType,
+            reason: body.reason ?? undefined,
+            processedAt,
+          },
+        },
+      });
+    } catch (mailErr) {
+      log("Email dispatch failed", { mailErr: String(mailErr) });
+    }
+
     // Audit log
     await sb.from("audit_logs").insert({
       user_id: adminUser.id,
@@ -131,6 +161,7 @@ serve(async (req) => {
         original_penalty_amount: body.original_penalty_amount ?? null,
         refund_type: refundType,
         reason: body.reason ?? null,
+        notification_email_sent: true,
       },
     });
 

@@ -308,14 +308,51 @@ const AdminCommitmentRefundsTab = () => {
         </Card>
       </div>
 
-      <div className="relative max-w-md">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Buscar por nome, e-mail ou ID Stripe..."
-          className="pl-9"
-        />
+      <div className="flex flex-col md:flex-row gap-3 md:items-end flex-wrap">
+        <div className="flex-1 min-w-[220px] max-w-md">
+          <Label className="text-xs text-muted-foreground mb-1 block">Buscar</Label>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Nome, e-mail ou ID Stripe..."
+              className="pl-9"
+            />
+          </div>
+        </div>
+        <div>
+          <Label className="text-xs text-muted-foreground mb-1 block">De</Label>
+          <Input
+            type="date"
+            value={dateFrom}
+            onChange={(e) => setDateFrom(e.target.value)}
+            className="w-[160px]"
+          />
+        </div>
+        <div>
+          <Label className="text-xs text-muted-foreground mb-1 block">Até</Label>
+          <Input
+            type="date"
+            value={dateTo}
+            onChange={(e) => setDateTo(e.target.value)}
+            className="w-[160px]"
+          />
+        </div>
+        <div className="flex gap-2">
+          {hasFilters && (
+            <Button variant="ghost" onClick={clearFilters}>
+              <X className="h-4 w-4 mr-1" /> Limpar
+            </Button>
+          )}
+          <Button
+            variant="outline"
+            onClick={exportCsv}
+            disabled={filteredRecords.length === 0}
+          >
+            <FileSpreadsheet className="h-4 w-4 mr-1" /> Exportar CSV
+          </Button>
+        </div>
       </div>
 
       {loading ? (

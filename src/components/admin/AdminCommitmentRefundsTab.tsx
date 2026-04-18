@@ -22,8 +22,14 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Loader2, Receipt, RotateCcw, Search, AlertTriangle } from "lucide-react";
+import { Loader2, Receipt, RotateCcw, Search, AlertTriangle, FileSpreadsheet, X } from "lucide-react";
 import { toast } from "sonner";
+
+const escapeCsv = (val: string | number | null | undefined) => {
+  const s = val == null ? "" : String(val);
+  if (/[",;\n\r]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+  return s;
+};
 
 interface RefundRecord {
   id: string;
@@ -64,6 +70,8 @@ const AdminCommitmentRefundsTab = () => {
   const [records, setRecords] = useState<RefundRecord[]>([]);
   const [students, setStudents] = useState<StudentOption[]>([]);
   const [query, setQuery] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
 
   // Form state
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -115,14 +123,83 @@ const AdminCommitmentRefundsTab = () => {
 
   const filteredRecords = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return records;
-    return records.filter(
-      (r) =>
-        (r.student_name ?? "").toLowerCase().includes(q) ||
-        (r.student_email ?? "").toLowerCase().includes(q) ||
-        (r.stripe_refund_id ?? "").toLowerCase().includes(q)
+    const fromTs = dateFrom ? new Date(`${dateFrom}T00:00:00`).getTime() : null;
+    const toTs = dateTo ? new Date(`${dateTo}T23:59:59.999`).getTime() : null;
+    return records.filter((r) => {
+      if (q) {
+        const matches =
+          (r.student_name ?? "").toLowerCase().includes(q) ||
+          (r.student_email ?? "").toLowerCase().includes(q) ||
+          (r.stripe_refund_id ?? "").toLowerCase().includes(q);
+        if (!matches) return false;
+      }
+      if (fromTs || toTs) {
+        const ts = new Date(r.created_at).getTime();
+        if (fromTs && ts < fromTs) return false;
+        if (toTs && ts > toTs) return false;
+      }
+      return true;
+    });
+  }, [records, query, dateFrom, dateTo]);
+
+  const hasFilters = !!(query.trim() || dateFrom || dateTo);
+
+  const clearFilters = () => {
+    setQuery("");
+    setDateFrom("");
+    setDateTo("");
+  };
+
+  const exportCsv = () => {
+    if (filteredRecords.length === 0) {
+      toast.error("Nenhum reembolso para exportar");
+      return;
+    }
+    const headers = [
+      "Aluno",
+      "E-mail",
+      "ID do aluno",
+      "Data",
+      "Multa original (R$)",
+      "Reembolsado (R$)",
+      "Tipo",
+      "Motivo",
+      "Stripe Refund ID",
+      "Stripe Charge ID",
+      "Stripe Subscription ID",
+      "Status",
+    ];
+    const rows = filteredRecords.map((r) =>
+      [
+        escapeCsv(r.student_name ?? ""),
+        escapeCsv(r.student_email ?? ""),
+        escapeCsv(r.user_id),
+        escapeCsv(r.created_at),
+        escapeCsv(Number(r.original_penalty_amount).toFixed(2).replace(".", ",")),
+        escapeCsv(Number(r.refund_amount).toFixed(2).replace(".", ",")),
+        escapeCsv(r.refund_type),
+        escapeCsv(r.reason ?? ""),
+        escapeCsv(r.stripe_refund_id ?? ""),
+        escapeCsv(r.stripe_charge_id ?? ""),
+        escapeCsv(r.stripe_subscription_id ?? ""),
+        escapeCsv(r.status),
+      ].join(";")
     );
-  }, [records, query]);
+    const csv = [headers.join(";"), ...rows].join("\r\n");
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const stamp = new Date().toISOString().slice(0, 10);
+    a.href = url;
+    a.download = `reembolsos-multa_${stamp}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success(
+      `CSV exportado (${filteredRecords.length} registro${filteredRecords.length > 1 ? "s" : ""})`
+    );
+  };
 
   const studentMatches = useMemo(() => {
     const q = studentSearch.trim().toLowerCase();

@@ -228,7 +228,8 @@ serve(async (req) => {
       );
     }
 
-    const pdfBytes = buildPdf(data);
+    const branding = await fetchBranding(supabase);
+    const pdfBytes = await buildPdf(data, branding);
 
     const safeDate = data.effectiveDate.replace(/\//g, "-");
     const fileName = `cancelamento-${safeDate}-${crypto.randomUUID().slice(0, 8)}.pdf`;

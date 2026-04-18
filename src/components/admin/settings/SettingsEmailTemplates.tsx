@@ -163,8 +163,18 @@ const SettingsEmailTemplates = () => {
     new Date(active.coupon_expires_at).getTime() < Date.now()
   );
 
+  const couponCodeMissing = !!(
+    active?.coupon_enabled && !active?.coupon_code?.trim()
+  );
+
   const handleSave = async () => {
     if (!active) return;
+    if (couponCodeMissing) {
+      toast.error(
+        "Informe o código do cupom ou desabilite o cupom antes de salvar."
+      );
+      return;
+    }
     if (couponDateRangeInvalid) {
       toast.error(
         "A data de início do cupom deve ser anterior à data de expiração."
@@ -475,8 +485,21 @@ const SettingsEmailTemplates = () => {
                     onChange={(e) => updateField("coupon_code", e.target.value.toUpperCase())}
                     placeholder="Ex: VOLTA20"
                     maxLength={40}
-                    className="uppercase tracking-wider font-mono"
+                    className={`uppercase tracking-wider font-mono ${
+                      couponCodeMissing
+                        ? "border-destructive ring-1 ring-destructive focus-visible:ring-destructive"
+                        : ""
+                    }`}
                   />
+                  {couponCodeMissing && (
+                    <p className="text-xs mt-1 text-destructive font-semibold flex items-start gap-1">
+                      <span>⚠️</span>
+                      <span>
+                        O código do cupom é obrigatório quando o cupom está
+                        habilitado. Informe um código ou desabilite o cupom.
+                      </span>
+                    </p>
+                  )}
                 </div>
                 <div>
                   <Label className="text-xs">Frase do cupom</Label>
@@ -791,7 +814,7 @@ const SettingsEmailTemplates = () => {
 
           {/* Actions */}
           <div className="flex gap-2">
-            <Button onClick={handleSave} disabled={saving || couponDateRangeInvalid || couponExpiresInPast}>
+            <Button onClick={handleSave} disabled={saving || couponDateRangeInvalid || couponExpiresInPast || couponCodeMissing}>
               <Save className="h-4 w-4 mr-2" /> {saving ? "Salvando..." : "Salvar"}
             </Button>
             <Button variant="outline" onClick={() => setPreviewing(!previewing)}>

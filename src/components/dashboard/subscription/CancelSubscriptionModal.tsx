@@ -2,6 +2,19 @@ import { useEffect, useState } from "react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { AlertTriangle, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+export const CANCELLATION_REASONS = [
+  { value: "too_expensive", label: "Muito caro" },
+  { value: "not_using", label: "Não estou usando" },
+  { value: "missing_features", label: "Falta funcionalidades / conteúdo" },
+  { value: "found_alternative", label: "Encontrei outra plataforma" },
+  { value: "technical_issues", label: "Problemas técnicos" },
+  { value: "temporary_pause", label: "Pausa temporária" },
+  { value: "other", label: "Outro motivo" },
+] as const;
 
 export interface CancellationPreview {
   planName: string;

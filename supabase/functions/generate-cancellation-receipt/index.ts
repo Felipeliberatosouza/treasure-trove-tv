@@ -207,7 +207,7 @@ async function buildPdf(data: ReceiptData, branding: BrandingForPdf): Promise<Ui
 
   doc.setFont("helvetica", "bold");
   doc.setFontSize(12);
-  doc.setTextColor(0, 80, 180);
+  doc.setTextColor(pr, pg, pb);
   doc.text(`Total cobrado: ${fmt(chargeAmount)}`, margin, y);
   y += 8;
 

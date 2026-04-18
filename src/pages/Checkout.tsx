@@ -12,7 +12,7 @@ import { Card } from "@/components/ui/card";
 import CpfInput from "@/components/CpfInput";
 import PaymentSecurityBadge from "@/components/PaymentSecurityBadge";
 import { isValidCPF } from "@/lib/cpfValidator";
-import { ArrowLeft, Loader2, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Check, CreditCard, Loader2, ShieldCheck, UserRound } from "lucide-react";
 import { motion } from "framer-motion";
 
 /**

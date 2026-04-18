@@ -144,28 +144,43 @@ const AdminPlansTab = () => {
             </div>
 
             {/* Cancellation policy */}
-            <div className="space-y-3 border rounded-lg p-3">
+            <div className="space-y-3 border rounded-lg p-3 bg-muted/30">
+              <div>
+                <h4 className="text-sm font-semibold">Política de cancelamento</h4>
+                <p className="text-xs text-muted-foreground">
+                  Define se o aluno pode cancelar a qualquer momento sem custo, ou se o plano possui período mínimo de permanência (fidelidade) com cobrança de multa proporcional.
+                </p>
+              </div>
+
               <div className="flex items-center gap-2">
                 <Switch
                   checked={!!plan.allow_free_cancel}
                   onCheckedChange={(v) => updatePlan(pi, "allow_free_cancel", v)}
                 />
-                <Label className="cursor-pointer">Cancelamento livre (sem cobrança)</Label>
+                <Label className="cursor-pointer">
+                  Cancelamento livre (sem multa de permanência)
+                </Label>
               </div>
 
               {plan.allow_free_cancel ? (
                 <div>
-                  <Label>Frase de cancelamento</Label>
+                  <Label>Frase exibida no banner do plano</Label>
                   <Input
                     value={(plan.cancel_text as string) || ""}
                     onChange={(e) => updatePlan(pi, "cancel_text", e.target.value)}
                     placeholder="Ex: Cancele quando quiser. Sem compromisso."
                   />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Esta frase aparece com um ícone de escudo no card do plano.
+                  </p>
                 </div>
               ) : (
-                <div className="space-y-2">
+                <div className="space-y-2 rounded-md border border-warning/30 bg-warning/5 p-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-medium text-warning">⚠ Plano com fidelidade</span>
+                  </div>
                   <div>
-                    <Label>Tempo mínimo de permanência (dias)</Label>
+                    <Label>Permanência mínima (dias)</Label>
                     <Input
                       type="number"
                       min={1}
@@ -175,7 +190,7 @@ const AdminPlansTab = () => {
                     />
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    O aluno será cobrado se cancelar antes de {(plan.min_commitment_days as number) || 30} dias.
+                    Se o aluno cancelar antes de {(plan.min_commitment_days as number) || 30} dias, será cobrada uma multa = (preço do plano ÷ dias do ciclo) × dias restantes de fidelidade.
                   </p>
                 </div>
               )}

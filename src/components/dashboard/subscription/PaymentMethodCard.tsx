@@ -270,6 +270,44 @@ export default function PaymentMethodCard() {
           </>
         )}
       </CardContent>
+
+      <AlertDialog
+        open={!!confirmRemoveId}
+        onOpenChange={(o) => !o && setConfirmRemoveId(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remover cartão?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {cardToRemove ? (
+                <>
+                  O cartão{" "}
+                  <span className="font-semibold uppercase">{cardToRemove.brand}</span>{" "}
+                  final <span className="font-mono">•••• {cardToRemove.last4}</span> será
+                  removido permanentemente. Esta ação não pode ser desfeita.
+                </>
+              ) : (
+                "Tem certeza que deseja remover este cartão?"
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={!!removingId}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => confirmRemoveId && handleRemoveCard(confirmRemoveId)}
+              disabled={!!removingId}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {removingId ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-1" />
+              ) : (
+                <Trash2 className="h-4 w-4 mr-1" />
+              )}
+              Remover
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }

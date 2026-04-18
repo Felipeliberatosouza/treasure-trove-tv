@@ -149,8 +149,22 @@ const SettingsEmailTemplates = () => {
     if (url) updateField("logo_url", url);
   };
 
+  const couponDateRangeInvalid = !!(
+    active?.coupon_enabled &&
+    active?.coupon_starts_at &&
+    active?.coupon_expires_at &&
+    new Date(active.coupon_starts_at).getTime() >=
+      new Date(active.coupon_expires_at).getTime()
+  );
+
   const handleSave = async () => {
     if (!active) return;
+    if (couponDateRangeInvalid) {
+      toast.error(
+        "A data de início do cupom deve ser anterior à data de expiração."
+      );
+      return;
+    }
     setSaving(true);
     const { error } = await supabase
       .from("email_templates")
@@ -483,6 +497,11 @@ const SettingsEmailTemplates = () => {
                         v ? new Date(v).toISOString() : null
                       );
                     }}
+                    className={
+                      couponDateRangeInvalid
+                        ? "border-destructive ring-1 ring-destructive focus-visible:ring-destructive"
+                        : ""
+                    }
                   />
                   {active.coupon_starts_at && (
                     <p
@@ -528,6 +547,11 @@ const SettingsEmailTemplates = () => {
                         v ? new Date(v).toISOString() : null
                       );
                     }}
+                    className={
+                      couponDateRangeInvalid
+                        ? "border-destructive ring-1 ring-destructive focus-visible:ring-destructive"
+                        : ""
+                    }
                   />
                   {active.coupon_expires_at && (
                     <p
@@ -550,6 +574,17 @@ const SettingsEmailTemplates = () => {
                     </p>
                   )}
                 </div>
+                {couponDateRangeInvalid && (
+                  <div className="rounded-md border-2 border-destructive bg-destructive/10 p-3">
+                    <p className="text-sm font-semibold text-destructive flex items-start gap-2">
+                      <span>⚠️</span>
+                      <span>
+                        A data de início do cupom deve ser anterior à data de
+                        expiração. Corrija as datas antes de salvar.
+                      </span>
+                    </p>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -731,7 +766,7 @@ const SettingsEmailTemplates = () => {
 
           {/* Actions */}
           <div className="flex gap-2">
-            <Button onClick={handleSave} disabled={saving}>
+            <Button onClick={handleSave} disabled={saving || couponDateRangeInvalid}>
               <Save className="h-4 w-4 mr-2" /> {saving ? "Salvando..." : "Salvar"}
             </Button>
             <Button variant="outline" onClick={() => setPreviewing(!previewing)}>

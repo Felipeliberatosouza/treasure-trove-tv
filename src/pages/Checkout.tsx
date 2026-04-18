@@ -521,6 +521,9 @@ function CheckoutForm({
     }
   };
 
+  // Always point ref at latest closure so parent's stable callback works
+  handleSubmitRef.current = handleSubmit;
+
   return (
     <div className="space-y-6">
       <Card className="p-5 space-y-4">

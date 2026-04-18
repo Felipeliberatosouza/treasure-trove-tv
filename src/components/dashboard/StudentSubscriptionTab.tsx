@@ -17,6 +17,7 @@ import PlanChangeModal from "./subscription/PlanChangeModal";
 import PlanChangeCheckoutModal from "./subscription/PlanChangeCheckoutModal";
 import CancelSubscriptionModal from "./subscription/CancelSubscriptionModal";
 import PurchaseHistory from "./subscription/PurchaseHistory";
+import PaymentMethodCard from "./subscription/PaymentMethodCard";
 
 
 const SERVICE_META: Record<string, { label: string; icon: React.ElementType; resourceType: string }> = {
@@ -753,6 +754,9 @@ export default function StudentSubscriptionTab() {
                   </CardContent>
                 </Card>
               </TooltipProvider>
+
+              {/* Payment method — manage subscription card in-app via Elements */}
+              <PaymentMethodCard />
 
               {/* Resource usage */}
               <h3 className="text-sm font-medium">Uso dos Recursos</h3>

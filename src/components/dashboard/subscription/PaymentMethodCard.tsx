@@ -89,8 +89,31 @@ export default function PaymentMethodCard() {
     await load();
   };
 
+  const handleRemoveCard = async (pmId: string) => {
+    setRemovingId(pmId);
+    try {
+      const { data, error } = await supabase.functions.invoke("detach-payment-method", {
+        body: { paymentMethodId: pmId },
+      });
+      if (error) throw error;
+      if (!data?.ok) {
+        toast.error(data?.error || "Não foi possível remover o cartão.");
+        return;
+      }
+      toast.success("Cartão removido.");
+      await load();
+    } catch (e) {
+      console.error("[PaymentMethodCard] remove failed", e);
+      toast.error("Falha ao remover o cartão. Tente novamente.");
+    } finally {
+      setRemovingId(null);
+      setConfirmRemoveId(null);
+    }
+  };
+
   const defaultCard = savedCards.find((c) => c.isDefault) || savedCards[0];
   const otherCards = savedCards.filter((c) => c.id !== defaultCard?.id);
+  const cardToRemove = otherCards.find((c) => c.id === confirmRemoveId);
 
   return (
     <Card className="border border-border">

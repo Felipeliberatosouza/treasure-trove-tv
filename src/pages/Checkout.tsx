@@ -150,10 +150,10 @@ const Checkout = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="mx-auto max-w-4xl px-4 pt-4 pb-8 md:pt-6 md:pb-12">
+      <div className="mx-auto max-w-4xl px-4 pt-2 pb-8 md:pt-6 md:pb-12">
         <button
           onClick={() => navigate(state.cancelUrl || -1 as any)}
-          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-4 transition-colors"
+          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-2 md:mb-4 transition-colors"
         >
           <ArrowLeft className="h-4 w-4" /> Voltar
         </button>
@@ -161,13 +161,13 @@ const Checkout = () => {
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          className="grid gap-6 md:grid-cols-[1fr_360px]"
+          className="grid gap-4 md:gap-6 md:grid-cols-[1fr_360px]"
         >
           <div className="order-2 md:order-1">
-            <h1 className="font-display text-2xl md:text-3xl font-bold mb-1">
+            <h1 className="font-display text-xl md:text-3xl font-bold mb-1">
               Pagamento seguro
             </h1>
-            <p className="text-sm text-muted-foreground mb-6">
+            <p className="text-xs md:text-sm text-muted-foreground mb-4 md:mb-6">
               Preencha seus dados de cobrança e do cartão. Tudo é processado em ambiente
               criptografado certificado PCI-DSS — seus dados nunca passam pelos nossos servidores.
             </p>

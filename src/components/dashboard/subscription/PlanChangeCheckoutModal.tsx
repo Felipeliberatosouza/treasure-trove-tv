@@ -215,7 +215,7 @@ export default function PlanChangeCheckoutModal({
 
   return (
     <Dialog open={open} onOpenChange={(v) => !submitting && !awaiting3DS && onOpenChange(v)}>
-      <DialogContent className="max-w-xl max-h-[92vh] overflow-y-auto relative">
+      <DialogContent className="max-w-xl w-[calc(100%-2rem)] sm:w-full max-h-[90vh] p-0 gap-0 flex flex-col relative overflow-hidden">
         {awaiting3DS && (
           <div className="absolute inset-0 z-50 flex flex-col items-center justify-center gap-3 bg-background/85 backdrop-blur-sm rounded-lg">
             <div className="relative">
@@ -230,7 +230,7 @@ export default function PlanChangeCheckoutModal({
             </p>
           </div>
         )}
-        <DialogHeader>
+        <DialogHeader className="px-6 pt-6 pb-4 border-b border-border shrink-0">
           <div className="flex items-center gap-2">
             {isUpgrade ? (
               <ArrowUp className="h-5 w-5 text-success" />
@@ -245,6 +245,9 @@ export default function PlanChangeCheckoutModal({
             Revise os valores e a forma de pagamento antes de confirmar.
           </DialogDescription>
         </DialogHeader>
+
+        {/* Scrollable body */}
+        <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4 min-h-0">
 
         {/* Plan transition card */}
         <div className="rounded-lg border border-border bg-muted/30 p-4">
@@ -416,27 +419,33 @@ export default function PlanChangeCheckoutModal({
           </div>
         )}
 
-        {/* Footer — hidden when StripeCardForm renders its own submit button */}
-        {!showNewCardForm && (
-          <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-2">
-            <Button variant="outline" onClick={() => onOpenChange(false)} disabled={submitting}>
-              Cancelar
-            </Button>
-            <Button
-              onClick={handleConfirmSavedOrNoCharge}
-              disabled={submitting || loadingSetup}
-              className="min-w-[180px]"
-            >
-              {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-              {requiresPayment
-                ? `Pagar ${formatBRL(dueNow)} e mudar`
-                : `Confirmar ${isUpgrade ? "Upgrade" : "Downgrade"}`}
-            </Button>
-          </div>
-        )}
+        </div>
+        {/* /Scrollable body */}
 
-        <div className="flex justify-center pt-1">
-          <PaymentSecurityBadge variant="pill" />
+        {/* Sticky footer */}
+        <div className="border-t border-border bg-background px-6 py-4 space-y-3 shrink-0">
+          {/* Footer — hidden when StripeCardForm renders its own submit button */}
+          {!showNewCardForm && (
+            <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
+              <Button variant="outline" onClick={() => onOpenChange(false)} disabled={submitting}>
+                Cancelar
+              </Button>
+              <Button
+                onClick={handleConfirmSavedOrNoCharge}
+                disabled={submitting || loadingSetup}
+                className="min-w-[180px]"
+              >
+                {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                {requiresPayment
+                  ? `Pagar ${formatBRL(dueNow)} e mudar`
+                  : `Confirmar ${isUpgrade ? "Upgrade" : "Downgrade"}`}
+              </Button>
+            </div>
+          )}
+
+          <div className="flex justify-center">
+            <PaymentSecurityBadge variant="pill" />
+          </div>
         </div>
       </DialogContent>
     </Dialog>

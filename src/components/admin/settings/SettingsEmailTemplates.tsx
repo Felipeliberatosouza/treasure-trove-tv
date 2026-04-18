@@ -275,6 +275,24 @@ const SettingsEmailTemplates = () => {
     const footerHtml = active.show_social_footer ? buildFooterHtml() : "";
     const alwaysSendFooter = buildAlwaysSendFooter();
 
+    let couponHtml = "";
+    if (active.coupon_enabled && (active.coupon_code || active.coupon_message)) {
+      const safe = (s: string) =>
+        String(s ?? "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+      const code = safe(active.coupon_code || "");
+      const message = safe(active.coupon_message || "");
+      couponHtml = `
+        <div style="margin:24px auto;background:linear-gradient(135deg,#fef3c7 0%,#fde68a 100%);border:2px dashed #d97706;border-radius:12px;padding:20px 24px;text-align:center;">
+          ${message ? `<p style="margin:0 0 12px;font-size:16px;font-weight:600;color:#7c2d12;line-height:1.4;">${message}</p>` : ""}
+          ${code ? `<div style="display:inline-block;background:#ffffff;border:2px solid #d97706;border-radius:8px;padding:12px 24px;font-size:22px;font-weight:800;letter-spacing:2px;color:#7c2d12;font-family:'Courier New',monospace;">${code}</div>` : ""}
+          <p style="margin:12px 0 0;font-size:12px;color:#92400e;">Use este cupom em sua próxima assinatura</p>
+        </div>
+      `;
+    }
+
     let body = active.body_html
       .replace(/\{\{name\}\}/g, "João Silva")
       .replace(/\{\{confirmation_link\}\}/g, "#")
@@ -304,6 +322,7 @@ const SettingsEmailTemplates = () => {
       <div style="max-width:600px;margin:0 auto;font-family:${fontFamily};background:#ffffff;padding:24px;border-radius:8px;color:${textColor};">
         ${logoHtml}
         ${body}
+        ${couponHtml}
         ${footerHtml}
         ${alwaysSendFooter}
       </div>

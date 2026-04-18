@@ -422,7 +422,7 @@ export default function StudentSubscriptionTab() {
 
   // Build statement entries from subscription history
   const buildStatementEntries = () => {
-    const entries: { date: string; type: "subscription_start" | "plan_change" | "cancellation" | "renewal" | "purchase"; description: string; amount: number; explanation: string }[] = [];
+    const entries: { date: string; type: "subscription_start" | "plan_change" | "cancellation" | "renewal" | "purchase"; description: string; amount: number; explanation: string; pdfData?: import("@/lib/planChangePdf").PlanChangePdfData }[] = [];
 
     // Chronological order (oldest first) so we can detect plan transitions
     const chrono = allSubscriptions.slice().sort(

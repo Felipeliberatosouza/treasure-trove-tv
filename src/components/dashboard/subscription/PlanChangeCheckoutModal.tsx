@@ -298,6 +298,33 @@ export default function PlanChangeCheckoutModal({
               <h3 className="font-semibold text-sm">Forma de pagamento</h3>
             </div>
 
+            {paymentError && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Pagamento não concluído</AlertTitle>
+                <AlertDescription className="space-y-2">
+                  <p className="text-xs">{paymentError}</p>
+                  {pendingInvoice && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={retryPendingInvoice}
+                      disabled={submitting}
+                      className="mt-1"
+                    >
+                      {submitting ? (
+                        <Loader2 className="h-3 w-3 animate-spin mr-1.5" />
+                      ) : (
+                        <RefreshCw className="h-3 w-3 mr-1.5" />
+                      )}
+                      Tentar autenticar novamente
+                    </Button>
+                  )}
+                </AlertDescription>
+              </Alert>
+            )}
+
             {loadingSetup ? (
               <div className="flex items-center justify-center py-6">
                 <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
@@ -306,7 +333,7 @@ export default function PlanChangeCheckoutModal({
               <>
                 <RadioGroup
                   value={paymentChoice}
-                  onValueChange={setPaymentChoice}
+                  onValueChange={(v) => { setPaymentChoice(v); setPaymentError(null); }}
                   className="space-y-2"
                 >
                   {savedCards.map((card) => (

@@ -255,6 +255,44 @@ const Checkout = () => {
           </Card>
         </motion.div>
       </div>
+
+      {/* Mobile sticky pay bar */}
+      {isMobile && (
+        <>
+          <div
+            aria-hidden
+            className="h-20"
+          />
+          <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 backdrop-blur-md px-4 py-3 shadow-[0_-4px_20px_-4px_hsl(var(--background))]">
+            <div className="mx-auto flex max-w-4xl items-center gap-3">
+              <div className="min-w-0 flex-1">
+                <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                  Total
+                </p>
+                <p className="font-display text-base font-bold leading-tight truncate">
+                  {amountLabel}
+                </p>
+              </div>
+              <Button
+                onClick={() => submitRef.current?.()}
+                disabled={mobileSubmitting}
+                size="lg"
+                className="font-display whitespace-nowrap"
+              >
+                {mobileSubmitting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" /> Processando...
+                  </>
+                ) : state.mode === "subscription" ? (
+                  "Confirmar e assinar"
+                ) : (
+                  "Confirmar e pagar"
+                )}
+              </Button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 };

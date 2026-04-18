@@ -47,6 +47,17 @@ serve(async (req) => {
     const user = ud.user;
     log("auth ok", { userId: user.id });
 
+    // Optional cancellation reason from the in-app modal.
+    let reasonCode: string | null = null;
+    let reasonDetails: string | null = null;
+    try {
+      const body = await req.json();
+      if (body && typeof body === "object") {
+        if (typeof body.reasonCode === "string") reasonCode = body.reasonCode.slice(0, 50) || null;
+        if (typeof body.reasonDetails === "string") reasonDetails = body.reasonDetails.slice(0, 500) || null;
+      }
+    } catch { /* no body is fine */ }
+
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
     const customers = await stripe.customers.list({ email: user.email!, limit: 1 });
@@ -72,7 +83,24 @@ serve(async (req) => {
     }
 
     const sub = subs.data[0];
-    log("cancelling subscription", { id: sub.id });
+    log("cancelling subscription", { id: sub.id, reasonCode });
+
+    // Persist reason on the subscription metadata BEFORE cancellation so it's
+    // attached to the canceled record in the provider as well.
+    if (reasonCode || reasonDetails) {
+      try {
+        await stripe.subscriptions.update(sub.id, {
+          metadata: {
+            ...(sub.metadata || {}),
+            cancellation_reason_code: reasonCode || "",
+            cancellation_reason_details: reasonDetails || "",
+            cancellation_requested_at: new Date().toISOString(),
+          },
+        });
+      } catch (e) {
+        log("metadata update failed", { msg: e instanceof Error ? e.message : String(e) });
+      }
+    }
 
     // Immediate cancellation — no portal, no extra UI.
     const cancelled = await stripe.subscriptions.cancel(sub.id, {
@@ -89,6 +117,24 @@ serve(async (req) => {
       .eq("user_id", user.id)
       .eq("status", "active");
     if (updErr) log("local mirror update failed", { msg: updErr.message });
+
+    // Audit log so admins can see WHY users cancel — drives the stats panel.
+    try {
+      await sb.from("audit_logs").insert({
+        user_id: user.id,
+        action: "subscription_cancelled",
+        target_table: "student_subscriptions",
+        target_id: sub.id,
+        metadata: {
+          reason_code: reasonCode,
+          reason_details: reasonDetails,
+          stripe_subscription_id: sub.id,
+          email: user.email,
+        },
+      });
+    } catch (e) {
+      log("audit log failed", { msg: e instanceof Error ? e.message : String(e) });
+    }
 
     return new Response(
       JSON.stringify({ ok: true, cancelledAt: nowIso }),

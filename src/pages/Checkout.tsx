@@ -192,6 +192,10 @@ const Checkout = () => {
                 initialName={profile?.name || ""}
                 initialCpf={profile?.cpf || ""}
                 onStepChange={setStep}
+                onReady={(submit) => {
+                  submitRef.current = submit;
+                }}
+                onSubmittingChange={setMobileSubmitting}
               />
             </Elements>
           </div>

@@ -68,6 +68,22 @@ export default function PaymentMethodCard() {
     load();
   }, [load]);
 
+  // Allow other parts of the dashboard (e.g. the past-due billing alert) to
+  // open the "add new card" form by dispatching a window event.
+  useEffect(() => {
+    const open = () => {
+      setReplaceMode(false);
+      setShowForm(true);
+      // Defer scroll until the form is rendered.
+      setTimeout(() => {
+        const el = document.getElementById("payment-method-card");
+        el?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 50);
+    };
+    window.addEventListener("open-payment-method-form", open);
+    return () => window.removeEventListener("open-payment-method-form", open);
+  }, []);
+
   const handlePaymentMethodReady = async (pmId: string) => {
     const { data, error } = await supabase.functions.invoke("update-payment-method", {
       body: { paymentMethodId: pmId, removeOthers: replaceMode },
@@ -138,7 +154,7 @@ export default function PaymentMethodCard() {
   const cardToRemove = otherCards.find((c) => c.id === confirmRemoveId);
 
   return (
-    <Card className="border border-border">
+    <Card id="payment-method-card" className="border border-border scroll-mt-24">
       <CardHeader className="pb-2 pt-4 px-4">
         <CardTitle className="flex items-center gap-2 text-sm font-medium">
           <CreditCard className="h-4 w-4 text-primary" />

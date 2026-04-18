@@ -7,6 +7,7 @@ import LoginDataTab from "@/components/dashboard/LoginDataTab";
 import StudentDoubtsTab from "@/components/dashboard/StudentDoubtsTab";
 import StudentSubscriptionTab from "@/components/dashboard/StudentSubscriptionTab";
 import StudentInstructionsTab from "@/components/dashboard/StudentInstructionsTab";
+import PastDueBillingAlert from "@/components/dashboard/PastDueBillingAlert";
 
 const tabs = [
   { id: "instructions", label: "Como Usar", icon: Info },
@@ -34,8 +35,18 @@ const StudentDashboardContent = () => {
     }
   }, [tabParam]);
 
+  const handleUpdateCardClick = () => {
+    setActiveTab("subscription");
+    // Defer until the subscription tab mounts the PaymentMethodCard.
+    setTimeout(() => {
+      window.dispatchEvent(new CustomEvent("open-payment-method-form"));
+    }, 100);
+  };
+
   return (
-    <div className="flex gap-6 flex-col md:flex-row">
+    <>
+      <PastDueBillingAlert onUpdateCardClick={handleUpdateCardClick} />
+      <div className="flex gap-6 flex-col md:flex-row">
       <nav className="flex md:flex-col gap-1 overflow-x-auto md:overflow-visible md:w-56 shrink-0 scrollbar-hide">
         {tabs.map((tab) => (
           <button
@@ -78,6 +89,7 @@ const StudentDashboardContent = () => {
         )}
       </motion.div>
     </div>
+    </>
   );
 };
 

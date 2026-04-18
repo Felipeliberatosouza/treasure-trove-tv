@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Receipt, Calendar, ArrowRight, Download } from "lucide-react";
 import { downloadPlanChangePdf, type PlanChangePdfData } from "@/lib/planChangePdf";
+import { downloadCancellationPdf, type CancellationPdfData } from "@/lib/cancellationPdf";
 
 interface StatementEntry {
   date: string;
@@ -13,6 +14,8 @@ interface StatementEntry {
   explanation: string;
   /** Present only on plan_change entries — enables PDF download. */
   pdfData?: PlanChangePdfData;
+  /** Present only on cancellation entries — enables PDF download. */
+  cancellationPdfData?: CancellationPdfData;
 }
 
 interface SubscriptionStatementProps {
@@ -104,6 +107,21 @@ export default function SubscriptionStatement({ planName, entries }: Subscriptio
                         variant="outline"
                         className="h-7 text-xs gap-1.5"
                         onClick={() => downloadPlanChangePdf(entry.pdfData!)}
+                      >
+                        <Download className="h-3 w-3" />
+                        Baixar comprovante (PDF)
+                      </Button>
+                    </div>
+                  )}
+
+                  {entry.type === "cancellation" && entry.cancellationPdfData && (
+                    <div className="pt-1">
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        className="h-7 text-xs gap-1.5"
+                        onClick={() => downloadCancellationPdf(entry.cancellationPdfData!)}
                       >
                         <Download className="h-3 w-3" />
                         Baixar comprovante (PDF)

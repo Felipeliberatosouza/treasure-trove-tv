@@ -422,7 +422,7 @@ export default function StudentSubscriptionTab() {
 
   // Build statement entries from subscription history
   const buildStatementEntries = () => {
-    const entries: { date: string; type: "subscription_start" | "plan_change" | "cancellation" | "renewal" | "purchase"; description: string; amount: number; explanation: string; pdfData?: import("@/lib/planChangePdf").PlanChangePdfData }[] = [];
+    const entries: { date: string; type: "subscription_start" | "plan_change" | "cancellation" | "renewal" | "purchase"; description: string; amount: number; explanation: string; pdfData?: import("@/lib/planChangePdf").PlanChangePdfData; cancellationPdfData?: import("@/lib/cancellationPdf").CancellationPdfData }[] = [];
 
     // Chronological order (oldest first) so we can detect plan transitions
     const chrono = allSubscriptions.slice().sort(
@@ -539,6 +539,20 @@ export default function StudentSubscriptionTab() {
           description: `Cancelamento ${plan.name}`,
           amount: chargeAmount,
           explanation,
+          cancellationPdfData: {
+            studentName: user?.user_metadata?.name || "",
+            studentEmail: user?.email || "",
+            planName: plan.name,
+            planPrice: plan.price,
+            totalDays,
+            daysUsed,
+            dailyRate,
+            usedAmount,
+            minUsageChargePct: plan.min_usage_charge_pct || 0,
+            minCharge,
+            chargeAmount,
+            effectiveDate: new Date(endDate).toLocaleDateString("pt-BR"),
+          },
         });
       }
     });

@@ -109,7 +109,7 @@ export default function CancelSubscriptionModal({
         } else {
           setPreview(data as CancellationPreview);
         }
-        const cfgValue = cfgRow?.value as RetentionCouponSettings | undefined;
+        const cfgValue = cfgRow?.value as unknown as RetentionCouponSettings | undefined;
         if (cfgValue) setRetention(cfgValue);
         const priorRows =
           (priorRes as { data?: { id: string; created_at: string }[] | null })?.data || [];

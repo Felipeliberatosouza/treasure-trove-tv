@@ -216,8 +216,42 @@ export default function PlanChangeCheckoutModal({
 
   const showNewCardForm = requiresPayment && paymentChoice === "new";
 
+  const handleClose = (v: boolean) => {
+    if (submitting || awaiting3DS) return;
+    if (!v) {
+      setSuccess(false);
+      setPaymentError(null);
+      setPendingInvoice(null);
+    }
+    onOpenChange(v);
+  };
+
+  const handleDownloadPdf = () => {
+    const today = new Date();
+    const effectiveDate = today.toLocaleDateString("pt-BR");
+    const balance = isUpgrade ? dueNow : -creditForNext;
+    const changeType: "upgrade" | "downgrade" | "change" =
+      newPlan.price > currentPlan.price ? "upgrade" : newPlan.price < currentPlan.price ? "downgrade" : "change";
+    downloadPlanChangePdf({
+      previousPlan: currentPlan.name,
+      previousPlanPrice: currentPlan.price,
+      newPlan: newPlan.name,
+      newPlanPrice: newPlan.price,
+      changeType,
+      totalDays,
+      daysUsed,
+      daysRemaining,
+      dailyOld,
+      dailyNew,
+      credit,
+      newProRata: newPeriodCharge,
+      balance,
+      effectiveDate,
+    });
+  };
+
   return (
-    <Dialog open={open} onOpenChange={(v) => !submitting && !awaiting3DS && onOpenChange(v)}>
+    <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-xl w-[calc(100%-2rem)] sm:w-full max-h-[85vh] sm:max-h-[90vh] p-0 gap-0 !grid-cols-1 grid-rows-[auto_1fr_auto] overflow-hidden top-[50%] translate-y-[-50%]">
         {awaiting3DS && (
           <div className="absolute inset-0 z-50 flex flex-col items-center justify-center gap-3 bg-background/85 backdrop-blur-sm rounded-lg">

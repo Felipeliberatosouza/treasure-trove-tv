@@ -15,6 +15,8 @@ import { isValidCPF } from "@/lib/cpfValidator";
 import { ArrowLeft, Check, ChevronDown, CreditCard, Loader2, ShieldCheck, UserRound } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 type CheckoutStep = "billing" | "card" | "confirm";
 

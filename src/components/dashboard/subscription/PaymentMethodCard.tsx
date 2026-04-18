@@ -194,11 +194,26 @@ export default function PaymentMethodCard() {
                       {String(c.exp_month).padStart(2, "0")}/{String(c.exp_year).slice(-2)}
                     </span>
                     <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 px-2 text-[11px]"
+                      onClick={() => handleSetDefault(c.id)}
+                      disabled={settingDefaultId === c.id || removingId === c.id}
+                      aria-label={`Tornar padrão o cartão ${c.brand} final ${c.last4}`}
+                    >
+                      {settingDefaultId === c.id ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <Star className="h-3.5 w-3.5 mr-1" />
+                      )}
+                      Tornar padrão
+                    </Button>
+                    <Button
                       size="icon"
                       variant="ghost"
                       className="h-7 w-7 text-muted-foreground hover:text-destructive"
                       onClick={() => setConfirmRemoveId(c.id)}
-                      disabled={removingId === c.id}
+                      disabled={removingId === c.id || settingDefaultId === c.id}
                       aria-label={`Remover cartão ${c.brand} final ${c.last4}`}
                     >
                       {removingId === c.id ? (

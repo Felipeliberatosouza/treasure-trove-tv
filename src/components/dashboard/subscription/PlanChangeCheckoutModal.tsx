@@ -271,6 +271,31 @@ export default function PlanChangeCheckoutModal({
           <div className="flex items-center gap-2">
             <Info className="h-4 w-4 text-primary" />
             <h3 className="font-semibold text-sm">Cálculo proporcional</h3>
+            <TooltipProvider delayDuration={150}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    className="ml-auto text-muted-foreground hover:text-foreground transition-colors"
+                    aria-label="Como o cálculo é feito"
+                  >
+                    <HelpCircle className="h-4 w-4" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="left" className="max-w-[280px] text-xs leading-relaxed space-y-1.5">
+                  <p className="font-semibold">Como calculamos</p>
+                  <p><strong>Valor diário</strong> = preço do plano ÷ {totalDays} dias</p>
+                  <p><strong>Crédito</strong> = valor diário do plano atual × dias restantes</p>
+                  <p><strong>Novo proporcional</strong> = valor diário do novo plano × dias restantes</p>
+                  <p className="pt-1 border-t border-border/50">
+                    <strong>Saldo</strong> = novo proporcional − crédito
+                  </p>
+                  <p className="text-muted-foreground">
+                    Ex.: R$ 49,90 ÷ 30 = R$ 1,66/dia. Se restam 10 dias, crédito = R$ 16,63.
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
           <div className="space-y-1.5 text-sm">
             <div className="flex justify-between text-muted-foreground">

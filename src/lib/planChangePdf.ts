@@ -135,7 +135,7 @@ export async function buildPlanChangePdf(data: PlanChangePdfData): Promise<jsPDF
   doc.setFont("helvetica", "bold");
   doc.setFontSize(12);
   if (data.balance > 0.005) {
-    doc.setTextColor(0, 80, 180);
+    doc.setTextColor(pr, pg, pb);
     doc.text(`Saldo a pagar: ${fmt(data.balance)}`, margin, y);
   } else if (data.balance < -0.005) {
     doc.setTextColor(0, 130, 60);

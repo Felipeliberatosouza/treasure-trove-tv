@@ -149,8 +149,22 @@ const SettingsEmailTemplates = () => {
     if (url) updateField("logo_url", url);
   };
 
+  const couponDateRangeInvalid = !!(
+    active?.coupon_enabled &&
+    active?.coupon_starts_at &&
+    active?.coupon_expires_at &&
+    new Date(active.coupon_starts_at).getTime() >=
+      new Date(active.coupon_expires_at).getTime()
+  );
+
   const handleSave = async () => {
     if (!active) return;
+    if (couponDateRangeInvalid) {
+      toast.error(
+        "A data de início do cupom deve ser anterior à data de expiração."
+      );
+      return;
+    }
     setSaving(true);
     const { error } = await supabase
       .from("email_templates")

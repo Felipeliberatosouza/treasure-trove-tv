@@ -228,6 +228,52 @@ export default function CancelSubscriptionModal({
     );
   };
 
+  // Retention offer view — shown instead of cancellation summary
+  if (showRetention && retention) {
+    return (
+      <AlertDialog open={open} onOpenChange={onOpenChange}>
+        <AlertDialogContent className="max-h-[90vh] overflow-y-auto">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Gift className="h-5 w-5 text-primary" />
+              {retention.headline}
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3 pt-2">
+                <p className="text-sm text-foreground">{retention.message}</p>
+                <div className="rounded-lg bg-primary/10 border border-primary/30 p-4 text-center">
+                  <p className="text-2xl font-bold text-primary">{retention.discount_label}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{retention.duration_label}</p>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Ao aceitar, sua assinatura continuará ativa e o desconto será aplicado automaticamente na próxima fatura.
+                </p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-col-reverse sm:flex-row sm:justify-end gap-2">
+            <Button
+              variant="ghost"
+              onClick={handleDeclineCoupon}
+              disabled={applyingCoupon}
+              className="text-muted-foreground hover:text-foreground"
+            >
+              Não, quero cancelar mesmo assim
+            </Button>
+            <Button
+              onClick={handleAcceptCoupon}
+              disabled={applyingCoupon}
+              className="bg-primary text-primary-foreground hover:bg-primary/90"
+            >
+              {applyingCoupon ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Gift className="h-4 w-4 mr-1" />}
+              Aceitar oferta e continuar
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    );
+  }
+
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent className="max-h-[90vh] overflow-y-auto">
@@ -273,6 +319,12 @@ export default function CancelSubscriptionModal({
               />
               <p className="text-[10px] text-muted-foreground/70 text-right">{reasonDetails.length}/500</p>
             </div>
+            {offerEligible && reasonCode && (
+              <div className="rounded-md bg-primary/10 border border-primary/30 p-2 flex items-center gap-2 text-xs text-foreground">
+                <Gift className="h-3.5 w-3.5 text-primary shrink-0" />
+                <span>Temos uma oferta especial para você. Continue para vê-la antes de confirmar.</span>
+              </div>
+            )}
           </div>
         )}
 
@@ -284,7 +336,7 @@ export default function CancelSubscriptionModal({
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
             {loading ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
-            Confirmar Cancelamento
+            {offerEligible && reasonCode ? "Continuar" : "Confirmar Cancelamento"}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

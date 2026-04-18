@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Settings, Palette, Phone, FileText, Star, Layout, Gift, FolderOpen, Mail, Package, FileSignature, Smartphone } from "lucide-react";
+import { Settings, Palette, Phone, FileText, Star, Layout, Gift, FolderOpen, Mail, Package, FileSignature, Smartphone, Heart } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import SettingsBranding from "./settings/SettingsBranding";
@@ -14,6 +14,7 @@ import SettingsTeacherBanner from "./settings/SettingsTeacherBanner";
 import SettingsProductConfig from "./settings/SettingsProductConfig";
 import SettingsTeacherContract from "./settings/SettingsTeacherContract";
 import SettingsTwilio from "./settings/SettingsTwilio";
+import SettingsRetentionCoupon from "./settings/SettingsRetentionCoupon";
 
 const sections = [
   { id: "branding", label: "Identidade Visual", icon: Palette },
@@ -28,6 +29,7 @@ const sections = [
   { id: "products", label: "Config. de Produtos", icon: Package },
   { id: "contract", label: "Contrato do Professor", icon: FileSignature },
   { id: "twilio", label: "Verificação Celular", icon: Smartphone },
+  { id: "retention", label: "Retenção (Cupom)", icon: Heart },
 ] as const;
 
 type SectionId = (typeof sections)[number]["id"];
@@ -70,6 +72,7 @@ const AdminSettingsTab = () => {
       {activeSection === "products" && <SettingsProductConfig />}
       {activeSection === "contract" && <SettingsTeacherContract />}
       {activeSection === "twilio" && <SettingsTwilio />}
+      {activeSection === "retention" && <SettingsRetentionCoupon />}
     </div>
   );
 };

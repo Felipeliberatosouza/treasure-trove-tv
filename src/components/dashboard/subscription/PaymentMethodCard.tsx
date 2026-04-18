@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CreditCard, Plus, Loader2, ShieldCheck, Trash2 } from "lucide-react";
+import { CreditCard, Plus, Loader2, ShieldCheck, Trash2, Star } from "lucide-react";
 import { Elements } from "@stripe/react-stripe-js";
 import { getStripe } from "@/lib/stripe";
 import { supabase } from "@/integrations/supabase/client";
@@ -44,6 +44,7 @@ export default function PaymentMethodCard() {
   const [showForm, setShowForm] = useState(false);
   const [replaceMode, setReplaceMode] = useState(false);
   const [removingId, setRemovingId] = useState<string | null>(null);
+  const [settingDefaultId, setSettingDefaultId] = useState<string | null>(null);
   const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null);
 
   const stripePromise = useMemo(() => getStripe(), []);
@@ -111,6 +112,27 @@ export default function PaymentMethodCard() {
     }
   };
 
+  const handleSetDefault = async (pmId: string) => {
+    setSettingDefaultId(pmId);
+    try {
+      const { data, error } = await supabase.functions.invoke("update-payment-method", {
+        body: { paymentMethodId: pmId, removeOthers: false },
+      });
+      if (error) throw error;
+      if (!data?.ok) {
+        toast.error(data?.error || "Não foi possível definir como padrão.");
+        return;
+      }
+      toast.success("Cartão definido como padrão. Próximas cobranças usarão este cartão.");
+      await load();
+    } catch (e) {
+      console.error("[PaymentMethodCard] set default failed", e);
+      toast.error("Falha ao definir como padrão. Tente novamente.");
+    } finally {
+      setSettingDefaultId(null);
+    }
+  };
+
   const defaultCard = savedCards.find((c) => c.isDefault) || savedCards[0];
   const otherCards = savedCards.filter((c) => c.id !== defaultCard?.id);
   const cardToRemove = otherCards.find((c) => c.id === confirmRemoveId);
@@ -172,11 +194,26 @@ export default function PaymentMethodCard() {
                       {String(c.exp_month).padStart(2, "0")}/{String(c.exp_year).slice(-2)}
                     </span>
                     <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 px-2 text-[11px]"
+                      onClick={() => handleSetDefault(c.id)}
+                      disabled={settingDefaultId === c.id || removingId === c.id}
+                      aria-label={`Tornar padrão o cartão ${c.brand} final ${c.last4}`}
+                    >
+                      {settingDefaultId === c.id ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <Star className="h-3.5 w-3.5 mr-1" />
+                      )}
+                      Tornar padrão
+                    </Button>
+                    <Button
                       size="icon"
                       variant="ghost"
                       className="h-7 w-7 text-muted-foreground hover:text-destructive"
                       onClick={() => setConfirmRemoveId(c.id)}
-                      disabled={removingId === c.id}
+                      disabled={removingId === c.id || settingDefaultId === c.id}
                       aria-label={`Remover cartão ${c.brand} final ${c.last4}`}
                     >
                       {removingId === c.id ? (

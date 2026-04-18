@@ -111,6 +111,7 @@ const Checkout = () => {
   const { user, profile, refreshSubscription } = useAuth();
   const state = (location.state || null) as EmbeddedCheckoutState | null;
   const stripePromise = useMemo(() => getStripe(), []);
+  const [step, setStep] = useState<CheckoutStep>("billing");
 
   // Guard: missing context
   useEffect(() => {

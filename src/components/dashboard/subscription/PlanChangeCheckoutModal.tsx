@@ -7,8 +7,9 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import {
   ArrowRight, CreditCard, Plus, ShieldCheck, Loader2,
-  ArrowUp, ArrowDown, CheckCircle2, Info, AlertCircle, RefreshCw, HelpCircle,
+  ArrowUp, ArrowDown, CheckCircle2, Info, AlertCircle, RefreshCw, HelpCircle, Download,
 } from "lucide-react";
+import { downloadPlanChangePdf } from "@/lib/planChangePdf";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Elements } from "@stripe/react-stripe-js";

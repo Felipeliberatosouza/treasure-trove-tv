@@ -61,7 +61,8 @@ export async function buildCancellationPdf(data: CancellationPdfData): Promise<j
   y += 10;
 
   // Title
-  doc.setTextColor(20);
+  const [pr, pg, pb] = branding.primaryRgb;
+  doc.setTextColor(pr, pg, pb);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(14);
   doc.text(`Cancelamento — ${data.planName}`, margin, y);
@@ -126,7 +127,7 @@ export async function buildCancellationPdf(data: CancellationPdfData): Promise<j
   // Total
   doc.setFont("helvetica", "bold");
   doc.setFontSize(12);
-  doc.setTextColor(0, 80, 180);
+  doc.setTextColor(pr, pg, pb);
   doc.text(`Total cobrado: ${fmt(data.chargeAmount)}`, margin, y);
   y += 8;
 

@@ -33,6 +33,13 @@ interface BrandingForPdf {
   logoWidth: number;
   logoHeight: number;
   company: { razaoSocial: string; cnpj: string; address: string };
+  primaryRgb: [number, number, number];
+}
+
+function hexToRgb(hex: string): [number, number, number] | null {
+  const m = (hex || "").trim().replace(/^#/, "");
+  if (!/^[0-9a-fA-F]{6}$/.test(m)) return null;
+  return [parseInt(m.slice(0, 2), 16), parseInt(m.slice(2, 4), 16), parseInt(m.slice(4, 6), 16)];
 }
 
 function formatCnpj(raw: string): string {
@@ -58,6 +65,7 @@ async function fetchBranding(supabase: ReturnType<typeof createClient>): Promise
     logoWidth: 0,
     logoHeight: 0,
     company: { razaoSocial: "", cnpj: "", address: "" },
+    primaryRgb: [0, 80, 180],
   };
   try {
     const { data } = await supabase
@@ -70,6 +78,8 @@ async function fetchBranding(supabase: ReturnType<typeof createClient>): Promise
       if (row.key === "branding") {
         if (v.platform_name) fallback.platformName = v.platform_name;
         if (v.logo_url) logoUrl = v.logo_url;
+        const rgb = hexToRgb(v.primary_color || "");
+        if (rgb) fallback.primaryRgb = rgb;
       } else if (row.key === "contact") {
         fallback.company.razaoSocial = v.razao_social || v.nome_fantasia || "";
         fallback.company.cnpj = formatCnpj(v.cnpj || "");
@@ -141,7 +151,8 @@ async function buildPdf(data: ReceiptData, branding: BrandingForPdf): Promise<Ui
   doc.line(margin, y, pageW - margin, y);
   y += 10;
 
-  doc.setTextColor(20);
+  const [pr, pg, pb] = branding.primaryRgb;
+  doc.setTextColor(pr, pg, pb);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(14);
   doc.text(`Cancelamento — ${data.planName}`, margin, y);
@@ -196,7 +207,7 @@ async function buildPdf(data: ReceiptData, branding: BrandingForPdf): Promise<Ui
 
   doc.setFont("helvetica", "bold");
   doc.setFontSize(12);
-  doc.setTextColor(0, 80, 180);
+  doc.setTextColor(pr, pg, pb);
   doc.text(`Total cobrado: ${fmt(chargeAmount)}`, margin, y);
   y += 8;
 

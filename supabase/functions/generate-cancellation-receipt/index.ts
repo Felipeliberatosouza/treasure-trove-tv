@@ -17,6 +17,10 @@ interface ReceiptData {
   totalDays: number;
   daysUsed: number;
   minUsageChargePct: number;
+  /** Permanência mínima (opcionais para retrocompatibilidade) */
+  allowFreeCancel?: boolean;
+  minCommitmentDays?: number;
+  totalSubscriptionDays?: number;
   effectiveDate: string; // dd/mm/yyyy
 }
 
@@ -106,11 +110,38 @@ async function fetchBranding(supabase: ReturnType<typeof createClient>): Promise
   }
 }
 
-async function buildPdf(data: ReceiptData, branding: BrandingForPdf): Promise<Uint8Array> {
+interface ComputedAmounts {
+  dailyRate: number;
+  usedAmount: number;
+  minCharge: number;
+  proRataAmount: number;
+  isInCommitment: boolean;
+  commitmentDaysRemaining: number;
+  commitmentPenalty: number;
+  chargeAmount: number;
+}
+
+function computeAmounts(data: ReceiptData): ComputedAmounts {
   const dailyRate = data.totalDays > 0 ? data.planPrice / data.totalDays : 0;
   const usedAmount = dailyRate * data.daysUsed;
   const minCharge = ((data.minUsageChargePct || 0) / 100) * data.planPrice;
-  const chargeAmount = Math.max(usedAmount, minCharge);
+  const proRataAmount = Math.max(usedAmount, minCharge);
+  const isInCommitment =
+    data.allowFreeCancel === false &&
+    typeof data.minCommitmentDays === "number" &&
+    typeof data.totalSubscriptionDays === "number" &&
+    data.totalSubscriptionDays < data.minCommitmentDays;
+  const commitmentDaysRemaining = isInCommitment
+    ? Math.max(0, (data.minCommitmentDays ?? 0) - (data.totalSubscriptionDays ?? 0))
+    : 0;
+  const commitmentPenalty = isInCommitment ? dailyRate * commitmentDaysRemaining : 0;
+  const chargeAmount = proRataAmount + commitmentPenalty;
+  return { dailyRate, usedAmount, minCharge, proRataAmount, isInCommitment, commitmentDaysRemaining, commitmentPenalty, chargeAmount };
+}
+
+async function buildPdf(data: ReceiptData, branding: BrandingForPdf): Promise<{ bytes: Uint8Array; amounts: ComputedAmounts }> {
+  const amounts = computeAmounts(data);
+  const { dailyRate, usedAmount, minCharge, proRataAmount, isInCommitment, commitmentDaysRemaining, commitmentPenalty, chargeAmount } = amounts;
 
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   const pageW = doc.internal.pageSize.getWidth();
@@ -191,9 +222,16 @@ async function buildPdf(data: ReceiptData, branding: BrandingForPdf): Promise<Ui
     ["Dias usados no ciclo", `${data.daysUsed} dias`],
     ["Valor diário do plano", `${fmt(dailyRate)} (${fmt(data.planPrice)} ÷ ${data.totalDays})`],
     ["Uso proporcional", `${fmt(usedAmount)} (${fmt(dailyRate)} × ${data.daysUsed})`],
-    [`Cobrança mínima (${data.minUsageChargePct}%)`, `${fmt(minCharge)}`],
-    ["Critério aplicado", minCharge > usedAmount ? "Mínimo do plano" : "Uso proporcional"],
+    [`Cobrança mínima do ciclo (${data.minUsageChargePct}%)`, `${fmt(minCharge)}`],
+    ["Critério proporcional aplicado", minCharge > usedAmount ? "Mínimo do plano" : "Uso proporcional"],
+    ["Subtotal proporcional", fmt(proRataAmount)],
   ];
+  if (isInCommitment) {
+    rows.push([
+      `Multa de permanência (${commitmentDaysRemaining} dias restantes de ${data.minCommitmentDays ?? 0})`,
+      `${fmt(commitmentPenalty)} (${fmt(dailyRate)} × ${commitmentDaysRemaining})`,
+    ]);
+  }
   doc.setDrawColor(230);
   rows.forEach(([label, value]) => {
     doc.setTextColor(70);
@@ -214,13 +252,18 @@ async function buildPdf(data: ReceiptData, branding: BrandingForPdf): Promise<Ui
   doc.setFont("helvetica", "normal");
   doc.setFontSize(10);
   doc.setTextColor(60);
-  const explanation =
+  let explanation =
     `Você usou ${data.daysUsed} de ${data.totalDays} dias do ciclo no plano ${data.planName}. ` +
     `O valor proporcional pelos dias usados é ${fmt(usedAmount)}. ` +
     (minCharge > usedAmount && data.minUsageChargePct > 0
-      ? `Como o plano possui cobrança mínima de ${data.minUsageChargePct}% (${fmt(minCharge)}), esse foi o valor aplicado. `
-      : `Esse foi o valor aplicado, pois é maior que a cobrança mínima do plano. `) +
-    `Total cobrado no cancelamento: ${fmt(chargeAmount)}.`;
+      ? `Como o plano possui cobrança mínima de ${data.minUsageChargePct}% (${fmt(minCharge)}), o subtotal proporcional aplicado foi ${fmt(proRataAmount)}. `
+      : `Esse foi o subtotal proporcional aplicado, pois é maior ou igual à cobrança mínima do plano (${fmt(proRataAmount)}). `);
+  if (isInCommitment) {
+    explanation +=
+      `O plano possui permanência mínima de ${data.minCommitmentDays} dias e você está no dia ${data.totalSubscriptionDays}. ` +
+      `Por isso, foi adicionada uma multa de permanência de ${fmt(commitmentPenalty)} referente aos ${commitmentDaysRemaining} dias restantes de compromisso. `;
+  }
+  explanation += `Total cobrado no cancelamento: ${fmt(chargeAmount)}.`;
   const wrapped = doc.splitTextToSize(explanation, pageW - margin * 2);
   doc.text(wrapped, margin, y);
   y += wrapped.length * 5 + 6;
@@ -245,9 +288,8 @@ async function buildPdf(data: ReceiptData, branding: BrandingForPdf): Promise<Ui
     { maxWidth: pageW - margin * 2 },
   );
 
-  // Return as Uint8Array
   const arrayBuffer = doc.output("arraybuffer") as ArrayBuffer;
-  return new Uint8Array(arrayBuffer);
+  return { bytes: new Uint8Array(arrayBuffer), amounts };
 }
 
 serve(async (req) => {
@@ -272,7 +314,7 @@ serve(async (req) => {
     }
 
     const branding = await fetchBranding(supabase);
-    const pdfBytes = await buildPdf(data, branding);
+    const { bytes: pdfBytes, amounts } = await buildPdf(data, branding);
 
     const safeDate = data.effectiveDate.replace(/\//g, "-");
     const fileName = `cancelamento-${safeDate}-${crypto.randomUUID().slice(0, 8)}.pdf`;
@@ -306,7 +348,16 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ url: signed.signedUrl, path }),
+      JSON.stringify({
+        url: signed.signedUrl,
+        path,
+        amounts: {
+          proRataAmount: amounts.proRataAmount,
+          commitmentPenalty: amounts.commitmentPenalty,
+          commitmentDaysRemaining: amounts.commitmentDaysRemaining,
+          chargeAmount: amounts.chargeAmount,
+        },
+      }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (err) {

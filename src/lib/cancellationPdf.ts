@@ -12,6 +12,15 @@ export interface CancellationPdfData {
   usedAmount: number;
   minUsageChargePct: number;
   minCharge: number;
+  /** Subtotal proporcional (max(usedAmount, minCharge)) */
+  proRataAmount?: number;
+  /** Configuração de permanência mínima */
+  allowFreeCancel?: boolean;
+  minCommitmentDays?: number;
+  totalSubscriptionDays?: number;
+  commitmentDaysRemaining?: number;
+  commitmentPenalty?: number;
+  /** Total final = proRata + commitmentPenalty */
   chargeAmount: number;
   effectiveDate: string; // dd/mm/yyyy
 }
@@ -24,6 +33,12 @@ export async function buildCancellationPdf(data: CancellationPdfData): Promise<j
   const pageW = doc.internal.pageSize.getWidth();
   const margin = 18;
   let y = margin;
+
+  // Derived (with safe fallbacks for older callers)
+  const proRataAmount = data.proRataAmount ?? Math.max(data.usedAmount, data.minCharge);
+  const commitmentPenalty = data.commitmentPenalty ?? 0;
+  const commitmentDaysRemaining = data.commitmentDaysRemaining ?? 0;
+  const isInCommitment = commitmentPenalty > 0 && commitmentDaysRemaining > 0;
 
   // Header with logo
   const branding = await getPdfBranding();
@@ -105,14 +120,21 @@ export async function buildCancellationPdf(data: CancellationPdfData): Promise<j
     ["Valor diário do plano", `${fmt(data.dailyRate)} (${fmt(data.planPrice)} ÷ ${data.totalDays})`],
     ["Uso proporcional", `${fmt(data.usedAmount)} (${fmt(data.dailyRate)} × ${data.daysUsed})`],
     [
-      `Cobrança mínima (${data.minUsageChargePct}%)`,
+      `Cobrança mínima do ciclo (${data.minUsageChargePct}%)`,
       `${fmt(data.minCharge)}`,
     ],
     [
-      "Critério aplicado",
+      "Critério proporcional aplicado",
       data.minCharge > data.usedAmount ? "Mínimo do plano" : "Uso proporcional",
     ],
+    ["Subtotal proporcional", fmt(proRataAmount)],
   ];
+  if (isInCommitment) {
+    rows.push([
+      `Multa de permanência (${commitmentDaysRemaining} dias restantes de ${data.minCommitmentDays ?? 0})`,
+      `${fmt(commitmentPenalty)} (${fmt(data.dailyRate)} × ${commitmentDaysRemaining})`,
+    ]);
+  }
   doc.setDrawColor(230);
   rows.forEach(([label, value]) => {
     doc.setTextColor(70);
@@ -135,13 +157,18 @@ export async function buildCancellationPdf(data: CancellationPdfData): Promise<j
   doc.setFont("helvetica", "normal");
   doc.setFontSize(10);
   doc.setTextColor(60);
-  const usedExplanation =
+  let usedExplanation =
     `Você usou ${data.daysUsed} de ${data.totalDays} dias do ciclo no plano ${data.planName}. ` +
     `O valor proporcional pelos dias usados é ${fmt(data.usedAmount)}. ` +
     (data.minCharge > data.usedAmount && data.minUsageChargePct > 0
-      ? `Como o plano possui cobrança mínima de ${data.minUsageChargePct}% (${fmt(data.minCharge)}), esse foi o valor aplicado. `
-      : `Esse foi o valor aplicado, pois é maior que a cobrança mínima do plano. `) +
-    `Total cobrado no cancelamento: ${fmt(data.chargeAmount)}.`;
+      ? `Como o plano possui cobrança mínima de ${data.minUsageChargePct}% (${fmt(data.minCharge)}), o subtotal proporcional aplicado foi ${fmt(proRataAmount)}. `
+      : `Esse foi o subtotal proporcional aplicado, pois é maior ou igual à cobrança mínima do plano (${fmt(proRataAmount)}). `);
+  if (isInCommitment) {
+    usedExplanation +=
+      `O plano possui permanência mínima de ${data.minCommitmentDays} dias e você está no dia ${data.totalSubscriptionDays}. ` +
+      `Por isso, foi adicionada uma multa de permanência de ${fmt(commitmentPenalty)} referente aos ${commitmentDaysRemaining} dias restantes de compromisso. `;
+  }
+  usedExplanation += `Total cobrado no cancelamento: ${fmt(data.chargeAmount)}.`;
   const wrapped = doc.splitTextToSize(usedExplanation, pageW - margin * 2);
   doc.text(wrapped, margin, y);
   y += wrapped.length * 5 + 6;

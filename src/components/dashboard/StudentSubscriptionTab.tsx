@@ -333,11 +333,27 @@ export default function StudentSubscriptionTab() {
         const dailyRate = cycleInfo.totalDays > 0 ? plan.price / cycleInfo.totalDays : 0;
         const usedAmount = dailyRate * cycleInfo.daysUsed;
         const minCharge = ((plan.min_usage_charge_pct || 0) / 100) * plan.price;
-        const chargeAmount = Math.max(usedAmount, minCharge);
+        const proRataSubtotal = Math.max(usedAmount, minCharge);
+
+        // Multa de permanência (só quando o plano não permite cancelamento gratuito
+        // e o aluno ainda está dentro do período de compromisso)
+        const isInCommitment =
+          !plan.allow_free_cancel &&
+          cycleInfo.totalSubscriptionDays < (plan.min_commitment_days || 0);
+        const commitmentDaysRemaining = isInCommitment
+          ? Math.max(0, (plan.min_commitment_days || 0) - cycleInfo.totalSubscriptionDays)
+          : 0;
+        const commitmentPenalty = isInCommitment ? dailyRate * commitmentDaysRemaining : 0;
+        const chargeAmount = proRataSubtotal + commitmentPenalty;
+
         const studentName = user.user_metadata?.name || "";
         const effectiveDate = new Date().toLocaleDateString("pt-BR");
-        const proRataAmount = `R$ ${chargeAmount.toFixed(2)}`;
-        const proRataExplanation = `Cobrança proporcional: ${cycleInfo.daysUsed} dias usados de ${cycleInfo.totalDays}. Mínimo: ${plan.min_usage_charge_pct || 0}% do plano.`;
+        const fmtBRL = (v: number) => `R$ ${v.toFixed(2).replace(".", ",")}`;
+        const proRataAmount = fmtBRL(chargeAmount);
+        let proRataExplanation = `Cobrança proporcional: ${cycleInfo.daysUsed} dias usados de ${cycleInfo.totalDays}. Mínimo: ${plan.min_usage_charge_pct || 0}% do plano. Subtotal: ${fmtBRL(proRataSubtotal)}.`;
+        if (isInCommitment) {
+          proRataExplanation += ` Multa de permanência: ${fmtBRL(commitmentPenalty)} (${commitmentDaysRemaining} dias restantes de ${plan.min_commitment_days}). Total: ${fmtBRL(chargeAmount)}.`;
+        }
 
         // Generate cancellation receipt PDF (server-side) and get a signed URL.
         // Failure here must NOT block the email or the cancellation flow.
@@ -355,6 +371,9 @@ export default function StudentSubscriptionTab() {
                 totalDays: cycleInfo.totalDays,
                 daysUsed: cycleInfo.daysUsed,
                 minUsageChargePct: plan.min_usage_charge_pct || 0,
+                allowFreeCancel: plan.allow_free_cancel,
+                minCommitmentDays: plan.min_commitment_days,
+                totalSubscriptionDays: cycleInfo.totalSubscriptionDays,
                 effectiveDate,
               },
             },
@@ -375,6 +394,11 @@ export default function StudentSubscriptionTab() {
               expiryDate: effectiveDate,
               reason: "cancelada",
               receiptUrl,
+              proRataSubtotal: fmtBRL(proRataSubtotal),
+              commitmentPenalty: isInCommitment ? fmtBRL(commitmentPenalty) : "",
+              commitmentDaysRemaining: isInCommitment ? commitmentDaysRemaining : 0,
+              minCommitmentDays: isInCommitment ? plan.min_commitment_days : 0,
+              chargeAmount: fmtBRL(chargeAmount),
             },
           },
         });
@@ -548,14 +572,28 @@ export default function StudentSubscriptionTab() {
         const end = new Date(endDate);
         const totalDays = 30;
         const daysUsed = Math.min(Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)), totalDays);
+        const totalSubscriptionDays = Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
         const dailyRate = plan.price / totalDays;
         const usedAmount = dailyRate * daysUsed;
         const minCharge = ((plan.min_usage_charge_pct || 0) / 100) * plan.price;
-        const chargeAmount = Math.max(usedAmount, minCharge);
+        const proRataAmount = Math.max(usedAmount, minCharge);
+
+        const isInCommitment =
+          !plan.allow_free_cancel &&
+          totalSubscriptionDays < (plan.min_commitment_days || 0);
+        const commitmentDaysRemaining = isInCommitment
+          ? Math.max(0, (plan.min_commitment_days || 0) - totalSubscriptionDays)
+          : 0;
+        const commitmentPenalty = isInCommitment ? dailyRate * commitmentDaysRemaining : 0;
+        const chargeAmount = proRataAmount + commitmentPenalty;
 
         let explanation = `Cancelamento após ${daysUsed} dias de uso. Valor proporcional: R$ ${usedAmount.toFixed(2)}.`;
         if (minCharge > usedAmount && plan.min_usage_charge_pct > 0) {
           explanation += ` Cobrança mínima de ${plan.min_usage_charge_pct}% aplicada: R$ ${minCharge.toFixed(2)}.`;
+        }
+        explanation += ` Subtotal proporcional: R$ ${proRataAmount.toFixed(2)}.`;
+        if (isInCommitment) {
+          explanation += ` Multa de permanência (${commitmentDaysRemaining} dias restantes de ${plan.min_commitment_days}): R$ ${commitmentPenalty.toFixed(2)}.`;
         }
         explanation += ` Valor final cobrado: R$ ${chargeAmount.toFixed(2)}.`;
 
@@ -576,6 +614,12 @@ export default function StudentSubscriptionTab() {
             usedAmount,
             minUsageChargePct: plan.min_usage_charge_pct || 0,
             minCharge,
+            proRataAmount,
+            allowFreeCancel: plan.allow_free_cancel,
+            minCommitmentDays: plan.min_commitment_days,
+            totalSubscriptionDays,
+            commitmentDaysRemaining,
+            commitmentPenalty,
             chargeAmount,
             effectiveDate: new Date(endDate).toLocaleDateString("pt-BR"),
           },

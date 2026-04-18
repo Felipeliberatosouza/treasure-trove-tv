@@ -175,6 +175,25 @@ const SettingsEmailTemplates = () => {
     !COUPON_CODE_REGEX.test(active.coupon_code.trim())
   );
 
+  const generateCouponCode = () => {
+    const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // sem 0/O/1/I para evitar confusão
+    const length = 8;
+    let code = "";
+    if (typeof crypto !== "undefined" && crypto.getRandomValues) {
+      const buf = new Uint32Array(length);
+      crypto.getRandomValues(buf);
+      for (let i = 0; i < length; i++) {
+        code += alphabet[buf[i] % alphabet.length];
+      }
+    } else {
+      for (let i = 0; i < length; i++) {
+        code += alphabet[Math.floor(Math.random() * alphabet.length)];
+      }
+    }
+    updateField("coupon_code", code);
+    toast.success(`Código gerado: ${code}`);
+  };
+
   const handleSave = async () => {
     if (!active) return;
     if (couponCodeMissing) {

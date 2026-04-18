@@ -513,17 +513,29 @@ const SettingsEmailTemplates = () => {
               <div className="space-y-3 pt-1">
                 <div>
                   <Label className="text-xs">Código do cupom</Label>
-                  <Input
-                    value={active.coupon_code || ""}
-                    onChange={(e) => updateField("coupon_code", e.target.value.toUpperCase())}
-                    placeholder="Ex: VOLTA20"
-                    maxLength={40}
-                    className={`uppercase tracking-wider font-mono ${
-                      couponCodeMissing || couponCodeHasInvalidChars
-                        ? "border-destructive ring-1 ring-destructive focus-visible:ring-destructive"
-                        : ""
-                    }`}
-                  />
+                  <div className="flex gap-2">
+                    <Input
+                      value={active.coupon_code || ""}
+                      onChange={(e) => updateField("coupon_code", e.target.value.toUpperCase())}
+                      placeholder="Ex: VOLTA20"
+                      maxLength={40}
+                      className={`uppercase tracking-wider font-mono ${
+                        couponCodeMissing || couponCodeHasInvalidChars
+                          ? "border-destructive ring-1 ring-destructive focus-visible:ring-destructive"
+                          : ""
+                      }`}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={generateCouponCode}
+                      title="Gerar código aleatório de 8 caracteres"
+                      className="shrink-0 gap-1"
+                    >
+                      <Sparkles className="h-4 w-4" />
+                      <span className="hidden sm:inline">Gerar</span>
+                    </Button>
+                  </div>
                   {couponCodeMissing && (
                     <p className="text-xs mt-1 text-destructive font-semibold flex items-start gap-1">
                       <span>⚠️</span>

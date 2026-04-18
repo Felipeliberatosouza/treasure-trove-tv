@@ -14,6 +14,7 @@ interface SubscriptionCancelledProps {
   expiryDate?: string
   reason?: string
   renewLink?: string
+  receiptUrl?: string
   unsubscribeUrl?: string
 }
 
@@ -23,6 +24,7 @@ const SubscriptionCancelledEmail = ({
   expiryDate = '',
   reason = 'cancelada',
   renewLink = 'https://revisaofacil.com/#pricing',
+  receiptUrl,
   unsubscribeUrl,
 }: SubscriptionCancelledProps) => (
   <Html lang="pt-BR" dir="ltr">
@@ -54,6 +56,19 @@ const SubscriptionCancelledEmail = ({
         <Button style={button} href={renewLink}>
           Renovar Assinatura
         </Button>
+        {receiptUrl && (
+          <Section style={{ marginTop: '16px' }}>
+            <Text style={text}>
+              Você também pode baixar o comprovante detalhado do cancelamento (cálculo proporcional, dias usados e valor cobrado):
+            </Text>
+            <Button style={secondaryButton} href={receiptUrl}>
+              Baixar comprovante (PDF)
+            </Button>
+            <Text style={{ ...text, fontSize: '12px', color: '#6b7280', marginTop: '8px' }}>
+              O link do comprovante expira em 30 dias.
+            </Text>
+          </Section>
+        )}
         <Hr style={hr} />
         <Text style={text}>
           Se tiver dúvidas ou precisar de ajuda, entre em contato conosco.
@@ -93,6 +108,16 @@ const button = {
   textDecoration: 'none' as const,
   fontWeight: '600' as const,
   fontSize: '14px',
+  display: 'inline-block' as const,
+}
+const secondaryButton = {
+  backgroundColor: '#374151',
+  color: '#ffffff',
+  padding: '10px 20px',
+  borderRadius: '8px',
+  textDecoration: 'none' as const,
+  fontWeight: '600' as const,
+  fontSize: '13px',
   display: 'inline-block' as const,
 }
 const hr = { borderColor: '#e5e7eb', margin: '16px 0' }

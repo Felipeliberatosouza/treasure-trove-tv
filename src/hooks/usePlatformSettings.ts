@@ -39,6 +39,68 @@ export interface HeroBannerSettings {
   banner_image_url?: string;
 }
 
+export interface HeroBannerCarouselSettings {
+  slides: HeroBannerSettings[];
+  autoplay_seconds: number;
+}
+
+export const MAX_HERO_SLIDES = 5;
+export const DEFAULT_HERO_AUTOPLAY_SECONDS = 6;
+
+export const emptyHeroSlide = (): HeroBannerSettings => ({
+  title: "",
+  subtitle: "",
+  cta_text: "",
+  cta_link: "",
+  banner_image_url: "",
+});
+
+/** Coerces legacy single-slide shape `{ title, subtitle, ... }` into the new
+ *  carousel shape `{ slides: [...], autoplay_seconds }`. Safe to call on
+ *  already-migrated data. */
+export const normalizeHeroCarousel = (
+  raw: unknown
+): HeroBannerCarouselSettings => {
+  if (raw && typeof raw === "object") {
+    const obj = raw as Record<string, unknown>;
+    if (Array.isArray(obj.slides)) {
+      const slides = (obj.slides as HeroBannerSettings[])
+        .filter((s) => s && typeof s === "object")
+        .slice(0, MAX_HERO_SLIDES);
+      return {
+        slides: slides.length > 0 ? slides : [emptyHeroSlide()],
+        autoplay_seconds:
+          typeof obj.autoplay_seconds === "number" && obj.autoplay_seconds > 0
+            ? obj.autoplay_seconds
+            : DEFAULT_HERO_AUTOPLAY_SECONDS,
+      };
+    }
+    if (
+      "title" in obj ||
+      "subtitle" in obj ||
+      "cta_text" in obj ||
+      "banner_image_url" in obj
+    ) {
+      return {
+        slides: [
+          {
+            title: (obj.title as string) ?? "",
+            subtitle: (obj.subtitle as string) ?? "",
+            cta_text: (obj.cta_text as string) ?? "",
+            cta_link: (obj.cta_link as string) ?? "",
+            banner_image_url: (obj.banner_image_url as string) ?? "",
+          },
+        ],
+        autoplay_seconds: DEFAULT_HERO_AUTOPLAY_SECONDS,
+      };
+    }
+  }
+  return {
+    slides: [emptyHeroSlide()],
+    autoplay_seconds: DEFAULT_HERO_AUTOPLAY_SECONDS,
+  };
+};
+
 export interface FeaturedVideosSettings {
   video_ids: string[];
   section_title: string;
@@ -100,9 +162,9 @@ export interface PrivacyPolicySettings {
 type SettingsMap = {
   branding: BrandingSettings;
   contact: ContactSettings;
-  hero_banner: HeroBannerSettings;
-  hero_banner_student: HeroBannerSettings;
-  hero_banner_teacher: HeroBannerSettings;
+  hero_banner: HeroBannerCarouselSettings;
+  hero_banner_student: HeroBannerCarouselSettings;
+  hero_banner_teacher: HeroBannerCarouselSettings;
   featured_videos: FeaturedVideosSettings;
   subscription_plans: SubscriptionPlansSettings;
   video_pricing: VideoPricingSettings;

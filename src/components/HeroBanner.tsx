@@ -1,9 +1,14 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Play, BookOpen, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getFeaturedVideo } from "@/data/courses";
-import { usePlatformSettings, HeroBannerSettings } from "@/hooks/usePlatformSettings";
+import {
+  usePlatformSettings,
+  HeroBannerSettings,
+  normalizeHeroCarousel,
+  DEFAULT_HERO_AUTOPLAY_SECONDS,
+} from "@/hooks/usePlatformSettings";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import heroBanner from "@/assets/hero-banner.jpg";
@@ -15,8 +20,7 @@ interface HeroBannerProps {
 
 const SEARCH_CTA_TEXTS = new Set(["comece agora", "começar agora"]);
 
-interface SlideProps {
-  settings: HeroBannerSettings | null;
+interface SlideViewProps {
   onPrimary: () => void;
   ctaText: string;
   bannerImage: string;
@@ -27,7 +31,16 @@ interface SlideProps {
   primaryGoesToPopular: boolean;
 }
 
-const Slide = ({ onPrimary, ctaText, bannerImage, title, subtitle, badge, featured, primaryGoesToPopular }: SlideProps) => {
+const SlideView = ({
+  onPrimary,
+  ctaText,
+  bannerImage,
+  title,
+  subtitle,
+  badge,
+  featured,
+  primaryGoesToPopular,
+}: SlideViewProps) => {
   const PrimaryIcon = primaryGoesToPopular ? BookOpen : Play;
 
   return (
@@ -72,10 +85,11 @@ const Slide = ({ onPrimary, ctaText, bannerImage, title, subtitle, badge, featur
   );
 };
 
-interface ResolvedSlide {
-  settings: HeroBannerSettings | null;
+interface FlatSlide {
+  slide: HeroBannerSettings;
   badge: string;
   audience: "visitor" | "student" | "teacher";
+  autoplaySeconds: number;
 }
 
 const HeroBanner = ({ onVideoClick, onExploreClick }: HeroBannerProps) => {
@@ -83,47 +97,62 @@ const HeroBanner = ({ onVideoClick, onExploreClick }: HeroBannerProps) => {
   const { role } = useAuth();
   const featured = getFeaturedVideo();
 
-  const { data: visitorSettings } = usePlatformSettings("hero_banner");
-  const { data: studentSettings } = usePlatformSettings("hero_banner_student");
-  const { data: teacherSettings } = usePlatformSettings("hero_banner_teacher");
+  const { data: visitorRaw } = usePlatformSettings("hero_banner");
+  const { data: studentRaw } = usePlatformSettings("hero_banner_student");
+  const { data: teacherRaw } = usePlatformSettings("hero_banner_teacher");
 
-  // Build the slide list based on role
-  const slides: ResolvedSlide[] =
-    role === "admin"
-      ? [
-          { settings: studentSettings, badge: "Visão do aluno", audience: "student" },
-          { settings: teacherSettings, badge: "Visão do professor", audience: "teacher" },
-        ]
-      : role === "student"
-      ? [{ settings: studentSettings, badge: "Em destaque", audience: "student" }]
-      : role === "teacher"
-      ? [{ settings: teacherSettings, badge: "Em destaque", audience: "teacher" }]
-      : [{ settings: visitorSettings, badge: "Em destaque", audience: "visitor" }];
+  const slides: FlatSlide[] = useMemo(() => {
+    const visitor = normalizeHeroCarousel(visitorRaw);
+    const student = normalizeHeroCarousel(studentRaw);
+    const teacher = normalizeHeroCarousel(teacherRaw);
+
+    const flatten = (
+      carousel: { slides: HeroBannerSettings[]; autoplay_seconds: number },
+      audience: FlatSlide["audience"],
+      badge: string
+    ): FlatSlide[] =>
+      carousel.slides.map((slide) => ({
+        slide,
+        audience,
+        badge,
+        autoplaySeconds: carousel.autoplay_seconds || DEFAULT_HERO_AUTOPLAY_SECONDS,
+      }));
+
+    if (role === "admin") {
+      return [
+        ...flatten(student, "student", "Visão do aluno"),
+        ...flatten(teacher, "teacher", "Visão do professor"),
+      ];
+    }
+    if (role === "student") return flatten(student, "student", "Em destaque");
+    if (role === "teacher") return flatten(teacher, "teacher", "Em destaque");
+    return flatten(visitor, "visitor", "Em destaque");
+  }, [role, visitorRaw, studentRaw, teacherRaw]);
 
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  // Auto-play only when admin (multiple slides)
-  useEffect(() => {
-    if (slides.length <= 1) return;
-    const interval = setInterval(() => {
-      setCurrentIndex((i) => (i + 1) % slides.length);
-    }, 6000);
-    return () => clearInterval(interval);
-  }, [slides.length]);
-
-  // Reset index if list shrinks
   useEffect(() => {
     if (currentIndex >= slides.length) setCurrentIndex(0);
   }, [slides.length, currentIndex]);
 
-  const active = slides[currentIndex] || slides[0];
-  const settings = active?.settings;
+  // Per-slide autoplay: schedule next based on the current slide's audience interval
+  useEffect(() => {
+    if (slides.length <= 1) return;
+    const ms = (slides[currentIndex]?.autoplaySeconds || DEFAULT_HERO_AUTOPLAY_SECONDS) * 1000;
+    const id = window.setTimeout(() => {
+      setCurrentIndex((i) => (i + 1) % slides.length);
+    }, ms);
+    return () => window.clearTimeout(id);
+  }, [currentIndex, slides]);
 
-  const title = settings?.title || featured?.title || "Bem-vindo";
-  const subtitle = settings?.subtitle || featured?.description || "";
-  const ctaText = settings?.cta_text || "Comece Agora";
-  const bannerImage = settings?.banner_image_url || heroBanner;
-  const ctaLink = settings?.cta_link || "";
+  const active = slides[currentIndex] || slides[0];
+  const slide = active?.slide;
+
+  const title = slide?.title || featured?.title || "Bem-vindo";
+  const subtitle = slide?.subtitle || featured?.description || "";
+  const ctaText = slide?.cta_text || "Comece Agora";
+  const bannerImage = slide?.banner_image_url || heroBanner;
+  const ctaLink = slide?.cta_link || "";
 
   const normalizedPrimaryCta = ctaText.trim().toLowerCase();
   const primaryGoesToPopular = SEARCH_CTA_TEXTS.has(normalizedPrimaryCta);
@@ -158,8 +187,7 @@ const HeroBanner = ({ onVideoClick, onExploreClick }: HeroBannerProps) => {
           transition={{ duration: 0.6 }}
           className="absolute inset-0"
         >
-          <Slide
-            settings={settings}
+          <SlideView
             onPrimary={handlePrimary}
             ctaText={ctaText}
             bannerImage={bannerImage}

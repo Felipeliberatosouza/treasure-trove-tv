@@ -291,6 +291,19 @@ function CheckoutForm({ state, initialName, initialCpf, onStepChange }: Checkout
     return null;
   };
 
+  const billingValid = validateBilling() === null;
+
+  // Sync step indicator: billing → card → confirm
+  useEffect(() => {
+    if (submitting) {
+      onStepChange?.("confirm");
+    } else if (billingValid) {
+      onStepChange?.("card");
+    } else {
+      onStepChange?.("billing");
+    }
+  }, [billingValid, submitting, onStepChange]);
+
   const handleSubmit = async () => {
     if (!stripe || !elements) return;
     setError(null);

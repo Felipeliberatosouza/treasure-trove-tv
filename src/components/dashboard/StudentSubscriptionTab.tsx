@@ -310,13 +310,18 @@ export default function StudentSubscriptionTab() {
     await refreshActiveSub();
   };
 
-  const handleCancel = async (preview: import("./subscription/CancelSubscriptionModal").CancellationPreview) => {
+  const handleCancel = async (
+    preview: import("./subscription/CancelSubscriptionModal").CancellationPreview,
+    reason: { code: string; details: string },
+  ) => {
     const plan = activeSubscription?.subscription_plans as unknown as PlanData;
 
     try {
       // Cancel directly via our edge function — no portal redirect, no
       // external screens. The user stays on our UI the whole time.
-      const { data, error } = await supabase.functions.invoke("cancel-subscription");
+      const { data, error } = await supabase.functions.invoke("cancel-subscription", {
+        body: { reasonCode: reason.code || null, reasonDetails: reason.details || null },
+      });
       if (error) throw error;
       if (!data?.ok) throw new Error(data?.error || "Falha ao cancelar assinatura");
 

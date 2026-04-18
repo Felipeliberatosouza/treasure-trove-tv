@@ -2,6 +2,19 @@ import { useEffect, useState } from "react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { AlertTriangle, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+export const CANCELLATION_REASONS = [
+  { value: "too_expensive", label: "Muito caro" },
+  { value: "not_using", label: "Não estou usando" },
+  { value: "missing_features", label: "Falta funcionalidades / conteúdo" },
+  { value: "found_alternative", label: "Encontrei outra plataforma" },
+  { value: "technical_issues", label: "Problemas técnicos" },
+  { value: "temporary_pause", label: "Pausa temporária" },
+  { value: "other", label: "Outro motivo" },
+] as const;
 
 export interface CancellationPreview {
   planName: string;
@@ -29,7 +42,7 @@ interface CancelSubscriptionModalProps {
   planName: string;
   /** Called with the Stripe-sourced preview so the parent can reuse the same
    *  numbers on the email and the PDF. */
-  onConfirm: (preview: CancellationPreview) => Promise<void>;
+  onConfirm: (preview: CancellationPreview, reason: { code: string; details: string }) => Promise<void>;
 }
 
 const fmtBRL = (v: number) => `R$ ${v.toFixed(2).replace(".", ",")}`;
@@ -41,6 +54,8 @@ export default function CancelSubscriptionModal({
   const [previewLoading, setPreviewLoading] = useState(false);
   const [preview, setPreview] = useState<CancellationPreview | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [reasonCode, setReasonCode] = useState<string>("");
+  const [reasonDetails, setReasonDetails] = useState<string>("");
 
   // Fetch the Stripe-sourced cancellation breakdown whenever the modal opens.
   // This is the SOURCE OF TRUTH — same numbers will be used on the email/PDF.
@@ -48,6 +63,8 @@ export default function CancelSubscriptionModal({
     if (!open) {
       setPreview(null);
       setError(null);
+      setReasonCode("");
+      setReasonDetails("");
       return;
     }
     let cancelled = false;
@@ -78,7 +95,7 @@ export default function CancelSubscriptionModal({
     if (!preview) return;
     setLoading(true);
     try {
-      await onConfirm(preview);
+      await onConfirm(preview, { code: reasonCode, details: reasonDetails.trim() });
       onOpenChange(false);
     } finally {
       setLoading(false);
@@ -162,7 +179,7 @@ export default function CancelSubscriptionModal({
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent>
+      <AlertDialogContent className="max-h-[90vh] overflow-y-auto">
         <AlertDialogHeader>
           <AlertDialogTitle className="flex items-center gap-2">
             <AlertTriangle className="h-5 w-5 text-destructive" />
@@ -172,6 +189,42 @@ export default function CancelSubscriptionModal({
             {renderBody()}
           </AlertDialogDescription>
         </AlertDialogHeader>
+
+        {/* Cancellation reason — optional, helps the platform improve */}
+        {preview && !error && (
+          <div className="space-y-3 pt-2 border-t border-border/40">
+            <div className="space-y-1.5">
+              <Label htmlFor="cancel-reason" className="text-xs font-medium">
+                Motivo do cancelamento <span className="text-muted-foreground font-normal">(opcional)</span>
+              </Label>
+              <Select value={reasonCode} onValueChange={setReasonCode}>
+                <SelectTrigger id="cancel-reason" className="h-9 text-sm">
+                  <SelectValue placeholder="Selecione um motivo (opcional)" />
+                </SelectTrigger>
+                <SelectContent>
+                  {CANCELLATION_REASONS.map((r) => (
+                    <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="cancel-details" className="text-xs font-medium">
+                Comentário <span className="text-muted-foreground font-normal">(opcional)</span>
+              </Label>
+              <Textarea
+                id="cancel-details"
+                value={reasonDetails}
+                onChange={(e) => setReasonDetails(e.target.value.slice(0, 500))}
+                placeholder="Conte o que poderíamos melhorar..."
+                rows={2}
+                className="text-sm resize-none"
+              />
+              <p className="text-[10px] text-muted-foreground/70 text-right">{reasonDetails.length}/500</p>
+            </div>
+          </div>
+        )}
+
         <AlertDialogFooter>
           <AlertDialogCancel>Voltar</AlertDialogCancel>
           <AlertDialogAction

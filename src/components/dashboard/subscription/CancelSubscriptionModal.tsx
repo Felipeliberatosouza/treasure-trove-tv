@@ -1,72 +1,163 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { AlertTriangle, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+
+export interface CancellationPreview {
+  planName: string;
+  allowFreeCancel: boolean;
+  minCommitmentDays: number;
+  minUsageChargePct: number;
+  currency: string;
+  currentAmount: number;
+  cycleDays: number;
+  daysUsed: number;
+  totalSubscriptionDays: number;
+  dailyRate: number;
+  usedAmount: number;
+  minCharge: number;
+  proRataAmount: number;
+  isInCommitment: boolean;
+  commitmentDaysRemaining: number;
+  commitmentPenalty: number;
+  chargeAmount: number;
+}
 
 interface CancelSubscriptionModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   planName: string;
-  planPrice: number;
-  daysUsed: number;
-  totalDays: number;
-  minUsageChargePct: number;
-  allowFreeCancel: boolean;
-  minCommitmentDays: number;
-  totalSubscriptionDays: number;
-  onConfirm: () => Promise<void>;
+  /** Called with the Stripe-sourced preview so the parent can reuse the same
+   *  numbers on the email and the PDF. */
+  onConfirm: (preview: CancellationPreview) => Promise<void>;
 }
 
 const fmtBRL = (v: number) => `R$ ${v.toFixed(2).replace(".", ",")}`;
 
 export default function CancelSubscriptionModal({
-  open, onOpenChange, planName, planPrice,
-  daysUsed, totalDays, minUsageChargePct,
-  allowFreeCancel, minCommitmentDays, totalSubscriptionDays,
-  onConfirm,
+  open, onOpenChange, planName, onConfirm,
 }: CancelSubscriptionModalProps) {
   const [loading, setLoading] = useState(false);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [preview, setPreview] = useState<CancellationPreview | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const usagePct = totalDays > 0 ? (daysUsed / totalDays) * 100 : 0;
-  const dailyRate = totalDays > 0 ? planPrice / totalDays : 0;
-  const usedAmount = dailyRate * daysUsed;
-
-  // Cobrança mínima do ciclo (% do plano)
-  const minCharge = (minUsageChargePct / 100) * planPrice;
-  // Valor proporcional pelo uso (com piso na cobrança mínima)
-  const proRataAmount = Math.max(usedAmount, minCharge);
-
-  // Multa por permanência: somente quando plano NÃO permite cancelamento gratuito
-  // e o aluno ainda está no período de compromisso.
-  const isInCommitment = !allowFreeCancel && totalSubscriptionDays < minCommitmentDays;
-  const commitmentDaysRemaining = isInCommitment
-    ? Math.max(0, minCommitmentDays - totalSubscriptionDays)
-    : 0;
-  const commitmentPenalty = isInCommitment ? dailyRate * commitmentDaysRemaining : 0;
-
-  // Total final
-  const chargeAmount = proRataAmount + commitmentPenalty;
-
-  let explanation = "";
-  if (allowFreeCancel) {
-    if (minUsageChargePct > 0 && usedAmount < minCharge) {
-      explanation = `Você usou ${daysUsed} de ${totalDays} dias do ciclo (${usagePct.toFixed(0)}%). O uso proporcional seria ${fmtBRL(usedAmount)}, porém o plano ${planName} possui cobrança mínima de ${minUsageChargePct}% (${fmtBRL(minCharge)}). Será cobrado ${fmtBRL(chargeAmount)}.`;
-    } else {
-      explanation = `Você usou ${daysUsed} de ${totalDays} dias do ciclo (${usagePct.toFixed(0)}%). Será cobrado proporcionalmente ${fmtBRL(chargeAmount)} pelos dias utilizados.`;
+  // Fetch the Stripe-sourced cancellation breakdown whenever the modal opens.
+  // This is the SOURCE OF TRUTH — same numbers will be used on the email/PDF.
+  useEffect(() => {
+    if (!open) {
+      setPreview(null);
+      setError(null);
+      return;
     }
-  } else if (isInCommitment) {
-    explanation = `O plano ${planName} possui permanência mínima de ${minCommitmentDays} dias e você está no dia ${totalSubscriptionDays}. Além do valor proporcional pelos ${daysUsed} dias usados neste ciclo (${fmtBRL(proRataAmount)}), será cobrada uma multa de permanência referente aos ${commitmentDaysRemaining} dias restantes de compromisso (${fmtBRL(commitmentPenalty)}). Total: ${fmtBRL(chargeAmount)}.`;
-  } else {
-    explanation = `Você já cumpriu o período mínimo de ${minCommitmentDays} dias. Será cobrado ${fmtBRL(chargeAmount)} proporcionalmente pelos ${daysUsed} dias usados neste ciclo.`;
-  }
+    let cancelled = false;
+    (async () => {
+      setPreviewLoading(true);
+      setError(null);
+      try {
+        const { data, error } = await supabase.functions.invoke("preview-cancellation");
+        if (error) throw error;
+        if (cancelled) return;
+        if (!data?.ok) {
+          setError(data?.error || "Não foi possível calcular o valor de cancelamento.");
+        } else {
+          setPreview(data as CancellationPreview);
+        }
+      } catch (e) {
+        if (!cancelled) {
+          setError(e instanceof Error ? e.message : "Erro ao consultar o Stripe.");
+        }
+      } finally {
+        if (!cancelled) setPreviewLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [open]);
 
   const handleConfirm = async () => {
+    if (!preview) return;
     setLoading(true);
     try {
-      await onConfirm();
+      await onConfirm(preview);
       onOpenChange(false);
     } finally {
       setLoading(false);
     }
+  };
+
+  const renderBody = () => {
+    if (previewLoading) {
+      return (
+        <div className="flex items-center gap-2 text-sm text-muted-foreground p-4 justify-center">
+          <Loader2 className="h-4 w-4 animate-spin" /> Consultando Stripe...
+        </div>
+      );
+    }
+    if (error) {
+      return (
+        <div className="rounded-lg bg-destructive/10 border border-destructive/30 p-3 text-sm text-destructive">
+          {error}
+        </div>
+      );
+    }
+    if (!preview) return null;
+
+    const {
+      daysUsed, cycleDays, dailyRate, usedAmount, minUsageChargePct, minCharge,
+      proRataAmount, isInCommitment, commitmentDaysRemaining, commitmentPenalty,
+      chargeAmount, allowFreeCancel, minCommitmentDays,
+    } = preview;
+    const usagePct = cycleDays > 0 ? (daysUsed / cycleDays) * 100 : 0;
+
+    let explanation = "";
+    if (allowFreeCancel) {
+      if (minUsageChargePct > 0 && usedAmount < minCharge) {
+        explanation = `Você usou ${daysUsed} de ${cycleDays} dias do ciclo (${usagePct.toFixed(0)}%). O uso proporcional seria ${fmtBRL(usedAmount)}, porém o plano ${planName} possui cobrança mínima de ${minUsageChargePct}% (${fmtBRL(minCharge)}). Será cobrado ${fmtBRL(chargeAmount)}.`;
+      } else {
+        explanation = `Você usou ${daysUsed} de ${cycleDays} dias do ciclo (${usagePct.toFixed(0)}%). Será cobrado proporcionalmente ${fmtBRL(chargeAmount)} pelos dias utilizados.`;
+      }
+    } else if (isInCommitment) {
+      explanation = `O plano ${planName} possui permanência mínima de ${minCommitmentDays} dias. Além do valor proporcional pelos ${daysUsed} dias usados neste ciclo (${fmtBRL(proRataAmount)}), será cobrada uma multa de permanência referente aos ${commitmentDaysRemaining} dias restantes de compromisso (${fmtBRL(commitmentPenalty)}). Total: ${fmtBRL(chargeAmount)}.`;
+    } else {
+      explanation = `Você já cumpriu o período mínimo de ${minCommitmentDays} dias. Será cobrado ${fmtBRL(chargeAmount)} proporcionalmente pelos ${daysUsed} dias usados neste ciclo.`;
+    }
+
+    return (
+      <div className="space-y-3">
+        <div className="rounded-lg bg-muted p-3 space-y-2 text-sm">
+          <div className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 text-xs">
+            <span>Dias usados no ciclo</span>
+            <span className="text-right">{daysUsed} de {cycleDays}</span>
+            <span>Valor diário do plano</span>
+            <span className="text-right">{fmtBRL(dailyRate)}</span>
+            <span>Uso proporcional</span>
+            <span className="text-right">{fmtBRL(usedAmount)}</span>
+            {minUsageChargePct > 0 && (
+              <>
+                <span>Cobrança mínima do ciclo ({minUsageChargePct}%)</span>
+                <span className="text-right">{fmtBRL(minCharge)}</span>
+              </>
+            )}
+            <span className="font-medium text-foreground">Subtotal proporcional</span>
+            <span className="text-right font-medium text-foreground">{fmtBRL(proRataAmount)}</span>
+            {isInCommitment && (
+              <>
+                <span className="text-destructive">Multa de permanência ({commitmentDaysRemaining} dias restantes)</span>
+                <span className="text-right text-destructive">{fmtBRL(commitmentPenalty)}</span>
+              </>
+            )}
+          </div>
+          <div className="flex justify-between pt-1 border-t border-border/50 font-medium text-sm">
+            <span>Valor final de cancelamento</span>
+            <span>{fmtBRL(chargeAmount)}</span>
+          </div>
+          <p className="text-[10px] text-muted-foreground/70 pt-1">
+            Valores calculados com base na sua assinatura ativa no Stripe.
+          </p>
+        </div>
+        <p className="text-xs text-muted-foreground leading-relaxed">{explanation}</p>
+      </div>
+    );
   };
 
   return (
@@ -78,44 +169,14 @@ export default function CancelSubscriptionModal({
             Cancelar Assinatura — {planName}
           </AlertDialogTitle>
           <AlertDialogDescription asChild>
-            <div className="space-y-3">
-              <div className="rounded-lg bg-muted p-3 space-y-2 text-sm">
-                <div className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 text-xs">
-                  <span>Dias usados no ciclo</span>
-                  <span className="text-right">{daysUsed} de {totalDays}</span>
-                  <span>Valor diário do plano</span>
-                  <span className="text-right">{fmtBRL(dailyRate)}</span>
-                  <span>Uso proporcional</span>
-                  <span className="text-right">{fmtBRL(usedAmount)}</span>
-                  {minUsageChargePct > 0 && (
-                    <>
-                      <span>Cobrança mínima do ciclo ({minUsageChargePct}%)</span>
-                      <span className="text-right">{fmtBRL(minCharge)}</span>
-                    </>
-                  )}
-                  <span className="font-medium text-foreground">Subtotal proporcional</span>
-                  <span className="text-right font-medium text-foreground">{fmtBRL(proRataAmount)}</span>
-                  {isInCommitment && (
-                    <>
-                      <span className="text-destructive">Multa de permanência ({commitmentDaysRemaining} dias restantes)</span>
-                      <span className="text-right text-destructive">{fmtBRL(commitmentPenalty)}</span>
-                    </>
-                  )}
-                </div>
-                <div className="flex justify-between pt-1 border-t border-border/50 font-medium text-sm">
-                  <span>Valor final de cancelamento</span>
-                  <span>{fmtBRL(chargeAmount)}</span>
-                </div>
-              </div>
-              <p className="text-xs text-muted-foreground leading-relaxed">{explanation}</p>
-            </div>
+            {renderBody()}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Voltar</AlertDialogCancel>
           <AlertDialogAction
             onClick={handleConfirm}
-            disabled={loading}
+            disabled={loading || previewLoading || !preview}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
             {loading ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}

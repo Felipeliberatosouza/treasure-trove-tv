@@ -122,11 +122,14 @@ export default function CancelSubscriptionModal({
     return () => { cancelled = true; };
   }, [open]);
 
-  // Decide whether the offer applies for the currently selected reason
+  // Decide whether the offer applies for the currently selected reason.
+  // The retention coupon is one-shot per student: if they accepted it before,
+  // we never offer it again (verified against audit_logs.retention_coupon_applied).
   const offerEligible =
     !!retention?.enabled &&
     !!retention?.coupon_id &&
     !retentionDeclined &&
+    !retentionAlreadyUsed &&
     (!reasonCode ||
       !retention.eligible_reasons?.length ||
       retention.eligible_reasons.includes(reasonCode));

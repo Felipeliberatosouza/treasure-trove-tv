@@ -65,6 +65,9 @@ export default function CancelSubscriptionModal({
   const [showRetention, setShowRetention] = useState(false);
   const [applyingCoupon, setApplyingCoupon] = useState(false);
   const [retentionDeclined, setRetentionDeclined] = useState(false);
+  // True when this student has already accepted a retention coupon in the past.
+  // The offer is one-shot per student, so we hide it from then on.
+  const [retentionAlreadyUsed, setRetentionAlreadyUsed] = useState(false);
 
   // Fetch the Stripe-sourced cancellation breakdown whenever the modal opens.
   // This is the SOURCE OF TRUTH — same numbers will be used on the email/PDF.
@@ -76,6 +79,7 @@ export default function CancelSubscriptionModal({
       setReasonDetails("");
       setShowRetention(false);
       setRetentionDeclined(false);
+      setRetentionAlreadyUsed(false);
       return;
     }
     let cancelled = false;
@@ -83,9 +87,19 @@ export default function CancelSubscriptionModal({
       setPreviewLoading(true);
       setError(null);
       try {
-        const [{ data, error }, { data: cfgRow }] = await Promise.all([
+        const { data: userRes } = await supabase.auth.getUser();
+        const uid = userRes?.user?.id;
+        const [{ data, error }, { data: cfgRow }, priorRes] = await Promise.all([
           supabase.functions.invoke("preview-cancellation"),
           supabase.from("platform_settings").select("value").eq("key", "retention_coupon").maybeSingle(),
+          uid
+            ? supabase
+                .from("audit_logs")
+                .select("id")
+                .eq("user_id", uid)
+                .eq("action", "retention_coupon_applied")
+                .limit(1)
+            : Promise.resolve({ data: [] as { id: string }[] }),
         ]);
         if (error) throw error;
         if (cancelled) return;
@@ -95,6 +109,8 @@ export default function CancelSubscriptionModal({
           setPreview(data as CancellationPreview);
         }
         if (cfgRow?.value) setRetention(cfgRow.value as unknown as RetentionCouponSettings);
+        const priorRows = (priorRes as { data?: { id: string }[] | null })?.data || [];
+        if (priorRows.length > 0) setRetentionAlreadyUsed(true);
       } catch (e) {
         if (!cancelled) {
           setError(e instanceof Error ? e.message : "Erro ao calcular o cancelamento.");
@@ -106,11 +122,14 @@ export default function CancelSubscriptionModal({
     return () => { cancelled = true; };
   }, [open]);
 
-  // Decide whether the offer applies for the currently selected reason
+  // Decide whether the offer applies for the currently selected reason.
+  // The retention coupon is one-shot per student: if they accepted it before,
+  // we never offer it again (verified against audit_logs.retention_coupon_applied).
   const offerEligible =
     !!retention?.enabled &&
     !!retention?.coupon_id &&
     !retentionDeclined &&
+    !retentionAlreadyUsed &&
     (!reasonCode ||
       !retention.eligible_reasons?.length ||
       retention.eligible_reasons.includes(reasonCode));

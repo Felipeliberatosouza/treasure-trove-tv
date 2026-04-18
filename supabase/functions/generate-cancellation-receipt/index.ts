@@ -8,6 +8,17 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
+interface StripeOverrides {
+  dailyRate: number;
+  usedAmount: number;
+  minCharge: number;
+  proRataAmount: number;
+  commitmentPenalty: number;
+  commitmentDaysRemaining: number;
+  chargeAmount: number;
+  isInCommitment: boolean;
+}
+
 interface ReceiptData {
   userId: string;
   studentName?: string;
@@ -22,6 +33,9 @@ interface ReceiptData {
   minCommitmentDays?: number;
   totalSubscriptionDays?: number;
   effectiveDate: string; // dd/mm/yyyy
+  /** Stripe-sourced authoritative breakdown — when present, overrides any
+   *  local recalculation so PDF == modal == email. */
+  stripeOverrides?: StripeOverrides;
 }
 
 const fmt = (n: number) =>
@@ -122,6 +136,20 @@ interface ComputedAmounts {
 }
 
 function computeAmounts(data: ReceiptData): ComputedAmounts {
+  // If Stripe overrides are present, ALWAYS use them — Stripe is the source of truth.
+  if (data.stripeOverrides) {
+    const o = data.stripeOverrides;
+    return {
+      dailyRate: o.dailyRate,
+      usedAmount: o.usedAmount,
+      minCharge: o.minCharge,
+      proRataAmount: o.proRataAmount,
+      isInCommitment: o.isInCommitment,
+      commitmentDaysRemaining: o.commitmentDaysRemaining,
+      commitmentPenalty: o.commitmentPenalty,
+      chargeAmount: o.chargeAmount,
+    };
+  }
   const dailyRate = data.totalDays > 0 ? data.planPrice / data.totalDays : 0;
   const usedAmount = dailyRate * data.daysUsed;
   const minCharge = ((data.minUsageChargePct || 0) / 100) * data.planPrice;

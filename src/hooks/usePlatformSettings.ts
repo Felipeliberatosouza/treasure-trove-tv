@@ -129,6 +129,9 @@ export interface RetentionCouponSettings {
   eligible_reasons: string[];
   headline: string;
   message: string;
+  /** Months the student must wait after accepting the coupon before becoming
+   *  eligible for a new retention offer. 0 = block forever (one-shot). */
+  cooldown_months: number;
 }
 
 export interface ProductConfigSettings {

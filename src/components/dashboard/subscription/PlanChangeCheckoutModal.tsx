@@ -591,23 +591,35 @@ export default function PlanChangeCheckoutModal({
 
         {/* Sticky footer */}
         <div className="border-t border-border bg-background px-6 py-4 space-y-3 shrink-0">
-          {/* Footer — hidden when StripeCardForm renders its own submit button */}
-          {!showNewCardForm && (
+          {success ? (
             <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
-              <Button variant="outline" onClick={() => onOpenChange(false)} disabled={submitting}>
-                Cancelar
+              <Button variant="outline" onClick={handleDownloadPdf}>
+                <Download className="h-4 w-4 mr-2" />
+                Baixar PDF
               </Button>
-              <Button
-                onClick={handleConfirmSavedOrNoCharge}
-                disabled={submitting || loadingSetup}
-                className="min-w-[180px]"
-              >
-                {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                {requiresPayment
-                  ? `Pagar ${formatBRL(dueNow)} e mudar`
-                  : `Confirmar ${isUpgrade ? "Upgrade" : "Downgrade"}`}
+              <Button onClick={() => handleClose(false)} className="min-w-[140px]">
+                Concluir
               </Button>
             </div>
+          ) : (
+            /* Footer — hidden when StripeCardForm renders its own submit button */
+            !showNewCardForm && (
+              <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
+                <Button variant="outline" onClick={() => handleClose(false)} disabled={submitting}>
+                  Cancelar
+                </Button>
+                <Button
+                  onClick={handleConfirmSavedOrNoCharge}
+                  disabled={submitting || loadingSetup}
+                  className="min-w-[180px]"
+                >
+                  {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                  {requiresPayment
+                    ? `Pagar ${formatBRL(dueNow)} e mudar`
+                    : `Confirmar ${isUpgrade ? "Upgrade" : "Downgrade"}`}
+                </Button>
+              </div>
+            )
           )}
 
           <div className="flex justify-center">

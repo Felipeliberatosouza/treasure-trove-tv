@@ -42,7 +42,7 @@ interface CancelSubscriptionModalProps {
   planName: string;
   /** Called with the Stripe-sourced preview so the parent can reuse the same
    *  numbers on the email and the PDF. */
-  onConfirm: (preview: CancellationPreview) => Promise<void>;
+  onConfirm: (preview: CancellationPreview, reason: { code: string; details: string }) => Promise<void>;
 }
 
 const fmtBRL = (v: number) => `R$ ${v.toFixed(2).replace(".", ",")}`;
@@ -54,6 +54,8 @@ export default function CancelSubscriptionModal({
   const [previewLoading, setPreviewLoading] = useState(false);
   const [preview, setPreview] = useState<CancellationPreview | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [reasonCode, setReasonCode] = useState<string>("");
+  const [reasonDetails, setReasonDetails] = useState<string>("");
 
   // Fetch the Stripe-sourced cancellation breakdown whenever the modal opens.
   // This is the SOURCE OF TRUTH — same numbers will be used on the email/PDF.

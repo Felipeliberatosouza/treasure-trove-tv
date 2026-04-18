@@ -63,6 +63,7 @@ function computeSize(dataUrl: string): Promise<{ width: number; height: number }
 export async function getPdfBranding(): Promise<PdfBranding> {
   let platformName = DEFAULT_NAME;
   let logoUrl = "";
+  let primaryRgb: [number, number, number] = DEFAULT_PRIMARY;
   const company: PdfCompany = { razaoSocial: "", cnpj: "", address: "" };
   try {
     const { data } = await supabase
@@ -74,6 +75,8 @@ export async function getPdfBranding(): Promise<PdfBranding> {
       if (row.key === "branding") {
         if (value.platform_name) platformName = value.platform_name;
         if (value.logo_url) logoUrl = value.logo_url;
+        const rgb = hexToRgb(value.primary_color || "");
+        if (rgb) primaryRgb = rgb;
       } else if (row.key === "contact") {
         company.razaoSocial = value.razao_social || value.nome_fantasia || "";
         company.cnpj = formatCnpj(value.cnpj || "");
@@ -85,11 +88,11 @@ export async function getPdfBranding(): Promise<PdfBranding> {
   }
 
   if (!logoUrl) {
-    return { platformName, logoDataUrl: null, logoFormat: null, logoWidth: 0, logoHeight: 0, company };
+    return { platformName, logoDataUrl: null, logoFormat: null, logoWidth: 0, logoHeight: 0, company, primaryRgb };
   }
   const loaded = await urlToDataUrl(logoUrl);
   if (!loaded) {
-    return { platformName, logoDataUrl: null, logoFormat: null, logoWidth: 0, logoHeight: 0, company };
+    return { platformName, logoDataUrl: null, logoFormat: null, logoWidth: 0, logoHeight: 0, company, primaryRgb };
   }
   const { width, height } = await computeSize(loaded.dataUrl);
   return {
@@ -99,6 +102,7 @@ export async function getPdfBranding(): Promise<PdfBranding> {
     logoWidth: width,
     logoHeight: height,
     company,
+    primaryRgb,
   };
 }
 

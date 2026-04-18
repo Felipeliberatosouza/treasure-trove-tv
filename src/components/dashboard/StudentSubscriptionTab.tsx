@@ -480,6 +480,24 @@ export default function StudentSubscriptionTab() {
           description: `${direction}: ${prevPlan!.name} → ${plan.name}`,
           amount: balance, // mostra o saldo real da troca (positivo = cobrança, negativo = crédito)
           explanation,
+          pdfData: {
+            studentName: user?.user_metadata?.name || "",
+            studentEmail: user?.email || "",
+            previousPlan: prevPlan!.name,
+            previousPlanPrice: prevPlan!.price,
+            newPlan: plan.name,
+            newPlanPrice: plan.price,
+            changeType: isUpgrade ? "upgrade" : diff < 0 ? "downgrade" : "change",
+            totalDays,
+            daysUsed: daysUsedPrev,
+            daysRemaining: daysRemainingPrev,
+            dailyOld: dailyPrev,
+            dailyNew,
+            credit: creditPrev,
+            newProRata: proRataNew,
+            balance,
+            effectiveDate: new Date(sub.started_at).toLocaleDateString("pt-BR"),
+          },
         });
       } else {
         entries.push({

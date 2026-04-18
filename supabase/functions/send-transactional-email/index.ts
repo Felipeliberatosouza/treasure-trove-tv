@@ -329,11 +329,19 @@ Deno.serve(async (req) => {
   try {
     const { data: tplCfg } = await supabase
       .from('email_templates')
-      .select('coupon_enabled, coupon_code, coupon_message')
+      .select('coupon_enabled, coupon_code, coupon_message, coupon_expires_at')
       .eq('template_key', templateName)
       .maybeSingle()
 
-    if (tplCfg?.coupon_enabled && (tplCfg.coupon_code || tplCfg.coupon_message)) {
+    const couponExpired = tplCfg?.coupon_expires_at
+      ? new Date(tplCfg.coupon_expires_at as string).getTime() < Date.now()
+      : false
+
+    if (
+      tplCfg?.coupon_enabled &&
+      !couponExpired &&
+      (tplCfg.coupon_code || tplCfg.coupon_message)
+    ) {
       const safe = (s: string) =>
         String(s ?? '')
           .replace(/&/g, '&amp;')

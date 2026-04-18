@@ -252,11 +252,16 @@ const PricingSection = () => {
                         Permanência mínima de {plan.min_commitment_days} dias.
                       </p>
                     </TooltipTrigger>
-                    <TooltipContent side="bottom" className="max-w-xs text-center">
+                    <TooltipContent side="bottom" className="max-w-xs text-left">
                       <p className="text-sm">
-                        Este plano possui um período mínimo de <strong>{plan.min_commitment_days} dias</strong>.
-                        Se cancelar antes desse prazo, será cobrado o valor proporcional aos dias restantes.
-                        Após o período mínimo, o cancelamento é gratuito.
+                        Este plano possui <strong>fidelidade de {plan.min_commitment_days} dias</strong>.
+                        Ao cancelar antes do prazo, é cobrada uma <strong>multa de permanência</strong> calculada automaticamente:
+                      </p>
+                      <p className="text-xs mt-2 font-mono bg-muted/50 rounded px-2 py-1">
+                        (R$ {Number(plan.price).toFixed(2).replace(".", ",")} ÷ dias do ciclo) × dias restantes de fidelidade
+                      </p>
+                      <p className="text-xs mt-2 text-muted-foreground">
+                        Após o período de fidelidade, o cancelamento é gratuito (sem multa).
                       </p>
                     </TooltipContent>
                   </Tooltip>

@@ -7,7 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BookOpen, FileText, ClipboardList, Award, StickyNote, HelpCircle, GraduationCap, AlertTriangle, Settings, Loader2, ArrowLeftRight, XCircle, History } from "lucide-react";
+import { BookOpen, FileText, ClipboardList, Award, StickyNote, HelpCircle, GraduationCap, AlertTriangle, Settings, Loader2, ArrowLeftRight, XCircle, History, ShieldCheck, Clock, Info } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 import { useAuditLog } from "@/hooks/useAuditLog";
 import { useActiveSubscription } from "@/hooks/useActiveSubscription";
@@ -701,6 +702,68 @@ export default function StudentSubscriptionTab() {
                   Cancelar
                 </Button>
               </div>
+
+              {/* Cancellation policy card */}
+              <TooltipProvider>
+                <Card className={`border ${plan!.allow_free_cancel ? "border-success/30 bg-success/5" : "border-warning/30 bg-warning/5"}`}>
+                  <CardContent className="px-4 py-3 space-y-1.5">
+                    {plan!.allow_free_cancel ? (
+                      <>
+                        <div className="flex items-center gap-2 text-sm font-medium text-success">
+                          <ShieldCheck className="h-4 w-4" />
+                          Cancelamento livre
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Info className="h-3.5 w-3.5 text-muted-foreground cursor-help ml-auto" />
+                            </TooltipTrigger>
+                            <TooltipContent side="left" className="max-w-xs text-left">
+                              <p className="text-sm">
+                                Você pode cancelar este plano a qualquer momento, <strong>sem multa de permanência</strong>.
+                                {(plan!.min_usage_charge_pct || 0) > 0 && (
+                                  <> Será cobrado apenas o uso proporcional do ciclo (mínimo de {plan!.min_usage_charge_pct}% do valor mensal).</>
+                                )}
+                                {(plan!.min_usage_charge_pct || 0) === 0 && (
+                                  <> Será cobrado apenas o uso proporcional aos dias utilizados no ciclo atual.</>
+                                )}
+                              </p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </div>
+                        {plan!.cancel_text && (
+                          <p className="text-xs text-muted-foreground">{plan!.cancel_text}</p>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        <div className="flex items-center gap-2 text-sm font-medium text-warning">
+                          <Clock className="h-4 w-4" />
+                          Plano com fidelidade de {plan!.min_commitment_days} dias
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Info className="h-3.5 w-3.5 text-muted-foreground cursor-help ml-auto" />
+                            </TooltipTrigger>
+                            <TooltipContent side="left" className="max-w-xs text-left">
+                              <p className="text-sm">
+                                Ao cancelar antes de completar <strong>{plan!.min_commitment_days} dias</strong> de assinatura,
+                                é cobrada uma <strong>multa de permanência</strong>:
+                              </p>
+                              <p className="text-xs mt-2 font-mono bg-muted/50 rounded px-2 py-1">
+                                (R$ {Number(plan!.price).toFixed(2).replace(".", ",")} ÷ dias do ciclo) × dias restantes
+                              </p>
+                              <p className="text-xs mt-2 text-muted-foreground">
+                                Após {plan!.min_commitment_days} dias, o cancelamento é gratuito (sem multa).
+                              </p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Cancelamento antecipado gera multa proporcional aos dias restantes de fidelidade.
+                        </p>
+                      </>
+                    )}
+                  </CardContent>
+                </Card>
+              </TooltipProvider>
 
               {/* Resource usage */}
               <h3 className="text-sm font-medium">Uso dos Recursos</h3>

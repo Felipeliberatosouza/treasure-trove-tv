@@ -407,9 +407,16 @@ const VideoPage = () => {
   const handleBuyUnit = () => {
     if (!user) { navigate("/login"); return; }
     if (!video) return;
-    requireCpf(async () => {
+    requireCpf(() => {
       setBuying(true);
-      const ok = await startUnitCheckout({ contentId: video.id, contentType });
+      const ok = startUnitCheckout({
+        contentId: video.id,
+        contentType,
+        contentTitle: video.title,
+        unitPrice: effectivePrice,
+        cancelUrl: `/video/${video.id}`,
+        navigate,
+      });
       if (!ok) setBuying(false);
     });
   };

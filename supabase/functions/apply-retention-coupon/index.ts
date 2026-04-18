@@ -75,6 +75,28 @@ serve(async (req) => {
       );
     }
 
+    // One-shot retention: if this user has already accepted a retention coupon
+    // in the past, do NOT offer/apply it again. This is the server-side guard
+    // matching the client-side check in the cancellation modal.
+    const { data: prior, error: priorErr } = await sb
+      .from("audit_logs")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("action", "retention_coupon_applied")
+      .limit(1);
+    if (priorErr) log("prior check failed", { msg: priorErr.message });
+    if (prior && prior.length > 0) {
+      log("retention already used by this user — blocking", { userId: user.id });
+      return new Response(
+        JSON.stringify({
+          ok: false,
+          error: "Esta oferta de retenção já foi utilizada anteriormente.",
+          alreadyUsed: true,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
+      );
+    }
+
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
     // Find active subscription via customer email

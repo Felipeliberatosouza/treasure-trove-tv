@@ -572,14 +572,28 @@ export default function StudentSubscriptionTab() {
         const end = new Date(endDate);
         const totalDays = 30;
         const daysUsed = Math.min(Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)), totalDays);
+        const totalSubscriptionDays = Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
         const dailyRate = plan.price / totalDays;
         const usedAmount = dailyRate * daysUsed;
         const minCharge = ((plan.min_usage_charge_pct || 0) / 100) * plan.price;
-        const chargeAmount = Math.max(usedAmount, minCharge);
+        const proRataAmount = Math.max(usedAmount, minCharge);
+
+        const isInCommitment =
+          !plan.allow_free_cancel &&
+          totalSubscriptionDays < (plan.min_commitment_days || 0);
+        const commitmentDaysRemaining = isInCommitment
+          ? Math.max(0, (plan.min_commitment_days || 0) - totalSubscriptionDays)
+          : 0;
+        const commitmentPenalty = isInCommitment ? dailyRate * commitmentDaysRemaining : 0;
+        const chargeAmount = proRataAmount + commitmentPenalty;
 
         let explanation = `Cancelamento após ${daysUsed} dias de uso. Valor proporcional: R$ ${usedAmount.toFixed(2)}.`;
         if (minCharge > usedAmount && plan.min_usage_charge_pct > 0) {
           explanation += ` Cobrança mínima de ${plan.min_usage_charge_pct}% aplicada: R$ ${minCharge.toFixed(2)}.`;
+        }
+        explanation += ` Subtotal proporcional: R$ ${proRataAmount.toFixed(2)}.`;
+        if (isInCommitment) {
+          explanation += ` Multa de permanência (${commitmentDaysRemaining} dias restantes de ${plan.min_commitment_days}): R$ ${commitmentPenalty.toFixed(2)}.`;
         }
         explanation += ` Valor final cobrado: R$ ${chargeAmount.toFixed(2)}.`;
 
@@ -600,6 +614,12 @@ export default function StudentSubscriptionTab() {
             usedAmount,
             minUsageChargePct: plan.min_usage_charge_pct || 0,
             minCharge,
+            proRataAmount,
+            allowFreeCancel: plan.allow_free_cancel,
+            minCommitmentDays: plan.min_commitment_days,
+            totalSubscriptionDays,
+            commitmentDaysRemaining,
+            commitmentPenalty,
             chargeAmount,
             effectiveDate: new Date(endDate).toLocaleDateString("pt-BR"),
           },

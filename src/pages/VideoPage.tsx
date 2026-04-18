@@ -478,7 +478,7 @@ const VideoPage = () => {
           individualPrice={limitInfo.individualPrice}
           onBuyIndividual={() => {
             requireCpf(() => {
-              toast.info("Compra individual será integrada com Stripe em breve.");
+              toast.info("Compra individual em breve.");
             });
           }}
         />

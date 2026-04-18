@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BookOpen, FileText, ClipboardList, Award, StickyNote, HelpCircle, GraduationCap, AlertTriangle, Settings, Loader2, ArrowLeftRight, XCircle, History, ShieldCheck, Clock, Info } from "lucide-react";
+import { BookOpen, FileText, ClipboardList, Award, StickyNote, HelpCircle, GraduationCap, AlertTriangle, Loader2, ArrowLeftRight, XCircle, History, ShieldCheck, Clock, Info } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 import { useAuditLog } from "@/hooks/useAuditLog";
@@ -17,7 +17,7 @@ import PlanChangeModal from "./subscription/PlanChangeModal";
 import PlanChangeCheckoutModal from "./subscription/PlanChangeCheckoutModal";
 import CancelSubscriptionModal from "./subscription/CancelSubscriptionModal";
 import PurchaseHistory from "./subscription/PurchaseHistory";
-import { redirectTopLevel } from "@/lib/payments";
+
 
 const SERVICE_META: Record<string, { label: string; icon: React.ElementType; resourceType: string }> = {
   service_revisoes: { label: "Revisões", icon: BookOpen, resourceType: "revisao" },
@@ -73,7 +73,7 @@ export default function StudentSubscriptionTab() {
   const [purchases, setPurchases] = useState<Purchase[]>([]);
   const [availablePlans, setAvailablePlans] = useState<import("./subscription/PlanChangeModal").PlanOption[]>([]);
   const [loading, setLoading] = useState(true);
-  const [portalLoading, setPortalLoading] = useState(false);
+  
   const [showPlanChange, setShowPlanChange] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
   const [pendingNewPlan, setPendingNewPlan] = useState<import("./subscription/PlanChangeModal").PlanOption | null>(null);
@@ -181,18 +181,6 @@ export default function StudentSubscriptionTab() {
   // and uses window.location (not window.top), so it works inside the
   // Lovable preview iframe without leaving the app frame blank.
 
-  const handleManageSubscription = async () => {
-    setPortalLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("customer-portal");
-      if (error) throw error;
-      if (data?.url) redirectTopLevel(data.url, { title: "Abrindo portal de gerenciamento..." });
-    } catch {
-      toast.error("Não foi possível abrir o portal de gerenciamento.");
-    } finally {
-      setPortalLoading(false);
-    }
-  };
 
   // User picked a target plan in the comparison modal — open the in-app
   // checkout modal (Stripe Elements) to confirm the change with prorated charge.
@@ -325,12 +313,14 @@ export default function StudentSubscriptionTab() {
     const plan = activeSubscription?.subscription_plans as unknown as PlanData;
 
     try {
-      const { data, error } = await supabase.functions.invoke("customer-portal");
+      // Cancel directly via our edge function — no portal redirect, no
+      // external screens. The user stays on our UI the whole time.
+      const { data, error } = await supabase.functions.invoke("cancel-subscription");
       if (error) throw error;
+      if (!data?.ok) throw new Error(data?.error || "Falha ao cancelar assinatura");
 
-      // Send cancellation notification email — using STRIPE-SOURCED values
-      // returned by preview-cancellation, so the email/PDF match exactly
-      // what was shown in the modal and what Stripe will actually invoice.
+      // Send cancellation notification email — values come from preview-cancellation
+      // so the email/PDF match exactly what will be invoiced.
       if (user?.email && plan) {
         const {
           daysUsed, cycleDays, totalSubscriptionDays,
@@ -343,7 +333,7 @@ export default function StudentSubscriptionTab() {
         const effectiveDate = new Date().toLocaleDateString("pt-BR");
         const fmtBRL = (v: number) => `R$ ${v.toFixed(2).replace(".", ",")}`;
         const proRataAmountStr = fmtBRL(chargeAmount);
-        let proRataExplanation = `Cobrança proporcional (Stripe): ${daysUsed} dias usados de ${cycleDays}. Mínimo: ${plan.min_usage_charge_pct || 0}% do plano. Subtotal: ${fmtBRL(proRataSubtotal)}.`;
+        let proRataExplanation = `Cobrança proporcional: ${daysUsed} dias usados de ${cycleDays}. Mínimo: ${plan.min_usage_charge_pct || 0}% do plano. Subtotal: ${fmtBRL(proRataSubtotal)}.`;
         if (isInCommitment) {
           proRataExplanation += ` Multa de permanência: ${fmtBRL(commitmentPenalty)} (${commitmentDaysRemaining} dias restantes de ${plan.min_commitment_days}). Total: ${fmtBRL(chargeAmount)}.`;
         }
@@ -447,12 +437,15 @@ export default function StudentSubscriptionTab() {
         metadata: { plan_name: cancelledPlan?.name },
       });
 
-      toast.success("Redirecionando para o portal de cancelamento...");
-      // Refresh shared subscription state so navbar reflects the change.
-      refreshActiveSub();
-      if (data?.url) redirectTopLevel(data.url, { title: "Abrindo portal de cancelamento..." });
-    } catch {
-      toast.error("Não foi possível processar o cancelamento.");
+      toast.success("Assinatura cancelada com sucesso.");
+      // Refresh shared subscription state and local data so the UI reflects
+      // the cancellation immediately — no external redirect needed.
+      await refreshActiveSub();
+      await refreshSubscription();
+      await loadAll();
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Não foi possível processar o cancelamento.";
+      toast.error(msg);
     }
   };
 
@@ -687,12 +680,8 @@ export default function StudentSubscriptionTab() {
                 </div>
               </div>
 
-              {/* Actions */}
+              {/* Actions — Mudar Plano e Cancelar acontecem 100% dentro da plataforma */}
               <div className="flex flex-wrap gap-2">
-                <Button variant="outline" size="sm" onClick={handleManageSubscription} disabled={portalLoading}>
-                  {portalLoading ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Settings className="h-4 w-4 mr-1" />}
-                  Gerenciar
-                </Button>
                 <Button variant="outline" size="sm" onClick={() => setShowPlanChange(true)}>
                   <ArrowLeftRight className="h-4 w-4 mr-1" />
                   Mudar Plano

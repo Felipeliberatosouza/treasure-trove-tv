@@ -74,7 +74,7 @@ export default function StripeCardForm({
     <div className="space-y-3">
       <PaymentSecurityBadge />
       <p className="text-[11px] text-muted-foreground leading-snug">
-        Os dados do cartão são processados diretamente pela Stripe e não passam pelos nossos servidores.
+        Os dados do cartão são processados em ambiente criptografado certificado PCI-DSS e não passam pelos nossos servidores.
       </p>
 
       <div className="rounded-md border border-border bg-background p-3">

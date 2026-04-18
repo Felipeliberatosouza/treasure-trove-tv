@@ -142,7 +142,7 @@ export default function PlanChangeCheckoutModal({
     toast.info("Autenticação adicional do banco necessária...");
     const stripe = await stripePromise;
     if (!stripe) {
-      setPaymentError("Stripe não pôde ser carregado. Recarregue a página.");
+      setPaymentError("Não foi possível carregar o módulo de pagamento. Recarregue a página.");
       return;
     }
     setAwaiting3DS(true);

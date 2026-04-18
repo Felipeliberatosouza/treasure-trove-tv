@@ -50,6 +50,7 @@ export default function PlanChangeCheckoutModal({
   const [submitting, setSubmitting] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
   const [pendingInvoice, setPendingInvoice] = useState<{ clientSecret: string; invoiceId: string } | null>(null);
+  const [awaiting3DS, setAwaiting3DS] = useState(false);
 
   const isUpgrade = newPlan.price > currentPlan.price;
   const daysRemaining = Math.max(0, totalDays - daysUsed);

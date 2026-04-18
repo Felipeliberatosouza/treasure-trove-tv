@@ -116,6 +116,8 @@ const Checkout = () => {
   const [step, setStep] = useState<CheckoutStep>("billing");
   const isMobile = useIsMobile();
   const [summaryOpen, setSummaryOpen] = useState(false);
+  const [mobileSubmitting, setMobileSubmitting] = useState(false);
+  const submitRef = useRef<(() => void) | null>(null);
   // Keep summary always open on desktop
   useEffect(() => {
     if (!isMobile) setSummaryOpen(true);

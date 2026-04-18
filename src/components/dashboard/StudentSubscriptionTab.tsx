@@ -333,11 +333,27 @@ export default function StudentSubscriptionTab() {
         const dailyRate = cycleInfo.totalDays > 0 ? plan.price / cycleInfo.totalDays : 0;
         const usedAmount = dailyRate * cycleInfo.daysUsed;
         const minCharge = ((plan.min_usage_charge_pct || 0) / 100) * plan.price;
-        const chargeAmount = Math.max(usedAmount, minCharge);
+        const proRataSubtotal = Math.max(usedAmount, minCharge);
+
+        // Multa de permanência (só quando o plano não permite cancelamento gratuito
+        // e o aluno ainda está dentro do período de compromisso)
+        const isInCommitment =
+          !plan.allow_free_cancel &&
+          cycleInfo.totalSubscriptionDays < (plan.min_commitment_days || 0);
+        const commitmentDaysRemaining = isInCommitment
+          ? Math.max(0, (plan.min_commitment_days || 0) - cycleInfo.totalSubscriptionDays)
+          : 0;
+        const commitmentPenalty = isInCommitment ? dailyRate * commitmentDaysRemaining : 0;
+        const chargeAmount = proRataSubtotal + commitmentPenalty;
+
         const studentName = user.user_metadata?.name || "";
         const effectiveDate = new Date().toLocaleDateString("pt-BR");
-        const proRataAmount = `R$ ${chargeAmount.toFixed(2)}`;
-        const proRataExplanation = `Cobrança proporcional: ${cycleInfo.daysUsed} dias usados de ${cycleInfo.totalDays}. Mínimo: ${plan.min_usage_charge_pct || 0}% do plano.`;
+        const fmtBRL = (v: number) => `R$ ${v.toFixed(2).replace(".", ",")}`;
+        const proRataAmount = fmtBRL(chargeAmount);
+        let proRataExplanation = `Cobrança proporcional: ${cycleInfo.daysUsed} dias usados de ${cycleInfo.totalDays}. Mínimo: ${plan.min_usage_charge_pct || 0}% do plano. Subtotal: ${fmtBRL(proRataSubtotal)}.`;
+        if (isInCommitment) {
+          proRataExplanation += ` Multa de permanência: ${fmtBRL(commitmentPenalty)} (${commitmentDaysRemaining} dias restantes de ${plan.min_commitment_days}). Total: ${fmtBRL(chargeAmount)}.`;
+        }
 
         // Generate cancellation receipt PDF (server-side) and get a signed URL.
         // Failure here must NOT block the email or the cancellation flow.
@@ -355,6 +371,9 @@ export default function StudentSubscriptionTab() {
                 totalDays: cycleInfo.totalDays,
                 daysUsed: cycleInfo.daysUsed,
                 minUsageChargePct: plan.min_usage_charge_pct || 0,
+                allowFreeCancel: plan.allow_free_cancel,
+                minCommitmentDays: plan.min_commitment_days,
+                totalSubscriptionDays: cycleInfo.totalSubscriptionDays,
                 effectiveDate,
               },
             },
@@ -375,6 +394,11 @@ export default function StudentSubscriptionTab() {
               expiryDate: effectiveDate,
               reason: "cancelada",
               receiptUrl,
+              proRataSubtotal: fmtBRL(proRataSubtotal),
+              commitmentPenalty: isInCommitment ? fmtBRL(commitmentPenalty) : "",
+              commitmentDaysRemaining: isInCommitment ? commitmentDaysRemaining : 0,
+              minCommitmentDays: isInCommitment ? plan.min_commitment_days : 0,
+              chargeAmount: fmtBRL(chargeAmount),
             },
           },
         });

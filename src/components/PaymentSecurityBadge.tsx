@@ -25,7 +25,7 @@ export default function PaymentSecurityBadge({
         )}
       >
         <Lock className="h-3.5 w-3.5 text-success" aria-hidden="true" />
-        <span>Pagamento seguro via Stripe</span>
+        <span>Pagamento 100% seguro e criptografado</span>
       </div>
     );
   }
@@ -38,7 +38,7 @@ export default function PaymentSecurityBadge({
       )}
     >
       <Lock className="h-3.5 w-3.5 text-success" aria-hidden="true" />
-      <span>Pagamento seguro via Stripe</span>
+      <span>Pagamento 100% seguro e criptografado</span>
     </p>
   );
 }

@@ -65,7 +65,7 @@ export default function CancelSubscriptionModal({
         }
       } catch (e) {
         if (!cancelled) {
-          setError(e instanceof Error ? e.message : "Erro ao consultar o Stripe.");
+          setError(e instanceof Error ? e.message : "Erro ao calcular o cancelamento.");
         }
       } finally {
         if (!cancelled) setPreviewLoading(false);
@@ -89,7 +89,7 @@ export default function CancelSubscriptionModal({
     if (previewLoading) {
       return (
         <div className="flex items-center gap-2 text-sm text-muted-foreground p-4 justify-center">
-          <Loader2 className="h-4 w-4 animate-spin" /> Consultando Stripe...
+          <Loader2 className="h-4 w-4 animate-spin" /> Calculando valores do cancelamento...
         </div>
       );
     }
@@ -152,7 +152,7 @@ export default function CancelSubscriptionModal({
             <span>{fmtBRL(chargeAmount)}</span>
           </div>
           <p className="text-[10px] text-muted-foreground/70 pt-1">
-            Valores calculados com base na sua assinatura ativa no Stripe.
+            Valores calculados com base no seu ciclo de assinatura atual.
           </p>
         </div>
         <p className="text-xs text-muted-foreground leading-relaxed">{explanation}</p>

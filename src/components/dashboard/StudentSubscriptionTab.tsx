@@ -325,12 +325,14 @@ export default function StudentSubscriptionTab() {
     const plan = activeSubscription?.subscription_plans as unknown as PlanData;
 
     try {
-      const { data, error } = await supabase.functions.invoke("customer-portal");
+      // Cancel directly via our edge function — no portal redirect, no
+      // external screens. The user stays on our UI the whole time.
+      const { data, error } = await supabase.functions.invoke("cancel-subscription");
       if (error) throw error;
+      if (!data?.ok) throw new Error(data?.error || "Falha ao cancelar assinatura");
 
-      // Send cancellation notification email — using STRIPE-SOURCED values
-      // returned by preview-cancellation, so the email/PDF match exactly
-      // what was shown in the modal and what Stripe will actually invoice.
+      // Send cancellation notification email — values come from preview-cancellation
+      // so the email/PDF match exactly what will be invoiced.
       if (user?.email && plan) {
         const {
           daysUsed, cycleDays, totalSubscriptionDays,
@@ -343,7 +345,7 @@ export default function StudentSubscriptionTab() {
         const effectiveDate = new Date().toLocaleDateString("pt-BR");
         const fmtBRL = (v: number) => `R$ ${v.toFixed(2).replace(".", ",")}`;
         const proRataAmountStr = fmtBRL(chargeAmount);
-        let proRataExplanation = `Cobrança proporcional (Stripe): ${daysUsed} dias usados de ${cycleDays}. Mínimo: ${plan.min_usage_charge_pct || 0}% do plano. Subtotal: ${fmtBRL(proRataSubtotal)}.`;
+        let proRataExplanation = `Cobrança proporcional: ${daysUsed} dias usados de ${cycleDays}. Mínimo: ${plan.min_usage_charge_pct || 0}% do plano. Subtotal: ${fmtBRL(proRataSubtotal)}.`;
         if (isInCommitment) {
           proRataExplanation += ` Multa de permanência: ${fmtBRL(commitmentPenalty)} (${commitmentDaysRemaining} dias restantes de ${plan.min_commitment_days}). Total: ${fmtBRL(chargeAmount)}.`;
         }
@@ -447,12 +449,15 @@ export default function StudentSubscriptionTab() {
         metadata: { plan_name: cancelledPlan?.name },
       });
 
-      toast.success("Redirecionando para o portal de cancelamento...");
-      // Refresh shared subscription state so navbar reflects the change.
-      refreshActiveSub();
-      if (data?.url) redirectTopLevel(data.url, { title: "Abrindo portal de cancelamento..." });
-    } catch {
-      toast.error("Não foi possível processar o cancelamento.");
+      toast.success("Assinatura cancelada com sucesso.");
+      // Refresh shared subscription state and local data so the UI reflects
+      // the cancellation immediately — no external redirect needed.
+      await refreshActiveSub();
+      await refreshSubscription();
+      await loadAll();
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Não foi possível processar o cancelamento.";
+      toast.error(msg);
     }
   };
 

@@ -89,6 +89,7 @@ const StudentDashboardContent = () => {
         )}
       </motion.div>
     </div>
+    </>
   );
 };
 

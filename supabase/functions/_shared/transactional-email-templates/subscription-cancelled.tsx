@@ -15,6 +15,11 @@ interface SubscriptionCancelledProps {
   reason?: string
   renewLink?: string
   receiptUrl?: string
+  proRataSubtotal?: string
+  commitmentPenalty?: string
+  commitmentDaysRemaining?: number
+  minCommitmentDays?: number
+  chargeAmount?: string
   unsubscribeUrl?: string
 }
 
@@ -25,8 +30,15 @@ const SubscriptionCancelledEmail = ({
   reason = 'cancelada',
   renewLink = 'https://revisaofacil.com/#pricing',
   receiptUrl,
+  proRataSubtotal,
+  commitmentPenalty,
+  commitmentDaysRemaining,
+  minCommitmentDays,
+  chargeAmount,
   unsubscribeUrl,
-}: SubscriptionCancelledProps) => (
+}: SubscriptionCancelledProps) => {
+  const hasPenalty = !!commitmentPenalty && (commitmentDaysRemaining ?? 0) > 0
+  return (
   <Html lang="pt-BR" dir="ltr">
     <Head />
     <Preview>Sua assinatura foi {reason} — {SITE_NAME}</Preview>
@@ -44,6 +56,19 @@ const SubscriptionCancelledEmail = ({
             <Text style={infoText}><strong>Data de encerramento:</strong> {expiryDate}</Text>
             <Text style={infoText}><strong>Plano:</strong> {planName}</Text>
             <Text style={infoText}><strong>Status:</strong> {reason === 'expirada' ? 'Expirada' : 'Cancelada'}</Text>
+            {proRataSubtotal && (
+              <Text style={infoText}><strong>Subtotal proporcional:</strong> {proRataSubtotal}</Text>
+            )}
+            {hasPenalty && (
+              <Text style={{ ...infoText, color: '#b91c1c' }}>
+                <strong>Multa de permanência ({commitmentDaysRemaining} dias restantes de {minCommitmentDays}):</strong> {commitmentPenalty}
+              </Text>
+            )}
+            {chargeAmount && (
+              <Text style={{ ...infoText, fontWeight: 'bold' as const, marginTop: '8px' }}>
+                <strong>Total cobrado:</strong> {chargeAmount}
+              </Text>
+            )}
           </Section>
         )}
         <Text style={text}>
@@ -59,7 +84,7 @@ const SubscriptionCancelledEmail = ({
         {receiptUrl && (
           <Section style={{ marginTop: '16px' }}>
             <Text style={text}>
-              Você também pode baixar o comprovante detalhado do cancelamento (cálculo proporcional, dias usados e valor cobrado):
+              Você também pode baixar o comprovante detalhado do cancelamento (cálculo proporcional, multa de permanência, se houver, e valor total cobrado):
             </Text>
             <Button style={secondaryButton} href={receiptUrl}>
               Baixar comprovante (PDF)

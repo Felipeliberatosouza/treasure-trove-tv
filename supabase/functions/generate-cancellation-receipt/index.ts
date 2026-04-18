@@ -151,7 +151,8 @@ async function buildPdf(data: ReceiptData, branding: BrandingForPdf): Promise<Ui
   doc.line(margin, y, pageW - margin, y);
   y += 10;
 
-  doc.setTextColor(20);
+  const [pr, pg, pb] = branding.primaryRgb;
+  doc.setTextColor(pr, pg, pb);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(14);
   doc.text(`Cancelamento — ${data.planName}`, margin, y);

@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Save, Upload, X, Eye, Mail, Shield, Copy, Tag } from "lucide-react";
+import { Save, Upload, X, Eye, Mail, Shield, Copy, Tag, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
 interface EmailTemplate {
@@ -174,6 +174,25 @@ const SettingsEmailTemplates = () => {
     active.coupon_code.trim() &&
     !COUPON_CODE_REGEX.test(active.coupon_code.trim())
   );
+
+  const generateCouponCode = () => {
+    const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // sem 0/O/1/I para evitar confusão
+    const length = 8;
+    let code = "";
+    if (typeof crypto !== "undefined" && crypto.getRandomValues) {
+      const buf = new Uint32Array(length);
+      crypto.getRandomValues(buf);
+      for (let i = 0; i < length; i++) {
+        code += alphabet[buf[i] % alphabet.length];
+      }
+    } else {
+      for (let i = 0; i < length; i++) {
+        code += alphabet[Math.floor(Math.random() * alphabet.length)];
+      }
+    }
+    updateField("coupon_code", code);
+    toast.success(`Código gerado: ${code}`);
+  };
 
   const handleSave = async () => {
     if (!active) return;
@@ -494,17 +513,29 @@ const SettingsEmailTemplates = () => {
               <div className="space-y-3 pt-1">
                 <div>
                   <Label className="text-xs">Código do cupom</Label>
-                  <Input
-                    value={active.coupon_code || ""}
-                    onChange={(e) => updateField("coupon_code", e.target.value.toUpperCase())}
-                    placeholder="Ex: VOLTA20"
-                    maxLength={40}
-                    className={`uppercase tracking-wider font-mono ${
-                      couponCodeMissing || couponCodeHasInvalidChars
-                        ? "border-destructive ring-1 ring-destructive focus-visible:ring-destructive"
-                        : ""
-                    }`}
-                  />
+                  <div className="flex gap-2">
+                    <Input
+                      value={active.coupon_code || ""}
+                      onChange={(e) => updateField("coupon_code", e.target.value.toUpperCase())}
+                      placeholder="Ex: VOLTA20"
+                      maxLength={40}
+                      className={`uppercase tracking-wider font-mono ${
+                        couponCodeMissing || couponCodeHasInvalidChars
+                          ? "border-destructive ring-1 ring-destructive focus-visible:ring-destructive"
+                          : ""
+                      }`}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={generateCouponCode}
+                      title="Gerar código aleatório de 8 caracteres"
+                      className="shrink-0 gap-1"
+                    >
+                      <Sparkles className="h-4 w-4" />
+                      <span className="hidden sm:inline">Gerar</span>
+                    </Button>
+                  </div>
                   {couponCodeMissing && (
                     <p className="text-xs mt-1 text-destructive font-semibold flex items-start gap-1">
                       <span>⚠️</span>

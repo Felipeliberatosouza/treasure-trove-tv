@@ -114,6 +114,13 @@ const Checkout = () => {
   const state = (location.state || null) as EmbeddedCheckoutState | null;
   const stripePromise = useMemo(() => getStripe(), []);
   const [step, setStep] = useState<CheckoutStep>("billing");
+  const isMobile = useIsMobile();
+  const [summaryOpen, setSummaryOpen] = useState(false);
+  // Keep summary always open on desktop
+  useEffect(() => {
+    if (!isMobile) setSummaryOpen(true);
+    else setSummaryOpen(false);
+  }, [isMobile]);
 
   // Guard: missing context
   useEffect(() => {

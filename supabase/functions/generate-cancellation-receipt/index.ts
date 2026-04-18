@@ -26,7 +26,53 @@ const fmt = (n: number) =>
     maximumFractionDigits: 2,
   })}`;
 
-function buildPdf(data: ReceiptData): Uint8Array {
+interface BrandingForPdf {
+  platformName: string;
+  logoDataUrl: string | null;
+  logoFormat: "PNG" | "JPEG" | null;
+  logoWidth: number;
+  logoHeight: number;
+}
+
+async function fetchBranding(supabase: ReturnType<typeof createClient>): Promise<BrandingForPdf> {
+  const fallback: BrandingForPdf = {
+    platformName: "Revisão Fácil",
+    logoDataUrl: null,
+    logoFormat: null,
+    logoWidth: 0,
+    logoHeight: 0,
+  };
+  try {
+    const { data } = await supabase
+      .from("platform_settings")
+      .select("value")
+      .eq("key", "branding")
+      .maybeSingle();
+    const b = (data?.value ?? {}) as { platform_name?: string; logo_url?: string };
+    if (b.platform_name) fallback.platformName = b.platform_name;
+    if (!b.logo_url) return fallback;
+    const res = await fetch(b.logo_url);
+    if (!res.ok) return fallback;
+    const buf = new Uint8Array(await res.arrayBuffer());
+    const ct = (res.headers.get("content-type") || "").toLowerCase();
+    const isPng = ct.includes("png") || /\.png(\?|$)/i.test(b.logo_url);
+    // base64 encode
+    let bin = "";
+    for (let i = 0; i < buf.length; i++) bin += String.fromCharCode(buf[i]);
+    const b64 = btoa(bin);
+    fallback.logoDataUrl = `data:${isPng ? "image/png" : "image/jpeg"};base64,${b64}`;
+    fallback.logoFormat = isPng ? "PNG" : "JPEG";
+    // Default fallback dimensions (server cannot decode image easily); jsPDF will use addImage with explicit w/h
+    fallback.logoWidth = 200;
+    fallback.logoHeight = 60;
+    return fallback;
+  } catch (e) {
+    console.warn("[gen-receipt] branding fetch failed", e);
+    return fallback;
+  }
+}
+
+async function buildPdf(data: ReceiptData, branding: BrandingForPdf): Promise<Uint8Array> {
   const dailyRate = data.totalDays > 0 ? data.planPrice / data.totalDays : 0;
   const usedAmount = dailyRate * data.daysUsed;
   const minCharge = ((data.minUsageChargePct || 0) / 100) * data.planPrice;
@@ -37,14 +83,36 @@ function buildPdf(data: ReceiptData): Uint8Array {
   const margin = 18;
   let y = margin;
 
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(18);
-  doc.text("Revisão Fácil", margin, y);
+  const headerTopY = y;
+  let headerLeftBottom = y;
+  if (branding.logoDataUrl && branding.logoFormat) {
+    const ratio = branding.logoWidth / branding.logoHeight || 3.3;
+    const maxH = 14;
+    const maxW = 60;
+    let h = maxH;
+    let w = h * ratio;
+    if (w > maxW) { w = maxW; h = w / ratio; }
+    try {
+      doc.addImage(branding.logoDataUrl, branding.logoFormat, margin, headerTopY - 3, w, h);
+      headerLeftBottom = headerTopY - 3 + h;
+    } catch (e) {
+      console.warn("[gen-receipt] addImage failed, falling back to text", e);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(18);
+      doc.text(branding.platformName, margin, y);
+      headerLeftBottom = y + 2;
+    }
+  } else {
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(18);
+    doc.text(branding.platformName, margin, y);
+    headerLeftBottom = y + 2;
+  }
   doc.setFont("helvetica", "normal");
   doc.setFontSize(10);
   doc.setTextColor(110);
-  doc.text("Comprovante de cancelamento", pageW - margin, y, { align: "right" });
-  y += 8;
+  doc.text("Comprovante de cancelamento", pageW - margin, headerTopY + 4, { align: "right" });
+  y = Math.max(headerLeftBottom, headerTopY + 8) + 2;
   doc.setDrawColor(220);
   doc.line(margin, y, pageW - margin, y);
   y += 10;
@@ -160,7 +228,8 @@ serve(async (req) => {
       );
     }
 
-    const pdfBytes = buildPdf(data);
+    const branding = await fetchBranding(supabase);
+    const pdfBytes = await buildPdf(data, branding);
 
     const safeDate = data.effectiveDate.replace(/\//g, "-");
     const fileName = `cancelamento-${safeDate}-${crypto.randomUUID().slice(0, 8)}.pdf`;

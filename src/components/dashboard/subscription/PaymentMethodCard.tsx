@@ -112,6 +112,27 @@ export default function PaymentMethodCard() {
     }
   };
 
+  const handleSetDefault = async (pmId: string) => {
+    setSettingDefaultId(pmId);
+    try {
+      const { data, error } = await supabase.functions.invoke("update-payment-method", {
+        body: { paymentMethodId: pmId, removeOthers: false },
+      });
+      if (error) throw error;
+      if (!data?.ok) {
+        toast.error(data?.error || "Não foi possível definir como padrão.");
+        return;
+      }
+      toast.success("Cartão definido como padrão. Próximas cobranças usarão este cartão.");
+      await load();
+    } catch (e) {
+      console.error("[PaymentMethodCard] set default failed", e);
+      toast.error("Falha ao definir como padrão. Tente novamente.");
+    } finally {
+      setSettingDefaultId(null);
+    }
+  };
+
   const defaultCard = savedCards.find((c) => c.isDefault) || savedCards[0];
   const otherCards = savedCards.filter((c) => c.id !== defaultCard?.id);
   const cardToRemove = otherCards.find((c) => c.id === confirmRemoveId);

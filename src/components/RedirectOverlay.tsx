@@ -1,5 +1,6 @@
 import { Loader2, ShieldCheck } from "lucide-react";
 import { createPortal } from "react-dom";
+import PaymentSecurityBadge from "@/components/PaymentSecurityBadge";
 
 interface RedirectOverlayProps {
   open: boolean;
@@ -33,6 +34,9 @@ export default function RedirectOverlay({
         </div>
         <h2 className="font-display text-lg font-semibold text-foreground">{title}</h2>
         <p className="mt-2 text-sm text-muted-foreground">{description}</p>
+        <div className="mt-4 flex justify-center">
+          <PaymentSecurityBadge variant="pill" />
+        </div>
       </div>
     </div>,
     document.body

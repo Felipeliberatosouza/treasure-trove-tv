@@ -434,10 +434,9 @@ export default function PlanChangeCheckoutModal({
           </div>
         )}
 
-        <p className="text-[10px] text-center text-muted-foreground flex items-center justify-center gap-1">
-          <ShieldCheck className="h-3 w-3" />
-          Conexão segura · Stripe · LGPD
-        </p>
+        <div className="flex justify-center pt-1">
+          <PaymentSecurityBadge variant="pill" />
+        </div>
       </DialogContent>
     </Dialog>
   );

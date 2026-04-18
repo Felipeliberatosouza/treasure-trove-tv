@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js";
 import { Button } from "@/components/ui/button";
-import { Loader2, ShieldCheck } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import PaymentSecurityBadge from "@/components/PaymentSecurityBadge";
 
 interface StripeCardFormProps {
   onPaymentMethodReady: (paymentMethodId: string) => Promise<void> | void;
@@ -71,9 +72,9 @@ export default function StripeCardForm({
 
   return (
     <div className="space-y-3">
-      <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-        <ShieldCheck className="h-3.5 w-3.5 text-success" />
-        Pagamento processado com segurança pela Stripe. Os dados do cartão não passam pelos nossos servidores.
+      <PaymentSecurityBadge />
+      <p className="text-[11px] text-muted-foreground leading-snug">
+        Os dados do cartão são processados diretamente pela Stripe e não passam pelos nossos servidores.
       </p>
 
       <div className="rounded-md border border-border bg-background p-3">

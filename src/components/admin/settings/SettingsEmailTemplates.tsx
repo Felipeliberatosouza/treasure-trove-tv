@@ -560,7 +560,7 @@ const SettingsEmailTemplates = () => {
                       );
                     }}
                     className={
-                      couponDateRangeInvalid
+                      couponDateRangeInvalid || couponExpiresInPast
                         ? "border-destructive ring-1 ring-destructive focus-visible:ring-destructive"
                         : ""
                     }
@@ -593,6 +593,19 @@ const SettingsEmailTemplates = () => {
                       <span>
                         A data de início do cupom deve ser anterior à data de
                         expiração. Corrija as datas antes de salvar.
+                      </span>
+                    </p>
+                  </div>
+                )}
+                {couponExpiresInPast && !couponDateRangeInvalid && (
+                  <div className="rounded-md border-2 border-destructive bg-destructive/10 p-3">
+                    <p className="text-sm font-semibold text-destructive flex items-start gap-2">
+                      <span>⚠️</span>
+                      <span>
+                        A data de expiração está no passado. Se salvar agora, o
+                        cupom <strong>nunca será exibido</strong> nos e-mails
+                        enviados. Atualize a data de expiração para uma data
+                        futura.
                       </span>
                     </p>
                   </div>

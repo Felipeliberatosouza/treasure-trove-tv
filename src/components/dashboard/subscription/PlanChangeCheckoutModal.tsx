@@ -188,8 +188,8 @@ export default function PlanChangeCheckoutModal({
     }
     toast.success(`Upgrade para ${newPlan.name} concluído!`);
     setPendingInvoice(null);
+    setSuccess(true);
     await onSuccess?.();
-    onOpenChange(false);
   };
 
   /** Retry an existing pending invoice (e.g., after 3DS failure with same card). */

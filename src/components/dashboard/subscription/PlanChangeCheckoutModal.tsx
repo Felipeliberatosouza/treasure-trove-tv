@@ -215,7 +215,7 @@ export default function PlanChangeCheckoutModal({
 
   return (
     <Dialog open={open} onOpenChange={(v) => !submitting && !awaiting3DS && onOpenChange(v)}>
-      <DialogContent className="max-w-xl max-h-[92vh] overflow-y-auto relative">
+      <DialogContent className="max-w-xl w-[calc(100%-2rem)] sm:w-full max-h-[90vh] p-0 gap-0 flex flex-col relative overflow-hidden">
         {awaiting3DS && (
           <div className="absolute inset-0 z-50 flex flex-col items-center justify-center gap-3 bg-background/85 backdrop-blur-sm rounded-lg">
             <div className="relative">

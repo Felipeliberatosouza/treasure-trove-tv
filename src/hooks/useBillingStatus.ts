@@ -64,5 +64,15 @@ export function useBillingStatus(): BillingStatus & {
     fetchStatus();
   }, [fetchStatus]);
 
+  // Allow other components (e.g. PaymentMethodCard after a successful card
+  // update + invoice retry) to trigger an immediate re-check.
+  useEffect(() => {
+    const handler = () => {
+      fetchStatus();
+    };
+    window.addEventListener("billing-status-refresh", handler);
+    return () => window.removeEventListener("billing-status-refresh", handler);
+  }, [fetchStatus]);
+
   return { ...data, loading, refresh: fetchStatus };
 }

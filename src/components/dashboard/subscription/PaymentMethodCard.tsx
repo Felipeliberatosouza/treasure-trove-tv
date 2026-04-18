@@ -96,14 +96,33 @@ export default function PaymentMethodCard() {
       toast.error(data?.error || "Não foi possível atualizar o cartão.");
       throw new Error(data?.error || "update failed");
     }
-    toast.success(
-      replaceMode
-        ? "Cartão substituído com sucesso. Próximas cobranças usarão o novo cartão."
-        : "Cartão adicionado com sucesso e definido como padrão."
-    );
+
+    const paid = Number(data?.paidInvoices ?? 0);
+    const failed = Number(data?.failedInvoices ?? 0);
+
+    if (paid > 0) {
+      toast.success(
+        paid === 1
+          ? "Cartão atualizado e fatura em aberto regularizada com sucesso."
+          : `Cartão atualizado e ${paid} faturas em aberto regularizadas com sucesso.`
+      );
+    } else if (failed > 0) {
+      toast.warning(
+        "Cartão atualizado, mas a tentativa de pagar a fatura em aberto falhou. Tentaremos novamente em breve."
+      );
+    } else {
+      toast.success(
+        replaceMode
+          ? "Cartão substituído com sucesso. Próximas cobranças usarão o novo cartão."
+          : "Cartão adicionado com sucesso e definido como padrão."
+      );
+    }
+
     setShowForm(false);
     setReplaceMode(false);
     await load();
+    // Notify the dashboard so the past-due alert can refresh.
+    window.dispatchEvent(new CustomEvent("billing-status-refresh"));
   };
 
   const handleRemoveCard = async (pmId: string) => {

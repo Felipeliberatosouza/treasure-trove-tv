@@ -111,8 +111,56 @@ serve(async (req) => {
       }
     }
 
+    // 6. Retry any open/past_due invoices immediately so the student is
+    //    regularized without waiting for Stripe's automatic retry schedule.
+    //    We attempt to pay all "open" invoices (which includes those left
+    //    behind by past_due / unpaid subscriptions) using the new default PM.
+    const retried: Array<{ id: string; status: string; paid: boolean; error?: string }> = [];
+    try {
+      const openInvoices = await stripe.invoices.list({
+        customer: customerId,
+        status: "open",
+        limit: 10,
+      });
+      log("open invoices found", { count: openInvoices.data.length });
+
+      for (const inv of openInvoices.data) {
+        if (!inv.id) continue;
+        try {
+          const paid = await stripe.invoices.pay(inv.id, {
+            payment_method: paymentMethodId,
+          });
+          retried.push({
+            id: inv.id,
+            status: paid.status ?? "unknown",
+            paid: paid.status === "paid",
+          });
+          log("invoice pay attempt", { id: inv.id, status: paid.status });
+        } catch (e) {
+          const msg = e instanceof Error ? e.message : String(e);
+          retried.push({ id: inv.id, status: "failed", paid: false, error: msg });
+          log("invoice pay failed", { id: inv.id, msg });
+        }
+      }
+    } catch (e) {
+      // Listing failures should not block the success of the card update.
+      log("list open invoices failed", {
+        msg: e instanceof Error ? e.message : String(e),
+      });
+    }
+
+    const retriedCount = retried.length;
+    const paidCount = retried.filter((r) => r.paid).length;
+    const failedCount = retriedCount - paidCount;
+
     return new Response(
-      JSON.stringify({ ok: true }),
+      JSON.stringify({
+        ok: true,
+        retriedInvoices: retriedCount,
+        paidInvoices: paidCount,
+        failedInvoices: failedCount,
+        invoices: retried,
+      }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
     );
   } catch (e) {

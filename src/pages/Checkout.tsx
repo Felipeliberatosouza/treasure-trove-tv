@@ -388,6 +388,17 @@ function CheckoutForm({
     }
   }, [billingValid, submitting, onStepChange]);
 
+  // Mirror submitting state to parent (for mobile sticky bar button)
+  useEffect(() => {
+    onSubmittingChange?.(submitting);
+  }, [submitting, onSubmittingChange]);
+
+  // Expose latest handleSubmit to parent via ref-callback
+  const handleSubmitRef = useRef<() => void>(() => {});
+  useEffect(() => {
+    onReady?.(() => handleSubmitRef.current?.());
+  }, [onReady]);
+
   const handleSubmit = async () => {
     if (!stripe || !elements) return;
     setError(null);

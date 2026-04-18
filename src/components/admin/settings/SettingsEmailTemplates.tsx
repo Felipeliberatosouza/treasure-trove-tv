@@ -157,11 +157,23 @@ const SettingsEmailTemplates = () => {
       new Date(active.coupon_expires_at).getTime()
   );
 
+  const couponExpiresInPast = !!(
+    active?.coupon_enabled &&
+    active?.coupon_expires_at &&
+    new Date(active.coupon_expires_at).getTime() < Date.now()
+  );
+
   const handleSave = async () => {
     if (!active) return;
     if (couponDateRangeInvalid) {
       toast.error(
         "A data de início do cupom deve ser anterior à data de expiração."
+      );
+      return;
+    }
+    if (couponExpiresInPast) {
+      toast.error(
+        "A data de expiração do cupom está no passado. O cupom nunca será exibido nos e-mails."
       );
       return;
     }

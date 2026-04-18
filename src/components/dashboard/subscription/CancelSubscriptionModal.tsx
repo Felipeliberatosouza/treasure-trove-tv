@@ -63,6 +63,8 @@ export default function CancelSubscriptionModal({
     if (!open) {
       setPreview(null);
       setError(null);
+      setReasonCode("");
+      setReasonDetails("");
       return;
     }
     let cancelled = false;
@@ -93,7 +95,7 @@ export default function CancelSubscriptionModal({
     if (!preview) return;
     setLoading(true);
     try {
-      await onConfirm(preview);
+      await onConfirm(preview, { code: reasonCode, details: reasonDetails.trim() });
       onOpenChange(false);
     } finally {
       setLoading(false);

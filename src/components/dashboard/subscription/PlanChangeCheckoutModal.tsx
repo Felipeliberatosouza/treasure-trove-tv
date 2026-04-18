@@ -7,8 +7,9 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import {
   ArrowRight, CreditCard, Plus, ShieldCheck, Loader2,
-  ArrowUp, ArrowDown, CheckCircle2, Info, AlertCircle, RefreshCw, HelpCircle,
+  ArrowUp, ArrowDown, CheckCircle2, Info, AlertCircle, RefreshCw, HelpCircle, Download,
 } from "lucide-react";
+import { downloadPlanChangePdf } from "@/lib/planChangePdf";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Elements } from "@stripe/react-stripe-js";
@@ -53,6 +54,7 @@ export default function PlanChangeCheckoutModal({
   const [paymentError, setPaymentError] = useState<string | null>(null);
   const [pendingInvoice, setPendingInvoice] = useState<{ clientSecret: string; invoiceId: string } | null>(null);
   const [awaiting3DS, setAwaiting3DS] = useState(false);
+  const [success, setSuccess] = useState(false);
 
   const isUpgrade = newPlan.price > currentPlan.price;
   const daysRemaining = Math.max(0, totalDays - daysUsed);
@@ -119,8 +121,8 @@ export default function PlanChangeCheckoutModal({
           : `Downgrade para ${newPlan.name} agendado.`,
       );
       setPendingInvoice(null);
+      setSuccess(true);
       await onSuccess?.();
-      onOpenChange(false);
     } catch (e) {
       setPaymentError(e instanceof Error ? e.message : "Erro ao alterar plano.");
     } finally {
@@ -186,8 +188,8 @@ export default function PlanChangeCheckoutModal({
     }
     toast.success(`Upgrade para ${newPlan.name} concluído!`);
     setPendingInvoice(null);
+    setSuccess(true);
     await onSuccess?.();
-    onOpenChange(false);
   };
 
   /** Retry an existing pending invoice (e.g., after 3DS failure with same card). */
@@ -214,8 +216,42 @@ export default function PlanChangeCheckoutModal({
 
   const showNewCardForm = requiresPayment && paymentChoice === "new";
 
+  const handleClose = (v: boolean) => {
+    if (submitting || awaiting3DS) return;
+    if (!v) {
+      setSuccess(false);
+      setPaymentError(null);
+      setPendingInvoice(null);
+    }
+    onOpenChange(v);
+  };
+
+  const handleDownloadPdf = () => {
+    const today = new Date();
+    const effectiveDate = today.toLocaleDateString("pt-BR");
+    const balance = isUpgrade ? dueNow : -creditForNext;
+    const changeType: "upgrade" | "downgrade" | "change" =
+      newPlan.price > currentPlan.price ? "upgrade" : newPlan.price < currentPlan.price ? "downgrade" : "change";
+    downloadPlanChangePdf({
+      previousPlan: currentPlan.name,
+      previousPlanPrice: currentPlan.price,
+      newPlan: newPlan.name,
+      newPlanPrice: newPlan.price,
+      changeType,
+      totalDays,
+      daysUsed,
+      daysRemaining,
+      dailyOld,
+      dailyNew,
+      credit,
+      newProRata: newPeriodCharge,
+      balance,
+      effectiveDate,
+    });
+  };
+
   return (
-    <Dialog open={open} onOpenChange={(v) => !submitting && !awaiting3DS && onOpenChange(v)}>
+    <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-xl w-[calc(100%-2rem)] sm:w-full max-h-[85vh] sm:max-h-[90vh] p-0 gap-0 !grid-cols-1 grid-rows-[auto_1fr_auto] overflow-hidden top-[50%] translate-y-[-50%]">
         {awaiting3DS && (
           <div className="absolute inset-0 z-50 flex flex-col items-center justify-center gap-3 bg-background/85 backdrop-blur-sm rounded-lg">
@@ -233,22 +269,76 @@ export default function PlanChangeCheckoutModal({
         )}
         <DialogHeader className="px-6 pt-6 pb-4 border-b border-border shrink-0">
           <div className="flex items-center gap-2">
-            {isUpgrade ? (
+            {success ? (
+              <CheckCircle2 className="h-5 w-5 text-success" />
+            ) : isUpgrade ? (
               <ArrowUp className="h-5 w-5 text-success" />
             ) : (
               <ArrowDown className="h-5 w-5 text-warning" />
             )}
             <DialogTitle>
-              Confirmar {isUpgrade ? "Upgrade" : "Downgrade"} de Plano
+              {success
+                ? `${isUpgrade ? "Upgrade" : "Downgrade"} concluído`
+                : `Confirmar ${isUpgrade ? "Upgrade" : "Downgrade"} de Plano`}
             </DialogTitle>
           </div>
           <DialogDescription>
-            Revise os valores e a forma de pagamento antes de confirmar.
+            {success
+              ? "Sua troca de plano foi processada. Baixe o comprovante abaixo."
+              : "Revise os valores e a forma de pagamento antes de confirmar."}
           </DialogDescription>
         </DialogHeader>
 
         {/* Scrollable body */}
         <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4 min-h-0">
+
+        {success && (
+          <div className="rounded-lg border border-success/40 bg-success/5 p-5 space-y-4">
+            <div className="flex items-start gap-3">
+              <div className="shrink-0 rounded-full bg-success/15 p-2">
+                <CheckCircle2 className="h-5 w-5 text-success" />
+              </div>
+              <div className="space-y-1">
+                <p className="font-semibold text-sm">Troca confirmada com sucesso</p>
+                <p className="text-xs text-muted-foreground">
+                  {currentPlan.name} → <strong className="text-foreground">{newPlan.name}</strong>
+                </p>
+              </div>
+            </div>
+            <div className="rounded-md bg-background/60 border border-border p-3 text-sm space-y-1">
+              {isUpgrade && dueNow > 0 ? (
+                <p>
+                  Saldo pago agora:{" "}
+                  <strong className="text-primary">{formatBRL(dueNow)}</strong>
+                </p>
+              ) : creditForNext > 0 ? (
+                <p>
+                  Crédito de <strong className="text-success">{formatBRL(creditForNext)}</strong>{" "}
+                  será aplicado na próxima fatura.
+                </p>
+              ) : (
+                <p>Sem ajuste financeiro nesta troca.</p>
+              )}
+              <p className="text-xs text-muted-foreground">
+                Baseado em {daysRemaining} dias restantes no ciclo.
+              </p>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleDownloadPdf}
+              className="w-full"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Baixar comprovante (PDF)
+            </Button>
+            <p className="text-[11px] text-muted-foreground text-center">
+              Você também pode baixar o comprovante depois no seu extrato de assinatura.
+            </p>
+          </div>
+        )}
+
+        {!success && (<>
 
         {/* Plan transition card */}
         <div className="rounded-lg border border-border bg-muted/30 p-4">
@@ -494,29 +584,42 @@ export default function PlanChangeCheckoutModal({
             )}
           </div>
         )}
+        </>)}
 
         </div>
         {/* /Scrollable body */}
 
         {/* Sticky footer */}
         <div className="border-t border-border bg-background px-6 py-4 space-y-3 shrink-0">
-          {/* Footer — hidden when StripeCardForm renders its own submit button */}
-          {!showNewCardForm && (
+          {success ? (
             <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
-              <Button variant="outline" onClick={() => onOpenChange(false)} disabled={submitting}>
-                Cancelar
+              <Button variant="outline" onClick={handleDownloadPdf}>
+                <Download className="h-4 w-4 mr-2" />
+                Baixar PDF
               </Button>
-              <Button
-                onClick={handleConfirmSavedOrNoCharge}
-                disabled={submitting || loadingSetup}
-                className="min-w-[180px]"
-              >
-                {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                {requiresPayment
-                  ? `Pagar ${formatBRL(dueNow)} e mudar`
-                  : `Confirmar ${isUpgrade ? "Upgrade" : "Downgrade"}`}
+              <Button onClick={() => handleClose(false)} className="min-w-[140px]">
+                Concluir
               </Button>
             </div>
+          ) : (
+            /* Footer — hidden when StripeCardForm renders its own submit button */
+            !showNewCardForm && (
+              <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
+                <Button variant="outline" onClick={() => handleClose(false)} disabled={submitting}>
+                  Cancelar
+                </Button>
+                <Button
+                  onClick={handleConfirmSavedOrNoCharge}
+                  disabled={submitting || loadingSetup}
+                  className="min-w-[180px]"
+                >
+                  {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                  {requiresPayment
+                    ? `Pagar ${formatBRL(dueNow)} e mudar`
+                    : `Confirmar ${isUpgrade ? "Upgrade" : "Downgrade"}`}
+                </Button>
+              </div>
+            )
           )}
 
           <div className="flex justify-center">

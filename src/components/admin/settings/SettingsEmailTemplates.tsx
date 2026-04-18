@@ -157,11 +157,23 @@ const SettingsEmailTemplates = () => {
       new Date(active.coupon_expires_at).getTime()
   );
 
+  const couponExpiresInPast = !!(
+    active?.coupon_enabled &&
+    active?.coupon_expires_at &&
+    new Date(active.coupon_expires_at).getTime() < Date.now()
+  );
+
   const handleSave = async () => {
     if (!active) return;
     if (couponDateRangeInvalid) {
       toast.error(
         "A data de início do cupom deve ser anterior à data de expiração."
+      );
+      return;
+    }
+    if (couponExpiresInPast) {
+      toast.error(
+        "A data de expiração do cupom está no passado. O cupom nunca será exibido nos e-mails."
       );
       return;
     }
@@ -548,7 +560,7 @@ const SettingsEmailTemplates = () => {
                       );
                     }}
                     className={
-                      couponDateRangeInvalid
+                      couponDateRangeInvalid || couponExpiresInPast
                         ? "border-destructive ring-1 ring-destructive focus-visible:ring-destructive"
                         : ""
                     }
@@ -581,6 +593,19 @@ const SettingsEmailTemplates = () => {
                       <span>
                         A data de início do cupom deve ser anterior à data de
                         expiração. Corrija as datas antes de salvar.
+                      </span>
+                    </p>
+                  </div>
+                )}
+                {couponExpiresInPast && !couponDateRangeInvalid && (
+                  <div className="rounded-md border-2 border-destructive bg-destructive/10 p-3">
+                    <p className="text-sm font-semibold text-destructive flex items-start gap-2">
+                      <span>⚠️</span>
+                      <span>
+                        A data de expiração está no passado. Se salvar agora, o
+                        cupom <strong>nunca será exibido</strong> nos e-mails
+                        enviados. Atualize a data de expiração para uma data
+                        futura.
                       </span>
                     </p>
                   </div>
@@ -766,7 +791,7 @@ const SettingsEmailTemplates = () => {
 
           {/* Actions */}
           <div className="flex gap-2">
-            <Button onClick={handleSave} disabled={saving || couponDateRangeInvalid}>
+            <Button onClick={handleSave} disabled={saving || couponDateRangeInvalid || couponExpiresInPast}>
               <Save className="h-4 w-4 mr-2" /> {saving ? "Salvando..." : "Salvar"}
             </Button>
             <Button variant="outline" onClick={() => setPreviewing(!previewing)}>

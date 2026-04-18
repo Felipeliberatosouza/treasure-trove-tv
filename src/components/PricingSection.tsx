@@ -10,8 +10,8 @@ import { toast } from "sonner";
 import CpfRequiredModal from "@/components/CpfRequiredModal";
 import { useCpfGuard } from "@/hooks/useCpfGuard";
 import { useActiveSubscription } from "@/hooks/useActiveSubscription";
-import { redirectTopLevel } from "@/lib/payments";
 import PaymentSecurityBadge from "@/components/PaymentSecurityBadge";
+import type { EmbeddedCheckoutState } from "@/pages/Checkout";
 
 interface PlanData {
   name: string;
@@ -97,45 +97,19 @@ const PricingSection = () => {
 
   const { requireCpf, showCpfModal, setShowCpfModal, onCpfComplete } = useCpfGuard();
 
-  const doCheckout = async (plan: PlanData) => {
-    setLoadingPlan(plan.name);
-    try {
-      const { data, error } = await supabase.functions.invoke("create-checkout", {
-        body: { priceId: plan.stripe_price_id },
-      });
-      if (error) throw error;
-      if (data?.error) {
-        // User already has an active subscription → send them to the plan
-        // change flow inside the student dashboard instead of just showing
-        // an error toast.
-        const msg = String(data.error || "");
-        if (/assinatura ativa/i.test(msg)) {
-          toast.info("Você já possui uma assinatura ativa. Redirecionando para a troca de plano...");
-          navigate("/dashboard/student?tab=subscription&action=change-plan");
-          return;
-        }
-        toast.error(data.error, {
-          action: {
-            label: "Gerenciar assinatura",
-            onClick: () => navigate("/dashboard/student?tab=subscription"),
-          },
-          duration: 8000,
-        });
-        return;
-      }
-      if (data?.url) {
-        // Centralized helper handles overlay + safe iframe navigation.
-        redirectTopLevel(data.url, { title: "Redirecionando para o pagamento seguro..." });
-        return;
-      }
-      toast.error("Não foi possível iniciar o checkout. Tente novamente.");
-    } catch (err: any) {
-      const msg = err?.message || "Erro ao iniciar checkout.";
-      toast.error(msg);
-      console.error(err);
-    } finally {
-      setLoadingPlan(null);
+  const doCheckout = (plan: PlanData) => {
+    if (!plan.stripe_price_id) {
+      toast.error("Este plano ainda não está disponível para compra.");
+      return;
     }
+    const state: EmbeddedCheckoutState = {
+      mode: "subscription",
+      priceId: plan.stripe_price_id,
+      planName: plan.name,
+      planPrice: plan.price,
+      cancelUrl: "/",
+    };
+    navigate("/checkout", { state });
   };
 
   const handleCheckout = async (plan: PlanData) => {

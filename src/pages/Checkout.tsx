@@ -118,10 +118,47 @@ const Checkout = () => {
   const [summaryOpen, setSummaryOpen] = useState(false);
   const [mobileSubmitting, setMobileSubmitting] = useState(false);
   const submitRef = useRef<(() => void) | null>(null);
+  const [keyboardOpen, setKeyboardOpen] = useState(false);
   // Keep summary always open on desktop
   useEffect(() => {
     if (!isMobile) setSummaryOpen(true);
     else setSummaryOpen(false);
+  }, [isMobile]);
+
+  // Detect virtual keyboard on mobile by tracking focus on form fields
+  // (also covers Stripe iframes, since focusin bubbles from the iframe host)
+  useEffect(() => {
+    if (!isMobile) {
+      setKeyboardOpen(false);
+      return;
+    }
+    const isFormField = (el: EventTarget | null) => {
+      if (!(el instanceof HTMLElement)) return false;
+      const tag = el.tagName;
+      return (
+        tag === "INPUT" ||
+        tag === "TEXTAREA" ||
+        tag === "SELECT" ||
+        el.isContentEditable ||
+        el.tagName === "IFRAME"
+      );
+    };
+    const onFocusIn = (e: FocusEvent) => {
+      if (isFormField(e.target)) setKeyboardOpen(true);
+    };
+    const onFocusOut = () => {
+      // Defer so a focus that immediately moves to another input doesn't flicker
+      window.setTimeout(() => {
+        const active = document.activeElement;
+        setKeyboardOpen(isFormField(active));
+      }, 50);
+    };
+    document.addEventListener("focusin", onFocusIn);
+    document.addEventListener("focusout", onFocusOut);
+    return () => {
+      document.removeEventListener("focusin", onFocusIn);
+      document.removeEventListener("focusout", onFocusOut);
+    };
   }, [isMobile]);
 
   // Guard: missing context
@@ -256,8 +293,8 @@ const Checkout = () => {
         </motion.div>
       </div>
 
-      {/* Mobile sticky pay bar */}
-      {isMobile && (
+      {/* Mobile sticky pay bar — hidden when virtual keyboard is open */}
+      {isMobile && !keyboardOpen && (
         <>
           <div
             aria-hidden

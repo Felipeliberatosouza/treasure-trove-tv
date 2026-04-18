@@ -113,11 +113,22 @@ type SettingsMap = {
   doubt_response_deadline_days: number;
   product_config: ProductConfigSettings;
   twilio_config: TwilioConfigSettings;
+  retention_coupon: RetentionCouponSettings;
 };
 
 export interface TwilioConfigSettings {
   sms_from_number: string;
   whatsapp_from_number: string;
+}
+
+export interface RetentionCouponSettings {
+  enabled: boolean;
+  coupon_id: string;
+  discount_label: string;
+  duration_label: string;
+  eligible_reasons: string[];
+  headline: string;
+  message: string;
 }
 
 export interface ProductConfigSettings {

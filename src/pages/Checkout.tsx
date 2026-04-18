@@ -82,10 +82,10 @@ const Checkout = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="mx-auto max-w-4xl px-4 py-8 md:py-12">
+      <div className="mx-auto max-w-4xl px-4 pt-4 pb-8 md:pt-6 md:pb-12">
         <button
           onClick={() => navigate(state.cancelUrl || -1 as any)}
-          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors"
+          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-4 transition-colors"
         >
           <ArrowLeft className="h-4 w-4" /> Voltar
         </button>

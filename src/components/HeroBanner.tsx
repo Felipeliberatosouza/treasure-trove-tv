@@ -249,6 +249,15 @@ const HeroBanner = ({ onVideoClick, onExploreClick }: HeroBannerProps) => {
               />
             ))}
           </div>
+          <div
+            className="absolute bottom-0 left-0 right-0 z-20 h-1 bg-foreground/10"
+            aria-hidden="true"
+          >
+            <div
+              className="h-full bg-primary transition-[width] duration-[50ms] ease-linear"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
         </>
       )}
     </section>

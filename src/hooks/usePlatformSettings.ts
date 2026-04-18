@@ -162,9 +162,9 @@ export interface PrivacyPolicySettings {
 type SettingsMap = {
   branding: BrandingSettings;
   contact: ContactSettings;
-  hero_banner: HeroBannerSettings;
-  hero_banner_student: HeroBannerSettings;
-  hero_banner_teacher: HeroBannerSettings;
+  hero_banner: HeroBannerCarouselSettings;
+  hero_banner_student: HeroBannerCarouselSettings;
+  hero_banner_teacher: HeroBannerCarouselSettings;
   featured_videos: FeaturedVideosSettings;
   subscription_plans: SubscriptionPlansSettings;
   video_pricing: VideoPricingSettings;

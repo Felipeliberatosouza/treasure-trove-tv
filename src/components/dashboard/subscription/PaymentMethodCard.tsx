@@ -9,6 +9,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import StripeCardForm from "./StripeCardForm";
 import PaymentSecurityBadge from "@/components/PaymentSecurityBadge";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface SavedCard {
   id: string;
@@ -33,6 +43,8 @@ export default function PaymentMethodCard() {
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [replaceMode, setReplaceMode] = useState(false);
+  const [removingId, setRemovingId] = useState<string | null>(null);
+  const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null);
 
   const stripePromise = useMemo(() => getStripe(), []);
 
@@ -77,8 +89,31 @@ export default function PaymentMethodCard() {
     await load();
   };
 
+  const handleRemoveCard = async (pmId: string) => {
+    setRemovingId(pmId);
+    try {
+      const { data, error } = await supabase.functions.invoke("detach-payment-method", {
+        body: { paymentMethodId: pmId },
+      });
+      if (error) throw error;
+      if (!data?.ok) {
+        toast.error(data?.error || "Não foi possível remover o cartão.");
+        return;
+      }
+      toast.success("Cartão removido.");
+      await load();
+    } catch (e) {
+      console.error("[PaymentMethodCard] remove failed", e);
+      toast.error("Falha ao remover o cartão. Tente novamente.");
+    } finally {
+      setRemovingId(null);
+      setConfirmRemoveId(null);
+    }
+  };
+
   const defaultCard = savedCards.find((c) => c.isDefault) || savedCards[0];
   const otherCards = savedCards.filter((c) => c.id !== defaultCard?.id);
+  const cardToRemove = otherCards.find((c) => c.id === confirmRemoveId);
 
   return (
     <Card className="border border-border">
@@ -136,6 +171,20 @@ export default function PaymentMethodCard() {
                     <span className="text-muted-foreground ml-auto">
                       {String(c.exp_month).padStart(2, "0")}/{String(c.exp_year).slice(-2)}
                     </span>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                      onClick={() => setConfirmRemoveId(c.id)}
+                      disabled={removingId === c.id}
+                      aria-label={`Remover cartão ${c.brand} final ${c.last4}`}
+                    >
+                      {removingId === c.id ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <Trash2 className="h-3.5 w-3.5" />
+                      )}
+                    </Button>
                   </div>
                 ))}
               </div>
@@ -221,6 +270,44 @@ export default function PaymentMethodCard() {
           </>
         )}
       </CardContent>
+
+      <AlertDialog
+        open={!!confirmRemoveId}
+        onOpenChange={(o) => !o && setConfirmRemoveId(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remover cartão?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {cardToRemove ? (
+                <>
+                  O cartão{" "}
+                  <span className="font-semibold uppercase">{cardToRemove.brand}</span>{" "}
+                  final <span className="font-mono">•••• {cardToRemove.last4}</span> será
+                  removido permanentemente. Esta ação não pode ser desfeita.
+                </>
+              ) : (
+                "Tem certeza que deseja remover este cartão?"
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={!!removingId}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => confirmRemoveId && handleRemoveCard(confirmRemoveId)}
+              disabled={!!removingId}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {removingId ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-1" />
+              ) : (
+                <Trash2 className="h-4 w-4 mr-1" />
+              )}
+              Remover
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }

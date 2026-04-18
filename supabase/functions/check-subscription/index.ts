@@ -192,7 +192,9 @@ serve(async (req) => {
       // Check if there were active subs that we're now expiring
       const { data: activeSubs } = await supabaseClient
         .from("student_subscriptions")
-        .select("id, plan_id, expires_at, subscription_plans(name)")
+        .select(
+          "id, plan_id, started_at, expires_at, subscription_plans(name, price, min_usage_charge_pct)",
+        )
         .eq("user_id", user.id)
         .eq("status", "active");
 
@@ -206,7 +208,11 @@ serve(async (req) => {
 
         // Send cancellation email for the first expired sub
         const expiredSub = activeSubs[0];
-        const planData = expiredSub.subscription_plans as any;
+        const planData = expiredSub.subscription_plans as {
+          name?: string;
+          price?: number;
+          min_usage_charge_pct?: number;
+        } | null;
         const { data: profile } = await supabaseClient
           .from("profiles")
           .select("name, email")
@@ -226,6 +232,53 @@ serve(async (req) => {
             }
           }
 
+          // Generate cancellation receipt (best-effort).
+          let receiptUrl: string | undefined;
+          try {
+            const startDate = new Date(expiredSub.started_at);
+            const now = new Date();
+            const totalDays = 30;
+            const cycleStart = new Date(startDate);
+            while (cycleStart.getTime() + totalDays * 86400000 < now.getTime()) {
+              cycleStart.setDate(cycleStart.getDate() + totalDays);
+            }
+            const daysUsed = Math.max(
+              0,
+              Math.min(
+                totalDays,
+                Math.floor((now.getTime() - cycleStart.getTime()) / 86400000),
+              ),
+            );
+
+            const recRes = await fetch(
+              `${supabaseUrl}/functions/v1/generate-cancellation-receipt`,
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${serviceKey}`,
+                },
+                body: JSON.stringify({
+                  userId: user.id,
+                  studentName: profile.name || "",
+                  studentEmail: profile.email,
+                  planName: planData?.name || "Plano",
+                  planPrice: Number(planData?.price ?? 0),
+                  totalDays,
+                  daysUsed,
+                  minUsageChargePct: Number(planData?.min_usage_charge_pct ?? 0),
+                  effectiveDate: new Date().toLocaleDateString("pt-BR"),
+                }),
+              },
+            );
+            if (recRes.ok) {
+              const j = (await recRes.json()) as { url?: string };
+              receiptUrl = j.url;
+            }
+          } catch (e) {
+            console.warn("[check-sub] receipt gen failed", e);
+          }
+
           await fetch(`${supabaseUrl}/functions/v1/send-transactional-email`, {
             method: "POST",
             headers: {
@@ -242,6 +295,7 @@ serve(async (req) => {
                 expiryDate: expiryDateStr,
                 reason: "expirada",
                 renewLink: "https://revisaofacil.com/#pricing",
+                receiptUrl,
               },
             }),
           });

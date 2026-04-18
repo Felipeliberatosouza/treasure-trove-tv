@@ -119,19 +119,26 @@ serve(async (req) => {
         });
       }
 
-      // Update local subscription status
+      // Update local subscription status (fetch full plan + cycle info for receipt)
       const { data: activeSubs } = await supabase
         .from("student_subscriptions")
-        .select("id, plan_id, expires_at, subscription_plans(name)")
+        .select(
+          "id, plan_id, started_at, expires_at, subscription_plans(name, price, min_usage_charge_pct)",
+        )
         .eq("user_id", profile.user_id)
         .eq("status", "active");
 
       let planName = "Plano";
       let expiryDate = "";
+      let receiptUrl: string | undefined;
 
       if (activeSubs && activeSubs.length > 0) {
         const sub = activeSubs[0];
-        const planData = sub.subscription_plans as any;
+        const planData = sub.subscription_plans as {
+          name?: string;
+          price?: number;
+          min_usage_charge_pct?: number;
+        } | null;
         planName = planData?.name || "Plano";
         expiryDate = sub.expires_at
           ? new Date(sub.expires_at).toLocaleDateString("pt-BR")
@@ -145,6 +152,57 @@ serve(async (req) => {
           .eq("status", "active");
 
         logStep("Local subscriptions marked as expired");
+
+        // Build cancellation receipt PDF (best-effort).
+        try {
+          const startDate = new Date(sub.started_at);
+          const now = new Date();
+          const totalDays = 30;
+          const cycleStart = new Date(startDate);
+          while (cycleStart.getTime() + totalDays * 86400000 < now.getTime()) {
+            cycleStart.setDate(cycleStart.getDate() + totalDays);
+          }
+          const daysUsed = Math.max(
+            0,
+            Math.min(
+              totalDays,
+              Math.floor((now.getTime() - cycleStart.getTime()) / 86400000),
+            ),
+          );
+
+          const recRes = await fetch(
+            `${Deno.env.get("SUPABASE_URL")}/functions/v1/generate-cancellation-receipt`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+              },
+              body: JSON.stringify({
+                userId: profile.user_id,
+                studentName: profile.name || "",
+                studentEmail: profile.email,
+                planName,
+                planPrice: Number(planData?.price ?? 0),
+                totalDays,
+                daysUsed,
+                minUsageChargePct: Number(planData?.min_usage_charge_pct ?? 0),
+                effectiveDate: new Date().toLocaleDateString("pt-BR"),
+              }),
+            },
+          );
+          if (recRes.ok) {
+            const recJson = (await recRes.json()) as { url?: string };
+            receiptUrl = recJson.url;
+            logStep("Cancellation receipt generated", { hasUrl: !!receiptUrl });
+          } else {
+            logStep("Receipt generation failed", { status: recRes.status });
+          }
+        } catch (e) {
+          logStep("Receipt generation error", {
+            error: e instanceof Error ? e.message : String(e),
+          });
+        }
       }
 
       // Determine reason
@@ -177,6 +235,7 @@ serve(async (req) => {
               expiryDate,
               reason,
               renewLink: "https://revisaofacil.com/#pricing",
+              receiptUrl,
             },
           }),
         }

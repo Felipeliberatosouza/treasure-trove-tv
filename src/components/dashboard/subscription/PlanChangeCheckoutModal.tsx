@@ -584,6 +584,7 @@ export default function PlanChangeCheckoutModal({
             )}
           </div>
         )}
+        </>)}
 
         </div>
         {/* /Scrollable body */}

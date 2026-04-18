@@ -60,6 +60,12 @@ export default function CancelSubscriptionModal({
   const [reasonCode, setReasonCode] = useState<string>("");
   const [reasonDetails, setReasonDetails] = useState<string>("");
 
+  // Retention offer state
+  const [retention, setRetention] = useState<RetentionCouponSettings | null>(null);
+  const [showRetention, setShowRetention] = useState(false);
+  const [applyingCoupon, setApplyingCoupon] = useState(false);
+  const [retentionDeclined, setRetentionDeclined] = useState(false);
+
   // Fetch the Stripe-sourced cancellation breakdown whenever the modal opens.
   // This is the SOURCE OF TRUTH — same numbers will be used on the email/PDF.
   useEffect(() => {
@@ -68,6 +74,8 @@ export default function CancelSubscriptionModal({
       setError(null);
       setReasonCode("");
       setReasonDetails("");
+      setShowRetention(false);
+      setRetentionDeclined(false);
       return;
     }
     let cancelled = false;
@@ -75,7 +83,10 @@ export default function CancelSubscriptionModal({
       setPreviewLoading(true);
       setError(null);
       try {
-        const { data, error } = await supabase.functions.invoke("preview-cancellation");
+        const [{ data, error }, { data: cfgRow }] = await Promise.all([
+          supabase.functions.invoke("preview-cancellation"),
+          supabase.from("platform_settings").select("value").eq("key", "retention_coupon").maybeSingle(),
+        ]);
         if (error) throw error;
         if (cancelled) return;
         if (!data?.ok) {
@@ -83,6 +94,7 @@ export default function CancelSubscriptionModal({
         } else {
           setPreview(data as CancellationPreview);
         }
+        if (cfgRow?.value) setRetention(cfgRow.value as unknown as RetentionCouponSettings);
       } catch (e) {
         if (!cancelled) {
           setError(e instanceof Error ? e.message : "Erro ao calcular o cancelamento.");
@@ -94,8 +106,22 @@ export default function CancelSubscriptionModal({
     return () => { cancelled = true; };
   }, [open]);
 
+  // Decide whether the offer applies for the currently selected reason
+  const offerEligible =
+    !!retention?.enabled &&
+    !!retention?.coupon_id &&
+    !retentionDeclined &&
+    (!reasonCode ||
+      !retention.eligible_reasons?.length ||
+      retention.eligible_reasons.includes(reasonCode));
+
   const handleConfirm = async () => {
     if (!preview) return;
+    // If an eligible retention offer exists, show it BEFORE cancelling.
+    if (offerEligible && reasonCode && !showRetention) {
+      setShowRetention(true);
+      return;
+    }
     setLoading(true);
     try {
       await onConfirm(preview, { code: reasonCode, details: reasonDetails.trim() });
@@ -103,6 +129,28 @@ export default function CancelSubscriptionModal({
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleAcceptCoupon = async () => {
+    setApplyingCoupon(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("apply-retention-coupon", {
+        body: { reasonCode },
+      });
+      if (error) throw error;
+      if (!data?.ok) throw new Error(data?.error || "Não foi possível aplicar o desconto.");
+      toast.success("Desconto aplicado! Sua assinatura continua ativa.");
+      onOpenChange(false);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erro ao aplicar o desconto.");
+    } finally {
+      setApplyingCoupon(false);
+    }
+  };
+
+  const handleDeclineCoupon = () => {
+    setRetentionDeclined(true);
+    setShowRetention(false);
   };
 
   const renderBody = () => {

@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BookOpen, FileText, ClipboardList, Award, StickyNote, HelpCircle, GraduationCap, AlertTriangle, Settings, Loader2, ArrowLeftRight, XCircle, History, ShieldCheck, Clock, Info } from "lucide-react";
+import { BookOpen, FileText, ClipboardList, Award, StickyNote, HelpCircle, GraduationCap, AlertTriangle, Loader2, ArrowLeftRight, XCircle, History, ShieldCheck, Clock, Info } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 import { useAuditLog } from "@/hooks/useAuditLog";
@@ -17,7 +17,7 @@ import PlanChangeModal from "./subscription/PlanChangeModal";
 import PlanChangeCheckoutModal from "./subscription/PlanChangeCheckoutModal";
 import CancelSubscriptionModal from "./subscription/CancelSubscriptionModal";
 import PurchaseHistory from "./subscription/PurchaseHistory";
-import { redirectTopLevel } from "@/lib/payments";
+
 
 const SERVICE_META: Record<string, { label: string; icon: React.ElementType; resourceType: string }> = {
   service_revisoes: { label: "Revisões", icon: BookOpen, resourceType: "revisao" },
@@ -73,7 +73,7 @@ export default function StudentSubscriptionTab() {
   const [purchases, setPurchases] = useState<Purchase[]>([]);
   const [availablePlans, setAvailablePlans] = useState<import("./subscription/PlanChangeModal").PlanOption[]>([]);
   const [loading, setLoading] = useState(true);
-  const [portalLoading, setPortalLoading] = useState(false);
+  
   const [showPlanChange, setShowPlanChange] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
   const [pendingNewPlan, setPendingNewPlan] = useState<import("./subscription/PlanChangeModal").PlanOption | null>(null);
@@ -181,18 +181,6 @@ export default function StudentSubscriptionTab() {
   // and uses window.location (not window.top), so it works inside the
   // Lovable preview iframe without leaving the app frame blank.
 
-  const handleManageSubscription = async () => {
-    setPortalLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("customer-portal");
-      if (error) throw error;
-      if (data?.url) redirectTopLevel(data.url, { title: "Abrindo portal de gerenciamento..." });
-    } catch {
-      toast.error("Não foi possível abrir o portal de gerenciamento.");
-    } finally {
-      setPortalLoading(false);
-    }
-  };
 
   // User picked a target plan in the comparison modal — open the in-app
   // checkout modal (Stripe Elements) to confirm the change with prorated charge.

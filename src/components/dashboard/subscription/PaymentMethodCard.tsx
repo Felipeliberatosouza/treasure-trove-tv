@@ -171,6 +171,20 @@ export default function PaymentMethodCard() {
                     <span className="text-muted-foreground ml-auto">
                       {String(c.exp_month).padStart(2, "0")}/{String(c.exp_year).slice(-2)}
                     </span>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                      onClick={() => setConfirmRemoveId(c.id)}
+                      disabled={removingId === c.id}
+                      aria-label={`Remover cartão ${c.brand} final ${c.last4}`}
+                    >
+                      {removingId === c.id ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <Trash2 className="h-3.5 w-3.5" />
+                      )}
+                    </Button>
                   </div>
                 ))}
               </div>

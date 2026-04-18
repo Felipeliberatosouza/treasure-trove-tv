@@ -15,6 +15,7 @@ import { getStripe } from "@/lib/stripe";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import StripeCardForm from "./StripeCardForm";
+import PaymentSecurityBadge from "@/components/PaymentSecurityBadge";
 import type { PlanOption } from "./plan-change/PlanOption";
 
 interface SavedCard {

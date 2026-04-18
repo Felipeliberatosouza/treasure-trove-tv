@@ -1,7 +1,7 @@
 import { useState } from "react";
 import MandatoryMfaGuard from "@/components/MandatoryMfaGuard";
 import { motion } from "framer-motion";
-import { ArrowLeft, Users, Video, DollarSign, Shield, LayoutDashboard, Settings, HelpCircle, Mail, CreditCard, Tag, BarChart3, CalendarClock, FileText } from "lucide-react";
+import { ArrowLeft, Users, Video, DollarSign, Shield, LayoutDashboard, Settings, HelpCircle, Mail, CreditCard, Tag, BarChart3, CalendarClock, FileText, Receipt } from "lucide-react";
 import { Link, Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
@@ -18,6 +18,7 @@ import AdminUsageHistoryTab from "@/components/admin/AdminUsageHistoryTab";
 import AdminSubscriptionsTab from "@/components/admin/AdminSubscriptionsTab";
 import AdminSecurityTab from "@/components/admin/AdminSecurityTab";
 import AdminAuditLogsTab from "@/components/admin/AdminAuditLogsTab";
+import AdminCancellationReceiptsTab from "@/components/admin/AdminCancellationReceiptsTab";
 
 const tabs = [
   { id: "overview", label: "Visão Geral", icon: LayoutDashboard },
@@ -27,6 +28,7 @@ const tabs = [
   { id: "payments", label: "Pagamentos", icon: DollarSign },
   { id: "plans", label: "Planos de Assinatura", icon: CreditCard },
   { id: "subscriptions", label: "Assinaturas", icon: CalendarClock },
+  { id: "cancellation-receipts", label: "Comprovantes de Cancelamento", icon: Receipt },
   { id: "pricing", label: "Preço de Recursos", icon: Tag },
   { id: "usage", label: "Histórico de Uso", icon: BarChart3 },
   { id: "emails", label: "Monitoramento de E-mails", icon: Mail },
@@ -91,6 +93,7 @@ const AdminDashboard = () => {
             {activeTab === "emails" && <AdminEmailsTab />}
             {activeTab === "plans" && <AdminPlansTab />}
             {activeTab === "subscriptions" && <AdminSubscriptionsTab />}
+            {activeTab === "cancellation-receipts" && <AdminCancellationReceiptsTab />}
             {activeTab === "pricing" && <AdminResourcePricingTab />}
             {activeTab === "usage" && <AdminUsageHistoryTab />}
             {activeTab === "security" && <AdminSecurityTab />}

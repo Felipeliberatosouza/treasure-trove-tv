@@ -293,8 +293,8 @@ const Checkout = () => {
         </motion.div>
       </div>
 
-      {/* Mobile sticky pay bar */}
-      {isMobile && (
+      {/* Mobile sticky pay bar — hidden when virtual keyboard is open */}
+      {isMobile && !keyboardOpen && (
         <>
           <div
             aria-hidden

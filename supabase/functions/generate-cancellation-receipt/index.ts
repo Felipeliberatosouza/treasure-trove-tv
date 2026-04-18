@@ -65,6 +65,7 @@ async function fetchBranding(supabase: ReturnType<typeof createClient>): Promise
     logoWidth: 0,
     logoHeight: 0,
     company: { razaoSocial: "", cnpj: "", address: "" },
+    primaryRgb: [0, 80, 180],
   };
   try {
     const { data } = await supabase
@@ -77,6 +78,8 @@ async function fetchBranding(supabase: ReturnType<typeof createClient>): Promise
       if (row.key === "branding") {
         if (v.platform_name) fallback.platformName = v.platform_name;
         if (v.logo_url) logoUrl = v.logo_url;
+        const rgb = hexToRgb(v.primary_color || "");
+        if (rgb) fallback.primaryRgb = rgb;
       } else if (row.key === "contact") {
         fallback.company.razaoSocial = v.razao_social || v.nome_fantasia || "";
         fallback.company.cnpj = formatCnpj(v.cnpj || "");

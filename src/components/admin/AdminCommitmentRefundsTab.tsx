@@ -164,9 +164,9 @@ const AdminCommitmentRefundsTab = () => {
       "Reembolsado (R$)",
       "Tipo",
       "Motivo",
-      "Stripe Refund ID",
-      "Stripe Charge ID",
-      "Stripe Subscription ID",
+      "ID do reembolso",
+      "ID da cobrança",
+      "ID da assinatura",
       "Status",
     ];
     const rows = filteredRecords.map((r) =>
@@ -375,7 +375,7 @@ const AdminCommitmentRefundsTab = () => {
                   <TableHead>Reembolsado</TableHead>
                   <TableHead>Tipo</TableHead>
                   <TableHead>Motivo</TableHead>
-                  <TableHead>Stripe Refund</TableHead>
+                  <TableHead>ID do reembolso</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -420,7 +420,7 @@ const AdminCommitmentRefundsTab = () => {
           <DialogHeader>
             <DialogTitle>Reembolsar multa de permanência</DialogTitle>
             <DialogDescription>
-              O reembolso será processado no Stripe e registrado no log de auditoria.
+              O reembolso será processado no provedor de pagamento e registrado no log de auditoria.
             </DialogDescription>
           </DialogHeader>
 
@@ -516,7 +516,7 @@ const AdminCommitmentRefundsTab = () => {
             <div className="flex items-start gap-2 rounded-md border border-accent/30 bg-accent/5 p-3 text-xs">
               <AlertTriangle className="h-4 w-4 text-accent shrink-0 mt-0.5" />
               <div>
-                O valor será reembolsado pela última cobrança do aluno no Stripe e a operação não pode ser desfeita pela plataforma.
+                O valor será reembolsado pela última cobrança do aluno e a operação não pode ser desfeita pela plataforma.
               </div>
             </div>
           </div>

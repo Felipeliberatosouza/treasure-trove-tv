@@ -70,7 +70,8 @@ export async function buildPlanChangePdf(data: PlanChangePdfData): Promise<jsPDF
   y += 10;
 
   // Title
-  doc.setTextColor(20);
+  const [pr, pg, pb] = branding.primaryRgb;
+  doc.setTextColor(pr, pg, pb);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(14);
   const titleMap = { upgrade: "Upgrade de plano", downgrade: "Downgrade de plano", change: "Mudança de plano" };

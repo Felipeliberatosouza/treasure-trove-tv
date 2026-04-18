@@ -320,37 +320,29 @@ export default function StudentSubscriptionTab() {
     await refreshActiveSub();
   };
 
-  const handleCancel = async () => {
+  const handleCancel = async (preview: import("./subscription/CancelSubscriptionModal").CancellationPreview) => {
     const plan = activeSubscription?.subscription_plans as unknown as PlanData;
-    const cycleInfo = activeSubscription ? getCycleInfo(activeSubscription) : null;
 
     try {
       const { data, error } = await supabase.functions.invoke("customer-portal");
       if (error) throw error;
 
-      // Send cancellation notification email
-      if (user?.email && plan && cycleInfo) {
-        const dailyRate = cycleInfo.totalDays > 0 ? plan.price / cycleInfo.totalDays : 0;
-        const usedAmount = dailyRate * cycleInfo.daysUsed;
-        const minCharge = ((plan.min_usage_charge_pct || 0) / 100) * plan.price;
-        const proRataSubtotal = Math.max(usedAmount, minCharge);
-
-        // Multa de permanência (só quando o plano não permite cancelamento gratuito
-        // e o aluno ainda está dentro do período de compromisso)
-        const isInCommitment =
-          !plan.allow_free_cancel &&
-          cycleInfo.totalSubscriptionDays < (plan.min_commitment_days || 0);
-        const commitmentDaysRemaining = isInCommitment
-          ? Math.max(0, (plan.min_commitment_days || 0) - cycleInfo.totalSubscriptionDays)
-          : 0;
-        const commitmentPenalty = isInCommitment ? dailyRate * commitmentDaysRemaining : 0;
-        const chargeAmount = proRataSubtotal + commitmentPenalty;
+      // Send cancellation notification email — using STRIPE-SOURCED values
+      // returned by preview-cancellation, so the email/PDF match exactly
+      // what was shown in the modal and what Stripe will actually invoice.
+      if (user?.email && plan) {
+        const {
+          daysUsed, cycleDays, totalSubscriptionDays,
+          usedAmount, minCharge, proRataAmount: proRataSubtotal,
+          isInCommitment, commitmentDaysRemaining, commitmentPenalty,
+          chargeAmount,
+        } = preview;
 
         const studentName = user.user_metadata?.name || "";
         const effectiveDate = new Date().toLocaleDateString("pt-BR");
         const fmtBRL = (v: number) => `R$ ${v.toFixed(2).replace(".", ",")}`;
-        const proRataAmount = fmtBRL(chargeAmount);
-        let proRataExplanation = `Cobrança proporcional: ${cycleInfo.daysUsed} dias usados de ${cycleInfo.totalDays}. Mínimo: ${plan.min_usage_charge_pct || 0}% do plano. Subtotal: ${fmtBRL(proRataSubtotal)}.`;
+        const proRataAmountStr = fmtBRL(chargeAmount);
+        let proRataExplanation = `Cobrança proporcional (Stripe): ${daysUsed} dias usados de ${cycleDays}. Mínimo: ${plan.min_usage_charge_pct || 0}% do plano. Subtotal: ${fmtBRL(proRataSubtotal)}.`;
         if (isInCommitment) {
           proRataExplanation += ` Multa de permanência: ${fmtBRL(commitmentPenalty)} (${commitmentDaysRemaining} dias restantes de ${plan.min_commitment_days}). Total: ${fmtBRL(chargeAmount)}.`;
         }
@@ -368,13 +360,24 @@ export default function StudentSubscriptionTab() {
                 studentEmail: user.email,
                 planName: plan.name,
                 planPrice: plan.price,
-                totalDays: cycleInfo.totalDays,
-                daysUsed: cycleInfo.daysUsed,
+                // STRIPE-SOURCED figures (override any DB recompute server-side)
+                totalDays: cycleDays,
+                daysUsed,
                 minUsageChargePct: plan.min_usage_charge_pct || 0,
                 allowFreeCancel: plan.allow_free_cancel,
                 minCommitmentDays: plan.min_commitment_days,
-                totalSubscriptionDays: cycleInfo.totalSubscriptionDays,
+                totalSubscriptionDays,
                 effectiveDate,
+                stripeOverrides: {
+                  dailyRate: preview.dailyRate,
+                  usedAmount,
+                  minCharge,
+                  proRataAmount: proRataSubtotal,
+                  commitmentPenalty,
+                  commitmentDaysRemaining,
+                  chargeAmount,
+                  isInCommitment,
+                },
               },
             },
           );

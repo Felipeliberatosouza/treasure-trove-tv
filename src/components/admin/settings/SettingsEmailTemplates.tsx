@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Save, Upload, X, Eye, Mail, Shield, Copy } from "lucide-react";
+import { Save, Upload, X, Eye, Mail, Shield, Copy, Tag } from "lucide-react";
 import { toast } from "sonner";
 
 interface EmailTemplate {
@@ -27,6 +27,9 @@ interface EmailTemplate {
   button_color: string;
   font_family: string;
   use_uploaded_logo: boolean;
+  coupon_enabled: boolean;
+  coupon_code: string;
+  coupon_message: string;
 }
 
 const TEMPLATE_LABELS: Record<string, string> = {
@@ -162,6 +165,9 @@ const SettingsEmailTemplates = () => {
         button_color: active.button_color,
         font_family: active.font_family,
         use_uploaded_logo: active.use_uploaded_logo,
+        coupon_enabled: active.coupon_enabled,
+        coupon_code: active.coupon_code,
+        coupon_message: active.coupon_message,
       } as any)
       .eq("id", active.id);
 
@@ -269,6 +275,24 @@ const SettingsEmailTemplates = () => {
     const footerHtml = active.show_social_footer ? buildFooterHtml() : "";
     const alwaysSendFooter = buildAlwaysSendFooter();
 
+    let couponHtml = "";
+    if (active.coupon_enabled && (active.coupon_code || active.coupon_message)) {
+      const safe = (s: string) =>
+        String(s ?? "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+      const code = safe(active.coupon_code || "");
+      const message = safe(active.coupon_message || "");
+      couponHtml = `
+        <div style="margin:24px auto;background:linear-gradient(135deg,#fef3c7 0%,#fde68a 100%);border:2px dashed #d97706;border-radius:12px;padding:20px 24px;text-align:center;">
+          ${message ? `<p style="margin:0 0 12px;font-size:16px;font-weight:600;color:#7c2d12;line-height:1.4;">${message}</p>` : ""}
+          ${code ? `<div style="display:inline-block;background:#ffffff;border:2px solid #d97706;border-radius:8px;padding:12px 24px;font-size:22px;font-weight:800;letter-spacing:2px;color:#7c2d12;font-family:'Courier New',monospace;">${code}</div>` : ""}
+          <p style="margin:12px 0 0;font-size:12px;color:#92400e;">Use este cupom em sua próxima assinatura</p>
+        </div>
+      `;
+    }
+
     let body = active.body_html
       .replace(/\{\{name\}\}/g, "João Silva")
       .replace(/\{\{confirmation_link\}\}/g, "#")
@@ -298,6 +322,7 @@ const SettingsEmailTemplates = () => {
       <div style="max-width:600px;margin:0 auto;font-family:${fontFamily};background:#ffffff;padding:24px;border-radius:8px;color:${textColor};">
         ${logoHtml}
         ${body}
+        ${couponHtml}
         ${footerHtml}
         ${alwaysSendFooter}
       </div>
@@ -375,6 +400,51 @@ const SettingsEmailTemplates = () => {
                   <p className="text-xs text-muted-foreground">
                     Só envia se o usuário aceitou receber comunicações no cadastro.
                   </p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Cupom de Desconto */}
+          <div className="rounded-lg border border-border p-4 space-y-3">
+            <h4 className="text-sm font-semibold flex items-center gap-2">
+              <Tag className="h-4 w-4" /> Cupom de Desconto
+            </h4>
+
+            <div className="flex items-center gap-3">
+              <Switch
+                checked={active.coupon_enabled}
+                onCheckedChange={(v) => updateField("coupon_enabled", v)}
+              />
+              <div>
+                <Label className="cursor-pointer text-sm">Incluir cupom de desconto neste e-mail</Label>
+                <p className="text-xs text-muted-foreground">
+                  Quando ativo, um bloco em destaque com a frase e o código será adicionado ao final do e-mail.
+                </p>
+              </div>
+            </div>
+
+            {active.coupon_enabled && (
+              <div className="space-y-3 pt-1">
+                <div>
+                  <Label className="text-xs">Código do cupom</Label>
+                  <Input
+                    value={active.coupon_code || ""}
+                    onChange={(e) => updateField("coupon_code", e.target.value.toUpperCase())}
+                    placeholder="Ex: VOLTA20"
+                    maxLength={40}
+                    className="uppercase tracking-wider font-mono"
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs">Frase do cupom</Label>
+                  <Textarea
+                    value={active.coupon_message || ""}
+                    onChange={(e) => updateField("coupon_message", e.target.value)}
+                    placeholder="Ex: Aproveite 20% de desconto na sua próxima assinatura usando o cupom abaixo:"
+                    rows={2}
+                    maxLength={300}
+                  />
                 </div>
               </div>
             )}

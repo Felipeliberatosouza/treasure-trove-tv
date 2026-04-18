@@ -426,13 +426,42 @@ export default function StudentSubscriptionTab() {
 
       if (isPlanChange) {
         const diff = plan.price - prevPlan!.price;
-        const direction = diff > 0 ? "Upgrade" : diff < 0 ? "Downgrade" : "Mudança";
+        const isUpgrade = diff > 0;
+        const direction = isUpgrade ? "Upgrade" : diff < 0 ? "Downgrade" : "Mudança";
+
+        // Pro-rata balance from the previous plan at the moment of switch
+        const totalDays = 30;
+        const prevStart = new Date(prev!.started_at);
+        const switchDate = new Date(sub.started_at);
+        const daysUsedPrev = Math.min(
+          totalDays,
+          Math.max(0, Math.floor((switchDate.getTime() - prevStart.getTime()) / (1000 * 60 * 60 * 24)))
+        );
+        const daysRemainingPrev = Math.max(0, totalDays - daysUsedPrev);
+        const dailyPrev = prevPlan!.price / totalDays;
+        const dailyNew = plan.price / totalDays;
+        const creditPrev = dailyPrev * daysRemainingPrev;     // valor não usado do plano anterior
+        const proRataNew = dailyNew * daysRemainingPrev;      // o que custaria no plano novo pelos dias restantes
+        const balance = proRataNew - creditPrev;              // >0 = aluno paga, <0 = aluno recebe crédito
+
+        const balanceLabel = balance > 0
+          ? `Saldo a pagar agora: R$ ${balance.toFixed(2)}`
+          : balance < 0
+            ? `Saldo de crédito: R$ ${Math.abs(balance).toFixed(2)}`
+            : `Sem saldo a ajustar`;
+
+        const explanation =
+          `${direction} de ${prevPlan!.name} (R$ ${prevPlan!.price.toFixed(2)}/mês) → ${plan.name} (R$ ${plan.price.toFixed(2)}/mês). ` +
+          `Você usou ${daysUsedPrev} de ${totalDays} dias do ${prevPlan!.name}, restavam ${daysRemainingPrev} dias ` +
+          `(crédito de R$ ${creditPrev.toFixed(2)}). Esses ${daysRemainingPrev} dias no novo plano custariam R$ ${proRataNew.toFixed(2)}. ` +
+          `${balanceLabel}.`;
+
         entries.push({
           date: sub.started_at,
           type: "plan_change",
           description: `${direction}: ${prevPlan!.name} → ${plan.name}`,
-          amount: plan.price,
-          explanation: `Troca do plano ${prevPlan!.name} (R$ ${prevPlan!.price.toFixed(2)}) para ${plan.name} (R$ ${plan.price.toFixed(2)}). Diferença: ${diff >= 0 ? "+" : "-"}R$ ${Math.abs(diff).toFixed(2)}/mês.`,
+          amount: balance, // mostra o saldo real da troca (positivo = cobrança, negativo = crédito)
+          explanation,
         });
       } else {
         entries.push({

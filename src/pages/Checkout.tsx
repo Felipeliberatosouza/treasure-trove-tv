@@ -95,7 +95,7 @@ const Checkout = () => {
           animate={{ opacity: 1, y: 0 }}
           className="grid gap-6 md:grid-cols-[1fr_360px]"
         >
-          <div>
+          <div className="order-2 md:order-1">
             <h1 className="font-display text-2xl md:text-3xl font-bold mb-1">
               Pagamento seguro
             </h1>
@@ -122,7 +122,7 @@ const Checkout = () => {
           </div>
 
           {/* Order summary */}
-          <Card className="p-5 h-fit md:sticky md:top-6 space-y-3">
+          <Card className="order-1 md:order-2 p-5 h-fit md:sticky md:top-6 space-y-3">
             <h2 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground">
               Resumo do pedido
             </h2>

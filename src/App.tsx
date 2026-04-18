@@ -43,6 +43,7 @@ import DynamicBranding from "./components/DynamicBranding.tsx";
 import InactivityGuard from "./components/InactivityGuard.tsx";
 import GlobalRedirectOverlay from "./components/GlobalRedirectOverlay.tsx";
 import OnboardingGuard from "./components/OnboardingGuard.tsx";
+import ScrollToTop from "./components/ScrollToTop.tsx";
 
 const queryClient = new QueryClient();
 

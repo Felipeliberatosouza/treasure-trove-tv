@@ -497,6 +497,11 @@ const SettingsEmailTemplates = () => {
                         v ? new Date(v).toISOString() : null
                       );
                     }}
+                    className={
+                      couponDateRangeInvalid
+                        ? "border-destructive ring-1 ring-destructive focus-visible:ring-destructive"
+                        : ""
+                    }
                   />
                   {active.coupon_starts_at && (
                     <p

@@ -50,6 +50,57 @@ export type Database = {
         }
         Relationships: []
       }
+      commitment_penalty_refunds: {
+        Row: {
+          admin_id: string
+          created_at: string
+          id: string
+          metadata: Json | null
+          original_penalty_amount: number
+          reason: string | null
+          refund_amount: number
+          refund_type: string
+          status: string
+          stripe_charge_id: string | null
+          stripe_refund_id: string | null
+          stripe_subscription_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_id: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          original_penalty_amount?: number
+          reason?: string | null
+          refund_amount?: number
+          refund_type?: string
+          status?: string
+          stripe_charge_id?: string | null
+          stripe_refund_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_id?: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          original_penalty_amount?: number
+          reason?: string | null
+          refund_amount?: number
+          refund_type?: string
+          status?: string
+          stripe_charge_id?: string | null
+          stripe_refund_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       contact_messages: {
         Row: {
           created_at: string

@@ -3,8 +3,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Download, FileText, Loader2, Search } from "lucide-react";
+import { Download, FileText, Loader2, Search, FileSpreadsheet, X } from "lucide-react";
 import { toast } from "sonner";
 
 interface ReceiptItem {
@@ -32,10 +33,18 @@ const formatDate = (iso: string | null) => {
   } catch { return iso; }
 };
 
+const escapeCsv = (val: string | number | null | undefined) => {
+  const s = val == null ? "" : String(val);
+  if (/[",;\n\r]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+  return s;
+};
+
 const AdminCancellationReceiptsTab = () => {
   const [loading, setLoading] = useState(true);
   const [items, setItems] = useState<ReceiptItem[]>([]);
   const [query, setQuery] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
 
   const load = async () => {
     setLoading(true);
@@ -53,25 +62,79 @@ const AdminCancellationReceiptsTab = () => {
 
   useEffect(() => { load(); }, []);
 
-  const grouped = useMemo(() => {
+  const filteredItems = useMemo(() => {
     const q = query.trim().toLowerCase();
-    const filtered = q
-      ? items.filter((it) =>
+    const fromTs = dateFrom ? new Date(`${dateFrom}T00:00:00`).getTime() : null;
+    const toTs = dateTo ? new Date(`${dateTo}T23:59:59.999`).getTime() : null;
+
+    return items.filter((it) => {
+      if (q) {
+        const matches =
           (it.studentName ?? "").toLowerCase().includes(q) ||
           (it.studentEmail ?? "").toLowerCase().includes(q) ||
-          it.userId.toLowerCase().includes(q),
-        )
-      : items;
+          it.userId.toLowerCase().includes(q);
+        if (!matches) return false;
+      }
+      if (fromTs || toTs) {
+        if (!it.createdAt) return false;
+        const ts = new Date(it.createdAt).getTime();
+        if (fromTs && ts < fromTs) return false;
+        if (toTs && ts > toTs) return false;
+      }
+      return true;
+    });
+  }, [items, query, dateFrom, dateTo]);
+
+  const grouped = useMemo(() => {
     const map = new Map<string, { name: string | null; email: string | null; userId: string; receipts: ReceiptItem[] }>();
-    for (const it of filtered) {
+    for (const it of filteredItems) {
       const g = map.get(it.userId) ?? { name: it.studentName, email: it.studentEmail, userId: it.userId, receipts: [] };
       g.receipts.push(it);
       map.set(it.userId, g);
     }
     return Array.from(map.values()).sort((a, b) => (a.name ?? a.email ?? a.userId).localeCompare(b.name ?? b.email ?? b.userId));
-  }, [items, query]);
+  }, [filteredItems]);
 
   const totalReceipts = items.length;
+  const filteredCount = filteredItems.length;
+  const hasFilters = !!(query.trim() || dateFrom || dateTo);
+
+  const clearFilters = () => {
+    setQuery("");
+    setDateFrom("");
+    setDateTo("");
+  };
+
+  const exportCsv = () => {
+    if (filteredItems.length === 0) {
+      toast.error("Nenhum comprovante para exportar");
+      return;
+    }
+    const headers = ["Nome do aluno", "E-mail", "ID do aluno", "Arquivo", "Gerado em", "Tamanho (bytes)", "Link de download"];
+    const rows = filteredItems.map((it) => [
+      escapeCsv(it.studentName ?? ""),
+      escapeCsv(it.studentEmail ?? ""),
+      escapeCsv(it.userId),
+      escapeCsv(it.fileName),
+      escapeCsv(it.createdAt ?? ""),
+      escapeCsv(it.size ?? ""),
+      escapeCsv(it.signedUrl ?? ""),
+    ].join(";"));
+
+    const csv = [headers.join(";"), ...rows].join("\r\n");
+    // UTF-8 BOM for Excel compatibility
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const stamp = new Date().toISOString().slice(0, 10);
+    a.href = url;
+    a.download = `comprovantes-cancelamento_${stamp}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success(`CSV exportado (${filteredItems.length} registro${filteredItems.length > 1 ? "s" : ""})`);
+  };
 
   return (
     <div className="space-y-6">
@@ -85,18 +148,45 @@ const AdminCancellationReceiptsTab = () => {
           </p>
         </div>
         <div className="text-sm text-muted-foreground">
-          Total: <span className="font-medium text-foreground">{totalReceipts}</span>
+          {hasFilters ? (
+            <>Exibindo <span className="font-medium text-foreground">{filteredCount}</span> de <span className="font-medium text-foreground">{totalReceipts}</span></>
+          ) : (
+            <>Total: <span className="font-medium text-foreground">{totalReceipts}</span></>
+          )}
         </div>
       </div>
 
-      <div className="relative max-w-md">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Buscar por nome, e-mail ou ID do aluno..."
-          className="pl-9"
-        />
+      <div className="flex flex-col md:flex-row gap-3 md:items-end flex-wrap">
+        <div className="relative flex-1 min-w-[220px] max-w-md">
+          <Label className="text-xs text-muted-foreground mb-1 block">Buscar</Label>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Nome, e-mail ou ID do aluno..."
+              className="pl-9"
+            />
+          </div>
+        </div>
+        <div>
+          <Label className="text-xs text-muted-foreground mb-1 block">De</Label>
+          <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="w-[160px]" />
+        </div>
+        <div>
+          <Label className="text-xs text-muted-foreground mb-1 block">Até</Label>
+          <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="w-[160px]" />
+        </div>
+        <div className="flex gap-2">
+          {hasFilters && (
+            <Button variant="ghost" onClick={clearFilters}>
+              <X className="h-4 w-4 mr-1" /> Limpar
+            </Button>
+          )}
+          <Button variant="outline" onClick={exportCsv} disabled={filteredItems.length === 0}>
+            <FileSpreadsheet className="h-4 w-4 mr-1" /> Exportar CSV
+          </Button>
+        </div>
       </div>
 
       {loading ? (

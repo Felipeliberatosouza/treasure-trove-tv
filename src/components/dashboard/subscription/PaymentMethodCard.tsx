@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CreditCard, Plus, Loader2, ShieldCheck, Trash2 } from "lucide-react";
+import { CreditCard, Plus, Loader2, ShieldCheck, Trash2, Star } from "lucide-react";
 import { Elements } from "@stripe/react-stripe-js";
 import { getStripe } from "@/lib/stripe";
 import { supabase } from "@/integrations/supabase/client";

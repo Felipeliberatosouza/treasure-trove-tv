@@ -163,8 +163,18 @@ const SettingsEmailTemplates = () => {
     new Date(active.coupon_expires_at).getTime() < Date.now()
   );
 
+  const couponCodeMissing = !!(
+    active?.coupon_enabled && !active?.coupon_code?.trim()
+  );
+
   const handleSave = async () => {
     if (!active) return;
+    if (couponCodeMissing) {
+      toast.error(
+        "Informe o código do cupom ou desabilite o cupom antes de salvar."
+      );
+      return;
+    }
     if (couponDateRangeInvalid) {
       toast.error(
         "A data de início do cupom deve ser anterior à data de expiração."

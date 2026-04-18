@@ -121,8 +121,8 @@ export default function PlanChangeCheckoutModal({
           : `Downgrade para ${newPlan.name} agendado.`,
       );
       setPendingInvoice(null);
+      setSuccess(true);
       await onSuccess?.();
-      onOpenChange(false);
     } catch (e) {
       setPaymentError(e instanceof Error ? e.message : "Erro ao alterar plano.");
     } finally {

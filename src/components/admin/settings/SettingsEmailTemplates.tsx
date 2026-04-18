@@ -500,7 +500,7 @@ const SettingsEmailTemplates = () => {
                     placeholder="Ex: VOLTA20"
                     maxLength={40}
                     className={`uppercase tracking-wider font-mono ${
-                      couponCodeMissing
+                      couponCodeMissing || couponCodeHasInvalidChars
                         ? "border-destructive ring-1 ring-destructive focus-visible:ring-destructive"
                         : ""
                     }`}
@@ -512,6 +512,21 @@ const SettingsEmailTemplates = () => {
                         O código do cupom é obrigatório quando o cupom está
                         habilitado. Informe um código ou desabilite o cupom.
                       </span>
+                    </p>
+                  )}
+                  {!couponCodeMissing && couponCodeHasInvalidChars && (
+                    <p className="text-xs mt-1 text-destructive font-semibold flex items-start gap-1">
+                      <span>⚠️</span>
+                      <span>
+                        O código do cupom contém caracteres inválidos. Use
+                        apenas letras (A-Z), números (0-9), hífen (-) e
+                        underline (_).
+                      </span>
+                    </p>
+                  )}
+                  {!couponCodeMissing && !couponCodeHasInvalidChars && (
+                    <p className="text-xs mt-1 text-muted-foreground">
+                      Permitido: letras, números, hífen (-) e underline (_).
                     </p>
                   )}
                 </div>

@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { AlertTriangle, Loader2 } from "lucide-react";
+import { AlertTriangle, Gift, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import { RetentionCouponSettings } from "@/hooks/usePlatformSettings";
 
 export const CANCELLATION_REASONS = [
   { value: "too_expensive", label: "Muito caro" },
@@ -57,6 +60,12 @@ export default function CancelSubscriptionModal({
   const [reasonCode, setReasonCode] = useState<string>("");
   const [reasonDetails, setReasonDetails] = useState<string>("");
 
+  // Retention offer state
+  const [retention, setRetention] = useState<RetentionCouponSettings | null>(null);
+  const [showRetention, setShowRetention] = useState(false);
+  const [applyingCoupon, setApplyingCoupon] = useState(false);
+  const [retentionDeclined, setRetentionDeclined] = useState(false);
+
   // Fetch the Stripe-sourced cancellation breakdown whenever the modal opens.
   // This is the SOURCE OF TRUTH — same numbers will be used on the email/PDF.
   useEffect(() => {
@@ -65,6 +74,8 @@ export default function CancelSubscriptionModal({
       setError(null);
       setReasonCode("");
       setReasonDetails("");
+      setShowRetention(false);
+      setRetentionDeclined(false);
       return;
     }
     let cancelled = false;
@@ -72,7 +83,10 @@ export default function CancelSubscriptionModal({
       setPreviewLoading(true);
       setError(null);
       try {
-        const { data, error } = await supabase.functions.invoke("preview-cancellation");
+        const [{ data, error }, { data: cfgRow }] = await Promise.all([
+          supabase.functions.invoke("preview-cancellation"),
+          supabase.from("platform_settings").select("value").eq("key", "retention_coupon").maybeSingle(),
+        ]);
         if (error) throw error;
         if (cancelled) return;
         if (!data?.ok) {
@@ -80,6 +94,7 @@ export default function CancelSubscriptionModal({
         } else {
           setPreview(data as CancellationPreview);
         }
+        if (cfgRow?.value) setRetention(cfgRow.value as unknown as RetentionCouponSettings);
       } catch (e) {
         if (!cancelled) {
           setError(e instanceof Error ? e.message : "Erro ao calcular o cancelamento.");
@@ -91,8 +106,22 @@ export default function CancelSubscriptionModal({
     return () => { cancelled = true; };
   }, [open]);
 
+  // Decide whether the offer applies for the currently selected reason
+  const offerEligible =
+    !!retention?.enabled &&
+    !!retention?.coupon_id &&
+    !retentionDeclined &&
+    (!reasonCode ||
+      !retention.eligible_reasons?.length ||
+      retention.eligible_reasons.includes(reasonCode));
+
   const handleConfirm = async () => {
     if (!preview) return;
+    // If an eligible retention offer exists, show it BEFORE cancelling.
+    if (offerEligible && reasonCode && !showRetention) {
+      setShowRetention(true);
+      return;
+    }
     setLoading(true);
     try {
       await onConfirm(preview, { code: reasonCode, details: reasonDetails.trim() });
@@ -100,6 +129,28 @@ export default function CancelSubscriptionModal({
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleAcceptCoupon = async () => {
+    setApplyingCoupon(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("apply-retention-coupon", {
+        body: { reasonCode },
+      });
+      if (error) throw error;
+      if (!data?.ok) throw new Error(data?.error || "Não foi possível aplicar o desconto.");
+      toast.success("Desconto aplicado! Sua assinatura continua ativa.");
+      onOpenChange(false);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erro ao aplicar o desconto.");
+    } finally {
+      setApplyingCoupon(false);
+    }
+  };
+
+  const handleDeclineCoupon = () => {
+    setRetentionDeclined(true);
+    setShowRetention(false);
   };
 
   const renderBody = () => {
@@ -177,6 +228,52 @@ export default function CancelSubscriptionModal({
     );
   };
 
+  // Retention offer view — shown instead of cancellation summary
+  if (showRetention && retention) {
+    return (
+      <AlertDialog open={open} onOpenChange={onOpenChange}>
+        <AlertDialogContent className="max-h-[90vh] overflow-y-auto">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Gift className="h-5 w-5 text-primary" />
+              {retention.headline}
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3 pt-2">
+                <p className="text-sm text-foreground">{retention.message}</p>
+                <div className="rounded-lg bg-primary/10 border border-primary/30 p-4 text-center">
+                  <p className="text-2xl font-bold text-primary">{retention.discount_label}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{retention.duration_label}</p>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Ao aceitar, sua assinatura continuará ativa e o desconto será aplicado automaticamente na próxima fatura.
+                </p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-col-reverse sm:flex-row sm:justify-end gap-2">
+            <Button
+              variant="ghost"
+              onClick={handleDeclineCoupon}
+              disabled={applyingCoupon}
+              className="text-muted-foreground hover:text-foreground"
+            >
+              Não, quero cancelar mesmo assim
+            </Button>
+            <Button
+              onClick={handleAcceptCoupon}
+              disabled={applyingCoupon}
+              className="bg-primary text-primary-foreground hover:bg-primary/90"
+            >
+              {applyingCoupon ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Gift className="h-4 w-4 mr-1" />}
+              Aceitar oferta e continuar
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    );
+  }
+
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent className="max-h-[90vh] overflow-y-auto">
@@ -222,6 +319,12 @@ export default function CancelSubscriptionModal({
               />
               <p className="text-[10px] text-muted-foreground/70 text-right">{reasonDetails.length}/500</p>
             </div>
+            {offerEligible && reasonCode && (
+              <div className="rounded-md bg-primary/10 border border-primary/30 p-2 flex items-center gap-2 text-xs text-foreground">
+                <Gift className="h-3.5 w-3.5 text-primary shrink-0" />
+                <span>Temos uma oferta especial para você. Continue para vê-la antes de confirmar.</span>
+              </div>
+            )}
           </div>
         )}
 
@@ -233,7 +336,7 @@ export default function CancelSubscriptionModal({
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
             {loading ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
-            Confirmar Cancelamento
+            {offerEligible && reasonCode ? "Continuar" : "Confirmar Cancelamento"}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

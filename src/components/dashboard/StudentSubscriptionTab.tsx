@@ -692,12 +692,8 @@ export default function StudentSubscriptionTab() {
                 </div>
               </div>
 
-              {/* Actions */}
+              {/* Actions — Mudar Plano e Cancelar acontecem 100% dentro da plataforma */}
               <div className="flex flex-wrap gap-2">
-                <Button variant="outline" size="sm" onClick={handleManageSubscription} disabled={portalLoading}>
-                  {portalLoading ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Settings className="h-4 w-4 mr-1" />}
-                  Gerenciar
-                </Button>
                 <Button variant="outline" size="sm" onClick={() => setShowPlanChange(true)}>
                   <ArrowLeftRight className="h-4 w-4 mr-1" />
                   Mudar Plano

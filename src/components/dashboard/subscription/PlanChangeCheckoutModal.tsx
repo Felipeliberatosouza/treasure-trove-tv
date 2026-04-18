@@ -7,8 +7,9 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import {
   ArrowRight, CreditCard, Plus, ShieldCheck, Loader2,
-  ArrowUp, ArrowDown, CheckCircle2, Info,
+  ArrowUp, ArrowDown, CheckCircle2, Info, AlertCircle, RefreshCw,
 } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Elements } from "@stripe/react-stripe-js";
 import { getStripe } from "@/lib/stripe";
 import { supabase } from "@/integrations/supabase/client";

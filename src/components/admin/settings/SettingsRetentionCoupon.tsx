@@ -17,6 +17,7 @@ const DEFAULTS: RetentionCouponSettings = {
   eligible_reasons: ["too_expensive"],
   headline: "Espera! Temos uma oferta para você",
   message: "Sabemos que o preço pesa. Que tal continuar com um desconto especial?",
+  cooldown_months: 12,
 };
 
 /**

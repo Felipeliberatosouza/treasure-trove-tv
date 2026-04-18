@@ -284,6 +284,7 @@ export type Database = {
           coupon_enabled: boolean
           coupon_expires_at: string | null
           coupon_message: string
+          coupon_starts_at: string | null
           created_at: string
           font_family: string
           heading_color: string
@@ -306,6 +307,7 @@ export type Database = {
           coupon_enabled?: boolean
           coupon_expires_at?: string | null
           coupon_message?: string
+          coupon_starts_at?: string | null
           created_at?: string
           font_family?: string
           heading_color?: string
@@ -328,6 +330,7 @@ export type Database = {
           coupon_enabled?: boolean
           coupon_expires_at?: string | null
           coupon_message?: string
+          coupon_starts_at?: string | null
           created_at?: string
           font_family?: string
           heading_color?: string

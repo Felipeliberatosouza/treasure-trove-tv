@@ -31,6 +31,7 @@ interface EmailTemplate {
   coupon_code: string;
   coupon_message: string;
   coupon_expires_at: string | null;
+  coupon_starts_at: string | null;
 }
 
 const TEMPLATE_LABELS: Record<string, string> = {
@@ -170,6 +171,7 @@ const SettingsEmailTemplates = () => {
         coupon_code: active.coupon_code,
         coupon_message: active.coupon_message,
         coupon_expires_at: active.coupon_expires_at,
+        coupon_starts_at: active.coupon_starts_at,
       } as any)
       .eq("id", active.id);
 
@@ -278,12 +280,17 @@ const SettingsEmailTemplates = () => {
     const alwaysSendFooter = buildAlwaysSendFooter();
 
     let couponHtml = "";
+    const nowMs = Date.now();
     const couponExpired = active.coupon_expires_at
-      ? new Date(active.coupon_expires_at).getTime() < Date.now()
+      ? new Date(active.coupon_expires_at).getTime() < nowMs
+      : false;
+    const couponNotStarted = active.coupon_starts_at
+      ? new Date(active.coupon_starts_at).getTime() > nowMs
       : false;
     if (
       active.coupon_enabled &&
       !couponExpired &&
+      !couponNotStarted &&
       (active.coupon_code || active.coupon_message)
     ) {
       const safe = (s: string) =>
@@ -454,6 +461,51 @@ const SettingsEmailTemplates = () => {
                     rows={2}
                     maxLength={300}
                   />
+                </div>
+                <div>
+                  <Label className="text-xs">Válido a partir de (opcional)</Label>
+                  <Input
+                    type="datetime-local"
+                    value={
+                      active.coupon_starts_at
+                        ? new Date(
+                            new Date(active.coupon_starts_at).getTime() -
+                              new Date().getTimezoneOffset() * 60000
+                          )
+                            .toISOString()
+                            .slice(0, 16)
+                        : ""
+                    }
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      updateField(
+                        "coupon_starts_at" as any,
+                        v ? new Date(v).toISOString() : null
+                      );
+                    }}
+                  />
+                  {active.coupon_starts_at && (
+                    <p
+                      className={`text-xs mt-1 ${
+                        new Date(active.coupon_starts_at).getTime() > Date.now()
+                          ? "text-amber-600 font-semibold"
+                          : "text-muted-foreground"
+                      }`}
+                    >
+                      {new Date(active.coupon_starts_at).getTime() > Date.now()
+                        ? `⏳ Cupom só será exibido a partir de ${new Date(
+                            active.coupon_starts_at
+                          ).toLocaleString("pt-BR")}.`
+                        : `Cupom ativo desde ${new Date(
+                            active.coupon_starts_at
+                          ).toLocaleString("pt-BR")}.`}
+                    </p>
+                  )}
+                  {!active.coupon_starts_at && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Deixe em branco para começar imediatamente.
+                    </p>
+                  )}
                 </div>
                 <div>
                   <Label className="text-xs">Data de expiração (opcional)</Label>

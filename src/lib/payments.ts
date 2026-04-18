@@ -92,7 +92,10 @@ export async function startUnitCheckout({ contentId, contentType }: BuyUnitParam
       return false;
     }
     if (data?.url) {
-      redirectTopLevel(data.url);
+      redirectTopLevel(data.url, {
+        title: "Redirecionando para o pagamento seguro...",
+        description: "Aguarde alguns instantes. Não feche esta janela.",
+      });
       return true;
     }
     toast.error("Resposta inválida do servidor de pagamento.");

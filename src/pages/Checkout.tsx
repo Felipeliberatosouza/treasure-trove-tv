@@ -14,6 +14,62 @@ import PaymentSecurityBadge from "@/components/PaymentSecurityBadge";
 import { isValidCPF } from "@/lib/cpfValidator";
 import { ArrowLeft, Check, CreditCard, Loader2, ShieldCheck, UserRound } from "lucide-react";
 import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
+
+type CheckoutStep = "billing" | "card" | "confirm";
+
+const STEPS: { key: CheckoutStep; label: string; Icon: typeof UserRound }[] = [
+  { key: "billing", label: "Dados", Icon: UserRound },
+  { key: "card", label: "Cartão", Icon: CreditCard },
+  { key: "confirm", label: "Confirmação", Icon: ShieldCheck },
+];
+
+function CheckoutStepper({ current }: { current: CheckoutStep }) {
+  const currentIdx = STEPS.findIndex((s) => s.key === current);
+  return (
+    <ol className="mb-6 flex items-center gap-2 sm:gap-3" aria-label="Progresso do checkout">
+      {STEPS.map((s, i) => {
+        const done = i < currentIdx;
+        const active = i === currentIdx;
+        const Icon = s.Icon;
+        return (
+          <li key={s.key} className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+            <div className="flex items-center gap-2 min-w-0">
+              <div
+                className={cn(
+                  "flex h-8 w-8 shrink-0 items-center justify-center rounded-full border text-xs font-semibold transition-colors",
+                  done && "border-primary bg-primary text-primary-foreground",
+                  active && "border-primary bg-primary/10 text-primary ring-2 ring-primary/20",
+                  !done && !active && "border-border bg-muted text-muted-foreground"
+                )}
+                aria-current={active ? "step" : undefined}
+              >
+                {done ? <Check className="h-4 w-4" /> : <Icon className="h-4 w-4" />}
+              </div>
+              <span
+                className={cn(
+                  "text-xs sm:text-sm font-medium truncate",
+                  active ? "text-foreground" : "text-muted-foreground"
+                )}
+              >
+                {s.label}
+              </span>
+            </div>
+            {i < STEPS.length - 1 && (
+              <div
+                className={cn(
+                  "h-px flex-1 transition-colors",
+                  done ? "bg-primary" : "bg-border"
+                )}
+                aria-hidden
+              />
+            )}
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
 
 /**
  * Embedded checkout state passed via router state from PricingSection or

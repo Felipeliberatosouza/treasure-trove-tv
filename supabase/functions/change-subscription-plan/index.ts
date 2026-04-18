@@ -31,8 +31,8 @@ serve(async (req) => {
     if (ue || !ud.user?.email) throw new Error("Auth failed");
     const user = ud.user;
 
-    const { newPlanId, paymentMethodId } = await req.json();
-    if (!newPlanId) throw new Error("newPlanId required");
+    const { newPlanId, paymentMethodId, retryInvoiceId } = await req.json();
+    if (!newPlanId && !retryInvoiceId) throw new Error("newPlanId or retryInvoiceId required");
 
     const { data: newPlan } = await sb
       .from("subscription_plans")

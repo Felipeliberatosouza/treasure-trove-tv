@@ -269,22 +269,76 @@ export default function PlanChangeCheckoutModal({
         )}
         <DialogHeader className="px-6 pt-6 pb-4 border-b border-border shrink-0">
           <div className="flex items-center gap-2">
-            {isUpgrade ? (
+            {success ? (
+              <CheckCircle2 className="h-5 w-5 text-success" />
+            ) : isUpgrade ? (
               <ArrowUp className="h-5 w-5 text-success" />
             ) : (
               <ArrowDown className="h-5 w-5 text-warning" />
             )}
             <DialogTitle>
-              Confirmar {isUpgrade ? "Upgrade" : "Downgrade"} de Plano
+              {success
+                ? `${isUpgrade ? "Upgrade" : "Downgrade"} concluído`
+                : `Confirmar ${isUpgrade ? "Upgrade" : "Downgrade"} de Plano`}
             </DialogTitle>
           </div>
           <DialogDescription>
-            Revise os valores e a forma de pagamento antes de confirmar.
+            {success
+              ? "Sua troca de plano foi processada. Baixe o comprovante abaixo."
+              : "Revise os valores e a forma de pagamento antes de confirmar."}
           </DialogDescription>
         </DialogHeader>
 
         {/* Scrollable body */}
         <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4 min-h-0">
+
+        {success && (
+          <div className="rounded-lg border border-success/40 bg-success/5 p-5 space-y-4">
+            <div className="flex items-start gap-3">
+              <div className="shrink-0 rounded-full bg-success/15 p-2">
+                <CheckCircle2 className="h-5 w-5 text-success" />
+              </div>
+              <div className="space-y-1">
+                <p className="font-semibold text-sm">Troca confirmada com sucesso</p>
+                <p className="text-xs text-muted-foreground">
+                  {currentPlan.name} → <strong className="text-foreground">{newPlan.name}</strong>
+                </p>
+              </div>
+            </div>
+            <div className="rounded-md bg-background/60 border border-border p-3 text-sm space-y-1">
+              {isUpgrade && dueNow > 0 ? (
+                <p>
+                  Saldo pago agora:{" "}
+                  <strong className="text-primary">{formatBRL(dueNow)}</strong>
+                </p>
+              ) : creditForNext > 0 ? (
+                <p>
+                  Crédito de <strong className="text-success">{formatBRL(creditForNext)}</strong>{" "}
+                  será aplicado na próxima fatura.
+                </p>
+              ) : (
+                <p>Sem ajuste financeiro nesta troca.</p>
+              )}
+              <p className="text-xs text-muted-foreground">
+                Baseado em {daysRemaining} dias restantes no ciclo.
+              </p>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleDownloadPdf}
+              className="w-full"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Baixar comprovante (PDF)
+            </Button>
+            <p className="text-[11px] text-muted-foreground text-center">
+              Você também pode baixar o comprovante depois no seu extrato de assinatura.
+            </p>
+          </div>
+        )}
+
+        {!success && (<>
 
         {/* Plan transition card */}
         <div className="rounded-lg border border-border bg-muted/30 p-4">

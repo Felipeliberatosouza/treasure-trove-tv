@@ -130,6 +130,7 @@ const HeroBanner = ({ onVideoClick, onExploreClick }: HeroBannerProps) => {
   }, [role, visitorRaw, studentRaw, teacherRaw]);
 
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
 
   useEffect(() => {
     if (currentIndex >= slides.length) setCurrentIndex(0);
@@ -137,13 +138,13 @@ const HeroBanner = ({ onVideoClick, onExploreClick }: HeroBannerProps) => {
 
   // Per-slide autoplay: schedule next based on the current slide's audience interval
   useEffect(() => {
-    if (slides.length <= 1) return;
+    if (slides.length <= 1 || isPaused) return;
     const ms = (slides[currentIndex]?.autoplaySeconds || DEFAULT_HERO_AUTOPLAY_SECONDS) * 1000;
     const id = window.setTimeout(() => {
       setCurrentIndex((i) => (i + 1) % slides.length);
     }, ms);
     return () => window.clearTimeout(id);
-  }, [currentIndex, slides]);
+  }, [currentIndex, slides, isPaused]);
 
   const active = slides[currentIndex] || slides[0];
   const slide = active?.slide;
@@ -177,7 +178,15 @@ const HeroBanner = ({ onVideoClick, onExploreClick }: HeroBannerProps) => {
   const goNext = () => setCurrentIndex((i) => (i + 1) % slides.length);
 
   return (
-    <section className="relative h-[85vh] min-h-[500px] w-full overflow-hidden">
+    <section
+      className="relative h-[85vh] min-h-[500px] w-full overflow-hidden"
+      onMouseEnter={() => setIsPaused(true)}
+      onMouseLeave={() => setIsPaused(false)}
+      onFocusCapture={() => setIsPaused(true)}
+      onBlurCapture={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node)) setIsPaused(false);
+      }}
+    >
       <AnimatePresence mode="wait">
         <motion.div
           key={currentIndex}

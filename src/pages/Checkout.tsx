@@ -12,9 +12,11 @@ import { Card } from "@/components/ui/card";
 import CpfInput from "@/components/CpfInput";
 import PaymentSecurityBadge from "@/components/PaymentSecurityBadge";
 import { isValidCPF } from "@/lib/cpfValidator";
-import { ArrowLeft, Check, CreditCard, Loader2, ShieldCheck, UserRound } from "lucide-react";
+import { ArrowLeft, Check, ChevronDown, CreditCard, Loader2, ShieldCheck, UserRound } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 type CheckoutStep = "billing" | "card" | "confirm";
 
@@ -112,6 +114,13 @@ const Checkout = () => {
   const state = (location.state || null) as EmbeddedCheckoutState | null;
   const stripePromise = useMemo(() => getStripe(), []);
   const [step, setStep] = useState<CheckoutStep>("billing");
+  const isMobile = useIsMobile();
+  const [summaryOpen, setSummaryOpen] = useState(false);
+  // Keep summary always open on desktop
+  useEffect(() => {
+    if (!isMobile) setSummaryOpen(true);
+    else setSummaryOpen(false);
+  }, [isMobile]);
 
   // Guard: missing context
   useEffect(() => {
@@ -186,35 +195,57 @@ const Checkout = () => {
           </div>
 
           {/* Order summary */}
-          <Card className="order-1 md:order-2 p-5 h-fit md:sticky md:top-6 space-y-3">
-            <h2 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground">
-              Resumo do pedido
-            </h2>
-            <div className="border-t border-border pt-3">
-              <div className="flex items-start justify-between gap-3">
-                <span className="text-sm">{title}</span>
-                <span className="font-semibold whitespace-nowrap">{amountLabel}</span>
-              </div>
-              {state.mode === "subscription" && (
-                <p className="text-xs text-muted-foreground mt-2">
-                  Cobrança recorrente mensal. Cancele quando quiser pelo painel do aluno.
-                </p>
-              )}
-              {state.mode === "unit" && (
-                <p className="text-xs text-muted-foreground mt-2">
-                  Compra avulsa. Acesso permanente a este conteúdo.
-                </p>
-              )}
-            </div>
-            <div className="border-t border-border pt-3">
-              <div className="flex items-center gap-2 text-xs text-success">
-                <ShieldCheck className="h-3.5 w-3.5" />
-                Pagamento processado com segurança
-              </div>
-              <div className="mt-3">
-                <PaymentSecurityBadge />
-              </div>
-            </div>
+          <Card className="order-1 md:order-2 p-5 h-fit md:sticky md:top-6">
+            <Collapsible open={summaryOpen} onOpenChange={setSummaryOpen}>
+              <CollapsibleTrigger
+                disabled={!isMobile}
+                className="flex w-full items-center justify-between gap-3 text-left disabled:cursor-default"
+                aria-label={summaryOpen ? "Recolher resumo" : "Expandir resumo"}
+              >
+                <div className="min-w-0 flex-1">
+                  <h2 className="font-semibold text-xs uppercase tracking-wide text-muted-foreground">
+                    Resumo do pedido
+                  </h2>
+                  <div className="mt-1 flex items-baseline justify-between gap-3">
+                    <span className="text-sm truncate">{title}</span>
+                    <span className="font-semibold whitespace-nowrap">{amountLabel}</span>
+                  </div>
+                </div>
+                {isMobile && (
+                  <ChevronDown
+                    className={cn(
+                      "h-4 w-4 shrink-0 text-muted-foreground transition-transform",
+                      summaryOpen && "rotate-180"
+                    )}
+                    aria-hidden
+                  />
+                )}
+              </CollapsibleTrigger>
+
+              <CollapsibleContent className="overflow-hidden data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
+                <div className="border-t border-border pt-3 mt-3">
+                  {state.mode === "subscription" && (
+                    <p className="text-xs text-muted-foreground">
+                      Cobrança recorrente mensal. Cancele quando quiser pelo painel do aluno.
+                    </p>
+                  )}
+                  {state.mode === "unit" && (
+                    <p className="text-xs text-muted-foreground">
+                      Compra avulsa. Acesso permanente a este conteúdo.
+                    </p>
+                  )}
+                </div>
+                <div className="border-t border-border pt-3 mt-3">
+                  <div className="flex items-center gap-2 text-xs text-success">
+                    <ShieldCheck className="h-3.5 w-3.5" />
+                    Pagamento processado com segurança
+                  </div>
+                  <div className="mt-3">
+                    <PaymentSecurityBadge />
+                  </div>
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
           </Card>
         </motion.div>
       </div>

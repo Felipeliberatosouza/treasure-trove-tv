@@ -302,9 +302,18 @@ interface CheckoutFormProps {
   initialName: string;
   initialCpf: string;
   onStepChange?: (s: CheckoutStep) => void;
+  onReady?: (submit: () => void) => void;
+  onSubmittingChange?: (submitting: boolean) => void;
 }
 
-function CheckoutForm({ state, initialName, initialCpf, onStepChange }: CheckoutFormProps) {
+function CheckoutForm({
+  state,
+  initialName,
+  initialCpf,
+  onStepChange,
+  onReady,
+  onSubmittingChange,
+}: CheckoutFormProps) {
   const stripe = useStripe();
   const elements = useElements();
   const navigate = useNavigate();

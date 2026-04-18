@@ -167,11 +167,25 @@ const SettingsEmailTemplates = () => {
     active?.coupon_enabled && !active?.coupon_code?.trim()
   );
 
+  const COUPON_CODE_REGEX = /^[A-Z0-9_-]+$/;
+  const couponCodeHasInvalidChars = !!(
+    active?.coupon_enabled &&
+    active?.coupon_code &&
+    active.coupon_code.trim() &&
+    !COUPON_CODE_REGEX.test(active.coupon_code.trim())
+  );
+
   const handleSave = async () => {
     if (!active) return;
     if (couponCodeMissing) {
       toast.error(
         "Informe o código do cupom ou desabilite o cupom antes de salvar."
+      );
+      return;
+    }
+    if (couponCodeHasInvalidChars) {
+      toast.error(
+        "O código do cupom contém caracteres inválidos. Use apenas letras, números, hífen e underline."
       );
       return;
     }

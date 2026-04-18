@@ -214,17 +214,28 @@ export default function StudentSubscriptionTab() {
     if (!user?.email || !plan || !cycleInfo) return;
 
     const isUpgrade = newPlan.price > plan.price;
+    const daysRemaining = Math.max(0, cycleInfo.totalDays - cycleInfo.daysUsed);
     const dailyRateCurrent = cycleInfo.totalDays > 0 ? plan.price / cycleInfo.totalDays : 0;
-    const creditRemaining = dailyRateCurrent * (cycleInfo.totalDays - cycleInfo.daysUsed);
+    const creditRemaining = dailyRateCurrent * daysRemaining;
     const dailyRateNew = cycleInfo.totalDays > 0 ? newPlan.price / cycleInfo.totalDays : 0;
-    const costRemaining = dailyRateNew * (cycleInfo.totalDays - cycleInfo.daysUsed);
-    const proRata = Math.abs(costRemaining - creditRemaining);
+    const costRemaining = dailyRateNew * daysRemaining;
+    const balanceRaw = costRemaining - creditRemaining; // >0 charge, <0 credit
+    const proRata = Math.abs(balanceRaw);
     const studentName = user.user_metadata?.name || "";
     const effectiveDate = new Date().toLocaleDateString("pt-BR");
-    const proRataAmount = `R$ ${proRata.toFixed(2)}`;
+    const fmtBRL = (n: number) => `R$ ${n.toFixed(2)}`;
+    const proRataAmount = fmtBRL(proRata);
     const proRataExplanation = isUpgrade
-      ? `Diferença proporcional de ${cycleInfo.totalDays - cycleInfo.daysUsed} dias restantes no ciclo atual.`
-      : `Crédito de ${cycleInfo.totalDays - cycleInfo.daysUsed} dias restantes será aplicado na próxima fatura.`;
+      ? `Diferença proporcional de ${daysRemaining} dias restantes no ciclo atual.`
+      : `Crédito de ${daysRemaining} dias restantes será aplicado na próxima fatura.`;
+    const balanceType: "charge" | "credit" | "none" =
+      balanceRaw > 0.005 ? "charge" : balanceRaw < -0.005 ? "credit" : "none";
+    const balanceLabel =
+      balanceType === "charge"
+        ? `Saldo a pagar agora: ${fmtBRL(balanceRaw)}`
+        : balanceType === "credit"
+          ? `Saldo de crédito: ${fmtBRL(Math.abs(balanceRaw))} (próxima fatura)`
+          : "Sem saldo a ajustar";
 
     try {
       await supabase.functions.invoke("send-transactional-email", {
@@ -240,6 +251,13 @@ export default function StudentSubscriptionTab() {
             proRataAmount,
             proRataExplanation,
             effectiveDate,
+            daysUsed: cycleInfo.daysUsed,
+            daysRemaining,
+            totalDays: cycleInfo.totalDays,
+            creditAmount: fmtBRL(creditRemaining),
+            newProRataAmount: fmtBRL(costRemaining),
+            balanceLabel,
+            balanceType,
           },
         },
       });
@@ -404,7 +422,7 @@ export default function StudentSubscriptionTab() {
 
   // Build statement entries from subscription history
   const buildStatementEntries = () => {
-    const entries: { date: string; type: "subscription_start" | "plan_change" | "cancellation" | "renewal" | "purchase"; description: string; amount: number; explanation: string }[] = [];
+    const entries: { date: string; type: "subscription_start" | "plan_change" | "cancellation" | "renewal" | "purchase"; description: string; amount: number; explanation: string; pdfData?: import("@/lib/planChangePdf").PlanChangePdfData }[] = [];
 
     // Chronological order (oldest first) so we can detect plan transitions
     const chrono = allSubscriptions.slice().sort(
@@ -462,6 +480,24 @@ export default function StudentSubscriptionTab() {
           description: `${direction}: ${prevPlan!.name} → ${plan.name}`,
           amount: balance, // mostra o saldo real da troca (positivo = cobrança, negativo = crédito)
           explanation,
+          pdfData: {
+            studentName: user?.user_metadata?.name || "",
+            studentEmail: user?.email || "",
+            previousPlan: prevPlan!.name,
+            previousPlanPrice: prevPlan!.price,
+            newPlan: plan.name,
+            newPlanPrice: plan.price,
+            changeType: isUpgrade ? "upgrade" : diff < 0 ? "downgrade" : "change",
+            totalDays,
+            daysUsed: daysUsedPrev,
+            daysRemaining: daysRemainingPrev,
+            dailyOld: dailyPrev,
+            dailyNew,
+            credit: creditPrev,
+            newProRata: proRataNew,
+            balance,
+            effectiveDate: new Date(sub.started_at).toLocaleDateString("pt-BR"),
+          },
         });
       } else {
         entries.push({

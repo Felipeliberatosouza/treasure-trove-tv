@@ -1,7 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Receipt, Calendar, ArrowRight } from "lucide-react";
+import { Receipt, Calendar, ArrowRight, Download } from "lucide-react";
+import { downloadPlanChangePdf, type PlanChangePdfData } from "@/lib/planChangePdf";
 
 interface StatementEntry {
   date: string;
@@ -9,6 +11,8 @@ interface StatementEntry {
   description: string;
   amount: number;
   explanation: string;
+  /** Present only on plan_change entries — enables PDF download. */
+  pdfData?: PlanChangePdfData;
 }
 
 interface SubscriptionStatementProps {
@@ -42,7 +46,6 @@ export default function SubscriptionStatement({ planName, entries }: Subscriptio
           const isCredit = entry.amount < 0;
           const isCharge = entry.amount > 0;
 
-          // Resumo curto do saldo para mudanças de plano
           const balanceSummary = isPlanChange
             ? isCredit
               ? `Crédito de R$ ${Math.abs(entry.amount).toFixed(2)}`
@@ -69,7 +72,6 @@ export default function SubscriptionStatement({ planName, entries }: Subscriptio
                     <span className="text-sm">{entry.description}</span>
                   </div>
 
-                  {/* Saldo destacado para troca de plano */}
                   {isPlanChange && (
                     <div
                       className={`inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-xs font-medium ${
@@ -93,6 +95,21 @@ export default function SubscriptionStatement({ planName, entries }: Subscriptio
                     <ArrowRight className="h-3.5 w-3.5 text-muted-foreground mt-0.5 shrink-0" />
                     <span className="text-xs text-muted-foreground leading-relaxed">{entry.explanation}</span>
                   </div>
+
+                  {isPlanChange && entry.pdfData && (
+                    <div className="pt-1">
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        className="h-7 text-xs gap-1.5"
+                        onClick={() => downloadPlanChangePdf(entry.pdfData!)}
+                      >
+                        <Download className="h-3 w-3" />
+                        Baixar comprovante (PDF)
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

@@ -16,6 +16,14 @@ interface PlanChangedProps {
   proRataAmount?: string
   proRataExplanation?: string
   effectiveDate?: string
+  /** New: balance summary fields */
+  daysUsed?: number
+  daysRemaining?: number
+  totalDays?: number
+  creditAmount?: string
+  newProRataAmount?: string
+  balanceLabel?: string
+  balanceType?: 'charge' | 'credit' | 'none'
   dashboardLink?: string
   unsubscribeUrl?: string
 }
@@ -28,6 +36,13 @@ const PlanChangedEmail = ({
   proRataAmount = '—',
   proRataExplanation = '',
   effectiveDate = '',
+  daysUsed,
+  daysRemaining,
+  totalDays = 30,
+  creditAmount,
+  newProRataAmount,
+  balanceLabel,
+  balanceType = 'charge',
   dashboardLink = 'https://revisaofacil.com/dashboard/student',
   unsubscribeUrl,
 }: PlanChangedProps) => (
@@ -55,6 +70,37 @@ const PlanChangedEmail = ({
           )}
         </Section>
 
+        {(daysRemaining !== undefined || creditAmount || newProRataAmount) && (
+          <Section style={summaryBox}>
+            <Text style={summaryTitle}>Resumo do saldo</Text>
+            {daysUsed !== undefined && daysRemaining !== undefined && (
+              <Text style={summaryRow}>
+                <strong>Dias do ciclo:</strong> {daysUsed} usados de {totalDays} ({daysRemaining} restantes)
+              </Text>
+            )}
+            {creditAmount && (
+              <Text style={summaryRow}>
+                <strong>Crédito do plano anterior:</strong> {creditAmount}
+              </Text>
+            )}
+            {newProRataAmount && (
+              <Text style={summaryRow}>
+                <strong>Custo proporcional no novo plano:</strong> {newProRataAmount}
+              </Text>
+            )}
+            {balanceLabel && (
+              <Text
+                style={{
+                  ...balanceHighlight,
+                  color: balanceType === 'credit' ? '#16a34a' : balanceType === 'charge' ? '#1d4ed8' : '#374151',
+                }}
+              >
+                {balanceLabel}
+              </Text>
+            )}
+          </Section>
+        )}
+
         {proRataAmount && (
           <Section style={calculationBox}>
             <Text style={calculationTitle}>Cálculo proporcional</Text>
@@ -70,6 +116,11 @@ const PlanChangedEmail = ({
 
         <Text style={text}>
           A partir de agora, você já pode aproveitar todos os recursos do plano {newPlan}.
+        </Text>
+
+        <Text style={smallNote}>
+          Você pode baixar o comprovante em PDF com o detalhamento completo desta troca acessando
+          <strong> Minha Assinatura → Histórico</strong> no seu painel.
         </Text>
 
         <Hr style={hr} />
@@ -96,6 +147,13 @@ export const template = {
     proRataAmount: 'R$ 25,00',
     proRataExplanation: 'Diferença proporcional de 15 dias restantes no ciclo atual.',
     effectiveDate: '13/04/2026',
+    daysUsed: 15,
+    daysRemaining: 15,
+    totalDays: 30,
+    creditAmount: 'R$ 24,95',
+    newProRataAmount: 'R$ 49,95',
+    balanceLabel: 'Saldo a pagar agora: R$ 25,00',
+    balanceType: 'charge',
   },
 } satisfies TemplateEntry
 
@@ -103,8 +161,13 @@ const main = { backgroundColor: '#ffffff', fontFamily: 'Arial, sans-serif' }
 const container = { padding: '20px 25px', maxWidth: '600px', margin: '0 auto' }
 const h1 = { fontSize: '22px', fontWeight: 'bold' as const, color: '#16a34a', margin: '0 0 20px' }
 const text = { fontSize: '14px', color: '#374151', lineHeight: '1.6', margin: '0 0 16px' }
+const smallNote = { fontSize: '12px', color: '#6b7280', lineHeight: '1.5', margin: '0 0 16px', fontStyle: 'italic' as const }
 const infoBox = { backgroundColor: '#f0fdf4', borderRadius: '8px', padding: '16px', margin: '0 0 16px' }
 const infoText = { fontSize: '14px', color: '#374151', margin: '0 0 4px' }
+const summaryBox = { backgroundColor: '#eff6ff', borderRadius: '8px', padding: '16px', margin: '0 0 16px', borderLeft: '4px solid #3b82f6' }
+const summaryTitle = { fontSize: '14px', fontWeight: 'bold' as const, color: '#1e3a8a', margin: '0 0 10px' }
+const summaryRow = { fontSize: '13px', color: '#374151', margin: '0 0 6px', lineHeight: '1.5' }
+const balanceHighlight = { fontSize: '15px', fontWeight: 'bold' as const, margin: '10px 0 0' }
 const calculationBox = { backgroundColor: '#f9fafb', borderRadius: '8px', padding: '16px', margin: '0 0 16px', borderLeft: '4px solid #6366f1' }
 const calculationTitle = { fontSize: '14px', fontWeight: 'bold' as const, color: '#374151', margin: '0 0 8px' }
 const calculationAmount = { fontSize: '16px', color: '#111827', margin: '0 0 8px' }

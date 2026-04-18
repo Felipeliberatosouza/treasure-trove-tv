@@ -11,6 +11,7 @@ import CpfRequiredModal from "@/components/CpfRequiredModal";
 import { useCpfGuard } from "@/hooks/useCpfGuard";
 import { useActiveSubscription } from "@/hooks/useActiveSubscription";
 import { redirectTopLevel } from "@/lib/payments";
+import PaymentSecurityBadge from "@/components/PaymentSecurityBadge";
 
 interface PlanData {
   name: string;
@@ -234,6 +235,9 @@ const PricingSection = () => {
                     "Começar Agora"
                   )}
                 </Button>
+                <div className="flex justify-center">
+                  <PaymentSecurityBadge />
+                </div>
                 {plan.allow_free_cancel !== false && plan.cancel_text && (
                   <p className="flex items-center justify-center gap-1.5 text-xs text-success">
                     <ShieldCheck className="h-3.5 w-3.5" />

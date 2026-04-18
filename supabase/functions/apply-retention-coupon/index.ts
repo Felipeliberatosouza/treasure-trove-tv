@@ -55,6 +55,7 @@ serve(async (req) => {
       enabled?: boolean;
       coupon_id?: string;
       eligible_reasons?: string[];
+      cooldown_months?: number;
     };
 
     if (!cfg.enabled || !cfg.coupon_id) {
@@ -75,26 +76,56 @@ serve(async (req) => {
       );
     }
 
-    // One-shot retention: if this user has already accepted a retention coupon
-    // in the past, do NOT offer/apply it again. This is the server-side guard
-    // matching the client-side check in the cancellation modal.
+    // Cooldown / one-shot guard: if this user has already accepted a retention
+    // coupon, only re-offer it after `cooldown_months` have elapsed.
+    // cooldown_months <= 0 → block forever (one-shot per student).
+    const cooldownMonths = Number.isFinite(cfg.cooldown_months) ? Number(cfg.cooldown_months) : 12;
     const { data: prior, error: priorErr } = await sb
       .from("audit_logs")
-      .select("id")
+      .select("id, created_at")
       .eq("user_id", user.id)
       .eq("action", "retention_coupon_applied")
+      .order("created_at", { ascending: false })
       .limit(1);
     if (priorErr) log("prior check failed", { msg: priorErr.message });
     if (prior && prior.length > 0) {
-      log("retention already used by this user — blocking", { userId: user.id });
-      return new Response(
-        JSON.stringify({
-          ok: false,
-          error: "Esta oferta de retenção já foi utilizada anteriormente.",
-          alreadyUsed: true,
-        }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
-      );
+      const lastAt = new Date(prior[0].created_at as string);
+      const now = new Date();
+      const monthsSince =
+        (now.getFullYear() - lastAt.getFullYear()) * 12 +
+        (now.getMonth() - lastAt.getMonth()) +
+        // partial-month adjustment so "exactly 12 months" counts as elapsed
+        (now.getDate() >= lastAt.getDate() ? 0 : -1);
+
+      const stillBlocked = cooldownMonths <= 0 || monthsSince < cooldownMonths;
+      if (stillBlocked) {
+        log("retention still in cooldown — blocking", {
+          userId: user.id,
+          cooldownMonths,
+          monthsSince,
+          lastAt: lastAt.toISOString(),
+        });
+        return new Response(
+          JSON.stringify({
+            ok: false,
+            error:
+              cooldownMonths <= 0
+                ? "Esta oferta de retenção já foi utilizada anteriormente."
+                : `Você poderá receber esta oferta novamente em ${Math.max(
+                    1,
+                    cooldownMonths - monthsSince,
+                  )} mês(es).`,
+            alreadyUsed: true,
+            cooldownMonths,
+            monthsSince,
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
+        );
+      }
+      log("prior coupon found but cooldown elapsed — proceeding", {
+        cooldownMonths,
+        monthsSince,
+      });
     }
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });

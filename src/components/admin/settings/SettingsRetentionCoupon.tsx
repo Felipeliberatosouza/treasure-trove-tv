@@ -104,6 +104,26 @@ export default function SettingsRetentionCoupon() {
             placeholder="ex: nos próximos 3 meses"
           />
         </div>
+        <div className="md:col-span-2">
+          <Label className="text-xs">Período de carência após aceitar (meses)</Label>
+          <Input
+            type="number"
+            min={0}
+            max={120}
+            value={Number.isFinite(cfg.cooldown_months) ? cfg.cooldown_months : 12}
+            onChange={(e) => {
+              const raw = parseInt(e.target.value, 10);
+              const v = Number.isFinite(raw) && raw >= 0 ? raw : 0;
+              setCfg((c) => ({ ...c, cooldown_months: v }));
+            }}
+            placeholder="ex: 12"
+            className="max-w-[160px]"
+          />
+          <p className="text-[10px] text-muted-foreground/70 mt-1">
+            Após aceitar o cupom, o aluno só voltará a receber a oferta depois deste período.
+            Use <strong>0</strong> para bloquear permanentemente (oferta única por aluno).
+          </p>
+        </div>
       </div>
 
       <div className="space-y-2">

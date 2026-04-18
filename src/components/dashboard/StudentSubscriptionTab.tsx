@@ -429,7 +429,7 @@ export default function StudentSubscriptionTab() {
                   studentEmail: user.email,
                   actionType: "cancellation",
                   previousPlan: plan.name,
-                  proRataAmount,
+                  proRataAmount: proRataAmountStr,
                   proRataExplanation,
                   effectiveDate,
                 },
@@ -772,18 +772,11 @@ export default function StudentSubscriptionTab() {
                 />
               )}
 
-              {/* Cancel Modal */}
+              {/* Cancel Modal — fetches the authoritative breakdown from Stripe */}
               <CancelSubscriptionModal
                 open={showCancel}
                 onOpenChange={setShowCancel}
                 planName={plan!.name}
-                planPrice={plan!.price}
-                daysUsed={cycleInfo!.daysUsed}
-                totalDays={cycleInfo!.totalDays}
-                minUsageChargePct={plan!.min_usage_charge_pct || 0}
-                allowFreeCancel={plan!.allow_free_cancel}
-                minCommitmentDays={plan!.min_commitment_days}
-                totalSubscriptionDays={cycleInfo!.totalSubscriptionDays}
                 onConfirm={handleCancel}
               />
             </>

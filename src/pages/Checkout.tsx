@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js";
 import { getStripe } from "@/lib/stripe";
@@ -116,6 +116,8 @@ const Checkout = () => {
   const [step, setStep] = useState<CheckoutStep>("billing");
   const isMobile = useIsMobile();
   const [summaryOpen, setSummaryOpen] = useState(false);
+  const [mobileSubmitting, setMobileSubmitting] = useState(false);
+  const submitRef = useRef<(() => void) | null>(null);
   // Keep summary always open on desktop
   useEffect(() => {
     if (!isMobile) setSummaryOpen(true);
@@ -190,6 +192,10 @@ const Checkout = () => {
                 initialName={profile?.name || ""}
                 initialCpf={profile?.cpf || ""}
                 onStepChange={setStep}
+                onReady={(submit) => {
+                  submitRef.current = submit;
+                }}
+                onSubmittingChange={setMobileSubmitting}
               />
             </Elements>
           </div>
@@ -249,6 +255,44 @@ const Checkout = () => {
           </Card>
         </motion.div>
       </div>
+
+      {/* Mobile sticky pay bar */}
+      {isMobile && (
+        <>
+          <div
+            aria-hidden
+            className="h-20"
+          />
+          <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 backdrop-blur-md px-4 py-3 shadow-[0_-4px_20px_-4px_hsl(var(--background))]">
+            <div className="mx-auto flex max-w-4xl items-center gap-3">
+              <div className="min-w-0 flex-1">
+                <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                  Total
+                </p>
+                <p className="font-display text-base font-bold leading-tight truncate">
+                  {amountLabel}
+                </p>
+              </div>
+              <Button
+                onClick={() => submitRef.current?.()}
+                disabled={mobileSubmitting}
+                size="lg"
+                className="font-display whitespace-nowrap"
+              >
+                {mobileSubmitting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" /> Processando...
+                  </>
+                ) : state.mode === "subscription" ? (
+                  "Confirmar e assinar"
+                ) : (
+                  "Confirmar e pagar"
+                )}
+              </Button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 };
@@ -258,9 +302,18 @@ interface CheckoutFormProps {
   initialName: string;
   initialCpf: string;
   onStepChange?: (s: CheckoutStep) => void;
+  onReady?: (submit: () => void) => void;
+  onSubmittingChange?: (submitting: boolean) => void;
 }
 
-function CheckoutForm({ state, initialName, initialCpf, onStepChange }: CheckoutFormProps) {
+function CheckoutForm({
+  state,
+  initialName,
+  initialCpf,
+  onStepChange,
+  onReady,
+  onSubmittingChange,
+}: CheckoutFormProps) {
   const stripe = useStripe();
   const elements = useElements();
   const navigate = useNavigate();
@@ -334,6 +387,17 @@ function CheckoutForm({ state, initialName, initialCpf, onStepChange }: Checkout
       onStepChange?.("billing");
     }
   }, [billingValid, submitting, onStepChange]);
+
+  // Mirror submitting state to parent (for mobile sticky bar button)
+  useEffect(() => {
+    onSubmittingChange?.(submitting);
+  }, [submitting, onSubmittingChange]);
+
+  // Expose latest handleSubmit to parent via ref-callback
+  const handleSubmitRef = useRef<() => void>(() => {});
+  useEffect(() => {
+    onReady?.(() => handleSubmitRef.current?.());
+  }, [onReady]);
 
   const handleSubmit = async () => {
     if (!stripe || !elements) return;
@@ -456,6 +520,9 @@ function CheckoutForm({ state, initialName, initialCpf, onStepChange }: Checkout
       setSubmitting(false);
     }
   };
+
+  // Always point ref at latest closure so parent's stable callback works
+  handleSubmitRef.current = handleSubmit;
 
   return (
     <div className="space-y-6">

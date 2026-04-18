@@ -65,6 +65,9 @@ export default function CancelSubscriptionModal({
   const [showRetention, setShowRetention] = useState(false);
   const [applyingCoupon, setApplyingCoupon] = useState(false);
   const [retentionDeclined, setRetentionDeclined] = useState(false);
+  // True when this student has already accepted a retention coupon in the past.
+  // The offer is one-shot per student, so we hide it from then on.
+  const [retentionAlreadyUsed, setRetentionAlreadyUsed] = useState(false);
 
   // Fetch the Stripe-sourced cancellation breakdown whenever the modal opens.
   // This is the SOURCE OF TRUTH — same numbers will be used on the email/PDF.

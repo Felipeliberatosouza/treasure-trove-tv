@@ -339,6 +339,31 @@ export default function StudentSubscriptionTab() {
         const proRataAmount = `R$ ${chargeAmount.toFixed(2)}`;
         const proRataExplanation = `Cobrança proporcional: ${cycleInfo.daysUsed} dias usados de ${cycleInfo.totalDays}. Mínimo: ${plan.min_usage_charge_pct || 0}% do plano.`;
 
+        // Generate cancellation receipt PDF (server-side) and get a signed URL.
+        // Failure here must NOT block the email or the cancellation flow.
+        let receiptUrl: string | undefined;
+        try {
+          const { data: receipt } = await supabase.functions.invoke(
+            "generate-cancellation-receipt",
+            {
+              body: {
+                userId: user.id,
+                studentName,
+                studentEmail: user.email,
+                planName: plan.name,
+                planPrice: plan.price,
+                totalDays: cycleInfo.totalDays,
+                daysUsed: cycleInfo.daysUsed,
+                minUsageChargePct: plan.min_usage_charge_pct || 0,
+                effectiveDate,
+              },
+            },
+          );
+          receiptUrl = (receipt as { url?: string } | null)?.url;
+        } catch (e) {
+          console.warn("[cancel] receipt generation failed", e);
+        }
+
         await supabase.functions.invoke("send-transactional-email", {
           body: {
             templateName: "subscription-cancelled",
@@ -349,6 +374,7 @@ export default function StudentSubscriptionTab() {
               planName: plan.name,
               expiryDate: effectiveDate,
               reason: "cancelada",
+              receiptUrl,
             },
           },
         });

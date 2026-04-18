@@ -13,9 +13,17 @@ export interface PdfBranding {
   logoWidth: number;
   logoHeight: number;
   company: PdfCompany;
+  primaryRgb: [number, number, number];
 }
 
 const DEFAULT_NAME = "Revisão Fácil";
+const DEFAULT_PRIMARY: [number, number, number] = [0, 80, 180];
+
+function hexToRgb(hex: string): [number, number, number] | null {
+  const m = (hex || "").trim().replace(/^#/, "");
+  if (!/^[0-9a-fA-F]{6}$/.test(m)) return null;
+  return [parseInt(m.slice(0, 2), 16), parseInt(m.slice(2, 4), 16), parseInt(m.slice(4, 6), 16)];
+}
 
 function formatCnpj(raw: string): string {
   const d = (raw || "").replace(/\D/g, "");

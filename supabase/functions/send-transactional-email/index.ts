@@ -315,13 +315,53 @@ Deno.serve(async (req) => {
   }
 
   // 5. Render React Email template to HTML and plain text
-  const html = await renderAsync(
+  let html = await renderAsync(
     React.createElement(template.component, enrichedTemplateData)
   )
-  const plainText = await renderAsync(
+  let plainText = await renderAsync(
     React.createElement(template.component, enrichedTemplateData),
     { plainText: true }
   )
+
+  // 5.1 Optional discount-coupon banner — admin-configured per template_key
+  // Looks up the email_templates row and, when coupon_enabled is true,
+  // injects a highly visible coupon block before </body> in the rendered HTML.
+  try {
+    const { data: tplCfg } = await supabase
+      .from('email_templates')
+      .select('coupon_enabled, coupon_code, coupon_message')
+      .eq('template_key', templateName)
+      .maybeSingle()
+
+    if (tplCfg?.coupon_enabled && (tplCfg.coupon_code || tplCfg.coupon_message)) {
+      const safe = (s: string) =>
+        String(s ?? '')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;')
+      const code = safe(tplCfg.coupon_code || '')
+      const message = safe(tplCfg.coupon_message || '')
+      const couponHtml = `
+        <div style="margin:24px auto;max-width:560px;background:linear-gradient(135deg,#fef3c7 0%,#fde68a 100%);border:2px dashed #d97706;border-radius:12px;padding:20px 24px;text-align:center;font-family:Arial,sans-serif;">
+          ${message ? `<p style="margin:0 0 12px;font-size:16px;font-weight:600;color:#7c2d12;line-height:1.4;">${message}</p>` : ''}
+          ${code ? `<div style="display:inline-block;background:#ffffff;border:2px solid #d97706;border-radius:8px;padding:12px 24px;font-size:22px;font-weight:800;letter-spacing:2px;color:#7c2d12;font-family:'Courier New',monospace;">${code}</div>` : ''}
+          <p style="margin:12px 0 0;font-size:12px;color:#92400e;">Use este cupom em sua próxima assinatura</p>
+        </div>
+      `
+      const plainCoupon = `\n\n${tplCfg.coupon_message || ''}${tplCfg.coupon_code ? `\nCupom: ${tplCfg.coupon_code}` : ''}\n\n`
+
+      if (html.includes('</body>')) {
+        html = html.replace('</body>', `${couponHtml}</body>`)
+      } else {
+        html = `${html}${couponHtml}`
+      }
+      plainText = `${plainText}${plainCoupon}`
+    }
+  } catch (e) {
+    console.error('Coupon injection failed (non-fatal)', e)
+  }
 
   // Resolve subject — supports static string or dynamic function
   const resolvedSubject =

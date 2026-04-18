@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Save, Upload, X, Eye, Mail, Shield, Copy } from "lucide-react";
+import { Save, Upload, X, Eye, Mail, Shield, Copy, Tag } from "lucide-react";
 import { toast } from "sonner";
 
 interface EmailTemplate {
@@ -27,6 +27,9 @@ interface EmailTemplate {
   button_color: string;
   font_family: string;
   use_uploaded_logo: boolean;
+  coupon_enabled: boolean;
+  coupon_code: string;
+  coupon_message: string;
 }
 
 const TEMPLATE_LABELS: Record<string, string> = {
@@ -162,6 +165,9 @@ const SettingsEmailTemplates = () => {
         button_color: active.button_color,
         font_family: active.font_family,
         use_uploaded_logo: active.use_uploaded_logo,
+        coupon_enabled: active.coupon_enabled,
+        coupon_code: active.coupon_code,
+        coupon_message: active.coupon_message,
       } as any)
       .eq("id", active.id);
 

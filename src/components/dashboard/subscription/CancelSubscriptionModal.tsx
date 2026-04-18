@@ -179,7 +179,7 @@ export default function CancelSubscriptionModal({
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent>
+      <AlertDialogContent className="max-h-[90vh] overflow-y-auto">
         <AlertDialogHeader>
           <AlertDialogTitle className="flex items-center gap-2">
             <AlertTriangle className="h-5 w-5 text-destructive" />
@@ -189,6 +189,42 @@ export default function CancelSubscriptionModal({
             {renderBody()}
           </AlertDialogDescription>
         </AlertDialogHeader>
+
+        {/* Cancellation reason — optional, helps the platform improve */}
+        {preview && !error && (
+          <div className="space-y-3 pt-2 border-t border-border/40">
+            <div className="space-y-1.5">
+              <Label htmlFor="cancel-reason" className="text-xs font-medium">
+                Motivo do cancelamento <span className="text-muted-foreground font-normal">(opcional)</span>
+              </Label>
+              <Select value={reasonCode} onValueChange={setReasonCode}>
+                <SelectTrigger id="cancel-reason" className="h-9 text-sm">
+                  <SelectValue placeholder="Selecione um motivo (opcional)" />
+                </SelectTrigger>
+                <SelectContent>
+                  {CANCELLATION_REASONS.map((r) => (
+                    <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="cancel-details" className="text-xs font-medium">
+                Comentário <span className="text-muted-foreground font-normal">(opcional)</span>
+              </Label>
+              <Textarea
+                id="cancel-details"
+                value={reasonDetails}
+                onChange={(e) => setReasonDetails(e.target.value.slice(0, 500))}
+                placeholder="Conte o que poderíamos melhorar..."
+                rows={2}
+                className="text-sm resize-none"
+              />
+              <p className="text-[10px] text-muted-foreground/70 text-right">{reasonDetails.length}/500</p>
+            </div>
+          </div>
+        )}
+
         <AlertDialogFooter>
           <AlertDialogCancel>Voltar</AlertDialogCancel>
           <AlertDialogAction
@@ -202,5 +238,7 @@ export default function CancelSubscriptionModal({
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
+  );
+}
   );
 }

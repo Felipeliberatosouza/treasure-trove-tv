@@ -316,6 +316,56 @@ export default function PlanChangeCheckoutModal({
           </div>
         </div>
 
+        {/* Saldo final em linguagem simples */}
+        <div
+          className={`rounded-lg border p-4 ${
+            isUpgrade && dueNow > 0
+              ? "border-primary/40 bg-primary/5"
+              : "border-success/40 bg-success/5"
+          }`}
+        >
+          <div className="flex items-start gap-3">
+            <div
+              className={`shrink-0 rounded-full p-2 ${
+                isUpgrade && dueNow > 0 ? "bg-primary/15" : "bg-success/15"
+              }`}
+            >
+              {isUpgrade && dueNow > 0 ? (
+                <ArrowUp className="h-4 w-4 text-primary" />
+              ) : (
+                <ArrowDown className="h-4 w-4 text-success" />
+              )}
+            </div>
+            <div className="space-y-1 flex-1">
+              <p className="text-xs uppercase tracking-wide text-muted-foreground font-medium">
+                Resumo do saldo
+              </p>
+              {isUpgrade && dueNow > 0 ? (
+                <p className="text-sm leading-relaxed">
+                  Saldo a pagar agora:{" "}
+                  <strong className="text-primary">{formatBRL(dueNow)}</strong>.{" "}
+                  Equivale a <strong>{daysRemaining} dias</strong> restantes no novo plano{" "}
+                  ({formatBRL(newPeriodCharge)}) menos seu crédito de{" "}
+                  {formatBRL(credit)} do {currentPlan.name}.
+                </p>
+              ) : creditForNext > 0 ? (
+                <p className="text-sm leading-relaxed">
+                  Saldo de crédito:{" "}
+                  <strong className="text-success">{formatBRL(creditForNext)}</strong>.{" "}
+                  Equivale aos <strong>{daysRemaining} dias</strong> restantes do{" "}
+                  {currentPlan.name} ({formatBRL(credit)}) menos o custo proporcional do{" "}
+                  {newPlan.name} ({formatBRL(newPeriodCharge)}). Será aplicado automaticamente
+                  na sua próxima fatura.
+                </p>
+              ) : (
+                <p className="text-sm leading-relaxed">
+                  Sem saldo a ajustar nesta troca. A mudança entra em vigor imediatamente.
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+
         {/* Payment method (only required for upgrades that need a charge now) */}
         {requiresPayment && (
           <div className="rounded-lg border border-border p-4 space-y-3">

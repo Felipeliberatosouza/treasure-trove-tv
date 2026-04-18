@@ -226,9 +226,10 @@ interface CheckoutFormProps {
   state: EmbeddedCheckoutState;
   initialName: string;
   initialCpf: string;
+  onStepChange?: (s: CheckoutStep) => void;
 }
 
-function CheckoutForm({ state, initialName, initialCpf }: CheckoutFormProps) {
+function CheckoutForm({ state, initialName, initialCpf, onStepChange }: CheckoutFormProps) {
   const stripe = useStripe();
   const elements = useElements();
   const navigate = useNavigate();

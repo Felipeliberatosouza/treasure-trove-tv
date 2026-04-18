@@ -32,6 +32,22 @@ interface BrandingForPdf {
   logoFormat: "PNG" | "JPEG" | null;
   logoWidth: number;
   logoHeight: number;
+  company: { razaoSocial: string; cnpj: string; address: string };
+}
+
+function formatCnpj(raw: string): string {
+  const d = (raw || "").replace(/\D/g, "");
+  if (d.length !== 14) return raw || "";
+  return `${d.slice(0, 2)}.${d.slice(2, 5)}.${d.slice(5, 8)}/${d.slice(8, 12)}-${d.slice(12, 14)}`;
+}
+
+function buildCompanyFooterLines(c: BrandingForPdf["company"]): string[] {
+  const parts: string[] = [];
+  if (c.razaoSocial && c.cnpj) parts.push(`${c.razaoSocial} — CNPJ ${c.cnpj}`);
+  else if (c.razaoSocial) parts.push(c.razaoSocial);
+  else if (c.cnpj) parts.push(`CNPJ ${c.cnpj}`);
+  if (c.address) parts.push(c.address);
+  return parts;
 }
 
 async function fetchBranding(supabase: ReturnType<typeof createClient>): Promise<BrandingForPdf> {
@@ -41,28 +57,36 @@ async function fetchBranding(supabase: ReturnType<typeof createClient>): Promise
     logoFormat: null,
     logoWidth: 0,
     logoHeight: 0,
+    company: { razaoSocial: "", cnpj: "", address: "" },
   };
   try {
     const { data } = await supabase
       .from("platform_settings")
-      .select("value")
-      .eq("key", "branding")
-      .maybeSingle();
-    const b = (data?.value ?? {}) as { platform_name?: string; logo_url?: string };
-    if (b.platform_name) fallback.platformName = b.platform_name;
-    if (!b.logo_url) return fallback;
-    const res = await fetch(b.logo_url);
+      .select("key,value")
+      .in("key", ["branding", "contact"]);
+    let logoUrl = "";
+    for (const row of (data ?? []) as Array<{ key: string; value: Record<string, string> }>) {
+      const v = row.value ?? {};
+      if (row.key === "branding") {
+        if (v.platform_name) fallback.platformName = v.platform_name;
+        if (v.logo_url) logoUrl = v.logo_url;
+      } else if (row.key === "contact") {
+        fallback.company.razaoSocial = v.razao_social || v.nome_fantasia || "";
+        fallback.company.cnpj = formatCnpj(v.cnpj || "");
+        fallback.company.address = v.platform_address || v.address || "";
+      }
+    }
+    if (!logoUrl) return fallback;
+    const res = await fetch(logoUrl);
     if (!res.ok) return fallback;
     const buf = new Uint8Array(await res.arrayBuffer());
     const ct = (res.headers.get("content-type") || "").toLowerCase();
-    const isPng = ct.includes("png") || /\.png(\?|$)/i.test(b.logo_url);
-    // base64 encode
+    const isPng = ct.includes("png") || /\.png(\?|$)/i.test(logoUrl);
     let bin = "";
     for (let i = 0; i < buf.length; i++) bin += String.fromCharCode(buf[i]);
     const b64 = btoa(bin);
     fallback.logoDataUrl = `data:${isPng ? "image/png" : "image/jpeg"};base64,${b64}`;
     fallback.logoFormat = isPng ? "PNG" : "JPEG";
-    // Default fallback dimensions (server cannot decode image easily); jsPDF will use addImage with explicit w/h
     fallback.logoWidth = 200;
     fallback.logoHeight = 60;
     return fallback;
@@ -194,6 +218,14 @@ async function buildPdf(data: ReceiptData, branding: BrandingForPdf): Promise<Ui
   doc.line(margin, y, pageW - margin, y);
   y += 6;
   doc.setFontSize(9);
+  doc.setTextColor(110);
+  const companyLines = buildCompanyFooterLines(branding.company);
+  for (const line of companyLines) {
+    const wrappedLine = doc.splitTextToSize(line, pageW - margin * 2);
+    doc.text(wrappedLine, margin, y);
+    y += wrappedLine.length * 4;
+  }
+  if (companyLines.length > 0) y += 2;
   doc.setTextColor(140);
   doc.text(
     "Este comprovante reflete o cálculo apresentado no momento do cancelamento. Em caso de dúvidas, contate o suporte.",

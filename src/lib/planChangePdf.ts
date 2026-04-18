@@ -1,5 +1,5 @@
 import jsPDF from "jspdf";
-import { getPdfBranding } from "./pdfBranding";
+import { getPdfBranding, buildCompanyFooterLines } from "./pdfBranding";
 
 export interface PlanChangePdfData {
   studentName?: string;
@@ -167,6 +167,14 @@ export async function buildPlanChangePdf(data: PlanChangePdfData): Promise<jsPDF
   doc.line(margin, y, pageW - margin, y);
   y += 6;
   doc.setFontSize(9);
+  doc.setTextColor(110);
+  const companyLines = buildCompanyFooterLines(branding.company);
+  for (const line of companyLines) {
+    const wrappedLine = doc.splitTextToSize(line, pageW - margin * 2);
+    doc.text(wrappedLine, margin, y);
+    y += wrappedLine.length * 4;
+  }
+  if (companyLines.length > 0) y += 2;
   doc.setTextColor(140);
   doc.text(
     "Este comprovante reflete o cálculo apresentado no momento da troca de plano. Em caso de dúvidas, contate o suporte.",

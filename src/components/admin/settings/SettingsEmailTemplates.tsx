@@ -485,8 +485,21 @@ const SettingsEmailTemplates = () => {
                     onChange={(e) => updateField("coupon_code", e.target.value.toUpperCase())}
                     placeholder="Ex: VOLTA20"
                     maxLength={40}
-                    className="uppercase tracking-wider font-mono"
+                    className={`uppercase tracking-wider font-mono ${
+                      couponCodeMissing
+                        ? "border-destructive ring-1 ring-destructive focus-visible:ring-destructive"
+                        : ""
+                    }`}
                   />
+                  {couponCodeMissing && (
+                    <p className="text-xs mt-1 text-destructive font-semibold flex items-start gap-1">
+                      <span>⚠️</span>
+                      <span>
+                        O código do cupom é obrigatório quando o cupom está
+                        habilitado. Informe um código ou desabilite o cupom.
+                      </span>
+                    </p>
+                  )}
                 </div>
                 <div>
                   <Label className="text-xs">Frase do cupom</Label>

@@ -405,6 +405,51 @@ const SettingsEmailTemplates = () => {
             )}
           </div>
 
+          {/* Cupom de Desconto */}
+          <div className="rounded-lg border border-border p-4 space-y-3">
+            <h4 className="text-sm font-semibold flex items-center gap-2">
+              <Tag className="h-4 w-4" /> Cupom de Desconto
+            </h4>
+
+            <div className="flex items-center gap-3">
+              <Switch
+                checked={active.coupon_enabled}
+                onCheckedChange={(v) => updateField("coupon_enabled", v)}
+              />
+              <div>
+                <Label className="cursor-pointer text-sm">Incluir cupom de desconto neste e-mail</Label>
+                <p className="text-xs text-muted-foreground">
+                  Quando ativo, um bloco em destaque com a frase e o código será adicionado ao final do e-mail.
+                </p>
+              </div>
+            </div>
+
+            {active.coupon_enabled && (
+              <div className="space-y-3 pt-1">
+                <div>
+                  <Label className="text-xs">Código do cupom</Label>
+                  <Input
+                    value={active.coupon_code || ""}
+                    onChange={(e) => updateField("coupon_code", e.target.value.toUpperCase())}
+                    placeholder="Ex: VOLTA20"
+                    maxLength={40}
+                    className="uppercase tracking-wider font-mono"
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs">Frase do cupom</Label>
+                  <Textarea
+                    value={active.coupon_message || ""}
+                    onChange={(e) => updateField("coupon_message", e.target.value)}
+                    placeholder="Ex: Aproveite 20% de desconto na sua próxima assinatura usando o cupom abaixo:"
+                    rows={2}
+                    maxLength={300}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+
           {/* Logo */}
           <div className="space-y-2">
             <Label>Logomarca do E-mail</Label>

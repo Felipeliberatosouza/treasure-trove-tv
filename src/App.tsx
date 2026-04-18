@@ -37,6 +37,7 @@ import Unsubscribe from "./pages/Unsubscribe.tsx";
 import EmailSecurityNotification from "./pages/EmailSecurityNotification.tsx";
 import PaymentSuccess from "./pages/PaymentSuccess.tsx";
 import PaymentCanceled from "./pages/PaymentCanceled.tsx";
+import Checkout from "./pages/Checkout.tsx";
 import PreviewPlanChange from "./pages/PreviewPlanChange.tsx";
 import DynamicBranding from "./components/DynamicBranding.tsx";
 import InactivityGuard from "./components/InactivityGuard.tsx";
@@ -79,6 +80,7 @@ const App = () => (
             <Route path="/minhas-duvidas" element={<MinhasDuvidas />} />
             <Route path="/minhas-aulas-agendadas" element={<MinhasAulasAgendadas />} />
             <Route path="/video/:id" element={<VideoPage />} />
+            <Route path="/checkout" element={<Checkout />} />
             <Route path="/payment-success" element={<PaymentSuccess />} />
             <Route path="/payment-canceled" element={<PaymentCanceled />} />
             <Route path="/unsubscribe" element={<Unsubscribe />} />

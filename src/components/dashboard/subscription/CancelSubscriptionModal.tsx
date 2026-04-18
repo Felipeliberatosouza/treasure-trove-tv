@@ -16,6 +16,8 @@ interface CancelSubscriptionModalProps {
   onConfirm: () => Promise<void>;
 }
 
+const fmtBRL = (v: number) => `R$ ${v.toFixed(2).replace(".", ",")}`;
+
 export default function CancelSubscriptionModal({
   open, onOpenChange, planName, planPrice,
   daysUsed, totalDays, minUsageChargePct,
@@ -28,25 +30,33 @@ export default function CancelSubscriptionModal({
   const dailyRate = totalDays > 0 ? planPrice / totalDays : 0;
   const usedAmount = dailyRate * daysUsed;
 
-  // Minimum charge: at least minUsageChargePct% of the monthly price
+  // Cobrança mínima do ciclo (% do plano)
   const minCharge = (minUsageChargePct / 100) * planPrice;
-  const chargeAmount = Math.max(usedAmount, minCharge);
+  // Valor proporcional pelo uso (com piso na cobrança mínima)
+  const proRataAmount = Math.max(usedAmount, minCharge);
 
+  // Multa por permanência: somente quando plano NÃO permite cancelamento gratuito
+  // e o aluno ainda está no período de compromisso.
   const isInCommitment = !allowFreeCancel && totalSubscriptionDays < minCommitmentDays;
+  const commitmentDaysRemaining = isInCommitment
+    ? Math.max(0, minCommitmentDays - totalSubscriptionDays)
+    : 0;
+  const commitmentPenalty = isInCommitment ? dailyRate * commitmentDaysRemaining : 0;
+
+  // Total final
+  const chargeAmount = proRataAmount + commitmentPenalty;
 
   let explanation = "";
   if (allowFreeCancel) {
     if (minUsageChargePct > 0 && usedAmount < minCharge) {
-      explanation = `Você usou ${daysUsed} de ${totalDays} dias do ciclo (${usagePct.toFixed(0)}%). O uso proporcional seria R$ ${usedAmount.toFixed(2)}, porém o plano ${planName} possui cobrança mínima de ${minUsageChargePct}% (R$ ${minCharge.toFixed(2)}). Será cobrado R$ ${chargeAmount.toFixed(2)}.`;
+      explanation = `Você usou ${daysUsed} de ${totalDays} dias do ciclo (${usagePct.toFixed(0)}%). O uso proporcional seria ${fmtBRL(usedAmount)}, porém o plano ${planName} possui cobrança mínima de ${minUsageChargePct}% (${fmtBRL(minCharge)}). Será cobrado ${fmtBRL(chargeAmount)}.`;
     } else {
-      explanation = `Você usou ${daysUsed} de ${totalDays} dias do ciclo (${usagePct.toFixed(0)}%). Será cobrado proporcionalmente R$ ${chargeAmount.toFixed(2)} pelos dias utilizados.`;
+      explanation = `Você usou ${daysUsed} de ${totalDays} dias do ciclo (${usagePct.toFixed(0)}%). Será cobrado proporcionalmente ${fmtBRL(chargeAmount)} pelos dias utilizados.`;
     }
+  } else if (isInCommitment) {
+    explanation = `O plano ${planName} possui permanência mínima de ${minCommitmentDays} dias e você está no dia ${totalSubscriptionDays}. Além do valor proporcional pelos ${daysUsed} dias usados neste ciclo (${fmtBRL(proRataAmount)}), será cobrada uma multa de permanência referente aos ${commitmentDaysRemaining} dias restantes de compromisso (${fmtBRL(commitmentPenalty)}). Total: ${fmtBRL(chargeAmount)}.`;
   } else {
-    if (isInCommitment) {
-      explanation = `Seu plano possui permanência mínima de ${minCommitmentDays} dias. Você está no dia ${totalSubscriptionDays}. Cancelar agora pode gerar cobrança do período restante de compromisso. Valor proporcional do ciclo: R$ ${chargeAmount.toFixed(2)}.`;
-    } else {
-      explanation = `Você já cumpriu o período mínimo de ${minCommitmentDays} dias. Será cobrado R$ ${chargeAmount.toFixed(2)} proporcionalmente pelos ${daysUsed} dias usados neste ciclo.`;
-    }
+    explanation = `Você já cumpriu o período mínimo de ${minCommitmentDays} dias. Será cobrado ${fmtBRL(chargeAmount)} proporcionalmente pelos ${daysUsed} dias usados neste ciclo.`;
   }
 
   const handleConfirm = async () => {
@@ -73,18 +83,28 @@ export default function CancelSubscriptionModal({
                 <div className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 text-xs">
                   <span>Dias usados no ciclo</span>
                   <span className="text-right">{daysUsed} de {totalDays}</span>
+                  <span>Valor diário do plano</span>
+                  <span className="text-right">{fmtBRL(dailyRate)}</span>
                   <span>Uso proporcional</span>
-                  <span className="text-right">R$ {usedAmount.toFixed(2)}</span>
+                  <span className="text-right">{fmtBRL(usedAmount)}</span>
                   {minUsageChargePct > 0 && (
                     <>
-                      <span>Cobrança mínima ({minUsageChargePct}%)</span>
-                      <span className="text-right">R$ {minCharge.toFixed(2)}</span>
+                      <span>Cobrança mínima do ciclo ({minUsageChargePct}%)</span>
+                      <span className="text-right">{fmtBRL(minCharge)}</span>
+                    </>
+                  )}
+                  <span className="font-medium text-foreground">Subtotal proporcional</span>
+                  <span className="text-right font-medium text-foreground">{fmtBRL(proRataAmount)}</span>
+                  {isInCommitment && (
+                    <>
+                      <span className="text-destructive">Multa de permanência ({commitmentDaysRemaining} dias restantes)</span>
+                      <span className="text-right text-destructive">{fmtBRL(commitmentPenalty)}</span>
                     </>
                   )}
                 </div>
                 <div className="flex justify-between pt-1 border-t border-border/50 font-medium text-sm">
                   <span>Valor final de cancelamento</span>
-                  <span>R$ {chargeAmount.toFixed(2)}</span>
+                  <span>{fmtBRL(chargeAmount)}</span>
                 </div>
               </div>
               <p className="text-xs text-muted-foreground leading-relaxed">{explanation}</p>

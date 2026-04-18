@@ -791,7 +791,7 @@ const SettingsEmailTemplates = () => {
 
           {/* Actions */}
           <div className="flex gap-2">
-            <Button onClick={handleSave} disabled={saving || couponDateRangeInvalid}>
+            <Button onClick={handleSave} disabled={saving || couponDateRangeInvalid || couponExpiresInPast}>
               <Save className="h-4 w-4 mr-2" /> {saving ? "Salvando..." : "Salvar"}
             </Button>
             <Button variant="outline" onClick={() => setPreviewing(!previewing)}>

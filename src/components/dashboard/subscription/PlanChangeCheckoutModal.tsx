@@ -15,6 +15,7 @@ import { getStripe } from "@/lib/stripe";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import StripeCardForm from "./StripeCardForm";
+import PaymentSecurityBadge from "@/components/PaymentSecurityBadge";
 import type { PlanOption } from "./plan-change/PlanOption";
 
 interface SavedCard {
@@ -434,10 +435,9 @@ export default function PlanChangeCheckoutModal({
           </div>
         )}
 
-        <p className="text-[10px] text-center text-muted-foreground flex items-center justify-center gap-1">
-          <ShieldCheck className="h-3 w-3" />
-          Conexão segura · Stripe · LGPD
-        </p>
+        <div className="flex justify-center pt-1">
+          <PaymentSecurityBadge variant="pill" />
+        </div>
       </DialogContent>
     </Dialog>
   );

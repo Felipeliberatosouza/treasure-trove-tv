@@ -103,7 +103,8 @@ const SubscriptionCancelledEmail = ({
       </Container>
     </Body>
   </Html>
-)
+  )
+}
 
 export const template = {
   component: SubscriptionCancelledEmail,
@@ -116,6 +117,11 @@ export const template = {
     expiryDate: '12/04/2026',
     reason: 'cancelada',
     renewLink: 'https://revisaofacil.com/#pricing',
+    proRataSubtotal: 'R$ 12,90',
+    commitmentPenalty: 'R$ 28,90',
+    commitmentDaysRemaining: 18,
+    minCommitmentDays: 30,
+    chargeAmount: 'R$ 41,80',
   },
 } satisfies TemplateEntry
 

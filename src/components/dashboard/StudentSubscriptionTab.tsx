@@ -13,6 +13,7 @@ import { useAuditLog } from "@/hooks/useAuditLog";
 import { useActiveSubscription } from "@/hooks/useActiveSubscription";
 import SubscriptionStatement from "./subscription/SubscriptionStatement";
 import PlanChangeModal from "./subscription/PlanChangeModal";
+import PlanChangeCheckoutModal from "./subscription/PlanChangeCheckoutModal";
 import CancelSubscriptionModal from "./subscription/CancelSubscriptionModal";
 import PurchaseHistory from "./subscription/PurchaseHistory";
 import { redirectTopLevel } from "@/lib/payments";
@@ -73,6 +74,8 @@ export default function StudentSubscriptionTab() {
   const [loading, setLoading] = useState(true);
   const [portalLoading, setPortalLoading] = useState(false);
   const [showPlanChange, setShowPlanChange] = useState(false);
+  const [showCheckout, setShowCheckout] = useState(false);
+  const [pendingNewPlan, setPendingNewPlan] = useState<import("./subscription/PlanChangeModal").PlanOption | null>(null);
   const [showCancel, setShowCancel] = useState(false);
 
   // Auto-open plan change modal when redirected with ?action=change-plan
@@ -190,99 +193,113 @@ export default function StudentSubscriptionTab() {
     }
   };
 
+  // User picked a target plan in the comparison modal — open the in-app
+  // checkout modal (Stripe Elements) to confirm the change with prorated charge.
   const handlePlanChange = async (newPlanId: string) => {
     const newPlan = availablePlans.find(p => p.id === newPlanId);
+    if (!newPlan) {
+      toast.error("Plano selecionado não encontrado.");
+      return;
+    }
+    setPendingNewPlan(newPlan);
+    setShowPlanChange(false);
+    setShowCheckout(true);
+  };
+
+  // Called by PlanChangeCheckoutModal after the Stripe-side change succeeds.
+  // Sends notification emails, refreshes local state.
+  const sendPlanChangeNotifications = async (newPlan: import("./subscription/PlanChangeModal").PlanOption) => {
     const plan = activeSubscription?.subscription_plans as unknown as PlanData;
     const cycleInfo = activeSubscription ? getCycleInfo(activeSubscription) : null;
+    if (!user?.email || !plan || !cycleInfo) return;
+
+    const isUpgrade = newPlan.price > plan.price;
+    const dailyRateCurrent = cycleInfo.totalDays > 0 ? plan.price / cycleInfo.totalDays : 0;
+    const creditRemaining = dailyRateCurrent * (cycleInfo.totalDays - cycleInfo.daysUsed);
+    const dailyRateNew = cycleInfo.totalDays > 0 ? newPlan.price / cycleInfo.totalDays : 0;
+    const costRemaining = dailyRateNew * (cycleInfo.totalDays - cycleInfo.daysUsed);
+    const proRata = Math.abs(costRemaining - creditRemaining);
+    const studentName = user.user_metadata?.name || "";
+    const effectiveDate = new Date().toLocaleDateString("pt-BR");
+    const proRataAmount = `R$ ${proRata.toFixed(2)}`;
+    const proRataExplanation = isUpgrade
+      ? `Diferença proporcional de ${cycleInfo.totalDays - cycleInfo.daysUsed} dias restantes no ciclo atual.`
+      : `Crédito de ${cycleInfo.totalDays - cycleInfo.daysUsed} dias restantes será aplicado na próxima fatura.`;
 
     try {
-      const { data, error } = await supabase.functions.invoke("customer-portal");
-      if (error) throw error;
-
-      // Send plan change notification email
-      if (user?.email && plan && newPlan && cycleInfo) {
-        const isUpgrade = newPlan.price > plan.price;
-        const dailyRateCurrent = cycleInfo.totalDays > 0 ? plan.price / cycleInfo.totalDays : 0;
-        const creditRemaining = dailyRateCurrent * (cycleInfo.totalDays - cycleInfo.daysUsed);
-        const dailyRateNew = cycleInfo.totalDays > 0 ? newPlan.price / cycleInfo.totalDays : 0;
-        const costRemaining = dailyRateNew * (cycleInfo.totalDays - cycleInfo.daysUsed);
-        const proRata = Math.abs(costRemaining - creditRemaining);
-        const studentName = user.user_metadata?.name || "";
-        const effectiveDate = new Date().toLocaleDateString("pt-BR");
-        const proRataAmount = `R$ ${proRata.toFixed(2)}`;
-        const proRataExplanation = isUpgrade
-          ? `Diferença proporcional de ${cycleInfo.totalDays - cycleInfo.daysUsed} dias restantes no ciclo atual.`
-          : `Crédito de ${cycleInfo.totalDays - cycleInfo.daysUsed} dias restantes será aplicado na próxima fatura.`;
-
-        await supabase.functions.invoke("send-transactional-email", {
-          body: {
-            templateName: "plan-changed",
-            recipientEmail: user.email,
-            idempotencyKey: `plan-change-${activeSubscription!.id}-${newPlanId}-${Date.now()}`,
-            templateData: {
-              name: studentName,
-              previousPlan: plan.name,
-              newPlan: newPlan.name,
-              changeType: isUpgrade ? "upgrade" : "downgrade",
-              proRataAmount,
-              proRataExplanation,
-              effectiveDate,
-            },
+      await supabase.functions.invoke("send-transactional-email", {
+        body: {
+          templateName: "plan-changed",
+          recipientEmail: user.email,
+          idempotencyKey: `plan-change-${activeSubscription!.id}-${newPlan.id}-${Date.now()}`,
+          templateData: {
+            name: studentName,
+            previousPlan: plan.name,
+            newPlan: newPlan.name,
+            changeType: isUpgrade ? "upgrade" : "downgrade",
+            proRataAmount,
+            proRataExplanation,
+            effectiveDate,
           },
-        });
-
-        // Notify admins
-        const { data: admins } = await supabase
-          .from("user_roles")
-          .select("user_id")
-          .eq("role", "admin");
-
-        if (admins) {
-          const { data: adminProfiles } = await supabase
-            .from("profiles")
-            .select("email")
-            .in("user_id", admins.map(a => a.user_id));
-
-          for (const admin of adminProfiles || []) {
-            await supabase.functions.invoke("send-transactional-email", {
-              body: {
-                templateName: "subscription-change-admin-notify",
-                recipientEmail: admin.email,
-                idempotencyKey: `plan-change-admin-${admin.email}-${activeSubscription!.id}-${Date.now()}`,
-                templateData: {
-                  studentName,
-                  studentEmail: user.email,
-                  actionType: "plan-change",
-                  previousPlan: plan.name,
-                  newPlan: newPlan.name,
-                  changeType: isUpgrade ? "upgrade" : "downgrade",
-                  proRataAmount,
-                  proRataExplanation,
-                  effectiveDate,
-                },
-              },
-            });
-          }
-        }
-      }
-
-      logAction("plan_changed", {
-        targetTable: "student_subscriptions",
-        targetId: activeSubscription?.id,
-        metadata: {
-          previous_plan: plan?.name,
-          new_plan: newPlan?.name,
-          change_type: newPlan && plan ? (newPlan.price > plan.price ? "upgrade" : "downgrade") : "unknown",
         },
       });
 
-      toast.success("Redirecionando para o portal de gerenciamento...");
-      // Refresh shared subscription state so navbar reflects the change.
-      refreshActiveSub();
-      if (data?.url) redirectTopLevel(data.url, { title: "Abrindo troca de plano segura..." });
-    } catch {
-      toast.error("Não foi possível processar a mudança de plano.");
+      const { data: admins } = await supabase
+        .from("user_roles")
+        .select("user_id")
+        .eq("role", "admin");
+
+      if (admins) {
+        const { data: adminProfiles } = await supabase
+          .from("profiles")
+          .select("email")
+          .in("user_id", admins.map(a => a.user_id));
+
+        for (const admin of adminProfiles || []) {
+          await supabase.functions.invoke("send-transactional-email", {
+            body: {
+              templateName: "subscription-change-admin-notify",
+              recipientEmail: admin.email,
+              idempotencyKey: `plan-change-admin-${admin.email}-${activeSubscription!.id}-${Date.now()}`,
+              templateData: {
+                studentName,
+                studentEmail: user.email,
+                actionType: "plan-change",
+                previousPlan: plan.name,
+                newPlan: newPlan.name,
+                changeType: isUpgrade ? "upgrade" : "downgrade",
+                proRataAmount,
+                proRataExplanation,
+                effectiveDate,
+              },
+            },
+          });
+        }
+      }
+    } catch (e) {
+      console.error("[StudentSubscriptionTab] notification error", e);
     }
+
+    logAction("plan_changed", {
+      targetTable: "student_subscriptions",
+      targetId: activeSubscription?.id,
+      metadata: {
+        previous_plan: plan?.name,
+        new_plan: newPlan?.name,
+        change_type: isUpgrade ? "upgrade" : "downgrade",
+      },
+    });
+  };
+
+  const handleCheckoutSuccess = async () => {
+    if (pendingNewPlan) {
+      await sendPlanChangeNotifications(pendingNewPlan);
+    }
+    setPendingNewPlan(null);
+    // Re-sync from Stripe + reload local data so UI reflects the new plan.
+    await refreshSubscription();
+    await loadAll();
+    await refreshActiveSub();
   };
 
   const handleCancel = async () => {
@@ -586,6 +603,22 @@ export default function StudentSubscriptionTab() {
                 plans={availablePlans}
                 onConfirm={handlePlanChange}
               />
+
+              {/* In-app Stripe checkout for the actual change (Elements) */}
+              {pendingNewPlan && (
+                <PlanChangeCheckoutModal
+                  open={showCheckout}
+                  onOpenChange={(v) => {
+                    setShowCheckout(v);
+                    if (!v) setPendingNewPlan(null);
+                  }}
+                  currentPlan={plan as unknown as import("./subscription/PlanChangeModal").PlanOption}
+                  newPlan={pendingNewPlan}
+                  daysUsed={cycleInfo!.daysUsed}
+                  totalDays={cycleInfo!.totalDays}
+                  onSuccess={handleCheckoutSuccess}
+                />
+              )}
 
               {/* Cancel Modal */}
               <CancelSubscriptionModal

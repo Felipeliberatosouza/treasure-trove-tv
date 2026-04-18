@@ -1,15 +1,19 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import {
   ArrowRight, CreditCard, Plus, ShieldCheck, Loader2,
   ArrowUp, ArrowDown, CheckCircle2, Info,
 } from "lucide-react";
+import { Elements } from "@stripe/react-stripe-js";
+import { getStripe } from "@/lib/stripe";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import StripeCardForm from "./StripeCardForm";
 import type { PlanOption } from "./plan-change/PlanOption";
 
 interface SavedCard {
@@ -18,6 +22,7 @@ interface SavedCard {
   last4: string;
   exp_month: number;
   exp_year: number;
+  isDefault?: boolean;
 }
 
 interface PlanChangeCheckoutModalProps {
@@ -27,46 +32,101 @@ interface PlanChangeCheckoutModalProps {
   newPlan: PlanOption;
   daysUsed: number;
   totalDays: number;
-  onConfirm: () => Promise<void> | void;
+  /** Called after the plan change succeeds (refresh UI / send notifications). */
+  onSuccess?: () => Promise<void> | void;
 }
-
-// Mock saved cards (visual only). Replace with real data from create-setup-intent.
-const MOCK_SAVED_CARDS: SavedCard[] = [
-  { id: "pm_mock_1", brand: "Visa", last4: "4242", exp_month: 12, exp_year: 2027 },
-];
 
 const formatBRL = (n: number) =>
   n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
 export default function PlanChangeCheckoutModal({
-  open, onOpenChange, currentPlan, newPlan, daysUsed, totalDays, onConfirm,
+  open, onOpenChange, currentPlan, newPlan, daysUsed, totalDays, onSuccess,
 }: PlanChangeCheckoutModalProps) {
-  const [paymentChoice, setPaymentChoice] = useState<string>(
-    MOCK_SAVED_CARDS[0]?.id ?? "new",
-  );
-  const [loading, setLoading] = useState(false);
+  const [paymentChoice, setPaymentChoice] = useState<string>("new");
+  const [savedCards, setSavedCards] = useState<SavedCard[]>([]);
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [loadingSetup, setLoadingSetup] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   const isUpgrade = newPlan.price > currentPlan.price;
   const daysRemaining = Math.max(0, totalDays - daysUsed);
-  const dailyOld = currentPlan.price / totalDays;
-  const dailyNew = newPlan.price / totalDays;
+  const dailyOld = totalDays > 0 ? currentPlan.price / totalDays : 0;
+  const dailyNew = totalDays > 0 ? newPlan.price / totalDays : 0;
   const credit = +(dailyOld * daysRemaining).toFixed(2);
   const newPeriodCharge = +(dailyNew * daysRemaining).toFixed(2);
   const dueNow = Math.max(0, +(newPeriodCharge - credit).toFixed(2));
   const creditForNext = isUpgrade ? 0 : Math.max(0, +(credit - newPeriodCharge).toFixed(2));
+  const requiresPayment = isUpgrade && dueNow > 0;
 
-  const handleConfirm = async () => {
-    setLoading(true);
+  // Fetch saved cards + SetupIntent client secret when modal opens (only if charge is needed).
+  useEffect(() => {
+    if (!open || !requiresPayment) return;
+    let cancelled = false;
+    (async () => {
+      setLoadingSetup(true);
+      try {
+        const { data, error } = await supabase.functions.invoke("create-setup-intent");
+        if (error) throw error;
+        if (cancelled) return;
+        setSavedCards(data?.savedCards || []);
+        setClientSecret(data?.clientSecret || null);
+        // Default to first saved card if available, otherwise "new"
+        const defaultId =
+          (data?.savedCards || []).find((c: SavedCard) => c.isDefault)?.id ||
+          data?.savedCards?.[0]?.id ||
+          "new";
+        setPaymentChoice(defaultId);
+      } catch (e) {
+        console.error("[PlanChangeCheckoutModal] setup-intent failed", e);
+        toast.error("Não foi possível carregar formas de pagamento.");
+      } finally {
+        if (!cancelled) setLoadingSetup(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [open, requiresPayment]);
+
+  const stripePromise = useMemo(() => getStripe(), []);
+
+  const performChange = async (paymentMethodId?: string) => {
+    setSubmitting(true);
     try {
-      await onConfirm();
+      const { data, error } = await supabase.functions.invoke("change-subscription-plan", {
+        body: { newPlanId: newPlan.id, paymentMethodId },
+      });
+      if (error) throw error;
+      if (!data?.ok) {
+        toast.error(data?.error || "Falha ao alterar plano.");
+        return;
+      }
+      toast.success(
+        isUpgrade
+          ? `Upgrade para ${newPlan.name} concluído!`
+          : `Downgrade para ${newPlan.name} agendado.`,
+      );
+      await onSuccess?.();
       onOpenChange(false);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erro ao alterar plano.");
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
 
+  // Confirm with a saved card (no Elements interaction needed)
+  const handleConfirmSavedOrNoCharge = async () => {
+    if (requiresPayment) {
+      await performChange(paymentChoice);
+    } else {
+      // Downgrade or no charge — no payment method needed
+      await performChange();
+    }
+  };
+
+  const showNewCardForm = requiresPayment && paymentChoice === "new";
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(v) => !submitting && onOpenChange(v)}>
       <DialogContent className="max-w-xl max-h-[92vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-center gap-2">
@@ -152,99 +212,99 @@ export default function PlanChangeCheckoutModal({
         </div>
 
         {/* Payment method (only required for upgrades that need a charge now) */}
-        {isUpgrade && dueNow > 0 && (
+        {requiresPayment && (
           <div className="rounded-lg border border-border p-4 space-y-3">
             <div className="flex items-center gap-2">
               <CreditCard className="h-4 w-4 text-primary" />
               <h3 className="font-semibold text-sm">Forma de pagamento</h3>
             </div>
 
-            <RadioGroup value={paymentChoice} onValueChange={setPaymentChoice} className="space-y-2">
-              {MOCK_SAVED_CARDS.map((card) => (
-                <Label
-                  key={card.id}
-                  htmlFor={card.id}
-                  className={`flex items-center gap-3 rounded-md border p-3 cursor-pointer transition-colors ${
-                    paymentChoice === card.id ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
-                  }`}
-                >
-                  <RadioGroupItem value={card.id} id={card.id} />
-                  <CreditCard className="h-4 w-4 text-muted-foreground" />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">
-                      {card.brand} •••• {card.last4}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      Vence {String(card.exp_month).padStart(2, "0")}/{card.exp_year}
-                    </p>
-                  </div>
-                  <Badge variant="outline" className="text-[10px]">Salvo</Badge>
-                </Label>
-              ))}
-
-              <Label
-                htmlFor="new"
-                className={`flex items-center gap-3 rounded-md border p-3 cursor-pointer transition-colors ${
-                  paymentChoice === "new" ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
-                }`}
-              >
-                <RadioGroupItem value="new" id="new" />
-                <Plus className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm font-medium">Usar um novo cartão</span>
-              </Label>
-            </RadioGroup>
-
-            {/* New card form (visual mockup — will be replaced by Stripe Elements) */}
-            {paymentChoice === "new" && (
-              <div className="rounded-md border border-dashed border-border bg-muted/20 p-4 space-y-3">
-                <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-                  <ShieldCheck className="h-3.5 w-3.5 text-success" />
-                  Pagamento processado com segurança. Os dados do cartão não passam pelos nossos servidores.
-                </p>
-
-                <div className="space-y-2">
-                  <Label htmlFor="card-number" className="text-xs">Número do cartão</Label>
-                  <Input id="card-number" placeholder="1234 1234 1234 1234" disabled />
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-2">
-                    <Label htmlFor="card-exp" className="text-xs">Validade</Label>
-                    <Input id="card-exp" placeholder="MM/AA" disabled />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="card-cvc" className="text-xs">CVV</Label>
-                    <Input id="card-cvc" placeholder="123" disabled />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="card-name" className="text-xs">Nome no cartão</Label>
-                  <Input id="card-name" placeholder="Como impresso no cartão" disabled />
-                </div>
-
-                <p className="text-[10px] text-muted-foreground italic">
-                  * Mockup visual. Será substituído pelo Stripe Elements (PCI-DSS SAQ-A).
-                </p>
+            {loadingSetup ? (
+              <div className="flex items-center justify-center py-6">
+                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
               </div>
+            ) : (
+              <>
+                <RadioGroup
+                  value={paymentChoice}
+                  onValueChange={setPaymentChoice}
+                  className="space-y-2"
+                >
+                  {savedCards.map((card) => (
+                    <Label
+                      key={card.id}
+                      htmlFor={card.id}
+                      className={`flex items-center gap-3 rounded-md border p-3 cursor-pointer transition-colors ${
+                        paymentChoice === card.id ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
+                      }`}
+                    >
+                      <RadioGroupItem value={card.id} id={card.id} />
+                      <CreditCard className="h-4 w-4 text-muted-foreground" />
+                      <div className="flex-1">
+                        <p className="text-sm font-medium capitalize">
+                          {card.brand} •••• {card.last4}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Vence {String(card.exp_month).padStart(2, "0")}/{card.exp_year}
+                        </p>
+                      </div>
+                      {card.isDefault && (
+                        <Badge variant="outline" className="text-[10px]">Padrão</Badge>
+                      )}
+                    </Label>
+                  ))}
+
+                  <Label
+                    htmlFor="new"
+                    className={`flex items-center gap-3 rounded-md border p-3 cursor-pointer transition-colors ${
+                      paymentChoice === "new" ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
+                    }`}
+                  >
+                    <RadioGroupItem value="new" id="new" />
+                    <Plus className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm font-medium">Usar um novo cartão</span>
+                  </Label>
+                </RadioGroup>
+
+                {showNewCardForm && clientSecret && (
+                  <Elements
+                    stripe={stripePromise}
+                    options={{
+                      clientSecret,
+                      appearance: { theme: "stripe" },
+                      locale: "pt-BR",
+                    }}
+                  >
+                    <StripeCardForm
+                      ctaLabel={`Pagar ${formatBRL(dueNow)} e mudar`}
+                      onPaymentMethodReady={(pmId) => performChange(pmId)}
+                      disabled={submitting}
+                    />
+                  </Elements>
+                )}
+              </>
             )}
           </div>
         )}
 
-        {/* Footer */}
-        <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-2">
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
-            Cancelar
-          </Button>
-          <Button onClick={handleConfirm} disabled={loading} className="min-w-[180px]">
-            {loading ? (
-              <Loader2 className="h-4 w-4 animate-spin mr-2" />
-            ) : null}
-            {isUpgrade && dueNow > 0
-              ? `Pagar ${formatBRL(dueNow)} e mudar`
-              : `Confirmar ${isUpgrade ? "Upgrade" : "Downgrade"}`}
-          </Button>
-        </div>
+        {/* Footer — hidden when StripeCardForm renders its own submit button */}
+        {!showNewCardForm && (
+          <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-2">
+            <Button variant="outline" onClick={() => onOpenChange(false)} disabled={submitting}>
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleConfirmSavedOrNoCharge}
+              disabled={submitting || loadingSetup}
+              className="min-w-[180px]"
+            >
+              {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              {requiresPayment
+                ? `Pagar ${formatBRL(dueNow)} e mudar`
+                : `Confirmar ${isUpgrade ? "Upgrade" : "Downgrade"}`}
+            </Button>
+          </div>
+        )}
 
         <p className="text-[10px] text-center text-muted-foreground flex items-center justify-center gap-1">
           <ShieldCheck className="h-3 w-3" />

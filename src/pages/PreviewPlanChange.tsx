@@ -59,9 +59,6 @@ export default function PreviewPlanChange() {
         newPlan={upgradePlan}
         daysUsed={12}
         totalDays={30}
-        onConfirm={async () => {
-          await new Promise((r) => setTimeout(r, 800));
-        }}
       />
 
       <PlanChangeCheckoutModal
@@ -71,9 +68,6 @@ export default function PreviewPlanChange() {
         newPlan={downgradePlan}
         daysUsed={12}
         totalDays={30}
-        onConfirm={async () => {
-          await new Promise((r) => setTimeout(r, 800));
-        }}
       />
     </div>
   );

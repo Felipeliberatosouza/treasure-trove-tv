@@ -55,25 +55,33 @@ function computeSize(dataUrl: string): Promise<{ width: number; height: number }
 export async function getPdfBranding(): Promise<PdfBranding> {
   let platformName = DEFAULT_NAME;
   let logoUrl = "";
+  const company: PdfCompany = { razaoSocial: "", cnpj: "", address: "" };
   try {
     const { data } = await supabase
       .from("platform_settings")
-      .select("value")
-      .eq("key", "branding")
-      .maybeSingle();
-    const branding = (data?.value ?? {}) as { platform_name?: string; logo_url?: string };
-    if (branding.platform_name) platformName = branding.platform_name;
-    if (branding.logo_url) logoUrl = branding.logo_url;
+      .select("key,value")
+      .in("key", ["branding", "contact"]);
+    for (const row of data ?? []) {
+      const value = (row.value ?? {}) as Record<string, string>;
+      if (row.key === "branding") {
+        if (value.platform_name) platformName = value.platform_name;
+        if (value.logo_url) logoUrl = value.logo_url;
+      } else if (row.key === "contact") {
+        company.razaoSocial = value.razao_social || value.nome_fantasia || "";
+        company.cnpj = formatCnpj(value.cnpj || "");
+        company.address = value.platform_address || value.address || "";
+      }
+    }
   } catch (e) {
     console.warn("[pdfBranding] failed to load branding", e);
   }
 
   if (!logoUrl) {
-    return { platformName, logoDataUrl: null, logoFormat: null, logoWidth: 0, logoHeight: 0 };
+    return { platformName, logoDataUrl: null, logoFormat: null, logoWidth: 0, logoHeight: 0, company };
   }
   const loaded = await urlToDataUrl(logoUrl);
   if (!loaded) {
-    return { platformName, logoDataUrl: null, logoFormat: null, logoWidth: 0, logoHeight: 0 };
+    return { platformName, logoDataUrl: null, logoFormat: null, logoWidth: 0, logoHeight: 0, company };
   }
   const { width, height } = await computeSize(loaded.dataUrl);
   return {
@@ -82,5 +90,20 @@ export async function getPdfBranding(): Promise<PdfBranding> {
     logoFormat: loaded.format,
     logoWidth: width,
     logoHeight: height,
+    company,
   };
+}
+
+/** Builds the legal footer lines (CNPJ/Razão Social/Endereço) for PDFs. */
+export function buildCompanyFooterLines(company: PdfCompany): string[] {
+  const parts: string[] = [];
+  if (company.razaoSocial && company.cnpj) {
+    parts.push(`${company.razaoSocial} — CNPJ ${company.cnpj}`);
+  } else if (company.razaoSocial) {
+    parts.push(company.razaoSocial);
+  } else if (company.cnpj) {
+    parts.push(`CNPJ ${company.cnpj}`);
+  }
+  if (company.address) parts.push(company.address);
+  return parts;
 }

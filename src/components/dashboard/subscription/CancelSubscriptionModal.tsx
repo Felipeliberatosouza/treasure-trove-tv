@@ -95,11 +95,12 @@ export default function CancelSubscriptionModal({
           uid
             ? supabase
                 .from("audit_logs")
-                .select("id")
+                .select("id, created_at")
                 .eq("user_id", uid)
                 .eq("action", "retention_coupon_applied")
+                .order("created_at", { ascending: false })
                 .limit(1)
-            : Promise.resolve({ data: [] as { id: string }[] }),
+            : Promise.resolve({ data: [] as { id: string; created_at: string }[] }),
         ]);
         if (error) throw error;
         if (cancelled) return;
@@ -108,9 +109,24 @@ export default function CancelSubscriptionModal({
         } else {
           setPreview(data as CancellationPreview);
         }
-        if (cfgRow?.value) setRetention(cfgRow.value as unknown as RetentionCouponSettings);
-        const priorRows = (priorRes as { data?: { id: string }[] | null })?.data || [];
-        if (priorRows.length > 0) setRetentionAlreadyUsed(true);
+        const cfgValue = cfgRow?.value as RetentionCouponSettings | undefined;
+        if (cfgValue) setRetention(cfgValue);
+        const priorRows =
+          (priorRes as { data?: { id: string; created_at: string }[] | null })?.data || [];
+        if (priorRows.length > 0) {
+          const lastAt = new Date(priorRows[0].created_at);
+          const cooldownMonths = Number.isFinite(cfgValue?.cooldown_months)
+            ? Number(cfgValue?.cooldown_months)
+            : 12;
+          const now = new Date();
+          const monthsSince =
+            (now.getFullYear() - lastAt.getFullYear()) * 12 +
+            (now.getMonth() - lastAt.getMonth()) +
+            (now.getDate() >= lastAt.getDate() ? 0 : -1);
+          // cooldown_months <= 0 → block forever; else block until elapsed.
+          const stillBlocked = cooldownMonths <= 0 || monthsSince < cooldownMonths;
+          if (stillBlocked) setRetentionAlreadyUsed(true);
+        }
       } catch (e) {
         if (!cancelled) {
           setError(e instanceof Error ? e.message : "Erro ao calcular o cancelamento.");

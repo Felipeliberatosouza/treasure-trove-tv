@@ -95,6 +95,13 @@ export default function PlanChangeCheckoutModal({
         body: { newPlanId: newPlan.id, paymentMethodId },
       });
       if (error) throw error;
+
+      // 3DS / SCA required on the upgrade invoice — run the challenge then retry.
+      if (data?.requiresAction && data?.clientSecret && data?.invoiceId) {
+        await handle3DSAndRetry(data.clientSecret as string, data.invoiceId as string);
+        return;
+      }
+
       if (!data?.ok) {
         toast.error(data?.error || "Falha ao alterar plano.");
         return;
@@ -111,6 +118,48 @@ export default function PlanChangeCheckoutModal({
     } finally {
       setSubmitting(false);
     }
+  };
+
+  /**
+   * Runs the 3D Secure challenge in a Stripe-hosted modal and, if successful,
+   * re-invokes the edge function with retryInvoiceId so the subscription
+   * change can be finalized server-side.
+   */
+  const handle3DSAndRetry = async (clientSecret: string, invoiceId: string) => {
+    toast.info("Autenticação adicional do banco necessária...");
+    const stripe = await stripePromise;
+    if (!stripe) {
+      toast.error("Stripe não pôde ser carregado.");
+      return;
+    }
+    const { error: confirmError, paymentIntent } = await stripe.confirmCardPayment(
+      clientSecret,
+    );
+    if (confirmError) {
+      toast.error(confirmError.message || "Autenticação 3D Secure falhou.");
+      return;
+    }
+    if (paymentIntent?.status !== "succeeded") {
+      toast.error("Autenticação não concluída. Tente novamente.");
+      return;
+    }
+
+    // Re-invoke to finalize the change server-side
+    const { data: retry, error: retryErr } = await supabase.functions.invoke(
+      "change-subscription-plan",
+      { body: { retryInvoiceId: invoiceId } },
+    );
+    if (retryErr) {
+      toast.error("Pagamento autenticado, mas falha ao finalizar. Atualize a página.");
+      return;
+    }
+    if (!retry?.ok) {
+      toast.error(retry?.error || "Não foi possível concluir a troca de plano.");
+      return;
+    }
+    toast.success(`Upgrade para ${newPlan.name} concluído!`);
+    await onSuccess?.();
+    onOpenChange(false);
   };
 
   // Confirm with a saved card (no Elements interaction needed)

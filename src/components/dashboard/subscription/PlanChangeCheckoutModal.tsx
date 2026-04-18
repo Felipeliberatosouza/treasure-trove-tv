@@ -7,8 +7,9 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import {
   ArrowRight, CreditCard, Plus, ShieldCheck, Loader2,
-  ArrowUp, ArrowDown, CheckCircle2, Info,
+  ArrowUp, ArrowDown, CheckCircle2, Info, AlertCircle, RefreshCw,
 } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Elements } from "@stripe/react-stripe-js";
 import { getStripe } from "@/lib/stripe";
 import { supabase } from "@/integrations/supabase/client";
@@ -47,6 +48,8 @@ export default function PlanChangeCheckoutModal({
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [loadingSetup, setLoadingSetup] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
+  const [pendingInvoice, setPendingInvoice] = useState<{ clientSecret: string; invoiceId: string } | null>(null);
 
   const isUpgrade = newPlan.price > currentPlan.price;
   const daysRemaining = Math.max(0, totalDays - daysUsed);
@@ -90,6 +93,7 @@ export default function PlanChangeCheckoutModal({
 
   const performChange = async (paymentMethodId?: string) => {
     setSubmitting(true);
+    setPaymentError(null);
     try {
       const { data, error } = await supabase.functions.invoke("change-subscription-plan", {
         body: { newPlanId: newPlan.id, paymentMethodId },
@@ -103,7 +107,7 @@ export default function PlanChangeCheckoutModal({
       }
 
       if (!data?.ok) {
-        toast.error(data?.error || "Falha ao alterar plano.");
+        setPaymentError(data?.error || "Falha ao alterar plano. Tente outro cartão.");
         return;
       }
       toast.success(
@@ -111,10 +115,11 @@ export default function PlanChangeCheckoutModal({
           ? `Upgrade para ${newPlan.name} concluído!`
           : `Downgrade para ${newPlan.name} agendado.`,
       );
+      setPendingInvoice(null);
       await onSuccess?.();
       onOpenChange(false);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Erro ao alterar plano.");
+      setPaymentError(e instanceof Error ? e.message : "Erro ao alterar plano.");
     } finally {
       setSubmitting(false);
     }
@@ -123,24 +128,36 @@ export default function PlanChangeCheckoutModal({
   /**
    * Runs the 3D Secure challenge in a Stripe-hosted modal and, if successful,
    * re-invokes the edge function with retryInvoiceId so the subscription
-   * change can be finalized server-side.
+   * change can be finalized server-side. On failure, keeps the modal open
+   * with an inline error so the user can retry with another card.
    */
   const handle3DSAndRetry = async (clientSecret: string, invoiceId: string) => {
+    // Remember the invoice so a future "Tentar novamente" can re-run with a new card
+    setPendingInvoice({ clientSecret, invoiceId });
     toast.info("Autenticação adicional do banco necessária...");
     const stripe = await stripePromise;
     if (!stripe) {
-      toast.error("Stripe não pôde ser carregado.");
+      setPaymentError("Stripe não pôde ser carregado. Recarregue a página.");
       return;
     }
     const { error: confirmError, paymentIntent } = await stripe.confirmCardPayment(
       clientSecret,
     );
     if (confirmError) {
-      toast.error(confirmError.message || "Autenticação 3D Secure falhou.");
+      setPaymentError(
+        confirmError.message
+          ? `Autenticação falhou: ${confirmError.message}. Tente outro cartão.`
+          : "Autenticação 3D Secure falhou. Tente outro cartão.",
+      );
+      // Switch UI back to "new card" so the user can enter another card
+      setPaymentChoice("new");
       return;
     }
     if (paymentIntent?.status !== "succeeded") {
-      toast.error("Autenticação não concluída. Tente novamente.");
+      setPaymentError(
+        `Autenticação não concluída (status: ${paymentIntent?.status ?? "desconhecido"}). Tente outro cartão.`,
+      );
+      setPaymentChoice("new");
       return;
     }
 
@@ -150,16 +167,29 @@ export default function PlanChangeCheckoutModal({
       { body: { retryInvoiceId: invoiceId } },
     );
     if (retryErr) {
-      toast.error("Pagamento autenticado, mas falha ao finalizar. Atualize a página.");
+      setPaymentError("Pagamento autenticado, mas falha ao finalizar. Tente novamente.");
       return;
     }
     if (!retry?.ok) {
-      toast.error(retry?.error || "Não foi possível concluir a troca de plano.");
+      setPaymentError(retry?.error || "Não foi possível concluir a troca de plano.");
       return;
     }
     toast.success(`Upgrade para ${newPlan.name} concluído!`);
+    setPendingInvoice(null);
     await onSuccess?.();
     onOpenChange(false);
+  };
+
+  /** Retry an existing pending invoice (e.g., after 3DS failure with same card). */
+  const retryPendingInvoice = async () => {
+    if (!pendingInvoice) return;
+    setSubmitting(true);
+    setPaymentError(null);
+    try {
+      await handle3DSAndRetry(pendingInvoice.clientSecret, pendingInvoice.invoiceId);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   // Confirm with a saved card (no Elements interaction needed)
@@ -268,6 +298,33 @@ export default function PlanChangeCheckoutModal({
               <h3 className="font-semibold text-sm">Forma de pagamento</h3>
             </div>
 
+            {paymentError && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Pagamento não concluído</AlertTitle>
+                <AlertDescription className="space-y-2">
+                  <p className="text-xs">{paymentError}</p>
+                  {pendingInvoice && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={retryPendingInvoice}
+                      disabled={submitting}
+                      className="mt-1"
+                    >
+                      {submitting ? (
+                        <Loader2 className="h-3 w-3 animate-spin mr-1.5" />
+                      ) : (
+                        <RefreshCw className="h-3 w-3 mr-1.5" />
+                      )}
+                      Tentar autenticar novamente
+                    </Button>
+                  )}
+                </AlertDescription>
+              </Alert>
+            )}
+
             {loadingSetup ? (
               <div className="flex items-center justify-center py-6">
                 <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
@@ -276,7 +333,7 @@ export default function PlanChangeCheckoutModal({
               <>
                 <RadioGroup
                   value={paymentChoice}
-                  onValueChange={setPaymentChoice}
+                  onValueChange={(v) => { setPaymentChoice(v); setPaymentError(null); }}
                   className="space-y-2"
                 >
                   {savedCards.map((card) => (

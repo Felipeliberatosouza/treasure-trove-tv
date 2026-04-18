@@ -65,12 +65,38 @@ serve(async (req) => {
     const currentAmount = (item.price.unit_amount ?? 0) / 100;
     const currency = item.price.currency || "brl";
 
-    // Stripe's authoritative period
-    const periodStartSec = sub.current_period_start ?? 0;
-    const periodEndSec = sub.current_period_end ?? 0;
+    // Stripe's authoritative period.
+    // IMPORTANT: in Stripe API 2025-08-27.basil, `current_period_start` /
+    // `current_period_end` live on the SUBSCRIPTION ITEM (not on the
+    // subscription itself). We fall back to the subscription-level fields
+    // for safety on older shapes.
+    // deno-lint-ignore no-explicit-any
+    const itemAny = item as any;
+    // deno-lint-ignore no-explicit-any
+    const subAny = sub as any;
+    const periodStartSec =
+      itemAny.current_period_start ?? subAny.current_period_start ?? 0;
+    const periodEndSec =
+      itemAny.current_period_end ?? subAny.current_period_end ?? 0;
+
+    // If Stripe still didn't give us a usable window, derive it from the
+    // billing interval so dailyRate is never equal to currentAmount.
+    let cycleSeconds = Math.max(0, periodEndSec - periodStartSec);
+    if (cycleSeconds <= 0) {
+      const interval = item.price.recurring?.interval ?? "month";
+      const intervalCount = item.price.recurring?.interval_count ?? 1;
+      const daysPerUnit =
+        interval === "year" ? 365
+        : interval === "week" ? 7
+        : interval === "day" ? 1
+        : 30; // month
+      cycleSeconds = daysPerUnit * intervalCount * 86400;
+    }
+
     const nowSec = Math.floor(Date.now() / 1000);
-    const cycleSeconds = Math.max(1, periodEndSec - periodStartSec);
-    const usedSeconds = Math.max(0, Math.min(cycleSeconds, nowSec - periodStartSec));
+    const usedSeconds = periodStartSec > 0
+      ? Math.max(0, Math.min(cycleSeconds, nowSec - periodStartSec))
+      : 0;
     const cycleDays = Math.max(1, Math.round(cycleSeconds / 86400));
     const daysUsed = Math.max(0, Math.min(cycleDays, Math.floor(usedSeconds / 86400)));
 

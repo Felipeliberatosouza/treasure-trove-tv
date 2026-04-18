@@ -87,8 +87,15 @@ serve(async (req) => {
     } catch (e) {
       log("upcoming invoice failed, fallback to manual estimate", { error: String(e) });
       // Fallback: manual estimate
-      const periodStart = (sub.current_period_start ?? 0) * 1000;
-      const periodEnd = (sub.current_period_end ?? 0) * 1000;
+      // In Stripe API basil, current_period_* lives on the subscription item.
+      // deno-lint-ignore no-explicit-any
+      const itemAny = sub.items.data[0] as any;
+      // deno-lint-ignore no-explicit-any
+      const subAny = sub as any;
+      const periodStart =
+        (itemAny.current_period_start ?? subAny.current_period_start ?? 0) * 1000;
+      const periodEnd =
+        (itemAny.current_period_end ?? subAny.current_period_end ?? 0) * 1000;
       const now = Date.now();
       const totalMs = periodEnd - periodStart;
       const remainingMs = Math.max(0, periodEnd - now);

@@ -547,6 +547,11 @@ const SettingsEmailTemplates = () => {
                         v ? new Date(v).toISOString() : null
                       );
                     }}
+                    className={
+                      couponDateRangeInvalid
+                        ? "border-destructive ring-1 ring-destructive focus-visible:ring-destructive"
+                        : ""
+                    }
                   />
                   {active.coupon_expires_at && (
                     <p
@@ -569,6 +574,17 @@ const SettingsEmailTemplates = () => {
                     </p>
                   )}
                 </div>
+                {couponDateRangeInvalid && (
+                  <div className="rounded-md border-2 border-destructive bg-destructive/10 p-3">
+                    <p className="text-sm font-semibold text-destructive flex items-start gap-2">
+                      <span>⚠️</span>
+                      <span>
+                        A data de início do cupom deve ser anterior à data de
+                        expiração. Corrija as datas antes de salvar.
+                      </span>
+                    </p>
+                  </div>
+                )}
               </div>
             )}
           </div>

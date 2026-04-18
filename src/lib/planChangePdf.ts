@@ -1,5 +1,5 @@
 import jsPDF from "jspdf";
-import { getPdfBranding } from "./pdfBranding";
+import { getPdfBranding, buildCompanyFooterLines } from "./pdfBranding";
 
 export interface PlanChangePdfData {
   studentName?: string;

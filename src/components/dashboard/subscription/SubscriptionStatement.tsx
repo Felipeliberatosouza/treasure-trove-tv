@@ -38,6 +38,19 @@ export default function SubscriptionStatement({ planName, entries }: Subscriptio
       <CardContent className="space-y-0">
         {entries.map((entry, i) => {
           const badge = typeBadge[entry.type] || typeBadge.purchase;
+          const isPlanChange = entry.type === "plan_change";
+          const isCredit = entry.amount < 0;
+          const isCharge = entry.amount > 0;
+
+          // Resumo curto do saldo para mudanças de plano
+          const balanceSummary = isPlanChange
+            ? isCredit
+              ? `Crédito de R$ ${Math.abs(entry.amount).toFixed(2)}`
+              : isCharge
+                ? `Cobrança de R$ ${entry.amount.toFixed(2)}`
+                : `Sem ajuste`
+            : null;
+
           return (
             <div key={i}>
               {i > 0 && <Separator className="my-3" />}
@@ -55,10 +68,28 @@ export default function SubscriptionStatement({ planName, entries }: Subscriptio
                     </Badge>
                     <span className="text-sm">{entry.description}</span>
                   </div>
+
+                  {/* Saldo destacado para troca de plano */}
+                  {isPlanChange && (
+                    <div
+                      className={`inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-xs font-medium ${
+                        isCredit
+                          ? "bg-success/10 text-success"
+                          : isCharge
+                            ? "bg-primary/10 text-primary"
+                            : "bg-muted text-muted-foreground"
+                      }`}
+                    >
+                      {isCredit ? "↓" : isCharge ? "↑" : "="} Saldo: {balanceSummary}
+                    </div>
+                  )}
+
                   <div className="flex items-start gap-3">
-                    <span className={`text-sm font-semibold ${entry.amount < 0 ? "text-success" : entry.amount > 0 ? "text-foreground" : "text-muted-foreground"}`}>
-                      {entry.amount < 0 ? "- " : ""}R$ {Math.abs(entry.amount).toFixed(2)}
-                    </span>
+                    {!isPlanChange && (
+                      <span className={`text-sm font-semibold ${entry.amount < 0 ? "text-success" : entry.amount > 0 ? "text-foreground" : "text-muted-foreground"}`}>
+                        {entry.amount < 0 ? "- " : ""}R$ {Math.abs(entry.amount).toFixed(2)}
+                      </span>
+                    )}
                     <ArrowRight className="h-3.5 w-3.5 text-muted-foreground mt-0.5 shrink-0" />
                     <span className="text-xs text-muted-foreground leading-relaxed">{entry.explanation}</span>
                   </div>

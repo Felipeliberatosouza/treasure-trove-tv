@@ -178,7 +178,15 @@ const HeroBanner = ({ onVideoClick, onExploreClick }: HeroBannerProps) => {
   const goNext = () => setCurrentIndex((i) => (i + 1) % slides.length);
 
   return (
-    <section className="relative h-[85vh] min-h-[500px] w-full overflow-hidden">
+    <section
+      className="relative h-[85vh] min-h-[500px] w-full overflow-hidden"
+      onMouseEnter={() => setIsPaused(true)}
+      onMouseLeave={() => setIsPaused(false)}
+      onFocusCapture={() => setIsPaused(true)}
+      onBlurCapture={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node)) setIsPaused(false);
+      }}
+    >
       <AnimatePresence mode="wait">
         <motion.div
           key={currentIndex}

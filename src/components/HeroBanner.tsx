@@ -131,19 +131,31 @@ const HeroBanner = ({ onVideoClick, onExploreClick }: HeroBannerProps) => {
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  const [progress, setProgress] = useState(0);
 
   useEffect(() => {
     if (currentIndex >= slides.length) setCurrentIndex(0);
   }, [slides.length, currentIndex]);
 
-  // Per-slide autoplay: schedule next based on the current slide's audience interval
+  // Per-slide autoplay + progress: drives both the slide change and the progress bar
   useEffect(() => {
-    if (slides.length <= 1 || isPaused) return;
-    const ms = (slides[currentIndex]?.autoplaySeconds || DEFAULT_HERO_AUTOPLAY_SECONDS) * 1000;
-    const id = window.setTimeout(() => {
-      setCurrentIndex((i) => (i + 1) % slides.length);
-    }, ms);
-    return () => window.clearTimeout(id);
+    setProgress(0);
+    if (slides.length <= 1) return;
+    const totalMs =
+      (slides[currentIndex]?.autoplaySeconds || DEFAULT_HERO_AUTOPLAY_SECONDS) * 1000;
+    const tickMs = 50;
+    let elapsed = 0;
+    const id = window.setInterval(() => {
+      if (isPaused) return;
+      elapsed += tickMs;
+      const pct = Math.min(100, (elapsed / totalMs) * 100);
+      setProgress(pct);
+      if (elapsed >= totalMs) {
+        window.clearInterval(id);
+        setCurrentIndex((i) => (i + 1) % slides.length);
+      }
+    }, tickMs);
+    return () => window.clearInterval(id);
   }, [currentIndex, slides, isPaused]);
 
   const active = slides[currentIndex] || slides[0];

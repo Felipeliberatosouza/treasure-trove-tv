@@ -141,9 +141,16 @@ export default function PlanChangeCheckoutModal({
       setPaymentError("Stripe não pôde ser carregado. Recarregue a página.");
       return;
     }
-    const { error: confirmError, paymentIntent } = await stripe.confirmCardPayment(
-      clientSecret,
-    );
+    setAwaiting3DS(true);
+    let confirmError: any;
+    let paymentIntent: any;
+    try {
+      const result = await stripe.confirmCardPayment(clientSecret);
+      confirmError = result.error;
+      paymentIntent = result.paymentIntent;
+    } finally {
+      setAwaiting3DS(false);
+    }
     if (confirmError) {
       setPaymentError(
         confirmError.message

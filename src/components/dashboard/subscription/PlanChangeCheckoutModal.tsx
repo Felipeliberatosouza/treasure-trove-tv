@@ -50,6 +50,7 @@ export default function PlanChangeCheckoutModal({
   const [submitting, setSubmitting] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
   const [pendingInvoice, setPendingInvoice] = useState<{ clientSecret: string; invoiceId: string } | null>(null);
+  const [awaiting3DS, setAwaiting3DS] = useState(false);
 
   const isUpgrade = newPlan.price > currentPlan.price;
   const daysRemaining = Math.max(0, totalDays - daysUsed);
@@ -140,9 +141,16 @@ export default function PlanChangeCheckoutModal({
       setPaymentError("Stripe não pôde ser carregado. Recarregue a página.");
       return;
     }
-    const { error: confirmError, paymentIntent } = await stripe.confirmCardPayment(
-      clientSecret,
-    );
+    setAwaiting3DS(true);
+    let confirmError: any;
+    let paymentIntent: any;
+    try {
+      const result = await stripe.confirmCardPayment(clientSecret);
+      confirmError = result.error;
+      paymentIntent = result.paymentIntent;
+    } finally {
+      setAwaiting3DS(false);
+    }
     if (confirmError) {
       setPaymentError(
         confirmError.message
@@ -205,8 +213,22 @@ export default function PlanChangeCheckoutModal({
   const showNewCardForm = requiresPayment && paymentChoice === "new";
 
   return (
-    <Dialog open={open} onOpenChange={(v) => !submitting && onOpenChange(v)}>
-      <DialogContent className="max-w-xl max-h-[92vh] overflow-y-auto">
+    <Dialog open={open} onOpenChange={(v) => !submitting && !awaiting3DS && onOpenChange(v)}>
+      <DialogContent className="max-w-xl max-h-[92vh] overflow-y-auto relative">
+        {awaiting3DS && (
+          <div className="absolute inset-0 z-50 flex flex-col items-center justify-center gap-3 bg-background/85 backdrop-blur-sm rounded-lg">
+            <div className="relative">
+              <ShieldCheck className="h-10 w-10 text-primary" />
+              <Loader2 className="h-5 w-5 animate-spin text-primary absolute -bottom-1 -right-1 bg-background rounded-full" />
+            </div>
+            <p className="text-sm font-medium text-foreground">
+              Aguardando autenticação do banco...
+            </p>
+            <p className="text-xs text-muted-foreground text-center max-w-[280px]">
+              Conclua a verificação 3D Secure na janela do seu banco. Não feche esta tela.
+            </p>
+          </div>
+        )}
         <DialogHeader>
           <div className="flex items-center gap-2">
             {isUpgrade ? (

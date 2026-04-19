@@ -10,6 +10,8 @@ import { Mail, CheckCircle, XCircle, AlertTriangle, Clock, ChevronLeft, ChevronR
 import { maskEmail } from "@/lib/maskData";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
+import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from "@/components/ui/chart";
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
 interface EmailLog {
   id: string;
@@ -100,6 +102,7 @@ const AdminEmailsTab = () => {
   const [birthdayLogs, setBirthdayLogs] = useState<BirthdayLog[]>([]);
   const [birthdayLoading, setBirthdayLoading] = useState(false);
   const [birthdayRangeDays, setBirthdayRangeDays] = useState(30);
+  const [birthdayMonthly, setBirthdayMonthly] = useState<{ month: string; subscribers: number; nonSubscribers: number }[]>([]);
   const { toast } = useToast();
 
   const fetchLogs = async () => {
@@ -148,6 +151,40 @@ const AdminEmailsTab = () => {
       .order("sent_at", { ascending: false })
       .limit(500);
     setBirthdayLogs((data as BirthdayLog[]) || []);
+
+    // Fetch last 12 months for chart (independent of range filter)
+    const twelveMonthsAgo = new Date();
+    twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 11);
+    twelveMonthsAgo.setDate(1);
+    twelveMonthsAgo.setHours(0, 0, 0, 0);
+    const { data: monthlyData } = await supabase
+      .from("birthday_email_log")
+      .select("sent_at, is_active_subscriber")
+      .gte("sent_at", twelveMonthsAgo.toISOString())
+      .order("sent_at", { ascending: true });
+
+    // Build 12 month buckets
+    const buckets: Record<string, { month: string; subscribers: number; nonSubscribers: number }> = {};
+    const monthNames = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
+    for (let i = 0; i < 12; i++) {
+      const d = new Date(twelveMonthsAgo);
+      d.setMonth(d.getMonth() + i);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      buckets[key] = {
+        month: `${monthNames[d.getMonth()]}/${String(d.getFullYear()).slice(2)}`,
+        subscribers: 0,
+        nonSubscribers: 0,
+      };
+    }
+    (monthlyData || []).forEach((row: any) => {
+      const d = new Date(row.sent_at);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      if (buckets[key]) {
+        if (row.is_active_subscriber) buckets[key].subscribers++;
+        else buckets[key].nonSubscribers++;
+      }
+    });
+    setBirthdayMonthly(Object.values(buckets));
     setBirthdayLoading(false);
   };
 
@@ -677,6 +714,37 @@ const AdminEmailsTab = () => {
               </CardContent>
             </Card>
           </div>
+
+          {/* Monthly chart - last 12 months */}
+          <Card>
+            <CardContent className="pt-4 pb-3 px-4">
+              <div className="mb-3">
+                <h3 className="text-sm font-semibold">Envios por mês (últimos 12 meses)</h3>
+                <p className="text-xs text-muted-foreground">Comparativo entre assinantes ativos e usuários sem assinatura.</p>
+              </div>
+              {birthdayMonthly.every(m => m.subscribers === 0 && m.nonSubscribers === 0) ? (
+                <p className="text-sm text-muted-foreground text-center py-8">Sem envios registrados nos últimos 12 meses.</p>
+              ) : (
+                <ChartContainer
+                  config={{
+                    subscribers: { label: "Assinantes ativos", color: "hsl(var(--primary))" },
+                    nonSubscribers: { label: "Sem assinatura", color: "hsl(var(--accent))" },
+                  }}
+                  className="h-[240px] w-full"
+                >
+                  <BarChart data={birthdayMonthly} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                    <CartesianGrid vertical={false} strokeDasharray="3 3" />
+                    <XAxis dataKey="month" tickLine={false} axisLine={false} fontSize={11} />
+                    <YAxis allowDecimals={false} tickLine={false} axisLine={false} fontSize={11} width={28} />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <ChartLegend content={<ChartLegendContent />} />
+                    <Bar dataKey="nonSubscribers" stackId="a" fill="var(--color-nonSubscribers)" radius={[0, 0, 4, 4]} />
+                    <Bar dataKey="subscribers" stackId="a" fill="var(--color-subscribers)" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ChartContainer>
+              )}
+            </CardContent>
+          </Card>
 
           {/* Filters */}
           <div className="flex gap-2 flex-wrap items-center">

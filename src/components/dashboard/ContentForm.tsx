@@ -319,16 +319,30 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
       if (top_questoes_url) contentData.top_questoes_url = top_questoes_url;
       if (colinha_url) contentData.colinha_url = colinha_url;
 
+      // Per-resource prices defined by the teacher (already validated against minimums)
+      const setPrice = (field: string, val: string, hasFile: boolean, existing?: string) => {
+        if (hasFile || existing) {
+          const n = parseFloat(val);
+          if (!isNaN(n) && n > 0) contentData[field] = n;
+        }
+      };
+      setPrice("price_revisoes", priceRevisoes, !!videoFile, editData?.video_url);
+      setPrice("price_resumos", priceResumos, !!resumoFile, editData?.resumo_url);
+      setPrice("price_simulados", priceSimulados, !!simuladoFile, editData?.simulado_url);
+      setPrice("price_top_questoes", priceTopQuestoes, !!topQuestoesFile, editData?.top_questoes_url);
+      setPrice("price_colinhas", priceColinhas, !!colinhaFile, editData?.colinha_url);
+
       let error;
       if (editData?.id) {
         ({ error } = await supabase.from(table).update(contentData).eq("id", editData.id));
       } else {
         contentData.teacher_id = user.id;
-        // Use platform_percentage and price from resource_prices config
+        // platform_percentage from admin config; main price = revisão price chosen by teacher
         if (revisaoPricing) {
           contentData.platform_percentage = revisaoPricing.platform_percentage;
-          contentData.price = revisaoPricing.price;
         }
+        const mainPrice = parseFloat(priceRevisoes);
+        if (!isNaN(mainPrice) && mainPrice > 0) contentData.price = mainPrice;
         contentData.thumbnail_url = thumbnail_url;
         contentData.carousel_cover_url = carousel_cover_url;
         contentData.video_url = video_url;

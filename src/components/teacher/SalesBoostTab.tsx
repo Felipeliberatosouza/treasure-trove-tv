@@ -29,7 +29,7 @@ interface ContentItem {
 }
 
 const SalesBoostTab = () => {
-  const { profile } = useAuth();
+  const { profile, user } = useAuth();
   const { data: branding } = usePlatformSettings("branding");
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [contents, setContents] = useState<ContentItem[]>([]);
@@ -37,22 +37,24 @@ const SalesBoostTab = () => {
   const [generating, setGenerating] = useState(false);
   const [imageDataUrl, setImageDataUrl] = useState<string>("");
   const [caption, setCaption] = useState<string>("");
+  const [slug, setSlug] = useState<string>("");
 
   const publicUrl = useMemo(() => {
-    if (!profile?.slug) return "";
-    return `${window.location.origin}/professor/${profile.slug}`;
-  }, [profile?.slug]);
+    if (!slug) return "";
+    return `${window.location.origin}/professor/${slug}`;
+  }, [slug]);
 
-  // Fetch teacher's approved content
+  // Fetch teacher's slug + approved content
   useEffect(() => {
-    const fetchContent = async () => {
-      if (!profile?.user_id) return;
+    const fetchAll = async () => {
+      if (!user?.id) return;
       setLoading(true);
-      const [lessonsRes, examsRes] = await Promise.all([
+      const [profRes, lessonsRes, examsRes] = await Promise.all([
+        supabase.from("profiles").select("slug").eq("user_id", user.id).maybeSingle(),
         supabase
           .from("lessons")
           .select("id,title,video_type,top_questoes_url")
-          .eq("teacher_id", profile.user_id)
+          .eq("teacher_id", user.id)
           .eq("published", true)
           .eq("admin_approved", true)
           .order("created_at", { ascending: false })
@@ -60,12 +62,13 @@ const SalesBoostTab = () => {
         supabase
           .from("exam_solutions")
           .select("id,title,video_type,top_questoes_url")
-          .eq("teacher_id", profile.user_id)
+          .eq("teacher_id", user.id)
           .eq("published", true)
           .eq("admin_approved", true)
           .order("created_at", { ascending: false })
           .limit(5),
       ]);
+      setSlug(profRes.data?.slug || "");
       const all: ContentItem[] = [
         ...(lessonsRes.data || []).map((l) => ({
           id: l.id,
@@ -83,8 +86,8 @@ const SalesBoostTab = () => {
       setContents(all);
       setLoading(false);
     };
-    fetchContent();
-  }, [profile?.user_id]);
+    fetchAll();
+  }, [user?.id]);
 
   const buildCaption = (items: ContentItem[]) => {
     const name = profile?.name || "Professor(a)";

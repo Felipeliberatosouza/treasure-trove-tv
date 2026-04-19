@@ -137,6 +137,8 @@ const SalesBoostTab = () => {
   const [caption, setCaption] = useState<string>("");
   const [slug, setSlug] = useState<string>("");
   const [template, setTemplate] = useState<TemplateKey>("colorful");
+  const [history, setHistory] = useState<SalesPostRow[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
 
   const MIN_SEL = 3;
   const MAX_SEL = 5;

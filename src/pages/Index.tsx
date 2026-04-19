@@ -160,7 +160,6 @@ const Index = () => {
         category: (l.areas as string[] || [])[0] || "",
         instructor: "",
         lessons: 1,
-        level: "Iniciante" as const,
         videoUrl: l.video_url || undefined,
       });
       setTeacherLessons((lessonsRes.data || []).map(mapToVideo));

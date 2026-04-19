@@ -614,8 +614,8 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
             <DollarSign className="h-4 w-4 text-primary" /> Valores e divisão de receita
           </p>
           <p className="text-xs text-muted-foreground mb-3">
-            Estes são os valores definidos pela plataforma para cada recurso. O percentual indicado é
-            o que você (professor) recebe sobre cada venda avulsa.
+            Você define o preço de cada recurso, respeitando o valor mínimo configurado pela plataforma.
+            O percentual indicado é o que você (professor) recebe sobre cada venda avulsa.
           </p>
           <div className="space-y-1.5">
             {resourcePrices

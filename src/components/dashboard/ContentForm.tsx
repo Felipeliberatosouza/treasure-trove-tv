@@ -13,7 +13,7 @@ import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import { compositeVideo, type ImpactWord } from "@/utils/videoCompositor";
 
 interface ContentFormProps {
-  table: "lessons" | "exam_solutions";
+  table: "lessons";
   editData?: any;
   onSaved: () => void;
   onCancel: () => void;
@@ -324,19 +324,7 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
   return (
     <form onSubmit={handleSubmit} className="space-y-4 max-w-lg">
       <div>
-        <label className="text-sm text-muted-foreground mb-1 block">
-          {table === "lessons" ? "Nome da aula" : "Nome do conteúdo"}
-        </label>
-        <Input value={title} onChange={(e) => setTitle(e.target.value)} className="bg-secondary" />
-      </div>
-
-      <div>
-        <label className="text-sm text-muted-foreground mb-1 block">Áreas do conteúdo</label>
-        <AreaSelector selected={selectedAreas} onChange={setSelectedAreas} max={3} />
-      </div>
-
-      <div>
-        <label className="text-sm text-muted-foreground mb-1 block">Tipo de vídeo</label>
+        <label className="text-sm text-muted-foreground mb-1 block">Tipo de aula</label>
         <Select value={videoType} onValueChange={setVideoType}>
           <SelectTrigger className="bg-secondary">
             <SelectValue placeholder="Selecione o tipo" />
@@ -346,6 +334,16 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
             <SelectItem value="resolucao_prova">Resolução de Questões de Prova</SelectItem>
           </SelectContent>
         </Select>
+      </div>
+
+      <div>
+        <label className="text-sm text-muted-foreground mb-1 block">Nome da aula</label>
+        <Input value={title} onChange={(e) => setTitle(e.target.value)} className="bg-secondary" />
+      </div>
+
+      <div>
+        <label className="text-sm text-muted-foreground mb-1 block">Áreas do conteúdo</label>
+        <AreaSelector selected={selectedAreas} onChange={setSelectedAreas} max={3} />
       </div>
 
       <div>

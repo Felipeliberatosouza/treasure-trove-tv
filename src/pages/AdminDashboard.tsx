@@ -14,7 +14,7 @@ import AdminDoubtsTab from "@/components/admin/AdminDoubtsTab";
 import AdminEmailsTab from "@/components/admin/AdminEmailsTab";
 import AdminSubscriptionsTab from "@/components/admin/AdminSubscriptionsTab";
 import AdminSalesPostsTab from "@/components/admin/AdminSalesPostsTab";
-import AdminUsersTab from "@/components/admin/AdminUsersTab";
+import AdminUsersWrapperTab from "@/components/admin/AdminUsersWrapperTab";
 import AdminPlansTab from "@/components/admin/AdminPlansTab";
 import AdminSecurityTab from "@/components/admin/AdminSecurityTab";
 import AdminAuditLogsTab from "@/components/admin/AdminAuditLogsTab";

@@ -445,8 +445,77 @@ const SalesBoostTab = () => {
               Você precisa definir sua <strong>URL pública</strong> em "Dados Pessoais" antes de gerar o post.
             </div>
           )}
+
+          {/* Manual content selection */}
+          <div className="rounded-lg border border-border bg-background/50 p-3">
+            <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
+              <Label className="text-sm font-medium">
+                Selecione os conteúdos que aparecerão no post
+              </Label>
+              <span
+                className={`text-xs font-medium ${
+                  selectedIds.length < MIN_SEL || selectedIds.length > MAX_SEL
+                    ? "text-destructive"
+                    : "text-muted-foreground"
+                }`}
+              >
+                {selectedIds.length}/{MAX_SEL} (mín. {MIN_SEL})
+              </span>
+            </div>
+            {loading ? (
+              <p className="text-xs text-muted-foreground">Carregando seus conteúdos...</p>
+            ) : contents.length === 0 ? (
+              <p className="text-xs text-muted-foreground">
+                Você ainda não tem conteúdos publicados e aprovados.
+              </p>
+            ) : (
+              <div className="grid sm:grid-cols-2 gap-2 max-h-60 overflow-y-auto pr-1">
+                {contents.map((c) => {
+                  const checked = selectedIds.includes(c.id);
+                  const disabled = !checked && selectedIds.length >= MAX_SEL;
+                  return (
+                    <label
+                      key={c.id}
+                      className={`flex items-start gap-2 rounded-md border border-border p-2 text-sm cursor-pointer transition-colors ${
+                        checked ? "bg-primary/10 border-primary/40" : "hover:bg-muted/50"
+                      } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
+                    >
+                      <Checkbox
+                        checked={checked}
+                        disabled={disabled}
+                        onCheckedChange={() => toggleSelect(c.id)}
+                        className="mt-0.5"
+                      />
+                      <span className="flex-1 leading-snug">
+                        <span className="block">
+                          {c.video_type === "resolucao_questoes" ? "📝 " : "🎬 "}
+                          {c.title}
+                        </span>
+                        {c.has_top_questoes && (
+                          <span className="text-[10px] text-amber-600 dark:text-amber-400 font-medium">
+                            ⭐ Top Questões
+                          </span>
+                        )}
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
           <div className="flex flex-wrap gap-3 items-center">
-            <Button onClick={generatePost} disabled={generating || loading || !slug} className="gap-2">
+            <Button
+              onClick={generatePost}
+              disabled={
+                generating ||
+                loading ||
+                !slug ||
+                selectedIds.length < MIN_SEL ||
+                selectedIds.length > MAX_SEL
+              }
+              className="gap-2"
+            >
               {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
               Gerar post automaticamente
             </Button>

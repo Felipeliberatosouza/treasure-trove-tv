@@ -162,6 +162,22 @@ Deno.serve(async (req: Request) => {
       // Suprimir variável não-usada (HTML pronto para integração com provedor)
       void fullHtml
 
+      // Registra envio no log de auditoria
+      try {
+        await supabase.from('birthday_email_log').insert({
+          user_id: user.user_id,
+          recipient_email: user.email,
+          recipient_name: user.name || null,
+          template_key: tpl.template_key,
+          is_active_subscriber: isActiveSubscriber,
+          coupon_included: couponHtml.length > 0,
+          coupon_code: couponHtml.length > 0 ? tpl.coupon_code : null,
+          metadata: { subject },
+        })
+      } catch (logErr) {
+        console.error('Failed to log birthday email:', logErr)
+      }
+
       if (isActiveSubscriber) sentSubscriber++
       else sentNoSubscription++
     }

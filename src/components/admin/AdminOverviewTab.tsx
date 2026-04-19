@@ -50,6 +50,10 @@ const AdminOverviewTab = ({ onNavigate }: AdminOverviewTabProps) => {
   const fetchData = async () => {
     setLoading(true);
 
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const thirtyDaysAgoIso = thirtyDaysAgo.toISOString();
+
     const [
       { data: roles },
       { data: lessons },
@@ -58,6 +62,8 @@ const AdminOverviewTab = ({ onNavigate }: AdminOverviewTabProps) => {
       { data: views },
       { data: ratings },
       { count: unsubCount },
+      { count: salesPostsTotal },
+      { count: salesPostsRecent },
     ] = await Promise.all([
       supabase.from("user_roles").select("role"),
       supabase.from("lessons").select("admin_approved, published"),
@@ -66,6 +72,8 @@ const AdminOverviewTab = ({ onNavigate }: AdminOverviewTabProps) => {
       supabase.from("video_views").select("id"),
       supabase.from("video_ratings").select("rating"),
       supabase.from("profiles").select("*", { count: "exact", head: true }).eq("accepts_marketing", false),
+      supabase.from("teacher_sales_posts").select("*", { count: "exact", head: true }),
+      supabase.from("teacher_sales_posts").select("*", { count: "exact", head: true }).gte("created_at", thirtyDaysAgoIso),
     ]);
 
     const students = roles?.filter((r) => r.role === "student").length ?? 0;

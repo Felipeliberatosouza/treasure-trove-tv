@@ -297,12 +297,6 @@ const PersonalDataTab = () => {
           <label className="text-sm text-muted-foreground mb-1 block">CPF {role === "teacher" && <span className="text-xs text-primary font-medium">(obrigatório para contrato)</span>}</label>
           <CpfInput value={cpf} onChange={setCpf} className="bg-secondary" />
         </div>
-        {role === "student" && (
-          <div>
-            <label className="text-sm text-muted-foreground mb-1 block">Áreas de Interesse</label>
-            <AreaSelector selected={studentAreas} onChange={setStudentAreas} max={3} />
-          </div>
-        )}
         <div className="flex items-start gap-2 pt-2">
           <Checkbox
             id="acceptsMarketing"

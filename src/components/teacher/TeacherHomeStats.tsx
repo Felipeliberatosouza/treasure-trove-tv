@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Loader2, TrendingUp, Activity, AlertCircle } from "lucide-react";
+import { Loader2, TrendingUp, Activity, AlertCircle, ArrowUpRight } from "lucide-react";
 import {
   Bar,
   BarChart,
@@ -324,6 +325,15 @@ const TeacherHomeStats = () => {
               <p className="text-xs text-muted-foreground">
                 {contentPublishedThisMonth}/{contentGoal} publicados este mês
               </p>
+              {pendings[0]?.value > 0 && (
+                <Link
+                  to="/dashboard/teacher?tab=doubts&filter=pending"
+                  className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
+                >
+                  Responder {pendings[0].value} dúvida{pendings[0].value > 1 ? "s" : ""} pendente{pendings[0].value > 1 ? "s" : ""}
+                  <ArrowUpRight className="h-3 w-3" />
+                </Link>
+              )}
             </div>
           </div>
           <div className="h-40">

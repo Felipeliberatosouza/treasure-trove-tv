@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
+import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
@@ -7,8 +8,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { HelpCircle, Send, Clock, AlertTriangle, CheckCircle, Loader2 } from "lucide-react";
+import { HelpCircle, Send, Clock, AlertTriangle, CheckCircle, Loader2, Filter } from "lucide-react";
 import { toast } from "sonner";
+
+type DoubtFilter = "all" | "pending" | "awaiting_approval" | "answered";
 
 interface Doubt {
   id: string;
@@ -27,6 +30,11 @@ interface Doubt {
 
 const TeacherDoubtsTab = () => {
   const { user } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const urlFilter = (searchParams.get("filter") as DoubtFilter) || "all";
+  const [filter, setFilter] = useState<DoubtFilter>(
+    ["all", "pending", "awaiting_approval", "answered"].includes(urlFilter) ? urlFilter : "all"
+  );
   const [doubts, setDoubts] = useState<Doubt[]>([]);
   const [loading, setLoading] = useState(true);
   const [answerModal, setAnswerModal] = useState<Doubt | null>(null);
@@ -34,6 +42,19 @@ const TeacherDoubtsTab = () => {
   const [submitting, setSubmitting] = useState(false);
   const { data: deadlineData } = usePlatformSettings("doubt_response_deadline_days");
   const deadlineDays = typeof deadlineData === "number" ? deadlineData : 3;
+
+  useEffect(() => {
+    const f = (searchParams.get("filter") as DoubtFilter) || "all";
+    if (["all", "pending", "awaiting_approval", "answered"].includes(f)) setFilter(f);
+  }, [searchParams]);
+
+  const handleFilterChange = (f: DoubtFilter) => {
+    setFilter(f);
+    const next = new URLSearchParams(searchParams);
+    if (f === "all") next.delete("filter");
+    else next.set("filter", f);
+    setSearchParams(next, { replace: true });
+  };
 
   const fetchDoubts = async () => {
     if (!user) return;
@@ -111,6 +132,20 @@ const TeacherDoubtsTab = () => {
     answered: { label: "Respondida", color: "border-green-500/30 text-green-500" },
   };
 
+  const filteredDoubts = useMemo(() => {
+    if (filter === "pending") return doubts.filter(d => d.status === "approved");
+    if (filter === "awaiting_approval") return doubts.filter(d => d.status === "pending_answer_approval");
+    if (filter === "answered") return doubts.filter(d => d.status === "answered");
+    return doubts;
+  }, [doubts, filter]);
+
+  const filterOptions: { id: DoubtFilter; label: string; count: number }[] = [
+    { id: "all", label: "Todas", count: doubts.length },
+    { id: "pending", label: "Pendentes", count: pendingCount },
+    { id: "awaiting_approval", label: "Aguardando Aprovação", count: pendingApprovalCount },
+    { id: "answered", label: "Respondidas", count: doubts.filter(d => d.status === "answered").length },
+  ];
+
   return (
     <div>
       <h2 className="font-display text-lg font-semibold mb-1 flex items-center gap-2">
@@ -126,6 +161,27 @@ const TeacherDoubtsTab = () => {
         {pendingCount === 0 && pendingApprovalCount === 0 && (
           <p>Todas as dúvidas foram respondidas.</p>
         )}
+      </div>
+
+      {/* Filter chips */}
+      <div className="flex items-center gap-2 flex-wrap mb-4">
+        <Filter className="h-3.5 w-3.5 text-muted-foreground" />
+        {filterOptions.map((opt) => (
+          <button
+            key={opt.id}
+            onClick={() => handleFilterChange(opt.id)}
+            className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs transition-colors ${
+              filter === opt.id
+                ? "bg-primary text-primary-foreground font-medium"
+                : "bg-secondary text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {opt.label}
+            <span className={`rounded-full px-1.5 py-0.5 text-[10px] ${filter === opt.id ? "bg-primary-foreground/20" : "bg-background"}`}>
+              {opt.count}
+            </span>
+          </button>
+        ))}
       </div>
 
       {loading ? (
@@ -144,7 +200,7 @@ const TeacherDoubtsTab = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {doubts.map((doubt) => {
+              {filteredDoubts.map((doubt) => {
                 const days = getDaysElapsed(doubt.approved_at || doubt.created_at);
                 const overdue = doubt.status === "approved" && days > deadlineDays;
                 const cfg = statusConfig[doubt.status] || statusConfig.approved;
@@ -184,10 +240,12 @@ const TeacherDoubtsTab = () => {
                   </TableRow>
                 );
               })}
-              {doubts.length === 0 && (
+              {filteredDoubts.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
-                    Nenhuma dúvida de alunos no momento.
+                    {filter === "all"
+                      ? "Nenhuma dúvida de alunos no momento."
+                      : "Nenhuma dúvida nesta categoria."}
                   </TableCell>
                 </TableRow>
               )}

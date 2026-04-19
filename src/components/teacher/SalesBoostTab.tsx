@@ -320,6 +320,7 @@ const SalesBoostTab = () => {
       if (inserted) {
         setHistory((prev) => [inserted as unknown as SalesPostRow, ...prev].slice(0, 20));
         setTotalPostsCount((prev) => prev + 1);
+        setRecentPostsCount((prev) => prev + 1);
       }
     } catch (e) {
       console.error("savePostToHistory error", e);

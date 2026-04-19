@@ -75,12 +75,13 @@ const TeacherHomeStats = () => {
       const effectiveGoal = personal && personal > 0 ? personal : globalGoal;
       setContentGoal(effectiveGoal);
 
-      // First get teacher's content ids for aula particular count
-      const { data: teacherLessonsIds } = await supabase
-        .from("lessons")
-        .select("id")
-        .eq("teacher_id", user.id);
+      // First get teacher's content ids for aula particular count and ratings
+      const [{ data: teacherLessonsIds }, { data: teacherExamsIds }] = await Promise.all([
+        supabase.from("lessons").select("id").eq("teacher_id", user.id),
+        supabase.from("exam_solutions").select("id").eq("teacher_id", user.id),
+      ]);
       const lessonIds = (teacherLessonsIds || []).map((l) => l.id);
+      const examIds = (teacherExamsIds || []).map((e) => e.id);
 
       // Parallel fetches
       const [

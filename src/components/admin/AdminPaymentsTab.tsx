@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DollarSign, TrendingUp, Eye, Star, Plus, Pencil, CheckCircle2, Download, X } from "lucide-react";
+import { DollarSign, TrendingUp, Eye, Star, Plus, Pencil, CheckCircle2, Download, X, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -409,12 +409,41 @@ const AdminPaymentsTab = () => {
         <DollarSign className="h-5 w-5" /> Pagamentos de Professores
       </h2>
 
-      <div className="flex gap-2 mb-6">
+      <div className="flex gap-2 mb-6 flex-wrap">
         <Button size="sm" variant={activeView === "metrics" ? "default" : "outline"} onClick={() => setActiveView("metrics")}>
           <TrendingUp className="h-4 w-4 mr-1" /> Métricas
         </Button>
         <Button size="sm" variant={activeView === "payments" ? "default" : "outline"} onClick={() => setActiveView("payments")}>
           <DollarSign className="h-4 w-4 mr-1" /> Pagamentos
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={async () => {
+            const ok = window.confirm(
+              "Isso irá recalcular os valores brutos, taxa e líquidos dos pagamentos pendentes a partir das compras reais (video_purchases) usando os preços por recurso e a % da plataforma. Pagamentos já marcados como pagos não serão alterados. Continuar?"
+            );
+            if (!ok) return;
+            toast({ title: "Recalculando...", description: "Processando compras dos últimos 12 meses." });
+            const { data, error } = await supabase.functions.invoke("recompute-teacher-payments", { body: {} });
+            if (error || (data as any)?.error) {
+              toast({
+                title: "Erro",
+                description: (data as any)?.error || error?.message || "Falha ao recalcular.",
+                variant: "destructive",
+              });
+              return;
+            }
+            const d = data as any;
+            toast({
+              title: "Recálculo concluído",
+              description: `${d.purchases_processed} compras processadas em ${d.buckets} períodos. Atualizado: ${d.results.filter((r: any) => r.action === "updated").length}, criado: ${d.results.filter((r: any) => r.action === "inserted").length}, ignorado (pago): ${d.results.filter((r: any) => r.action === "skipped_paid").length}.`,
+            });
+            fetchData();
+          }}
+          className="ml-auto"
+        >
+          <RefreshCw className="h-4 w-4 mr-1" /> Recalcular a partir de compras reais
         </Button>
       </div>
 

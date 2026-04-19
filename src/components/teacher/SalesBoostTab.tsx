@@ -34,6 +34,17 @@ interface ContentItem {
   has_top_questoes: boolean;
 }
 
+interface SalesPostRow {
+  id: string;
+  template: string;
+  caption: string;
+  thumbnail_url: string | null;
+  thumbnail_path: string | null;
+  contents: ContentItem[];
+  public_url: string | null;
+  created_at: string;
+}
+
 type TemplateKey = "light" | "dark" | "colorful";
 
 interface TemplateStyle {

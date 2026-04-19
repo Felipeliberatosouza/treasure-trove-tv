@@ -76,11 +76,13 @@ const Navbar = () => {
   const { isActive: hasActiveSubscription } = useActiveSubscription();
 
   const baseMenu = user
-    ? role === "teacher"
-      ? teacherMenuItems
-      : loggedMenuItems
+    ? role === "admin"
+      ? adminMenuItems
+      : role === "teacher"
+        ? teacherMenuItems
+        : loggedMenuItems
     : publicMenuItems;
-  const menuItems = user && role !== "teacher" && hasActiveSubscription
+  const menuItems = user && role === "student" && hasActiveSubscription
     ? [subscriberMenuItem, ...baseMenu]
     : baseMenu;
 

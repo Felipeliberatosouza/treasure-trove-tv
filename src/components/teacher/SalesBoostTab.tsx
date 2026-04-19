@@ -14,6 +14,8 @@ import {
   GripVertical,
   ArrowUp,
   ArrowDown,
+  History,
+  Trash2,
 } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";

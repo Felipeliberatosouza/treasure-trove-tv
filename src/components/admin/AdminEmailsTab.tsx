@@ -465,39 +465,79 @@ const AdminEmailsTab = () => {
                     <TableHead>E-mail</TableHead>
                     <TableHead>Motivo</TableHead>
                     <TableHead>Data</TableHead>
+                    <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredSuppressed.map((s) => (
-                    <TableRow key={s.id}>
-                      <TableCell className="text-sm">{maskEmail(s.email)}</TableCell>
-                      <TableCell>
-                        <Badge
-                          variant="outline"
-                          className={
-                            s.reason === "bounce"
-                              ? "border-destructive/30 text-destructive"
-                              : s.reason === "complaint"
-                              ? "border-orange-500/30 text-orange-600"
-                              : s.reason === "unsubscribe"
-                              ? "border-yellow-500/30 text-yellow-600"
-                              : "border-muted text-muted-foreground"
-                          }
-                        >
-                          {reasonLabels[s.reason] || s.reason}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
-                        {new Date(s.created_at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" })}
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {filteredSuppressed.map((s) => {
+                    const isReactivating = reactivatingEmail === s.email;
+                    return (
+                      <TableRow key={s.id}>
+                        <TableCell className="text-sm">{maskEmail(s.email)}</TableCell>
+                        <TableCell>
+                          <Badge
+                            variant="outline"
+                            className={
+                              s.reason === "bounce"
+                                ? "border-destructive/30 text-destructive"
+                                : s.reason === "complaint"
+                                ? "border-orange-500/30 text-orange-600"
+                                : s.reason === "unsubscribe"
+                                ? "border-yellow-500/30 text-yellow-600"
+                                : "border-muted text-muted-foreground"
+                            }
+                          >
+                            {reasonLabels[s.reason] || s.reason}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
+                          {new Date(s.created_at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-7 text-xs"
+                                disabled={isReactivating}
+                              >
+                                {isReactivating ? (
+                                  <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
+                                ) : (
+                                  <Undo2 className="h-3.5 w-3.5 mr-1" />
+                                )}
+                                Reativar
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Reativar envio de e-mails?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  O endereço <strong>{s.email}</strong> voltará a receber e-mails da plataforma
+                                  {s.reason === "bounce" && " — confirme que o endereço está válido antes de reativar, caso contrário a reputação de envio pode ser prejudicada"}
+                                  {s.reason === "complaint" && " — atenção: este e-mail foi marcado como spam pelo destinatário, reativar pode gerar novas reclamações"}
+                                  . A preferência de marketing também será restaurada.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleReactivate(s.email)}>
+                                  Confirmar reativação
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </div>
           )}
         </div>
-      ) : (
+      ) : activeView === "security" ? (
         /* Security Notifications View */
         <div>
           <p className="text-sm text-muted-foreground mb-4">

@@ -33,8 +33,11 @@ Deno.serve(async (req) => {
   let token: string | null = url.searchParams.get('token')
   // scope: 'all' = suppress all emails (current behavior)
   //        'marketing' = only opt-out of marketing emails (transactional still sent)
-  let scope: 'all' | 'marketing' = 'all'
+  //        'feedback' = save a reason on suppressed_emails.metadata after unsubscribe
+  let scope: 'all' | 'marketing' | 'feedback' = 'all'
   let isOneClick = false
+  let feedbackReason: string | null = null
+  let feedbackComment: string | null = null
 
   if (req.method === 'POST') {
     const contentType = req.headers.get('content-type') ?? ''
@@ -49,13 +52,19 @@ Deno.serve(async (req) => {
         const formToken = params.get('token')
         if (formToken) token = formToken
         const formScope = params.get('scope')
-        if (formScope === 'marketing' || formScope === 'all') scope = formScope
+        if (formScope === 'marketing' || formScope === 'all' || formScope === 'feedback') scope = formScope
+        const fr = params.get('feedback_reason')
+        if (fr) feedbackReason = fr
+        const fc = params.get('feedback_comment')
+        if (fc) feedbackComment = fc
       }
     } else {
       try {
         const body = await req.json()
         if (body.token) token = body.token
-        if (body.scope === 'marketing' || body.scope === 'all') scope = body.scope
+        if (body.scope === 'marketing' || body.scope === 'all' || body.scope === 'feedback') scope = body.scope
+        if (typeof body.feedback_reason === 'string') feedbackReason = body.feedback_reason
+        if (typeof body.feedback_comment === 'string') feedbackComment = body.feedback_comment
       } catch {
         // Fall through
       }
@@ -111,6 +120,40 @@ Deno.serve(async (req) => {
       accepts_marketing: profile?.accepts_marketing ?? false,
       already_suppressed: !!suppression,
     })
+  }
+
+  // POST scope === 'feedback': merge a reason into suppressed_emails.metadata
+  // (only valid after a full unsubscribe — i.e. there must be a suppression row)
+  if (scope === 'feedback') {
+    const allowedReasons = ['too_many', 'not_relevant', 'never_signed_up', 'other']
+    if (!feedbackReason || !allowedReasons.includes(feedbackReason)) {
+      return jsonResponse({ error: 'Invalid feedback reason' }, 400)
+    }
+    if (!suppression) {
+      // Nothing to attach feedback to — silently succeed so UI is resilient
+      return jsonResponse({ success: true, scope: 'feedback', skipped: true })
+    }
+    const { data: existing } = await supabase
+      .from('suppressed_emails')
+      .select('metadata')
+      .eq('email', normalizedEmail)
+      .maybeSingle()
+    const mergedMetadata = {
+      ...((existing?.metadata as Record<string, unknown>) ?? {}),
+      feedback_reason: feedbackReason,
+      feedback_comment: feedbackComment?.slice(0, 500) ?? null,
+      feedback_submitted_at: new Date().toISOString(),
+    }
+    const { error: feedbackError } = await supabase
+      .from('suppressed_emails')
+      .update({ metadata: mergedMetadata })
+      .eq('email', normalizedEmail)
+    if (feedbackError) {
+      console.error('Failed to save feedback', { error: feedbackError, email: normalizedEmail })
+      return jsonResponse({ error: 'Failed to save feedback' }, 500)
+    }
+    console.log('Unsubscribe feedback saved', { email: normalizedEmail, reason: feedbackReason })
+    return jsonResponse({ success: true, scope: 'feedback' })
   }
 
   // POST: process the unsubscribe according to scope

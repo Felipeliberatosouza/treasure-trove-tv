@@ -3,9 +3,19 @@ import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { MailX, CheckCircle, AlertCircle, Loader2, Mail } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { MailX, CheckCircle, AlertCircle, Loader2, Mail, MessageSquare } from "lucide-react";
 
 type Status = "loading" | "valid" | "already" | "invalid" | "success_all" | "success_marketing" | "error";
+type FeedbackState = "hidden" | "asking" | "submitting" | "submitted";
+const FEEDBACK_OPTIONS = [
+  { value: "too_many", label: "Recebo demais" },
+  { value: "not_relevant", label: "Não é relevante" },
+  { value: "never_signed_up", label: "Nunca me cadastrei" },
+  { value: "other", label: "Outro" },
+] as const;
 
 const Unsubscribe = () => {
   const [searchParams] = useSearchParams();
@@ -15,6 +25,9 @@ const Unsubscribe = () => {
   const [name, setName] = useState<string | null>(null);
   const [email, setEmail] = useState<string | null>(null);
   const [acceptsMarketing, setAcceptsMarketing] = useState<boolean>(false);
+  const [feedback, setFeedback] = useState<FeedbackState>("hidden");
+  const [feedbackReason, setFeedbackReason] = useState<string>("");
+  const [feedbackComment, setFeedbackComment] = useState<string>("");
 
   useEffect(() => {
     if (!token) {
@@ -49,14 +62,40 @@ const Unsubscribe = () => {
       const { data } = await supabase.functions.invoke("handle-email-unsubscribe", {
         body: { token, scope },
       });
-      if (data?.success && scope === "all") setStatus("success_all");
-      else if (data?.success && scope === "marketing") setStatus("success_marketing");
-      else if (data?.reason === "already_unsubscribed") setStatus("already");
-      else setStatus("error");
+      if (data?.success && scope === "all") {
+        setStatus("success_all");
+        setFeedback("asking");
+      } else if (data?.success && scope === "marketing") {
+        setStatus("success_marketing");
+      } else if (data?.reason === "already_unsubscribed") {
+        setStatus("already");
+        setFeedback("asking");
+      } else {
+        setStatus("error");
+      }
     } catch {
       setStatus("error");
     } finally {
       setProcessing(null);
+    }
+  };
+
+  const submitFeedback = async () => {
+    if (!feedbackReason) return;
+    setFeedback("submitting");
+    try {
+      await supabase.functions.invoke("handle-email-unsubscribe", {
+        body: {
+          token,
+          scope: "feedback",
+          feedback_reason: feedbackReason,
+          feedback_comment: feedbackComment.trim() || null,
+        },
+      });
+    } catch {
+      // Silently ignore — feedback is optional, never block the user
+    } finally {
+      setFeedback("submitted");
     }
   };
 
@@ -180,6 +219,72 @@ const Unsubscribe = () => {
                 em contato com nosso suporte.
               </p>
             </div>
+          )}
+
+          {(status === "success_all" || status === "already") && feedback === "asking" && (
+            <div className="rounded-lg border border-border p-4 space-y-3 text-left">
+              <div className="flex items-start gap-3">
+                <MessageSquare className="h-5 w-5 text-primary mt-0.5 shrink-0" />
+                <div className="space-y-1">
+                  <h2 className="text-sm font-semibold">
+                    Pode nos contar o motivo? <span className="text-muted-foreground font-normal">(opcional)</span>
+                  </h2>
+                  <p className="text-xs text-muted-foreground">
+                    Sua resposta nos ajuda a melhorar nossas comunicações.
+                  </p>
+                </div>
+              </div>
+              <RadioGroup value={feedbackReason} onValueChange={setFeedbackReason} className="space-y-2">
+                {FEEDBACK_OPTIONS.map((opt) => (
+                  <div key={opt.value} className="flex items-center space-x-2">
+                    <RadioGroupItem value={opt.value} id={`reason-${opt.value}`} />
+                    <Label htmlFor={`reason-${opt.value}`} className="text-sm font-normal cursor-pointer">
+                      {opt.label}
+                    </Label>
+                  </div>
+                ))}
+              </RadioGroup>
+              {feedbackReason === "other" && (
+                <Textarea
+                  placeholder="Conte-nos mais (opcional)..."
+                  value={feedbackComment}
+                  onChange={(e) => setFeedbackComment(e.target.value)}
+                  maxLength={500}
+                  className="text-sm"
+                  rows={3}
+                />
+              )}
+              <div className="flex gap-2 pt-1">
+                <Button
+                  onClick={submitFeedback}
+                  disabled={!feedbackReason}
+                  size="sm"
+                  className="flex-1"
+                >
+                  Enviar
+                </Button>
+                <Button
+                  onClick={() => setFeedback("submitted")}
+                  variant="ghost"
+                  size="sm"
+                >
+                  Pular
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {(status === "success_all" || status === "already") && feedback === "submitting" && (
+            <div className="rounded-lg border border-border p-4 flex items-center justify-center gap-2 text-sm text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Enviando...
+            </div>
+          )}
+
+          {(status === "success_all" || status === "already") && feedback === "submitted" && (
+            <p className="text-center text-xs text-muted-foreground">
+              Obrigado pelo seu retorno! 💜
+            </p>
           )}
 
           {status === "invalid" && (

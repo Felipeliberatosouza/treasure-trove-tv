@@ -406,4 +406,19 @@ const SettingsHeroBanner = ({
   );
 };
 
+
+const ScheduleBadge = ({ status }: { status: SlideScheduleStatus }) => {
+  if (status === "always" || status === "active") return null;
+  const config: Record<Exclude<SlideScheduleStatus, "always" | "active">, { label: string; className: string }> = {
+    scheduled: { label: "Agendado", className: "bg-primary/15 text-primary border-primary/30" },
+    expired: { label: "Expirado", className: "bg-destructive/15 text-destructive border-destructive/30" },
+  };
+  const { label, className } = config[status];
+  return (
+    <span className={`inline-flex items-center rounded-full border px-1.5 py-0 text-[10px] font-semibold leading-4 ${className}`}>
+      {label}
+    </span>
+  );
+};
+
 export default SettingsHeroBanner;

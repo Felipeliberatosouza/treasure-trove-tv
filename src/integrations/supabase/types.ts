@@ -426,6 +426,11 @@ export type Database = {
           id: string
           platform_percentage: number | null
           price: number | null
+          price_colinhas: number | null
+          price_resumos: number | null
+          price_revisoes: number | null
+          price_simulados: number | null
+          price_top_questoes: number | null
           published: boolean | null
           resumo_url: string | null
           simulado_url: string | null
@@ -449,6 +454,11 @@ export type Database = {
           id?: string
           platform_percentage?: number | null
           price?: number | null
+          price_colinhas?: number | null
+          price_resumos?: number | null
+          price_revisoes?: number | null
+          price_simulados?: number | null
+          price_top_questoes?: number | null
           published?: boolean | null
           resumo_url?: string | null
           simulado_url?: string | null
@@ -472,6 +482,11 @@ export type Database = {
           id?: string
           platform_percentage?: number | null
           price?: number | null
+          price_colinhas?: number | null
+          price_resumos?: number | null
+          price_revisoes?: number | null
+          price_simulados?: number | null
+          price_top_questoes?: number | null
           published?: boolean | null
           resumo_url?: string | null
           simulado_url?: string | null
@@ -537,6 +552,11 @@ export type Database = {
           id: string
           platform_percentage: number | null
           price: number | null
+          price_colinhas: number | null
+          price_resumos: number | null
+          price_revisoes: number | null
+          price_simulados: number | null
+          price_top_questoes: number | null
           published: boolean | null
           resumo_url: string | null
           simulado_url: string | null
@@ -560,6 +580,11 @@ export type Database = {
           id?: string
           platform_percentage?: number | null
           price?: number | null
+          price_colinhas?: number | null
+          price_resumos?: number | null
+          price_revisoes?: number | null
+          price_simulados?: number | null
+          price_top_questoes?: number | null
           published?: boolean | null
           resumo_url?: string | null
           simulado_url?: string | null
@@ -583,6 +608,11 @@ export type Database = {
           id?: string
           platform_percentage?: number | null
           price?: number | null
+          price_colinhas?: number | null
+          price_resumos?: number | null
+          price_revisoes?: number | null
+          price_simulados?: number | null
+          price_top_questoes?: number | null
           published?: boolean | null
           resumo_url?: string | null
           simulado_url?: string | null

@@ -35,9 +35,10 @@ const tabs = [
   { id: "cancellation-receipts", label: "Recibos de Cancelamento", icon: Receipt },
   { id: "commitment-refunds", label: "Reembolsos de Compromisso", icon: RefreshCcw },
   { id: "security", label: "Segurança", icon: Shield },
-  { id: "audit", label: "Auditoria", icon: ScrollText },
-  { id: "login-attempts", label: "Tentativas de Login", icon: Activity },
   { id: "settings", label: "Configurações", icon: Settings },
+  // Hidden: agora acessadas como submenu dentro de Segurança
+  { id: "audit", label: "Auditoria", icon: ScrollText, hidden: true },
+  { id: "login-attempts", label: "Tentativas de Login", icon: Activity, hidden: true },
   // Hidden tabs (acessadas via menu hambúrguer / deep-link, não exibidas no menu lateral)
   { id: "content", label: "Aprovação de Conteúdos", icon: Video, hidden: true },
   { id: "doubts", label: "Aprovação de Dúvidas", icon: HelpCircle, hidden: true },

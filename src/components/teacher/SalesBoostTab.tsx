@@ -187,10 +187,51 @@ const SalesBoostTab = () => {
     fetchAll();
   }, [user?.id]);
 
-  const selectedContents = useMemo(
-    () => contents.filter((c) => selectedIds.includes(c.id)),
-    [contents, selectedIds]
-  );
+  // Preserve selection order (drag-and-drop driven)
+  const selectedContents = useMemo(() => {
+    const map = new Map(contents.map((c) => [c.id, c]));
+    return selectedIds.map((id) => map.get(id)).filter(Boolean) as ContentItem[];
+  }, [contents, selectedIds]);
+
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+
+  const handleDragStart = (i: number) => (e: React.DragEvent) => {
+    setDragIndex(i);
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", String(i));
+  };
+  const handleDragOver = (i: number) => (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    setDragOverIndex(i);
+  };
+  const handleDrop = (i: number) => (e: React.DragEvent) => {
+    e.preventDefault();
+    const from = dragIndex;
+    setDragIndex(null);
+    setDragOverIndex(null);
+    if (from === null || from === i) return;
+    setSelectedIds((prev) => {
+      const next = [...prev];
+      const [moved] = next.splice(from, 1);
+      next.splice(i, 0, moved);
+      return next;
+    });
+  };
+  const handleDragEnd = () => {
+    setDragIndex(null);
+    setDragOverIndex(null);
+  };
+  const moveItem = (from: number, to: number) => {
+    if (to < 0 || to >= selectedIds.length) return;
+    setSelectedIds((prev) => {
+      const next = [...prev];
+      const [moved] = next.splice(from, 1);
+      next.splice(to, 0, moved);
+      return next;
+    });
+  };
 
   const toggleSelect = (id: string) => {
     setSelectedIds((prev) => {

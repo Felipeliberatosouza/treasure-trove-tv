@@ -598,6 +598,51 @@ const SalesBoostTab = () => {
             )}
           </div>
 
+          {/* Template picker */}
+          <div className="rounded-lg border border-border bg-background/50 p-3">
+            <Label className="text-sm font-medium mb-2 block">
+              Escolha o estilo visual do post
+            </Label>
+            <div className="grid grid-cols-3 gap-2">
+              {(Object.keys(TEMPLATES) as TemplateKey[]).map((key) => {
+                const tpl = TEMPLATES[key];
+                const active = template === key;
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setTemplate(key)}
+                    className={`group rounded-lg border p-2 text-left transition-all ${
+                      active
+                        ? "border-primary ring-2 ring-primary/40 bg-primary/5"
+                        : "border-border hover:border-primary/50"
+                    }`}
+                    aria-pressed={active}
+                  >
+                    <div
+                      className="h-16 w-full rounded-md mb-2 overflow-hidden flex"
+                      aria-hidden
+                    >
+                      {tpl.swatches.map((c, i) => (
+                        <div
+                          key={i}
+                          className="flex-1 h-full"
+                          style={{ backgroundColor: c }}
+                        />
+                      ))}
+                    </div>
+                    <div className="text-xs font-semibold text-foreground">
+                      {tpl.label}
+                    </div>
+                    <div className="text-[10px] text-muted-foreground leading-tight">
+                      {tpl.description}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           <div className="flex flex-wrap gap-3 items-center">
             <Button
               onClick={generatePost}

@@ -40,12 +40,15 @@ function monthBounds(ym: string): { start: string; end: string } {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
-  try {
-    const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
-    const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
+  const startedAt = Date.now();
+  let triggeredBy: string | null = null;
+  let source = "manual";
+  const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+  const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
+  const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
 
-    const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
+  try {
 
     // Allow scheduled cron invocations via shared secret stored in platform_settings.cron_secret
     const cronSecretHeader = req.headers.get("x-cron-secret") || "";
@@ -57,7 +60,10 @@ Deno.serve(async (req) => {
         .eq("key", "cron_secret")
         .maybeSingle();
       const expected = (settingRow?.value as any)?.token || "";
-      if (expected && cronSecretHeader === expected) isCron = true;
+      if (expected && cronSecretHeader === expected) {
+        isCron = true;
+        source = "cron";
+      }
     }
 
     if (!isCron) {
@@ -74,6 +80,7 @@ Deno.serve(async (req) => {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
+      triggeredBy = user.id;
 
       const { data: roleRow } = await admin
         .from("user_roles")
@@ -325,6 +332,33 @@ Deno.serve(async (req) => {
       }
     }
 
+    const inserted_count = results.filter((r) => r.action === "inserted").length;
+    const updated_count = results.filter((r) => r.action === "updated").length;
+    const skipped_paid_count = results.filter((r) => r.action === "skipped_paid").length;
+
+    // Log run for auditing
+    try {
+      await admin.from("recompute_runs").insert({
+        triggered_by: triggeredBy,
+        source,
+        period_start: periodStart,
+        period_end: periodEnd,
+        teacher_id: body.teacher_id || null,
+        dry_run: dryRun,
+        purchases_processed: (purchases || []).length,
+        purchases_skipped: skipped,
+        buckets_count: results.length,
+        inserted_count,
+        updated_count,
+        skipped_paid_count,
+        status: "success",
+        results,
+        duration_ms: Date.now() - startedAt,
+      });
+    } catch (logErr) {
+      console.error("Falha ao registrar recompute_runs", logErr);
+    }
+
     return new Response(
       JSON.stringify({
         ok: true,
@@ -340,6 +374,19 @@ Deno.serve(async (req) => {
     );
   } catch (err) {
     console.error("recompute-teacher-payments error", err);
+    // Best-effort error log
+    try {
+      await admin.from("recompute_runs").insert({
+        triggered_by: triggeredBy,
+        source,
+        period_start: new Date().toISOString().slice(0, 10),
+        period_end: new Date().toISOString().slice(0, 10),
+        dry_run: false,
+        status: "error",
+        error_message: (err as Error).message,
+        duration_ms: Date.now() - startedAt,
+      });
+    } catch (_logErr) { /* ignore */ }
     return new Response(JSON.stringify({ error: (err as Error).message }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },

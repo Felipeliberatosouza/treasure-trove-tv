@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Mail, CheckCircle, XCircle, AlertTriangle, Clock, ChevronLeft, ChevronRight, ShieldAlert, Ban, Search, RefreshCw, Download, Undo2, Loader2, Cake, Tag } from "lucide-react";
+import { Mail, CheckCircle, XCircle, AlertTriangle, Clock, ChevronLeft, ChevronRight, ShieldAlert, Ban, Search, RefreshCw, Download, Undo2, Loader2, Cake, Tag, Heart, Send } from "lucide-react";
 import { maskEmail } from "@/lib/maskData";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
@@ -54,6 +54,24 @@ interface BirthdayLog {
   sent_at: string;
 }
 
+interface ReengagementLog {
+  id: string;
+  user_id: string;
+  recipient_email: string;
+  recipient_name: string | null;
+  template_key: string;
+  days_inactive: number | null;
+  metadata: any;
+  sent_at: string;
+}
+
+interface ReengagementConfig {
+  student_inactive_days: number;
+  teacher_inactive_days: number;
+  resend_interval_days: number;
+  enabled: boolean;
+}
+
 const PAGE_SIZE = 50;
 
 const TIME_RANGES = [
@@ -92,7 +110,7 @@ const AdminEmailsTab = () => {
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterTemplate, setFilterTemplate] = useState("all");
   const [page, setPage] = useState(0);
-  const [activeView, setActiveView] = useState<"emails" | "security" | "suppressed" | "birthdays">("emails");
+  const [activeView, setActiveView] = useState<"emails" | "security" | "suppressed" | "birthdays" | "reengagement">("emails");
   const [securityNotifs, setSecurityNotifs] = useState<SecurityNotification[]>([]);
   const [securityLoading, setSecurityLoading] = useState(false);
   const [suppressedEmails, setSuppressedEmails] = useState<SuppressedEmail[]>([]);
@@ -103,6 +121,17 @@ const AdminEmailsTab = () => {
   const [birthdayLoading, setBirthdayLoading] = useState(false);
   const [birthdayRangeDays, setBirthdayRangeDays] = useState(30);
   const [birthdayMonthly, setBirthdayMonthly] = useState<{ month: string; subscribers: number; nonSubscribers: number }[]>([]);
+  const [reengagementLogs, setReengagementLogs] = useState<ReengagementLog[]>([]);
+  const [reengagementLoading, setReengagementLoading] = useState(false);
+  const [reengagementRangeDays, setReengagementRangeDays] = useState(30);
+  const [reengagementCfg, setReengagementCfg] = useState<ReengagementConfig>({
+    student_inactive_days: 14,
+    teacher_inactive_days: 30,
+    resend_interval_days: 30,
+    enabled: true,
+  });
+  const [savingReengCfg, setSavingReengCfg] = useState(false);
+  const [triggeringReeng, setTriggeringReeng] = useState(false);
   const { toast } = useToast();
 
   const fetchLogs = async () => {
@@ -193,7 +222,61 @@ const AdminEmailsTab = () => {
     if (activeView === "security") fetchSecurityNotifs();
     if (activeView === "suppressed") fetchSuppressedEmails();
     if (activeView === "birthdays") fetchBirthdayLogs();
-  }, [activeView, birthdayRangeDays]);
+    if (activeView === "reengagement") fetchReengagementData();
+  }, [activeView, birthdayRangeDays, reengagementRangeDays]);
+
+  const fetchReengagementData = async () => {
+    setReengagementLoading(true);
+    const since = new Date(Date.now() - reengagementRangeDays * 86400000).toISOString();
+    const [{ data: logs }, { data: cfgRow }] = await Promise.all([
+      supabase
+        .from("reengagement_email_log" as any)
+        .select("*")
+        .gte("sent_at", since)
+        .order("sent_at", { ascending: false })
+        .limit(500),
+      supabase
+        .from("platform_settings")
+        .select("value")
+        .eq("key", "reengagement_config")
+        .maybeSingle(),
+    ]);
+    setReengagementLogs((logs as unknown as ReengagementLog[]) || []);
+    if (cfgRow?.value) {
+      setReengagementCfg({ ...reengagementCfg, ...(cfgRow.value as Partial<ReengagementConfig>) });
+    }
+    setReengagementLoading(false);
+  };
+
+  const saveReengagementCfg = async () => {
+    setSavingReengCfg(true);
+    const { error } = await supabase
+      .from("platform_settings")
+      .update({ value: reengagementCfg as any })
+      .eq("key", "reengagement_config");
+    if (error) {
+      toast({ title: "Erro ao salvar configuração", variant: "destructive" });
+    } else {
+      toast({ title: "Configuração salva!" });
+    }
+    setSavingReengCfg(false);
+  };
+
+  const triggerReengagementNow = async () => {
+    setTriggeringReeng(true);
+    const { data, error } = await supabase.functions.invoke("send-reengagement-emails", { body: {} });
+    if (error) {
+      toast({ title: "Erro ao disparar", description: error.message, variant: "destructive" });
+    } else {
+      const r = data as any;
+      toast({
+        title: "Disparo concluído",
+        description: `${r?.sent_students || 0} aluno(s) e ${r?.sent_teachers || 0} professor(es) processados.`,
+      });
+      fetchReengagementData();
+    }
+    setTriggeringReeng(false);
+  };
 
   const updateSecurityStatus = async (id: string, status: string) => {
     await supabase.from("security_notifications").update({ status }).eq("id", id);
@@ -348,6 +431,14 @@ const AdminEmailsTab = () => {
           className="text-xs"
         >
           <Cake className="h-3.5 w-3.5 mr-1" /> Aniversários
+        </Button>
+        <Button
+          size="sm"
+          variant={activeView === "reengagement" ? "default" : "outline"}
+          onClick={() => setActiveView("reengagement")}
+          className="text-xs"
+        >
+          <Heart className="h-3.5 w-3.5 mr-1" /> Reengajamento
         </Button>
       </div>
 
@@ -812,6 +903,144 @@ const AdminEmailsTab = () => {
                       </TableCell>
                       <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
                         {new Date(b.sent_at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </div>
+      ) : activeView === "reengagement" ? (
+        <div className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            E-mails de reengajamento para alunos sem assistir vídeos e professores sem postar conteúdo.
+          </p>
+
+          <Card>
+            <CardContent className="pt-4 pb-4 px-4 space-y-3">
+              <h3 className="text-sm font-semibold flex items-center gap-2">
+                <Heart className="h-4 w-4 text-rose-500" /> Configuração
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div>
+                  <label className="text-xs text-muted-foreground">Aluno inativo (dias)</label>
+                  <Input
+                    type="number"
+                    min={1}
+                    value={reengagementCfg.student_inactive_days}
+                    onChange={(e) => setReengagementCfg({ ...reengagementCfg, student_inactive_days: Number(e.target.value) })}
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground">Professor inativo (dias)</label>
+                  <Input
+                    type="number"
+                    min={1}
+                    value={reengagementCfg.teacher_inactive_days}
+                    onChange={(e) => setReengagementCfg({ ...reengagementCfg, teacher_inactive_days: Number(e.target.value) })}
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground">Reenviar a cada (dias)</label>
+                  <Input
+                    type="number"
+                    min={1}
+                    value={reengagementCfg.resend_interval_days}
+                    onChange={(e) => setReengagementCfg({ ...reengagementCfg, resend_interval_days: Number(e.target.value) })}
+                  />
+                </div>
+              </div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <Button size="sm" onClick={saveReengagementCfg} disabled={savingReengCfg}>
+                  {savingReengCfg ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : null}
+                  Salvar configuração
+                </Button>
+                <Button size="sm" variant="outline" onClick={triggerReengagementNow} disabled={triggeringReeng}>
+                  {triggeringReeng ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Send className="h-4 w-4 mr-1" />}
+                  Disparar agora
+                </Button>
+                <span className="text-xs text-muted-foreground ml-auto">Disparo automático: diariamente às 09:00 BRT</span>
+              </div>
+            </CardContent>
+          </Card>
+
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            <Card>
+              <CardContent className="pt-4 pb-3 px-4 text-center">
+                <p className="text-2xl font-bold">{reengagementLogs.length}</p>
+                <p className="text-xs text-muted-foreground">Total no período</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-4 pb-3 px-4 text-center">
+                <p className="text-2xl font-bold text-rose-500">
+                  {reengagementLogs.filter((r) => r.template_key === "reengagement_student").length}
+                </p>
+                <p className="text-xs text-muted-foreground">Alunos</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-4 pb-3 px-4 text-center">
+                <p className="text-2xl font-bold text-indigo-500">
+                  {reengagementLogs.filter((r) => r.template_key === "reengagement_teacher").length}
+                </p>
+                <p className="text-xs text-muted-foreground">Professores</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-xs text-muted-foreground">Período:</span>
+            {[7, 30, 90, 180].map((d) => (
+              <Button key={d} size="sm" variant={reengagementRangeDays === d ? "default" : "outline"} onClick={() => setReengagementRangeDays(d)} className="text-xs h-7">
+                {d}d
+              </Button>
+            ))}
+            <Button variant="outline" size="sm" onClick={fetchReengagementData} disabled={reengagementLoading}>
+              <RefreshCw className={`h-4 w-4 mr-1 ${reengagementLoading ? "animate-spin" : ""}`} />
+              Atualizar
+            </Button>
+          </div>
+
+          {reengagementLoading ? (
+            <p className="text-sm text-muted-foreground text-center py-8">Carregando...</p>
+          ) : reengagementLogs.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-8">Nenhum e-mail de reengajamento enviado no período.</p>
+          ) : (
+            <div className="rounded-lg border border-border overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Destinatário</TableHead>
+                    <TableHead>Tipo</TableHead>
+                    <TableHead>Inativo (dias)</TableHead>
+                    <TableHead>Detalhes</TableHead>
+                    <TableHead>Enviado em</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {reengagementLogs.map((r) => (
+                    <TableRow key={r.id}>
+                      <TableCell className="text-sm">
+                        <div className="font-medium">{r.recipient_name || "—"}</div>
+                        <div className="text-xs text-muted-foreground">{maskEmail(r.recipient_email)}</div>
+                      </TableCell>
+                      <TableCell>
+                        {r.template_key === "reengagement_student" ? (
+                          <Badge variant="outline" className="border-rose-500/30 text-rose-600 dark:text-rose-400">Aluno</Badge>
+                        ) : (
+                          <Badge variant="outline" className="border-indigo-500/30 text-indigo-600 dark:text-indigo-400">Professor</Badge>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-sm">{r.days_inactive ?? "—"}</TableCell>
+                      <TableCell className="text-xs text-muted-foreground">
+                        {r.template_key === "reengagement_student"
+                          ? `${r.metadata?.video_ids?.length || 0} vídeo(s) — ${r.metadata?.video_source || "—"}`
+                          : `${r.metadata?.total_videos ?? 0} vídeos · ${r.metadata?.total_views ?? 0} views`}
+                      </TableCell>
+                      <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
+                        {new Date(r.sent_at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" })}
                       </TableCell>
                     </TableRow>
                   ))}

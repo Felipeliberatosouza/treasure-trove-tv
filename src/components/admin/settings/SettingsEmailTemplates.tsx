@@ -41,6 +41,8 @@ const TEMPLATE_LABELS: Record<string, string> = {
   birthday: "Aniversário",
   birthday_subscriber: "Aniversário",
   birthday_teacher: "Aniversário",
+  reengagement_student: "Reengajamento",
+  reengagement_teacher: "Reengajamento",
   doubt_approved: "Dúvida Aprovada (Professor)",
   doubt_answered: "Dúvida Respondida (Aluno)",
   doubt_submitted: "Dúvida Enviada (Aluno)",
@@ -62,6 +64,8 @@ const TEMPLATE_DESCRIPTIONS: Record<string, string> = {
   birthday: "Enviado no aniversário de ALUNOS SEM assinatura ativa (diariamente às 8h). Texto motivacional + vídeo recomendado da área de interesse + pode incluir cupom de desconto.",
   birthday_subscriber: "Enviado no aniversário de ALUNOS COM assinatura ativa (diariamente às 8h). Texto motivacional + vídeo recomendado da área de interesse. NÃO envia cupom.",
   birthday_teacher: "Enviado no aniversário de PROFESSORES (diariamente às 8h). Mensagem de parabéns e agradecimento pela parceria. NÃO envia cupom nem vídeo recomendado.",
+  reengagement_student: "Enviado a ALUNOS que não acessam vídeos há 14+ dias (configurável). Inclui 3 vídeos mais assistidos das áreas de interesse que ele ainda não viu (com fallback global). Reenviado no máximo a cada 30 dias.",
+  reengagement_teacher: "Enviado a PROFESSORES que não publicam conteúdo há 30+ dias (configurável). Inclui o desempenho atual (vídeos publicados, views) e simulação de ganhos em 3 cenários (Conservador/Realista/Otimista). Reenviado no máximo a cada 30 dias.",
   doubt_approved: "Enviado ao professor quando uma dúvida de aluno é aprovada pelo administrador.",
   doubt_answered: "Enviado ao aluno quando o professor responde sua dúvida.",
   doubt_submitted: "Mensagem exibida ao aluno após enviar uma dúvida.",
@@ -83,6 +87,8 @@ const TEMPLATE_VARS: Record<string, string[]> = {
   birthday: ["{{name}}", "{{login_link}}", "{{recommended_video_block}}"],
   birthday_subscriber: ["{{name}}", "{{login_link}}", "{{recommended_video_block}}"],
   birthday_teacher: ["{{name}}", "{{login_link}}"],
+  reengagement_student: ["{{name}}", "{{login_link}}", "{{recommended_videos_block}}"],
+  reengagement_teacher: ["{{name}}", "{{login_link}}", "{{teacher_stats_block}}", "{{teacher_scenarios_block}}", "{{total_videos}}", "{{total_views}}"],
   doubt_approved: ["{{teacher_name}}", "{{student_name}}", "{{question}}", "{{content_title}}", "{{deadline_days}}"],
   doubt_answered: ["{{student_name}}", "{{teacher_name}}", "{{question}}", "{{answer}}", "{{content_title}}"],
   doubt_submitted: ["{{student_name}}"],
@@ -483,6 +489,30 @@ const SettingsEmailTemplates = () => {
                 title="Enviado a professores. Mensagem de agradecimento. Não envia cupom."
               >
                 Professor
+              </span>
+            )}
+            {t.template_key === "reengagement_student" && (
+              <span
+                className={`ml-1 inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${
+                  activeKey === t.template_key
+                    ? "bg-primary-foreground/20 text-primary-foreground"
+                    : "bg-rose-500/15 text-rose-700 dark:text-rose-400"
+                }`}
+                title="Aluno inativo há 14+ dias. Inclui 3 vídeos recomendados."
+              >
+                Aluno inativo
+              </span>
+            )}
+            {t.template_key === "reengagement_teacher" && (
+              <span
+                className={`ml-1 inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${
+                  activeKey === t.template_key
+                    ? "bg-primary-foreground/20 text-primary-foreground"
+                    : "bg-indigo-500/15 text-indigo-700 dark:text-indigo-400"
+                }`}
+                title="Professor sem postar há 30+ dias. Inclui stats e simulação de ganhos."
+              >
+                Professor inativo
               </span>
             )}
           </button>

@@ -800,6 +800,42 @@ export type Database = {
         }
         Relationships: []
       }
+      reengagement_email_log: {
+        Row: {
+          created_at: string
+          days_inactive: number | null
+          id: string
+          metadata: Json | null
+          recipient_email: string
+          recipient_name: string | null
+          sent_at: string
+          template_key: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          days_inactive?: number | null
+          id?: string
+          metadata?: Json | null
+          recipient_email: string
+          recipient_name?: string | null
+          sent_at?: string
+          template_key: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          days_inactive?: number | null
+          id?: string
+          metadata?: Json | null
+          recipient_email?: string
+          recipient_name?: string | null
+          sent_at?: string
+          template_key?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       reserved_referral_codes: {
         Row: {
           created_at: string

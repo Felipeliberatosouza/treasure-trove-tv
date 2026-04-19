@@ -47,13 +47,22 @@ Deno.serve(async (req) => {
 
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
 
-    // Allow scheduled cron invocations: caller passes service role key as Bearer
-    const authHeader = req.headers.get("Authorization") || "";
-    const bearer = authHeader.replace(/^Bearer\s+/i, "").trim();
-    const isCron = bearer && bearer === SERVICE_ROLE;
+    // Allow scheduled cron invocations via shared secret stored in platform_settings.cron_secret
+    const cronSecretHeader = req.headers.get("x-cron-secret") || "";
+    let isCron = false;
+    if (cronSecretHeader) {
+      const { data: settingRow } = await admin
+        .from("platform_settings")
+        .select("value")
+        .eq("key", "cron_secret")
+        .maybeSingle();
+      const expected = (settingRow?.value as any)?.token || "";
+      if (expected && cronSecretHeader === expected) isCron = true;
+    }
 
     if (!isCron) {
       // Validate caller is admin
+      const authHeader = req.headers.get("Authorization") || "";
       const userClient = createClient(SUPABASE_URL, ANON_KEY, {
         global: { headers: { Authorization: authHeader } },
       });

@@ -574,13 +574,33 @@ const TeacherHomeStats = () => {
               </p>
             </div>
           </div>
-          <div className="flex-1 flex items-center justify-center">
-            <div className="relative">
-              <div className="absolute inset-0 rounded-full bg-primary/10 blur-2xl" aria-hidden />
-              <div className="relative flex h-24 w-24 items-center justify-center rounded-full border border-primary/30 bg-primary/5">
-                <Megaphone className="h-10 w-10 text-primary" />
-              </div>
+          <div className="flex-1 min-h-[120px]">
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">
+              Últimas 4 semanas
             </div>
+            <ResponsiveContainer width="100%" height={110}>
+              <BarChart data={salesPostsWeekly} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                <XAxis
+                  dataKey="week"
+                  tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <YAxis hide allowDecimals={false} />
+                <Tooltip
+                  cursor={{ fill: "hsl(var(--muted) / 0.3)" }}
+                  contentStyle={{
+                    background: "hsl(var(--card))",
+                    border: "1px solid hsl(var(--border))",
+                    borderRadius: 8,
+                    fontSize: 12,
+                  }}
+                  formatter={(v: number) => [`${v} ${v === 1 ? "post" : "posts"}`, "Criados"]}
+                />
+                <Bar dataKey="value" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
           </div>
           <Link
             to="/dashboard/teacher?tab=sales-boost"

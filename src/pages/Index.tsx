@@ -35,6 +35,11 @@ const Index = () => {
   const [popularVideos, setPopularVideos] = useState<Video[]>([]);
   const [loadingPopular, setLoadingPopular] = useState(false);
   const [watchedIds, setWatchedIds] = useState<Set<string>>(new Set());
+  const [teacherLessons, setTeacherLessons] = useState<Video[]>([]);
+  const [teacherExams, setTeacherExams] = useState<Video[]>([]);
+  const [loadingTeacherContent, setLoadingTeacherContent] = useState(false);
+
+  const isTeacher = role === "teacher";
 
   // Inline search state
   const [inlineSearchOpen, setInlineSearchOpen] = useState(false);

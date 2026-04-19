@@ -262,6 +262,7 @@ const SalesBoostTab = () => {
       return;
     }
     setHistory((prev) => prev.filter((p) => p.id !== post.id));
+    setTotalPostsCount((prev) => Math.max(0, prev - 1));
     toast.success("Post removido do histórico.");
   };
 

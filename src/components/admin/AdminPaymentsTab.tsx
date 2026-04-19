@@ -390,16 +390,36 @@ const AdminPaymentsTab = () => {
                     <TableCell className="text-right font-medium">R$ {Number(p.net_amount).toFixed(2)}</TableCell>
                     <TableCell>{statusBadge(p.status)}</TableCell>
                     <TableCell className="text-right">
-                      <Select value={p.status} onValueChange={(val) => handleStatusChange(p.id, val)}>
-                        <SelectTrigger className="w-[110px] h-8 text-xs">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="pending">Pendente</SelectItem>
-                          <SelectItem value="paid">Pago</SelectItem>
-                          <SelectItem value="cancelled">Cancelado</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <div className="flex items-center justify-end gap-1">
+                        {p.status !== "paid" && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-8 px-2 text-xs"
+                            onClick={() => handleMarkPaid(p.id)}
+                          >
+                            <CheckCircle2 className="h-3.5 w-3.5 mr-1" /> Pago
+                          </Button>
+                        )}
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-8 px-2 text-xs"
+                          onClick={() => openEditDialog(p)}
+                        >
+                          <Pencil className="h-3.5 w-3.5 mr-1" /> Editar
+                        </Button>
+                        <Select value={p.status} onValueChange={(val) => handleStatusChange(p.id, val)}>
+                          <SelectTrigger className="w-[110px] h-8 text-xs">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="pending">Pendente</SelectItem>
+                            <SelectItem value="paid">Pago</SelectItem>
+                            <SelectItem value="cancelled">Cancelado</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}

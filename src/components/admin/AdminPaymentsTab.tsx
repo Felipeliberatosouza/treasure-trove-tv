@@ -485,6 +485,9 @@ const AdminPaymentsTab = () => {
         <Button size="sm" variant={activeView === "payments" ? "default" : "outline"} onClick={() => setActiveView("payments")}>
           <DollarSign className="h-4 w-4 mr-1" /> Pagamentos
         </Button>
+        <Button size="sm" variant={activeView === "runs" ? "default" : "outline"} onClick={() => setActiveView("runs")}>
+          <History className="h-4 w-4 mr-1" /> Histórico de Recálculos
+        </Button>
         <Button
           size="sm"
           variant="outline"

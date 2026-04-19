@@ -63,7 +63,7 @@ const SalesBoostTab = () => {
           .eq("published", true)
           .eq("admin_approved", true)
           .order("created_at", { ascending: false })
-          .limit(5),
+          .limit(10),
         supabase
           .from("exam_solutions")
           .select("id,title,video_type,top_questoes_url")
@@ -71,7 +71,7 @@ const SalesBoostTab = () => {
           .eq("published", true)
           .eq("admin_approved", true)
           .order("created_at", { ascending: false })
-          .limit(5),
+          .limit(10),
       ]);
       setSlug(profRes.data?.slug || "");
       const all: ContentItem[] = [
@@ -87,12 +87,29 @@ const SalesBoostTab = () => {
           video_type: e.video_type,
           has_top_questoes: !!e.top_questoes_url,
         })),
-      ].slice(0, 5);
+      ];
       setContents(all);
+      setSelectedIds(all.slice(0, MAX_SEL).map((c) => c.id));
       setLoading(false);
     };
     fetchAll();
   }, [user?.id]);
+
+  const selectedContents = useMemo(
+    () => contents.filter((c) => selectedIds.includes(c.id)),
+    [contents, selectedIds]
+  );
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      if (prev.includes(id)) return prev.filter((x) => x !== id);
+      if (prev.length >= MAX_SEL) {
+        toast.error(`Selecione no máximo ${MAX_SEL} conteúdos.`);
+        return prev;
+      }
+      return [...prev, id];
+    });
+  };
 
   const buildCaption = (items: ContentItem[]) => {
     const name = profile?.name || "Professor(a)";

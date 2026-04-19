@@ -205,6 +205,58 @@ const SalesBoostTab = () => {
     fetchAll();
   }, [user?.id]);
 
+  // Fetch sales post history
+  const fetchHistory = async () => {
+    if (!user?.id) return;
+    setLoadingHistory(true);
+    const { data, error } = await supabase
+      .from("teacher_sales_posts")
+      .select("id,template,caption,thumbnail_url,thumbnail_path,contents,public_url,created_at")
+      .eq("teacher_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(20);
+    if (!error && data) {
+      setHistory(data as unknown as SalesPostRow[]);
+    }
+    setLoadingHistory(false);
+  };
+
+  useEffect(() => {
+    fetchHistory();
+  }, [user?.id]);
+
+  const reuseHistoryPost = (post: SalesPostRow) => {
+    setTemplate((post.template as TemplateKey) || "colorful");
+    setCaption(post.caption || "");
+    setImageDataUrl(post.thumbnail_url || "");
+    const ids = (post.contents || []).map((c) => c.id).filter(Boolean);
+    if (ids.length) {
+      // Only keep ids that still exist in current contents to allow re-generation
+      const existing = ids.filter((id) => contents.some((c) => c.id === id));
+      if (existing.length) setSelectedIds(existing.slice(0, MAX_SEL));
+    }
+    toast.success("Post carregado do histórico.");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const deleteHistoryPost = async (post: SalesPostRow) => {
+    if (!confirm("Excluir este post do histórico?")) return;
+    // Delete storage object first (best-effort)
+    if (post.thumbnail_path) {
+      await supabase.storage.from("sales-post-thumbnails").remove([post.thumbnail_path]);
+    }
+    const { error } = await supabase
+      .from("teacher_sales_posts")
+      .delete()
+      .eq("id", post.id);
+    if (error) {
+      toast.error("Falha ao excluir post.");
+      return;
+    }
+    setHistory((prev) => prev.filter((p) => p.id !== post.id));
+    toast.success("Post removido do histórico.");
+  };
+
   // Preserve selection order (drag-and-drop driven)
   const selectedContents = useMemo(() => {
     const map = new Map(contents.map((c) => [c.id, c]));

@@ -84,6 +84,8 @@ const AdminEmailsTab = () => {
   const [suppressedEmails, setSuppressedEmails] = useState<SuppressedEmail[]>([]);
   const [suppressedLoading, setSuppressedLoading] = useState(false);
   const [suppressedSearch, setSuppressedSearch] = useState("");
+  const [reactivatingEmail, setReactivatingEmail] = useState<string | null>(null);
+  const { toast } = useToast();
 
   const fetchLogs = async () => {
     setLoading(true);
@@ -203,6 +205,32 @@ const AdminEmailsTab = () => {
     a.download = `suppressed-emails-${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
+  };
+
+  const handleReactivate = async (email: string) => {
+    setReactivatingEmail(email);
+    try {
+      const { data, error } = await supabase.functions.invoke("reactivate-email-marketing", {
+        body: { email },
+      });
+      if (error || !data?.success) {
+        throw new Error(error?.message || "Falha ao reativar");
+      }
+      toast({
+        title: "E-mail reativado",
+        description: `${email} voltará a receber e-mails da plataforma.`,
+      });
+      // Optimistic update + refresh
+      setSuppressedEmails(prev => prev.filter(s => s.email.toLowerCase() !== email.toLowerCase()));
+    } catch (err: any) {
+      toast({
+        title: "Erro ao reativar",
+        description: err?.message || "Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setReactivatingEmail(null);
+    }
   };
 
   return (

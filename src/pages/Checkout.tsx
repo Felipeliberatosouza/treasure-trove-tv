@@ -675,7 +675,15 @@ function CheckoutForm({
           >
             <ShieldCheck className="h-3.5 w-3.5 mt-0.5 text-primary shrink-0" aria-hidden />
             <span>
-              Telefone verificado será usado para segurança da transação (antifraude).
+              Telefone verificado será usado para segurança da transação (antifraude).{" "}
+              <a
+                href="/privacidade#antifraude"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium text-primary underline-offset-2 hover:underline"
+              >
+                Saiba mais
+              </a>
             </span>
           </div>
         )}

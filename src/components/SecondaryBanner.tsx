@@ -31,11 +31,12 @@ const SecondaryBanner = () => {
     const teacher = normalizeHeroCarousel(teacherRaw);
 
     const flatten = (
-      carousel: { slides: HeroBannerSettings[]; autoplay_seconds: number },
+      carousel: { slides: HeroBannerSettings[]; autoplay_seconds: number; enabled?: boolean },
       audience: FlatSlide["audience"],
       badge: string
-    ): FlatSlide[] =>
-      carousel.slides
+    ): FlatSlide[] => {
+      if (carousel.enabled === false) return [];
+      return carousel.slides
         .filter((s) => s && (s.title || s.subtitle || s.cta_text || s.banner_image_url))
         .map((slide) => ({
           slide,
@@ -43,6 +44,7 @@ const SecondaryBanner = () => {
           badge,
           autoplaySeconds: carousel.autoplay_seconds || DEFAULT_HERO_AUTOPLAY_SECONDS,
         }));
+    };
 
     if (role === "admin") {
       return [

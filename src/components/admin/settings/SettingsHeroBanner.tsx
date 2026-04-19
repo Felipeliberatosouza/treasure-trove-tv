@@ -12,6 +12,7 @@ import { useStorageUpload } from "@/hooks/useStorageUpload";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
   Save,
   Upload,
@@ -21,6 +22,7 @@ import {
   ChevronUp,
   ChevronDown,
   Layers,
+  EyeOff,
 } from "lucide-react";
 
 type HeroSettingsKey =
@@ -109,12 +111,35 @@ const SettingsHeroBanner = ({
 
   if (loading) return <p className="text-sm text-muted-foreground">Carregando...</p>;
 
+  const isSecondary = settingsKey.startsWith("secondary_");
+  const enabled = carousel.enabled !== false;
+
   return (
     <div className="space-y-5 max-w-2xl">
       {description && (
         <p className="text-sm text-muted-foreground bg-secondary/50 border border-border rounded-md p-3">
           {description}
         </p>
+      )}
+
+      {isSecondary && (
+        <div className="flex items-center justify-between rounded-lg border border-border bg-secondary/30 p-4">
+          <div className="space-y-0.5">
+            <Label className="flex items-center gap-2 text-sm font-semibold">
+              <EyeOff className="h-4 w-4" /> Exibir este banner
+            </Label>
+            <p className="text-xs text-muted-foreground">
+              Quando desligado, o banner é completamente ocultado para este público.
+            </p>
+          </div>
+          <Switch
+            checked={enabled}
+            onCheckedChange={(v) =>
+              setCarousel((prev) => ({ ...prev, enabled: v }))
+            }
+            aria-label="Exibir banner"
+          />
+        </div>
       )}
 
       {/* Slides manager */}

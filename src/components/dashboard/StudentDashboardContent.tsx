@@ -1,22 +1,20 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { User, CreditCard, Lock, FileText, BookOpen, HelpCircle, Info } from "lucide-react";
+import { User, CreditCard, Lock, BookOpen, Info } from "lucide-react";
 import PersonalDataTab from "@/components/dashboard/PersonalDataTab";
 import LoginDataTab from "@/components/dashboard/LoginDataTab";
-import StudentDoubtsTab from "@/components/dashboard/StudentDoubtsTab";
 import StudentSubscriptionTab from "@/components/dashboard/StudentSubscriptionTab";
 import StudentInstructionsTab from "@/components/dashboard/StudentInstructionsTab";
+import InterestAreasTab from "@/components/dashboard/InterestAreasTab";
 import PastDueBillingAlert from "@/components/dashboard/PastDueBillingAlert";
 
 const tabs = [
-  { id: "instructions", label: "Como Usar", icon: Info },
   { id: "personal", label: "Dados Pessoais", icon: User },
-  { id: "subscription", label: "Assinatura e Compras", icon: CreditCard },
   { id: "login", label: "Dados de Login", icon: Lock },
-  { id: "doubts", label: "Minhas Dúvidas", icon: HelpCircle },
-  { id: "exams", label: "Minhas Provas", icon: FileText },
-  { id: "subjects", label: "Minhas Disciplinas", icon: BookOpen },
+  { id: "subscription", label: "Assinatura e Compras", icon: CreditCard },
+  { id: "interests", label: "Áreas de Interesse", icon: BookOpen },
+  { id: "instructions", label: "Como Usar", icon: Info },
 ] as const;
 
 type TabId = (typeof tabs)[number]["id"];
@@ -25,7 +23,7 @@ const validTabIds: readonly string[] = tabs.map(t => t.id);
 const StudentDashboardContent = () => {
   const [searchParams] = useSearchParams();
   const tabParam = searchParams.get("tab");
-  const initialTab: TabId = tabParam && validTabIds.includes(tabParam) ? (tabParam as TabId) : "instructions";
+  const initialTab: TabId = tabParam && validTabIds.includes(tabParam) ? (tabParam as TabId) : "personal";
   const [activeTab, setActiveTab] = useState<TabId>(initialTab);
 
   // React to URL changes (e.g. coming from PricingSection with ?tab=subscription)
@@ -70,23 +68,11 @@ const StudentDashboardContent = () => {
         animate={{ opacity: 1, y: 0 }}
         className="flex-1 rounded-xl border border-border bg-card p-6"
       >
-        {activeTab === "instructions" && <StudentInstructionsTab />}
         {activeTab === "personal" && <PersonalDataTab />}
         {activeTab === "login" && <LoginDataTab />}
-        {activeTab === "doubts" && <StudentDoubtsTab />}
         {activeTab === "subscription" && <StudentSubscriptionTab />}
-        {activeTab === "exams" && (
-          <div>
-            <h2 className="font-display text-lg font-semibold mb-4">Minhas Provas</h2>
-            <p className="text-sm text-muted-foreground">Nenhuma prova disponível no momento.</p>
-          </div>
-        )}
-        {activeTab === "subjects" && (
-          <div>
-            <h2 className="font-display text-lg font-semibold mb-4">Minhas Disciplinas</h2>
-            <p className="text-sm text-muted-foreground">Você ainda não se inscreveu em nenhuma disciplina.</p>
-          </div>
-        )}
+        {activeTab === "interests" && <InterestAreasTab />}
+        {activeTab === "instructions" && <StudentInstructionsTab />}
       </motion.div>
     </div>
     </>
@@ -94,3 +80,4 @@ const StudentDashboardContent = () => {
 };
 
 export default StudentDashboardContent;
+

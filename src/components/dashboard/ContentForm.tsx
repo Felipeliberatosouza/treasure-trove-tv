@@ -54,6 +54,7 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
   const [teacherName, setTeacherName] = useState("");
   const [processingUpload, setProcessingUpload] = useState(false);
   const [processingStep, setProcessingStep] = useState("");
+  const [resourcePrices, setResourcePrices] = useState<ResourcePriceInfo[]>([]);
 
   const recordingEnabled = productConfig?.revisoes?.enable_recording ?? false;
   const maxRecordingMinutes = productConfig?.revisoes?.max_recording_minutes ?? 30;
@@ -61,6 +62,8 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
   const enableBlackboard = productConfig?.revisoes?.enable_blackboard ?? false;
   const enableAutoCover = productConfig?.revisoes?.enable_auto_cover ?? false;
   const needsProcessing = enableSubtitles || enableBlackboard || enableAutoCover;
+
+  const revisaoPricing = resourcePrices.find((r) => r.resource_type === "revisoes");
 
   // Fetch teacher name for auto cover
   useEffect(() => {
@@ -74,6 +77,17 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
         if (data?.name) setTeacherName(data.name);
       });
   }, [user]);
+
+  // Fetch resource pricing config to display to teacher
+  useEffect(() => {
+    supabase
+      .from("resource_prices")
+      .select("resource_type, price, min_price, platform_percentage")
+      .eq("active", true)
+      .then(({ data }) => {
+        if (data) setResourcePrices(data as unknown as ResourcePriceInfo[]);
+      });
+  }, []);
 
   // Extract audio from a video file and return base64
   const extractAudioBase64 = useCallback(async (file: File): Promise<string> => {

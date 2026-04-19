@@ -16,6 +16,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -33,11 +34,15 @@ const SalesBoostTab = () => {
   const { data: branding } = usePlatformSettings("branding");
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [contents, setContents] = useState<ContentItem[]>([]);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [imageDataUrl, setImageDataUrl] = useState<string>("");
   const [caption, setCaption] = useState<string>("");
   const [slug, setSlug] = useState<string>("");
+
+  const MIN_SEL = 3;
+  const MAX_SEL = 5;
 
   const publicUrl = useMemo(() => {
     if (!slug) return "";
@@ -58,7 +63,7 @@ const SalesBoostTab = () => {
           .eq("published", true)
           .eq("admin_approved", true)
           .order("created_at", { ascending: false })
-          .limit(5),
+          .limit(10),
         supabase
           .from("exam_solutions")
           .select("id,title,video_type,top_questoes_url")
@@ -66,7 +71,7 @@ const SalesBoostTab = () => {
           .eq("published", true)
           .eq("admin_approved", true)
           .order("created_at", { ascending: false })
-          .limit(5),
+          .limit(10),
       ]);
       setSlug(profRes.data?.slug || "");
       const all: ContentItem[] = [
@@ -82,12 +87,29 @@ const SalesBoostTab = () => {
           video_type: e.video_type,
           has_top_questoes: !!e.top_questoes_url,
         })),
-      ].slice(0, 5);
+      ];
       setContents(all);
+      setSelectedIds(all.slice(0, MAX_SEL).map((c) => c.id));
       setLoading(false);
     };
     fetchAll();
   }, [user?.id]);
+
+  const selectedContents = useMemo(
+    () => contents.filter((c) => selectedIds.includes(c.id)),
+    [contents, selectedIds]
+  );
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      if (prev.includes(id)) return prev.filter((x) => x !== id);
+      if (prev.length >= MAX_SEL) {
+        toast.error(`Selecione no máximo ${MAX_SEL} conteúdos.`);
+        return prev;
+      }
+      return [...prev, id];
+    });
+  };
 
   const buildCaption = (items: ContentItem[]) => {
     const name = profile?.name || "Professor(a)";
@@ -130,10 +152,14 @@ const SalesBoostTab = () => {
       toast.error("Defina sua URL pública (slug) em Dados Pessoais antes de gerar o post.");
       return;
     }
+    if (selectedContents.length < MIN_SEL) {
+      toast.error(`Selecione ao menos ${MIN_SEL} conteúdos para o post.`);
+      return;
+    }
     setGenerating(true);
     try {
       // Build caption
-      const cap = buildCaption(contents);
+      const cap = buildCaption(selectedContents);
       setCaption(cap);
 
       // Build image (1080x1350 portrait — Instagram feed format)
@@ -239,7 +265,7 @@ const SalesBoostTab = () => {
 
       ctx.font = "500 28px system-ui, sans-serif";
       ctx.fillStyle = "rgba(255,255,255,0.92)";
-      const items = contents.slice(0, 4);
+      const items = selectedContents.slice(0, MAX_SEL);
       items.forEach((c, i) => {
         const y = listStartY + 60 + i * 50;
         const prefix = c.video_type === "resolucao_questoes" ? "📝" : "🎬";
@@ -419,8 +445,77 @@ const SalesBoostTab = () => {
               Você precisa definir sua <strong>URL pública</strong> em "Dados Pessoais" antes de gerar o post.
             </div>
           )}
+
+          {/* Manual content selection */}
+          <div className="rounded-lg border border-border bg-background/50 p-3">
+            <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
+              <Label className="text-sm font-medium">
+                Selecione os conteúdos que aparecerão no post
+              </Label>
+              <span
+                className={`text-xs font-medium ${
+                  selectedIds.length < MIN_SEL || selectedIds.length > MAX_SEL
+                    ? "text-destructive"
+                    : "text-muted-foreground"
+                }`}
+              >
+                {selectedIds.length}/{MAX_SEL} (mín. {MIN_SEL})
+              </span>
+            </div>
+            {loading ? (
+              <p className="text-xs text-muted-foreground">Carregando seus conteúdos...</p>
+            ) : contents.length === 0 ? (
+              <p className="text-xs text-muted-foreground">
+                Você ainda não tem conteúdos publicados e aprovados.
+              </p>
+            ) : (
+              <div className="grid sm:grid-cols-2 gap-2 max-h-60 overflow-y-auto pr-1">
+                {contents.map((c) => {
+                  const checked = selectedIds.includes(c.id);
+                  const disabled = !checked && selectedIds.length >= MAX_SEL;
+                  return (
+                    <label
+                      key={c.id}
+                      className={`flex items-start gap-2 rounded-md border border-border p-2 text-sm cursor-pointer transition-colors ${
+                        checked ? "bg-primary/10 border-primary/40" : "hover:bg-muted/50"
+                      } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
+                    >
+                      <Checkbox
+                        checked={checked}
+                        disabled={disabled}
+                        onCheckedChange={() => toggleSelect(c.id)}
+                        className="mt-0.5"
+                      />
+                      <span className="flex-1 leading-snug">
+                        <span className="block">
+                          {c.video_type === "resolucao_questoes" ? "📝 " : "🎬 "}
+                          {c.title}
+                        </span>
+                        {c.has_top_questoes && (
+                          <span className="text-[10px] text-amber-600 dark:text-amber-400 font-medium">
+                            ⭐ Top Questões
+                          </span>
+                        )}
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
           <div className="flex flex-wrap gap-3 items-center">
-            <Button onClick={generatePost} disabled={generating || loading || !slug} className="gap-2">
+            <Button
+              onClick={generatePost}
+              disabled={
+                generating ||
+                loading ||
+                !slug ||
+                selectedIds.length < MIN_SEL ||
+                selectedIds.length > MAX_SEL
+              }
+              className="gap-2"
+            >
               {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
               Gerar post automaticamente
             </Button>

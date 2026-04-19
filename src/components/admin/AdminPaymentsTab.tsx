@@ -41,7 +41,8 @@ const AdminPaymentsTab = () => {
   const [metrics, setMetrics] = useState<TeacherMetrics[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeView, setActiveView] = useState<"metrics" | "payments">("metrics");
+  const [activeView, setActiveView] = useState<"metrics" | "payments" | "runs">("metrics");
+  const [runs, setRuns] = useState<any[]>([]);
   const { toast } = useToast();
 
   // New payment form state

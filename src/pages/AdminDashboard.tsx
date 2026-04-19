@@ -91,7 +91,7 @@ const AdminDashboard = () => {
             animate={{ opacity: 1, y: 0 }}
             className="flex-1 rounded-xl border border-border bg-card p-6 overflow-x-auto"
           >
-            {activeTab === "overview" && <AdminOverviewTab />}
+            {activeTab === "overview" && <AdminOverviewTab onNavigate={(id) => setActiveTab(id as TabId)} />}
             {activeTab === "users" && <AdminUsersTab />}
             {activeTab === "content" && <AdminContentTab />}
             {activeTab === "doubts" && <AdminDoubtsTab />}

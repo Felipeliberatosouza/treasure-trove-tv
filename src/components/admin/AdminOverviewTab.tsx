@@ -35,7 +35,7 @@ const COLORS = [
   "hsl(var(--secondary))",
 ];
 
-const AdminOverviewTab = () => {
+const AdminOverviewTab = ({ onNavigate }: AdminOverviewTabProps) => {
   const [kpis, setKpis] = useState<KPIs | null>(null);
   const [revenueByMonth, setRevenueByMonth] = useState<{ month: string; amount: number }[]>([]);
   const [loading, setLoading] = useState(true);

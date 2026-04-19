@@ -793,6 +793,76 @@ const AdminPaymentsTab = () => {
             </Table>
           </div>
         </div>
+      ) : (
+        <div className="rounded-lg border border-border overflow-hidden">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Data</TableHead>
+                <TableHead>Origem</TableHead>
+                <TableHead>Período</TableHead>
+                <TableHead>Professor</TableHead>
+                <TableHead className="text-center">Dry run</TableHead>
+                <TableHead className="text-center">Compras</TableHead>
+                <TableHead className="text-center">Períodos</TableHead>
+                <TableHead className="text-center">Inseridos</TableHead>
+                <TableHead className="text-center">Atualizados</TableHead>
+                <TableHead className="text-center">Ignorados (pago)</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Erro</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {runs.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={12} className="text-center text-sm text-muted-foreground py-6">
+                    Nenhuma execução registrada ainda.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                runs.map((r) => {
+                  const teacherName = r.teacher_id
+                    ? metrics.find((m) => m.teacher_id === r.teacher_id)?.teacher_name || r.teacher_id.slice(0, 8)
+                    : "Todos";
+                  const fmtDate = (d?: string) => (d ? new Date(d).toLocaleDateString("pt-BR") : "");
+                  return (
+                    <TableRow key={r.id}>
+                      <TableCell className="text-xs whitespace-nowrap">
+                        {new Date(r.created_at).toLocaleString("pt-BR")}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className={r.source === "cron" ? "border-accent/30 text-accent" : ""}>
+                          {r.source === "cron" ? "Agendado" : "Manual"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-xs whitespace-nowrap">
+                        {fmtDate(r.period_start)} → {fmtDate(r.period_end)}
+                      </TableCell>
+                      <TableCell className="text-xs">{teacherName}</TableCell>
+                      <TableCell className="text-center">{r.dry_run ? "Sim" : "Não"}</TableCell>
+                      <TableCell className="text-center">{r.purchases_processed}</TableCell>
+                      <TableCell className="text-center">{r.buckets_count}</TableCell>
+                      <TableCell className="text-center">{r.inserted_count}</TableCell>
+                      <TableCell className="text-center">{r.updated_count}</TableCell>
+                      <TableCell className="text-center">{r.skipped_paid_count}</TableCell>
+                      <TableCell>
+                        <Badge
+                          variant="outline"
+                          className={r.status === "success" ? "border-success/30 text-success" : "border-destructive/30 text-destructive"}
+                        >
+                          {r.status === "success" ? "OK" : "Erro"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-xs text-destructive max-w-xs truncate" title={r.error_message || ""}>
+                        {r.error_message || "—"}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
+              )}
+            </TableBody>
+          </Table>
+        </div>
       )}
 
       <Dialog open={!!editingPayment} onOpenChange={(open) => !open && setEditingPayment(null)}>

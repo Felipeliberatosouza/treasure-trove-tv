@@ -529,6 +529,41 @@ const TeacherHomeStats = () => {
             </ResponsiveContainer>
           </div>
         </motion.div>
+
+        {/* Card 5: Sales Posts */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="rounded-xl border border-border bg-card p-5 flex flex-col"
+        >
+          <div className="flex items-start justify-between mb-3">
+            <div>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Megaphone className="h-4 w-4" /> Posts de Divulgação
+              </div>
+              <p className="font-display text-2xl font-bold mt-1">{salesPostsTotal}</p>
+              <p className="text-xs text-muted-foreground">
+                {salesPostsRecent} {salesPostsRecent === 1 ? "novo" : "novos"} em 30 dias
+              </p>
+            </div>
+          </div>
+          <div className="flex-1 flex items-center justify-center">
+            <div className="relative">
+              <div className="absolute inset-0 rounded-full bg-primary/10 blur-2xl" aria-hidden />
+              <div className="relative flex h-24 w-24 items-center justify-center rounded-full border border-primary/30 bg-primary/5">
+                <Megaphone className="h-10 w-10 text-primary" />
+              </div>
+            </div>
+          </div>
+          <Link
+            to="/dashboard/teacher?tab=sales-boost"
+            className="mt-3 inline-flex items-center justify-center gap-1 text-xs font-semibold text-primary hover:underline"
+          >
+            {salesPostsTotal === 0 ? "Criar meu primeiro post" : "Gerar novo post"}
+            <ArrowUpRight className="h-3 w-3" />
+          </Link>
+        </motion.div>
       </div>
     </section>
   );

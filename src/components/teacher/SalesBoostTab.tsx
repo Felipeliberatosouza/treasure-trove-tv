@@ -29,6 +29,97 @@ interface ContentItem {
   has_top_questoes: boolean;
 }
 
+type TemplateKey = "light" | "dark" | "colorful";
+
+interface TemplateStyle {
+  key: TemplateKey;
+  label: string;
+  description: string;
+  // Background paint
+  bgStops: [string, string, string];
+  blob1: string;
+  blob2: string;
+  blobAlpha: number;
+  // Text colors
+  platformTag: string;
+  nameColor: string;
+  areasColor: string;
+  listHeading: string;
+  listItem: string;
+  topQuestoesColor: string;
+  // Avatar ring
+  ringColor: string;
+  // CTA bar
+  ctaBg: string;
+  ctaTitle: string;
+  ctaUrl: string;
+  // Preview swatches for the picker
+  swatches: string[];
+}
+
+const TEMPLATES: Record<TemplateKey, TemplateStyle> = {
+  light: {
+    key: "light",
+    label: "Claro",
+    description: "Fundo claro, tipografia escura, sofisticado.",
+    bgStops: ["#fafaf7", "#f1efe9", "#e7e3d8"],
+    blob1: "#cbd5e1",
+    blob2: "#fde68a",
+    blobAlpha: 0.35,
+    platformTag: "rgba(30,27,75,0.65)",
+    nameColor: "#0f172a",
+    areasColor: "#475569",
+    listHeading: "#0f172a",
+    listItem: "rgba(15,23,42,0.85)",
+    topQuestoesColor: "#b45309",
+    ringColor: "#0f172a",
+    ctaBg: "#0f172a",
+    ctaTitle: "#fafaf7",
+    ctaUrl: "#fde68a",
+    swatches: ["#fafaf7", "#e7e3d8", "#0f172a", "#fde68a"],
+  },
+  dark: {
+    key: "dark",
+    label: "Escuro",
+    description: "Fundo escuro, contraste alto, elegante.",
+    bgStops: ["#0a0a0f", "#111118", "#1a1a24"],
+    blob1: "#1f2937",
+    blob2: "#334155",
+    blobAlpha: 0.4,
+    platformTag: "rgba(255,255,255,0.7)",
+    nameColor: "#ffffff",
+    areasColor: "#cbd5e1",
+    listHeading: "#ffffff",
+    listItem: "rgba(255,255,255,0.92)",
+    topQuestoesColor: "#fde68a",
+    ringColor: "#ffffff",
+    ctaBg: "rgba(255,255,255,0.95)",
+    ctaTitle: "#0a0a0f",
+    ctaUrl: "#0a0a0f",
+    swatches: ["#0a0a0f", "#1a1a24", "#ffffff", "#cbd5e1"],
+  },
+  colorful: {
+    key: "colorful",
+    label: "Colorido",
+    description: "Gradiente vibrante, estilo Instagram.",
+    bgStops: ["#0f172a", "#1e1b4b", "#7c3aed"],
+    blob1: "#a78bfa",
+    blob2: "#22d3ee",
+    blobAlpha: 0.18,
+    platformTag: "rgba(255,255,255,0.85)",
+    nameColor: "#ffffff",
+    areasColor: "#e9d5ff",
+    listHeading: "#ffffff",
+    listItem: "rgba(255,255,255,0.92)",
+    topQuestoesColor: "#fde68a",
+    ringColor: "#ffffff",
+    ctaBg: "rgba(255,255,255,0.95)",
+    ctaTitle: "#1e1b4b",
+    ctaUrl: "#7c3aed",
+    swatches: ["#1e1b4b", "#7c3aed", "#22d3ee", "#a78bfa"],
+  },
+};
+
 const SalesBoostTab = () => {
   const { profile, user } = useAuth();
   const { data: branding } = usePlatformSettings("branding");

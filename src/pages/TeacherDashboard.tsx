@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, User, Lock, Video, FileText, DollarSign, HelpCircle, BookOpen, FileSignature, GraduationCap } from "lucide-react";
+import { ArrowLeft, User, Lock, Video, FileText, DollarSign, HelpCircle, BookOpen, FileSignature, GraduationCap, Megaphone } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
@@ -12,6 +12,7 @@ import TeacherDoubtsTab from "@/components/dashboard/TeacherDoubtsTab";
 import TeacherInstructionsTab from "@/components/dashboard/TeacherInstructionsTab";
 import TeacherContractTab from "@/components/dashboard/TeacherContractTab";
 import StudentDashboardContent from "@/components/dashboard/StudentDashboardContent";
+import SalesBoostTab from "@/components/teacher/SalesBoostTab";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
@@ -22,6 +23,7 @@ const teacherTabs = [
   { id: "lessons", label: "Minhas Aulas", icon: Video },
   { id: "exams", label: "Resoluções de Provas", icon: FileText },
   { id: "doubts", label: "Dúvidas de Alunos", icon: HelpCircle },
+  { id: "sales-boost", label: "Buscar Vendas", icon: Megaphone },
   { id: "contract", label: "Meu Contrato", icon: FileSignature },
   { id: "sales", label: "Vendas e Recebimentos", icon: DollarSign },
 ] as const;
@@ -142,6 +144,7 @@ const TeacherDashboard = () => {
               {activeTab === "lessons" && <LessonsTab />}
               {activeTab === "exams" && <ExamSolutionsTab />}
               {activeTab === "doubts" && <TeacherDoubtsTab />}
+              {activeTab === "sales-boost" && <SalesBoostTab />}
               {activeTab === "contract" && <TeacherContractTab />}
               {activeTab === "sales" && (
                 <div>

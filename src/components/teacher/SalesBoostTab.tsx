@@ -126,7 +126,7 @@ const SalesBoostTab = () => {
   };
 
   const generatePost = async () => {
-    if (!profile?.slug) {
+    if (!slug) {
       toast.error("Defina sua URL pública (slug) em Dados Pessoais antes de gerar o post.");
       return;
     }
@@ -283,7 +283,7 @@ const SalesBoostTab = () => {
     if (!imageDataUrl) return;
     const a = document.createElement("a");
     a.href = imageDataUrl;
-    a.download = `revisao-facil-post-${profile?.slug || "professor"}.png`;
+    a.download = `revisao-facil-post-${slug || "professor"}.png`;
     a.click();
   };
 
@@ -414,13 +414,13 @@ const SalesBoostTab = () => {
           <ImageIcon className="h-4 w-4 text-primary" /> Gerador de post para divulgação
         </h3>
         <div className="rounded-xl border border-border bg-secondary/30 p-4 space-y-4">
-          {!profile?.slug && (
+          {!slug && (
             <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
               Você precisa definir sua <strong>URL pública</strong> em "Dados Pessoais" antes de gerar o post.
             </div>
           )}
           <div className="flex flex-wrap gap-3 items-center">
-            <Button onClick={generatePost} disabled={generating || loading || !profile?.slug} className="gap-2">
+            <Button onClick={generatePost} disabled={generating || loading || !slug} className="gap-2">
               {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
               Gerar post automaticamente
             </Button>

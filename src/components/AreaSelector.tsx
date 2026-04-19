@@ -31,7 +31,7 @@ const AreaSelector = ({ selected, onChange, max = 3 }: AreaSelectorProps) => {
         Selecione até {max} área(s) ({selected.length}/{max})
       </p>
       <div className="flex flex-wrap gap-2">
-        {areas.map((area) => {
+        {sortedAreas.map((area) => {
           const isSelected = selected.includes(area.name);
           return (
             <Badge

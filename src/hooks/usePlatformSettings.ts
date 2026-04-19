@@ -87,6 +87,24 @@ export const isSlideScheduledNow = (
   return true;
 };
 
+export type SlideScheduleStatus = "always" | "scheduled" | "active" | "expired";
+
+/** Classifies a slide's schedule window relative to `now`. */
+export const getSlideScheduleStatus = (
+  slide: Pick<HeroBannerSettings, "starts_at" | "ends_at">,
+  now: Date = new Date()
+): SlideScheduleStatus => {
+  const t = now.getTime();
+  const startRaw = slide.starts_at ? Date.parse(slide.starts_at) : NaN;
+  const endRaw = slide.ends_at ? Date.parse(slide.ends_at) : NaN;
+  const hasStart = !Number.isNaN(startRaw);
+  const hasEnd = !Number.isNaN(endRaw);
+  if (!hasStart && !hasEnd) return "always";
+  if (hasEnd && t > endRaw) return "expired";
+  if (hasStart && t < startRaw) return "scheduled";
+  return "active";
+};
+
 /** Coerces legacy single-slide shape `{ title, subtitle, ... }` into the new
  *  carousel shape `{ slides: [...], autoplay_seconds }`. Safe to call on
  *  already-migrated data. */

@@ -7,6 +7,8 @@ import {
   emptyHeroSlide,
   MAX_HERO_SLIDES,
   DEFAULT_HERO_AUTOPLAY_SECONDS,
+  getSlideScheduleStatus,
+  SlideScheduleStatus,
 } from "@/hooks/usePlatformSettings";
 import { useStorageUpload } from "@/hooks/useStorageUpload";
 import { Input } from "@/components/ui/input";
@@ -52,6 +54,12 @@ const SettingsHeroBanner = ({
   });
   const [activeIndex, setActiveIndex] = useState(0);
   const [saving, setSaving] = useState(false);
+  const [now, setNow] = useState(() => new Date());
+
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 30_000);
+    return () => clearInterval(id);
+  }, []);
 
   useEffect(() => {
     const normalized = normalizeHeroCarousel(data);
@@ -170,9 +178,12 @@ const SettingsHeroBanner = ({
                   : "border-border bg-background text-muted-foreground hover:text-foreground"
               }`}
             >
-              <button type="button" onClick={() => setActiveIndex(i)} className="px-1 font-medium">
-                Slide {i + 1}
-                {slide.title && <span className="hidden md:inline"> · {slide.title.slice(0, 18)}</span>}
+              <button type="button" onClick={() => setActiveIndex(i)} className="px-1 font-medium flex items-center gap-1.5">
+                <span>
+                  Slide {i + 1}
+                  {slide.title && <span className="hidden md:inline"> · {slide.title.slice(0, 18)}</span>}
+                </span>
+                <ScheduleBadge status={getSlideScheduleStatus(slide, now)} />
               </button>
               <button
                 type="button"
@@ -392,6 +403,21 @@ const SettingsHeroBanner = ({
         <Save className="h-4 w-4 mr-2" /> {saving ? "Salvando..." : "Salvar Alterações"}
       </Button>
     </div>
+  );
+};
+
+
+const ScheduleBadge = ({ status }: { status: SlideScheduleStatus }) => {
+  if (status === "always" || status === "active") return null;
+  const config: Record<Exclude<SlideScheduleStatus, "always" | "active">, { label: string; className: string }> = {
+    scheduled: { label: "Agendado", className: "bg-primary/15 text-primary border-primary/30" },
+    expired: { label: "Expirado", className: "bg-destructive/15 text-destructive border-destructive/30" },
+  };
+  const { label, className } = config[status];
+  return (
+    <span className={`inline-flex items-center rounded-full border px-1.5 py-0 text-[10px] font-semibold leading-4 ${className}`}>
+      {label}
+    </span>
   );
 };
 

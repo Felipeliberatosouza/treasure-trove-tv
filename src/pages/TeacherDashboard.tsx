@@ -13,6 +13,7 @@ import TeacherInstructionsTab from "@/components/dashboard/TeacherInstructionsTa
 import TeacherContractTab from "@/components/dashboard/TeacherContractTab";
 import StudentDashboardContent from "@/components/dashboard/StudentDashboardContent";
 import SalesBoostTab from "@/components/teacher/SalesBoostTab";
+import TeacherStatementTab from "@/components/dashboard/TeacherStatementTab";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
@@ -146,12 +147,7 @@ const TeacherDashboard = () => {
               {activeTab === "doubts" && <TeacherDoubtsTab />}
               {activeTab === "sales-boost" && <SalesBoostTab />}
               {activeTab === "contract" && <TeacherContractTab />}
-              {activeTab === "sales" && (
-                <div>
-                  <h2 className="font-display text-lg font-semibold mb-4">Meu Extrato</h2>
-                  <p className="text-sm text-muted-foreground">Nenhuma venda registrada ainda. Publique seus conteúdos para começar a vender.</p>
-                </div>
-              )}
+              {activeTab === "sales" && <TeacherStatementTab />}
             </motion.div>
           </div>
         )}

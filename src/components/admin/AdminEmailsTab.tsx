@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Mail, CheckCircle, XCircle, AlertTriangle, Clock, ChevronLeft, ChevronRight, ShieldAlert, Ban, Search, RefreshCw, Download, Undo2, Loader2, Cake, Tag } from "lucide-react";
+import { Mail, CheckCircle, XCircle, AlertTriangle, Clock, ChevronLeft, ChevronRight, ShieldAlert, Ban, Search, RefreshCw, Download, Undo2, Loader2, Cake, Tag, Heart, Send } from "lucide-react";
 import { maskEmail } from "@/lib/maskData";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
@@ -54,6 +54,24 @@ interface BirthdayLog {
   sent_at: string;
 }
 
+interface ReengagementLog {
+  id: string;
+  user_id: string;
+  recipient_email: string;
+  recipient_name: string | null;
+  template_key: string;
+  days_inactive: number | null;
+  metadata: any;
+  sent_at: string;
+}
+
+interface ReengagementConfig {
+  student_inactive_days: number;
+  teacher_inactive_days: number;
+  resend_interval_days: number;
+  enabled: boolean;
+}
+
 const PAGE_SIZE = 50;
 
 const TIME_RANGES = [
@@ -92,7 +110,7 @@ const AdminEmailsTab = () => {
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterTemplate, setFilterTemplate] = useState("all");
   const [page, setPage] = useState(0);
-  const [activeView, setActiveView] = useState<"emails" | "security" | "suppressed" | "birthdays">("emails");
+  const [activeView, setActiveView] = useState<"emails" | "security" | "suppressed" | "birthdays" | "reengagement">("emails");
   const [securityNotifs, setSecurityNotifs] = useState<SecurityNotification[]>([]);
   const [securityLoading, setSecurityLoading] = useState(false);
   const [suppressedEmails, setSuppressedEmails] = useState<SuppressedEmail[]>([]);
@@ -103,6 +121,17 @@ const AdminEmailsTab = () => {
   const [birthdayLoading, setBirthdayLoading] = useState(false);
   const [birthdayRangeDays, setBirthdayRangeDays] = useState(30);
   const [birthdayMonthly, setBirthdayMonthly] = useState<{ month: string; subscribers: number; nonSubscribers: number }[]>([]);
+  const [reengagementLogs, setReengagementLogs] = useState<ReengagementLog[]>([]);
+  const [reengagementLoading, setReengagementLoading] = useState(false);
+  const [reengagementRangeDays, setReengagementRangeDays] = useState(30);
+  const [reengagementCfg, setReengagementCfg] = useState<ReengagementConfig>({
+    student_inactive_days: 14,
+    teacher_inactive_days: 30,
+    resend_interval_days: 30,
+    enabled: true,
+  });
+  const [savingReengCfg, setSavingReengCfg] = useState(false);
+  const [triggeringReeng, setTriggeringReeng] = useState(false);
   const { toast } = useToast();
 
   const fetchLogs = async () => {
@@ -193,7 +222,61 @@ const AdminEmailsTab = () => {
     if (activeView === "security") fetchSecurityNotifs();
     if (activeView === "suppressed") fetchSuppressedEmails();
     if (activeView === "birthdays") fetchBirthdayLogs();
-  }, [activeView, birthdayRangeDays]);
+    if (activeView === "reengagement") fetchReengagementData();
+  }, [activeView, birthdayRangeDays, reengagementRangeDays]);
+
+  const fetchReengagementData = async () => {
+    setReengagementLoading(true);
+    const since = new Date(Date.now() - reengagementRangeDays * 86400000).toISOString();
+    const [{ data: logs }, { data: cfgRow }] = await Promise.all([
+      supabase
+        .from("reengagement_email_log" as any)
+        .select("*")
+        .gte("sent_at", since)
+        .order("sent_at", { ascending: false })
+        .limit(500),
+      supabase
+        .from("platform_settings")
+        .select("value")
+        .eq("key", "reengagement_config")
+        .maybeSingle(),
+    ]);
+    setReengagementLogs((logs as unknown as ReengagementLog[]) || []);
+    if (cfgRow?.value) {
+      setReengagementCfg({ ...reengagementCfg, ...(cfgRow.value as Partial<ReengagementConfig>) });
+    }
+    setReengagementLoading(false);
+  };
+
+  const saveReengagementCfg = async () => {
+    setSavingReengCfg(true);
+    const { error } = await supabase
+      .from("platform_settings")
+      .update({ value: reengagementCfg as any })
+      .eq("key", "reengagement_config");
+    if (error) {
+      toast({ title: "Erro ao salvar configuração", variant: "destructive" });
+    } else {
+      toast({ title: "Configuração salva!" });
+    }
+    setSavingReengCfg(false);
+  };
+
+  const triggerReengagementNow = async () => {
+    setTriggeringReeng(true);
+    const { data, error } = await supabase.functions.invoke("send-reengagement-emails", { body: {} });
+    if (error) {
+      toast({ title: "Erro ao disparar", description: error.message, variant: "destructive" });
+    } else {
+      const r = data as any;
+      toast({
+        title: "Disparo concluído",
+        description: `${r?.sent_students || 0} aluno(s) e ${r?.sent_teachers || 0} professor(es) processados.`,
+      });
+      fetchReengagementData();
+    }
+    setTriggeringReeng(false);
+  };
 
   const updateSecurityStatus = async (id: string, status: string) => {
     await supabase.from("security_notifications").update({ status }).eq("id", id);

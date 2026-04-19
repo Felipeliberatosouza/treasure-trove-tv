@@ -3,9 +3,19 @@ import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { MailX, CheckCircle, AlertCircle, Loader2, Mail } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { MailX, CheckCircle, AlertCircle, Loader2, Mail, MessageSquare } from "lucide-react";
 
 type Status = "loading" | "valid" | "already" | "invalid" | "success_all" | "success_marketing" | "error";
+type FeedbackState = "hidden" | "asking" | "submitting" | "submitted";
+const FEEDBACK_OPTIONS = [
+  { value: "too_many", label: "Recebo demais" },
+  { value: "not_relevant", label: "Não é relevante" },
+  { value: "never_signed_up", label: "Nunca me cadastrei" },
+  { value: "other", label: "Outro" },
+] as const;
 
 const Unsubscribe = () => {
   const [searchParams] = useSearchParams();

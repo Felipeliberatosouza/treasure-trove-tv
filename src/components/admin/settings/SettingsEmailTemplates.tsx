@@ -456,9 +456,9 @@ const SettingsEmailTemplates = () => {
                     ? "bg-primary-foreground/20 text-primary-foreground"
                     : "bg-amber-500/15 text-amber-700 dark:text-amber-400"
                 }`}
-                title="Enviado a professores e alunos SEM assinatura ativa. Pode incluir cupom."
+                title="Aluno SEM assinatura ativa. Inclui vídeo recomendado e pode ter cupom."
               >
-                Sem assinatura
+                Aluno sem assinatura
               </span>
             )}
             {t.template_key === "birthday_subscriber" && (
@@ -468,9 +468,21 @@ const SettingsEmailTemplates = () => {
                     ? "bg-primary-foreground/20 text-primary-foreground"
                     : "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400"
                 }`}
-                title="Enviado a alunos COM assinatura ativa. Não envia cupom."
+                title="Aluno COM assinatura ativa. Inclui vídeo recomendado. Não envia cupom."
               >
-                Assinatura ativa
+                Aluno assinante
+              </span>
+            )}
+            {t.template_key === "birthday_teacher" && (
+              <span
+                className={`ml-1 inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${
+                  activeKey === t.template_key
+                    ? "bg-primary-foreground/20 text-primary-foreground"
+                    : "bg-sky-500/15 text-sky-700 dark:text-sky-400"
+                }`}
+                title="Enviado a professores. Mensagem de agradecimento. Não envia cupom."
+              >
+                Professor
               </span>
             )}
           </button>
@@ -520,16 +532,17 @@ const SettingsEmailTemplates = () => {
             )}
           </div>
 
-          {/* Cupom de Desconto — não disponível para o template de aniversário de assinantes ativos */}
-          {activeKey === "birthday_subscriber" ? (
+          {/* Cupom de Desconto — não disponível para assinantes ativos nem para professores */}
+          {(activeKey === "birthday_subscriber" || activeKey === "birthday_teacher") ? (
             <div className="rounded-lg border border-border p-4 space-y-2 bg-muted/30">
               <h4 className="text-sm font-semibold flex items-center gap-2">
                 <Tag className="h-4 w-4" /> Cupom de Desconto
               </h4>
               <p className="text-xs text-muted-foreground">
-                Este template é destinado a alunos que <strong>já possuem assinatura ativa</strong>.
-                Por isso, não é possível incluir cupom de desconto. Para enviar cupom no aniversário,
-                use o template <strong>"Aniversário (Professores e Alunos sem Assinatura)"</strong>.
+                {activeKey === "birthday_subscriber"
+                  ? <>Este template é destinado a alunos que <strong>já possuem assinatura ativa</strong>. Por isso, não é possível incluir cupom de desconto. Para enviar cupom no aniversário, use o template <strong>"Aniversário (Aluno sem assinatura)"</strong>.</>
+                  : <>Este template é destinado a <strong>professores</strong>. Não é possível incluir cupom de desconto neste e-mail.</>
+                }
               </p>
             </div>
           ) : (

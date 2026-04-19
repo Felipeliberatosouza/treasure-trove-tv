@@ -20,7 +20,7 @@ Deno.serve(async (req: Request) => {
 
     const { data: birthdayUsers, error: queryError } = await supabase
       .from('profiles')
-      .select('user_id, name, email, birth_date')
+      .select('user_id, name, email, birth_date, areas')
       .not('birth_date', 'is', null)
 
     if (queryError) {
@@ -43,31 +43,39 @@ Deno.serve(async (req: Request) => {
       })
     }
 
-    // Carrega ambos os templates: tipo 1 (não-assinantes/professores, COM cupom) e tipo 2 (assinantes ativos, SEM cupom)
+    // Carrega os 3 templates: birthday (alunos sem assinatura), birthday_subscriber (alunos assinantes), birthday_teacher (professores)
     const { data: templates } = await supabase
       .from('email_templates')
       .select('template_key, subject, body_html, logo_url, show_social_footer, coupon_enabled, coupon_code, coupon_message, coupon_starts_at, coupon_expires_at')
-      .in('template_key', ['birthday', 'birthday_subscriber'])
+      .in('template_key', ['birthday', 'birthday_subscriber', 'birthday_teacher'])
 
-    const tplNoSub = templates?.find((t) => t.template_key === 'birthday')
-    const tplSub = templates?.find((t) => t.template_key === 'birthday_subscriber')
+    const tplStudentNoSub = templates?.find((t) => t.template_key === 'birthday')
+    const tplStudentSub = templates?.find((t) => t.template_key === 'birthday_subscriber')
+    const tplTeacher = templates?.find((t) => t.template_key === 'birthday_teacher')
 
-    if (!tplNoSub) {
+    if (!tplStudentNoSub) {
       return new Response(JSON.stringify({ error: 'Birthday template not found' }), {
         status: 404,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
 
-    // Identifica quais usuários têm assinatura ATIVA vigente (tipo 2)
     const userIds = todaysBirthdays.map((u) => u.user_id)
     const nowIso = new Date().toISOString()
-    const { data: activeSubs } = await supabase
-      .from('student_subscriptions')
-      .select('user_id, status, expires_at')
-      .in('user_id', userIds)
-      .eq('status', 'active')
 
+    // Identifica papéis (teacher) e assinaturas ativas
+    const [{ data: rolesData }, { data: activeSubs }] = await Promise.all([
+      supabase.from('user_roles').select('user_id, role').in('user_id', userIds),
+      supabase
+        .from('student_subscriptions')
+        .select('user_id, status, expires_at')
+        .in('user_id', userIds)
+        .eq('status', 'active'),
+    ])
+
+    const teacherUserIds = new Set(
+      (rolesData || []).filter((r) => r.role === 'teacher').map((r) => r.user_id),
+    )
     const activeSubUserIds = new Set(
       (activeSubs || [])
         .filter((s) => !s.expires_at || s.expires_at > nowIso)
@@ -113,25 +121,118 @@ Deno.serve(async (req: Request) => {
       `
     }
 
+    // Recomenda vídeo: mais assistido em alguma área de interesse do aluno e que ele AINDA NÃO viu.
+    // Estratégia: busca lessons aprovadas+publicadas que tenham ao menos 1 área de interesse do aluno;
+    // exclui as que o aluno já assistiu (video_views); rankeia por contagem total de views.
+    const recommendVideoForStudent = async (
+      userId: string,
+      areas: string[] | null | undefined,
+    ): Promise<{ id: string; title: string; thumbnail_url: string | null } | null> => {
+      if (!areas || areas.length === 0) return null
+      try {
+        // 1) Lessons elegíveis (aprovadas, publicadas, com áreas em comum)
+        const { data: candidates } = await supabase
+          .from('lessons')
+          .select('id, title, thumbnail_url, areas')
+          .eq('published', true)
+          .eq('admin_approved', true)
+          .overlaps('areas', areas)
+
+        if (!candidates || candidates.length === 0) return null
+
+        // 2) Vídeos já assistidos pelo aluno
+        const { data: viewedRows } = await supabase
+          .from('video_views')
+          .select('content_id')
+          .eq('user_id', userId)
+          .eq('content_type', 'lesson')
+        const viewedIds = new Set((viewedRows || []).map((v) => v.content_id))
+
+        const unseen = candidates.filter((c) => !viewedIds.has(c.id))
+        if (unseen.length === 0) return null
+
+        // 3) Conta views totais por lesson
+        const unseenIds = unseen.map((c) => c.id)
+        const { data: viewCounts } = await supabase
+          .from('video_views')
+          .select('content_id')
+          .eq('content_type', 'lesson')
+          .in('content_id', unseenIds)
+
+        const counts = new Map<string, number>()
+        for (const row of viewCounts || []) {
+          counts.set(row.content_id, (counts.get(row.content_id) || 0) + 1)
+        }
+
+        // 4) Ordena por views desc, desempata por título
+        unseen.sort((a, b) => {
+          const ca = counts.get(a.id) || 0
+          const cb = counts.get(b.id) || 0
+          if (cb !== ca) return cb - ca
+          return (a.title || '').localeCompare(b.title || '')
+        })
+
+        const top = unseen[0]
+        return { id: top.id, title: top.title, thumbnail_url: top.thumbnail_url }
+      } catch (e) {
+        console.error('recommendVideoForStudent error:', e)
+        return null
+      }
+    }
+
+    const buildRecommendedVideoBlock = (video: { id: string; title: string; thumbnail_url: string | null } | null) => {
+      if (!video) return ''
+      const url = `${loginLink}/video/lesson/${video.id}`
+      const thumbHtml = video.thumbnail_url
+        ? `<img src="${video.thumbnail_url}" alt="${video.title}" style="width:100%;max-width:480px;border-radius:8px;display:block;margin:0 auto 12px;" />`
+        : ''
+      return `
+        <div style="margin:24px auto;max-width:520px;padding:16px;border:1px solid #e5e7eb;border-radius:10px;background:#fafafa;text-align:center;">
+          <p style="margin:0 0 8px;font-size:13px;color:#6b7280;text-transform:uppercase;letter-spacing:1px;">🎁 Sugestão para você</p>
+          ${thumbHtml}
+          <p style="margin:0 0 12px;font-size:16px;font-weight:600;color:#1f2937;">${video.title}</p>
+          <a href="${url}" style="display:inline-block;padding:10px 20px;background:#4f46e5;color:#ffffff;text-decoration:none;border-radius:6px;font-weight:600;font-size:14px;">Assistir agora</a>
+        </div>
+      `
+    }
+
     let sentSubscriber = 0
     let sentNoSubscription = 0
+    let sentTeacher = 0
 
     for (const user of todaysBirthdays) {
-      const isActiveSubscriber = activeSubUserIds.has(user.user_id)
-      // Tipo 2 usa template do assinante (sem cupom). Tipo 1 (não-assinantes + professores) usa template padrão (pode ter cupom).
-      const tpl = isActiveSubscriber && tplSub ? tplSub : tplNoSub
+      const isTeacher = teacherUserIds.has(user.user_id)
+      const isActiveSubscriber = !isTeacher && activeSubUserIds.has(user.user_id)
+
+      // Seleção de template:
+      // - Professor → birthday_teacher (fallback: birthday)
+      // - Aluno com assinatura ativa → birthday_subscriber (fallback: birthday)
+      // - Demais → birthday
+      let tpl = tplStudentNoSub
+      if (isTeacher && tplTeacher) tpl = tplTeacher
+      else if (isActiveSubscriber && tplStudentSub) tpl = tplStudentSub
 
       const logoHtml = tpl.logo_url
         ? `<div style="text-align:center;margin-bottom:16px;"><img src="${tpl.logo_url}" alt="Logo" style="max-height:60px;max-width:200px;" /></div>`
         : ''
 
-      let body = (tpl.body_html || '')
-        .replace(/\{\{name\}\}/g, user.name || 'Estudante')
-        .replace(/\{\{login_link\}\}/g, loginLink)
+      // Vídeo recomendado: APENAS para alunos (não para professores)
+      let recommendedBlock = ''
+      if (!isTeacher) {
+        const video = await recommendVideoForStudent(user.user_id, user.areas as string[] | null)
+        recommendedBlock = buildRecommendedVideoBlock(video)
+      }
 
-      // Bloco de cupom — APENAS para tipo 1 (não-assinantes) e se habilitado/válido
+      let body = (tpl.body_html || '')
+        .replace(/\{\{name\}\}/g, user.name || (isTeacher ? 'Professor(a)' : 'Estudante'))
+        .replace(/\{\{login_link\}\}/g, loginLink)
+        .replace(/\{\{recommended_video_block\}\}/g, recommendedBlock)
+
+      // Cupom — APENAS para alunos sem assinatura ativa (template 'birthday') e se habilitado/válido.
+      // Professores e assinantes ativos NÃO recebem cupom.
       let couponHtml = ''
-      if (!isActiveSubscriber && tpl.coupon_enabled && tpl.coupon_code) {
+      const canIncludeCoupon = !isTeacher && !isActiveSubscriber && tpl.template_key === 'birthday'
+      if (canIncludeCoupon && tpl.coupon_enabled && tpl.coupon_code) {
         const now = Date.now()
         const startOk = !tpl.coupon_starts_at || new Date(tpl.coupon_starts_at).getTime() <= now
         const endOk = !tpl.coupon_expires_at || new Date(tpl.coupon_expires_at).getTime() >= now
@@ -157,12 +258,11 @@ Deno.serve(async (req: Request) => {
       const subject = (tpl.subject || '').replace(/\{\{name\}\}/g, user.name || 'Estudante')
 
       console.log(
-        `Birthday email queued [${isActiveSubscriber ? 'subscriber' : 'no_subscription'}] for ${user.email}: ${subject}`,
+        `Birthday email queued [${isTeacher ? 'teacher' : isActiveSubscriber ? 'subscriber' : 'no_subscription'}] for ${user.email}: ${subject}`,
       )
-      // Suprimir variável não-usada (HTML pronto para integração com provedor)
       void fullHtml
 
-      // Registra envio no log de auditoria
+      // Log de auditoria
       try {
         await supabase.from('birthday_email_log').insert({
           user_id: user.user_id,
@@ -172,22 +272,28 @@ Deno.serve(async (req: Request) => {
           is_active_subscriber: isActiveSubscriber,
           coupon_included: couponHtml.length > 0,
           coupon_code: couponHtml.length > 0 ? tpl.coupon_code : null,
-          metadata: { subject },
+          metadata: {
+            subject,
+            is_teacher: isTeacher,
+            recommended_video_included: recommendedBlock.length > 0,
+          },
         })
       } catch (logErr) {
         console.error('Failed to log birthday email:', logErr)
       }
 
-      if (isActiveSubscriber) sentSubscriber++
+      if (isTeacher) sentTeacher++
+      else if (isActiveSubscriber) sentSubscriber++
       else sentNoSubscription++
     }
 
     return new Response(
       JSON.stringify({
         message: 'Birthday emails processed',
-        sent: sentSubscriber + sentNoSubscription,
+        sent: sentSubscriber + sentNoSubscription + sentTeacher,
         sent_subscriber: sentSubscriber,
         sent_no_subscription: sentNoSubscription,
+        sent_teacher: sentTeacher,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     )

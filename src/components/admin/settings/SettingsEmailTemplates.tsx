@@ -40,6 +40,7 @@ const TEMPLATE_LABELS: Record<string, string> = {
   phone_verification: "Verificação por Celular",
   birthday: "Aniversário",
   birthday_subscriber: "Aniversário",
+  birthday_teacher: "Aniversário",
   doubt_approved: "Dúvida Aprovada (Professor)",
   doubt_answered: "Dúvida Respondida (Aluno)",
   doubt_submitted: "Dúvida Enviada (Aluno)",
@@ -58,8 +59,9 @@ const TEMPLATE_DESCRIPTIONS: Record<string, string> = {
   email_confirmation: "Enviado após verificação do celular, contém link de confirmação de cadastro.",
   welcome: "Enviado após o usuário confirmar o cadastro pelo link de e-mail.",
   phone_verification: "Mensagem com código de verificação enviada por SMS/WhatsApp.",
-  birthday: "Enviado no aniversário de PROFESSORES e ALUNOS SEM assinatura ativa (diariamente às 8h). Pode incluir cupom de desconto.",
-  birthday_subscriber: "Enviado no aniversário de ALUNOS COM assinatura ativa (diariamente às 8h). NÃO envia cupom de desconto.",
+  birthday: "Enviado no aniversário de ALUNOS SEM assinatura ativa (diariamente às 8h). Texto motivacional + vídeo recomendado da área de interesse + pode incluir cupom de desconto.",
+  birthday_subscriber: "Enviado no aniversário de ALUNOS COM assinatura ativa (diariamente às 8h). Texto motivacional + vídeo recomendado da área de interesse. NÃO envia cupom.",
+  birthday_teacher: "Enviado no aniversário de PROFESSORES (diariamente às 8h). Mensagem de parabéns e agradecimento pela parceria. NÃO envia cupom nem vídeo recomendado.",
   doubt_approved: "Enviado ao professor quando uma dúvida de aluno é aprovada pelo administrador.",
   doubt_answered: "Enviado ao aluno quando o professor responde sua dúvida.",
   doubt_submitted: "Mensagem exibida ao aluno após enviar uma dúvida.",
@@ -78,8 +80,9 @@ const TEMPLATE_VARS: Record<string, string[]> = {
   email_confirmation: ["{{name}}", "{{confirmation_link}}"],
   welcome: ["{{name}}", "{{login_link}}"],
   phone_verification: ["{{name}}", "{{code}}", "{{channel}}"],
-  birthday: ["{{name}}", "{{login_link}}"],
-  birthday_subscriber: ["{{name}}", "{{login_link}}"],
+  birthday: ["{{name}}", "{{login_link}}", "{{recommended_video_block}}"],
+  birthday_subscriber: ["{{name}}", "{{login_link}}", "{{recommended_video_block}}"],
+  birthday_teacher: ["{{name}}", "{{login_link}}"],
   doubt_approved: ["{{teacher_name}}", "{{student_name}}", "{{question}}", "{{content_title}}", "{{deadline_days}}"],
   doubt_answered: ["{{student_name}}", "{{teacher_name}}", "{{question}}", "{{answer}}", "{{content_title}}"],
   doubt_submitted: ["{{student_name}}"],
@@ -453,9 +456,9 @@ const SettingsEmailTemplates = () => {
                     ? "bg-primary-foreground/20 text-primary-foreground"
                     : "bg-amber-500/15 text-amber-700 dark:text-amber-400"
                 }`}
-                title="Enviado a professores e alunos SEM assinatura ativa. Pode incluir cupom."
+                title="Aluno SEM assinatura ativa. Inclui vídeo recomendado e pode ter cupom."
               >
-                Sem assinatura
+                Aluno sem assinatura
               </span>
             )}
             {t.template_key === "birthday_subscriber" && (
@@ -465,9 +468,21 @@ const SettingsEmailTemplates = () => {
                     ? "bg-primary-foreground/20 text-primary-foreground"
                     : "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400"
                 }`}
-                title="Enviado a alunos COM assinatura ativa. Não envia cupom."
+                title="Aluno COM assinatura ativa. Inclui vídeo recomendado. Não envia cupom."
               >
-                Assinatura ativa
+                Aluno assinante
+              </span>
+            )}
+            {t.template_key === "birthday_teacher" && (
+              <span
+                className={`ml-1 inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${
+                  activeKey === t.template_key
+                    ? "bg-primary-foreground/20 text-primary-foreground"
+                    : "bg-sky-500/15 text-sky-700 dark:text-sky-400"
+                }`}
+                title="Enviado a professores. Mensagem de agradecimento. Não envia cupom."
+              >
+                Professor
               </span>
             )}
           </button>
@@ -517,16 +532,17 @@ const SettingsEmailTemplates = () => {
             )}
           </div>
 
-          {/* Cupom de Desconto — não disponível para o template de aniversário de assinantes ativos */}
-          {activeKey === "birthday_subscriber" ? (
+          {/* Cupom de Desconto — não disponível para assinantes ativos nem para professores */}
+          {(activeKey === "birthday_subscriber" || activeKey === "birthday_teacher") ? (
             <div className="rounded-lg border border-border p-4 space-y-2 bg-muted/30">
               <h4 className="text-sm font-semibold flex items-center gap-2">
                 <Tag className="h-4 w-4" /> Cupom de Desconto
               </h4>
               <p className="text-xs text-muted-foreground">
-                Este template é destinado a alunos que <strong>já possuem assinatura ativa</strong>.
-                Por isso, não é possível incluir cupom de desconto. Para enviar cupom no aniversário,
-                use o template <strong>"Aniversário (Professores e Alunos sem Assinatura)"</strong>.
+                {activeKey === "birthday_subscriber"
+                  ? <>Este template é destinado a alunos que <strong>já possuem assinatura ativa</strong>. Por isso, não é possível incluir cupom de desconto. Para enviar cupom no aniversário, use o template <strong>"Aniversário (Aluno sem assinatura)"</strong>.</>
+                  : <>Este template é destinado a <strong>professores</strong>. Não é possível incluir cupom de desconto neste e-mail.</>
+                }
               </p>
             </div>
           ) : (

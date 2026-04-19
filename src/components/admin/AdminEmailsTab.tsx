@@ -715,6 +715,37 @@ const AdminEmailsTab = () => {
             </Card>
           </div>
 
+          {/* Monthly chart - last 12 months */}
+          <Card>
+            <CardContent className="pt-4 pb-3 px-4">
+              <div className="mb-3">
+                <h3 className="text-sm font-semibold">Envios por mês (últimos 12 meses)</h3>
+                <p className="text-xs text-muted-foreground">Comparativo entre assinantes ativos e usuários sem assinatura.</p>
+              </div>
+              {birthdayMonthly.every(m => m.subscribers === 0 && m.nonSubscribers === 0) ? (
+                <p className="text-sm text-muted-foreground text-center py-8">Sem envios registrados nos últimos 12 meses.</p>
+              ) : (
+                <ChartContainer
+                  config={{
+                    subscribers: { label: "Assinantes ativos", color: "hsl(var(--primary))" },
+                    nonSubscribers: { label: "Sem assinatura", color: "hsl(var(--accent))" },
+                  }}
+                  className="h-[240px] w-full"
+                >
+                  <BarChart data={birthdayMonthly} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                    <CartesianGrid vertical={false} strokeDasharray="3 3" />
+                    <XAxis dataKey="month" tickLine={false} axisLine={false} fontSize={11} />
+                    <YAxis allowDecimals={false} tickLine={false} axisLine={false} fontSize={11} width={28} />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <ChartLegend content={<ChartLegendContent />} />
+                    <Bar dataKey="nonSubscribers" stackId="a" fill="var(--color-nonSubscribers)" radius={[0, 0, 4, 4]} />
+                    <Bar dataKey="subscribers" stackId="a" fill="var(--color-subscribers)" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ChartContainer>
+              )}
+            </CardContent>
+          </Card>
+
           {/* Filters */}
           <div className="flex gap-2 flex-wrap items-center">
             <div className="flex gap-1">

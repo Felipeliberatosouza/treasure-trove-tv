@@ -358,7 +358,7 @@ const Index = () => {
               ) : (
                 popularVideos.length > 0 && (
                   <VideoCarousel
-                    title="🔥 Mais Populares"
+                    title="✨ Recomendado para você"
                     videos={popularVideos}
                     onVideoClick={handleVideoClick}
                     showTrialBadge={showTrialBadge}

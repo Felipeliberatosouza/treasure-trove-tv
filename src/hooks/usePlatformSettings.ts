@@ -60,6 +60,7 @@ export const emptyHeroSlide = (): HeroBannerSettings => ({
   cta_text: "",
   cta_link: "",
   banner_image_url: "",
+  color_scheme: "light",
 });
 
 /** Coerces legacy single-slide shape `{ title, subtitle, ... }` into the new

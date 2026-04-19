@@ -131,6 +131,7 @@ const SalesBoostTab = () => {
   const [imageDataUrl, setImageDataUrl] = useState<string>("");
   const [caption, setCaption] = useState<string>("");
   const [slug, setSlug] = useState<string>("");
+  const [template, setTemplate] = useState<TemplateKey>("colorful");
 
   const MIN_SEL = 3;
   const MAX_SEL = 5;

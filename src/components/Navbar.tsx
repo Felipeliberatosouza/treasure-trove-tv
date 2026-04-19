@@ -42,6 +42,16 @@ const loggedMenuItems = [
   { label: "Aula Particular: Agende/Acesse", href: "/minhas-aulas-agendadas" },
 ];
 
+const teacherMenuItems = [
+  { label: "Minhas Revisões: Gravar Nova Aula", href: "/dashboard/teacher?tab=lessons" },
+  { label: "Responder Dúvidas de Alunos", href: "/dashboard/teacher?tab=doubts" },
+  { label: "Aula Particular: Agende/Acesse", href: "/minhas-aulas-agendadas" },
+  { label: "Meus Resumos", href: "/meus-resumos" },
+  { label: "Meus Simulados", href: "/meus-simulados" },
+  { label: "Minhas Top Questões de Provas", href: "/minhas-top-questoes" },
+  { label: "Minhas Colinhas", href: "/minhas-colinhas" },
+];
+
 const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -51,13 +61,17 @@ const Navbar = () => {
   const searchInputRef = useRef<HTMLInputElement>(null);
   const searchContainerRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, role } = useAuth();
   const { settings } = useAllPlatformSettings();
   const branding = settings.branding as BrandingSettings | undefined;
   const { isActive: hasActiveSubscription } = useActiveSubscription();
 
-  const baseMenu = user ? loggedMenuItems : publicMenuItems;
-  const menuItems = user && hasActiveSubscription
+  const baseMenu = user
+    ? role === "teacher"
+      ? teacherMenuItems
+      : loggedMenuItems
+    : publicMenuItems;
+  const menuItems = user && role !== "teacher" && hasActiveSubscription
     ? [subscriberMenuItem, ...baseMenu]
     : baseMenu;
 

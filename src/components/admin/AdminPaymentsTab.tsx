@@ -55,6 +55,17 @@ const AdminPaymentsTab = () => {
     notes: "",
   });
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingPayment, setEditingPayment] = useState<Payment | null>(null);
+  const [editForm, setEditForm] = useState({
+    period_start: "",
+    period_end: "",
+    payment_type: "subscription",
+    gross_amount: "",
+    platform_fee: "",
+    net_amount: "",
+    status: "pending",
+    notes: "",
+  });
 
   const fetchData = async () => {
     setLoading(true);

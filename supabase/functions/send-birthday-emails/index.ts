@@ -121,26 +121,41 @@ Deno.serve(async (req: Request) => {
       `
     }
 
-    // Recomenda vídeo: mais assistido em alguma área de interesse do aluno e que ele AINDA NÃO viu.
-    // Estratégia: busca lessons aprovadas+publicadas que tenham ao menos 1 área de interesse do aluno;
-    // exclui as que o aluno já assistiu (video_views); rankeia por contagem total de views.
+    // Helper: rankeia uma lista de candidatos por views totais (desc), desempata por título
+    const rankByViews = async (
+      candidates: Array<{ id: string; title: string; thumbnail_url: string | null }>,
+    ) => {
+      const ids = candidates.map((c) => c.id)
+      const { data: viewCounts } = await supabase
+        .from('video_views')
+        .select('content_id')
+        .eq('content_type', 'lesson')
+        .in('content_id', ids)
+      const counts = new Map<string, number>()
+      for (const row of viewCounts || []) {
+        counts.set(row.content_id, (counts.get(row.content_id) || 0) + 1)
+      }
+      return [...candidates].sort((a, b) => {
+        const ca = counts.get(a.id) || 0
+        const cb = counts.get(b.id) || 0
+        if (cb !== ca) return cb - ca
+        return (a.title || '').localeCompare(b.title || '')
+      })
+    }
+
+    // Recomenda vídeo: prioriza áreas de interesse e exclui já assistidos.
+    // Fallback: quando não há áreas OU nenhum vídeo elegível nas áreas, retorna o vídeo
+    // mais assistido geral da plataforma que o aluno ainda não viu.
+    // Retorna também o tipo de recomendação para fins de log/telemetria.
     const recommendVideoForStudent = async (
       userId: string,
       areas: string[] | null | undefined,
-    ): Promise<{ id: string; title: string; thumbnail_url: string | null } | null> => {
-      if (!areas || areas.length === 0) return null
+    ): Promise<{
+      video: { id: string; title: string; thumbnail_url: string | null } | null
+      source: 'interest_area' | 'global_fallback' | 'none'
+    }> => {
       try {
-        // 1) Lessons elegíveis (aprovadas, publicadas, com áreas em comum)
-        const { data: candidates } = await supabase
-          .from('lessons')
-          .select('id, title, thumbnail_url, areas')
-          .eq('published', true)
-          .eq('admin_approved', true)
-          .overlaps('areas', areas)
-
-        if (!candidates || candidates.length === 0) return null
-
-        // 2) Vídeos já assistidos pelo aluno
+        // Vídeos já assistidos pelo aluno (usado em ambas as estratégias)
         const { data: viewedRows } = await supabase
           .from('video_views')
           .select('content_id')
@@ -148,47 +163,64 @@ Deno.serve(async (req: Request) => {
           .eq('content_type', 'lesson')
         const viewedIds = new Set((viewedRows || []).map((v) => v.content_id))
 
-        const unseen = candidates.filter((c) => !viewedIds.has(c.id))
-        if (unseen.length === 0) return null
+        // 1) Tenta recomendar dentro das áreas de interesse
+        if (areas && areas.length > 0) {
+          const { data: areaCandidates } = await supabase
+            .from('lessons')
+            .select('id, title, thumbnail_url')
+            .eq('published', true)
+            .eq('admin_approved', true)
+            .overlaps('areas', areas)
 
-        // 3) Conta views totais por lesson
-        const unseenIds = unseen.map((c) => c.id)
-        const { data: viewCounts } = await supabase
-          .from('video_views')
-          .select('content_id')
-          .eq('content_type', 'lesson')
-          .in('content_id', unseenIds)
-
-        const counts = new Map<string, number>()
-        for (const row of viewCounts || []) {
-          counts.set(row.content_id, (counts.get(row.content_id) || 0) + 1)
+          const unseenInAreas = (areaCandidates || []).filter((c) => !viewedIds.has(c.id))
+          if (unseenInAreas.length > 0) {
+            const ranked = await rankByViews(unseenInAreas)
+            const top = ranked[0]
+            return {
+              video: { id: top.id, title: top.title, thumbnail_url: top.thumbnail_url },
+              source: 'interest_area',
+            }
+          }
         }
 
-        // 4) Ordena por views desc, desempata por título
-        unseen.sort((a, b) => {
-          const ca = counts.get(a.id) || 0
-          const cb = counts.get(b.id) || 0
-          if (cb !== ca) return cb - ca
-          return (a.title || '').localeCompare(b.title || '')
-        })
+        // 2) Fallback global: vídeo mais assistido da plataforma que o aluno ainda não viu
+        const { data: allCandidates } = await supabase
+          .from('lessons')
+          .select('id, title, thumbnail_url')
+          .eq('published', true)
+          .eq('admin_approved', true)
 
-        const top = unseen[0]
-        return { id: top.id, title: top.title, thumbnail_url: top.thumbnail_url }
+        const unseenGlobal = (allCandidates || []).filter((c) => !viewedIds.has(c.id))
+        if (unseenGlobal.length === 0) return { video: null, source: 'none' }
+
+        const rankedGlobal = await rankByViews(unseenGlobal)
+        const topGlobal = rankedGlobal[0]
+        return {
+          video: { id: topGlobal.id, title: topGlobal.title, thumbnail_url: topGlobal.thumbnail_url },
+          source: 'global_fallback',
+        }
       } catch (e) {
         console.error('recommendVideoForStudent error:', e)
-        return null
+        return { video: null, source: 'none' }
       }
     }
 
-    const buildRecommendedVideoBlock = (video: { id: string; title: string; thumbnail_url: string | null } | null) => {
+    const buildRecommendedVideoBlock = (
+      video: { id: string; title: string; thumbnail_url: string | null } | null,
+      source: 'interest_area' | 'global_fallback' | 'none',
+    ) => {
       if (!video) return ''
       const url = `${loginLink}/video/lesson/${video.id}`
       const thumbHtml = video.thumbnail_url
         ? `<img src="${video.thumbnail_url}" alt="${video.title}" style="width:100%;max-width:480px;border-radius:8px;display:block;margin:0 auto 12px;" />`
         : ''
+      const heading =
+        source === 'interest_area'
+          ? '🎁 Sugestão para você'
+          : '🔥 Em alta na plataforma'
       return `
         <div style="margin:24px auto;max-width:520px;padding:16px;border:1px solid #e5e7eb;border-radius:10px;background:#fafafa;text-align:center;">
-          <p style="margin:0 0 8px;font-size:13px;color:#6b7280;text-transform:uppercase;letter-spacing:1px;">🎁 Sugestão para você</p>
+          <p style="margin:0 0 8px;font-size:13px;color:#6b7280;text-transform:uppercase;letter-spacing:1px;">${heading}</p>
           ${thumbHtml}
           <p style="margin:0 0 12px;font-size:16px;font-weight:600;color:#1f2937;">${video.title}</p>
           <a href="${url}" style="display:inline-block;padding:10px 20px;background:#4f46e5;color:#ffffff;text-decoration:none;border-radius:6px;font-weight:600;font-size:14px;">Assistir agora</a>
@@ -218,9 +250,16 @@ Deno.serve(async (req: Request) => {
 
       // Vídeo recomendado: APENAS para alunos (não para professores)
       let recommendedBlock = ''
+      let recommendedSource: 'interest_area' | 'global_fallback' | 'none' = 'none'
+      let recommendedVideoId: string | null = null
       if (!isTeacher) {
-        const video = await recommendVideoForStudent(user.user_id, user.areas as string[] | null)
-        recommendedBlock = buildRecommendedVideoBlock(video)
+        const { video, source } = await recommendVideoForStudent(
+          user.user_id,
+          user.areas as string[] | null,
+        )
+        recommendedSource = source
+        recommendedVideoId = video?.id ?? null
+        recommendedBlock = buildRecommendedVideoBlock(video, source)
       }
 
       let body = (tpl.body_html || '')
@@ -276,6 +315,8 @@ Deno.serve(async (req: Request) => {
             subject,
             is_teacher: isTeacher,
             recommended_video_included: recommendedBlock.length > 0,
+            recommended_video_id: recommendedVideoId,
+            recommended_video_source: recommendedSource,
           },
         })
       } catch (logErr) {

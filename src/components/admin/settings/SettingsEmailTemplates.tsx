@@ -493,7 +493,19 @@ const SettingsEmailTemplates = () => {
             )}
           </div>
 
-          {/* Cupom de Desconto */}
+          {/* Cupom de Desconto — não disponível para o template de aniversário de assinantes ativos */}
+          {activeKey === "birthday_subscriber" ? (
+            <div className="rounded-lg border border-border p-4 space-y-2 bg-muted/30">
+              <h4 className="text-sm font-semibold flex items-center gap-2">
+                <Tag className="h-4 w-4" /> Cupom de Desconto
+              </h4>
+              <p className="text-xs text-muted-foreground">
+                Este template é destinado a alunos que <strong>já possuem assinatura ativa</strong>.
+                Por isso, não é possível incluir cupom de desconto. Para enviar cupom no aniversário,
+                use o template <strong>"Aniversário (Professores e Alunos sem Assinatura)"</strong>.
+              </p>
+            </div>
+          ) : (
           <div className="rounded-lg border border-border p-4 space-y-3">
             <h4 className="text-sm font-semibold flex items-center gap-2">
               <Tag className="h-4 w-4" /> Cupom de Desconto

@@ -121,6 +121,7 @@ const AdminDashboard = () => {
             {activeTab === "cancellation-reasons" && <AdminCancellationReasonsTab />}
             {activeTab === "cancellation-receipts" && <AdminCancellationReceiptsTab />}
             {activeTab === "commitment-refunds" && <AdminCommitmentRefundsTab />}
+            {activeTab === "cancellations" && <AdminCancellationsTab />}
             {activeTab === "security" && <AdminSecurityTab />}
             {activeTab === "audit" && <AdminAuditLogsTab />}
             {activeTab === "login-attempts" && <AdminLoginAttemptsTab />}

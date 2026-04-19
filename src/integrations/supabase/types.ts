@@ -713,6 +713,7 @@ export type Database = {
           email_verified: boolean | null
           expertise_area: string | null
           id: string
+          monthly_content_goal: number | null
           name: string
           phone: string | null
           phone_verified: boolean
@@ -737,6 +738,7 @@ export type Database = {
           email_verified?: boolean | null
           expertise_area?: string | null
           id?: string
+          monthly_content_goal?: number | null
           name: string
           phone?: string | null
           phone_verified?: boolean
@@ -761,6 +763,7 @@ export type Database = {
           email_verified?: boolean | null
           expertise_area?: string | null
           id?: string
+          monthly_content_goal?: number | null
           name?: string
           phone?: string | null
           phone_verified?: boolean

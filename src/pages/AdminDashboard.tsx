@@ -37,6 +37,7 @@ const tabs = [
   { id: "pricing", label: "Preço de Recursos", icon: Tag },
   { id: "usage", label: "Histórico de Uso", icon: BarChart3 },
   { id: "emails", label: "Monitoramento de E-mails", icon: Mail },
+  { id: "sales-posts", label: "Posts de Divulgação", icon: Megaphone },
   { id: "security", label: "Segurança", icon: Shield },
   { id: "audit", label: "Logs de Auditoria", icon: FileText },
   { id: "settings", label: "Configurações", icon: Settings },

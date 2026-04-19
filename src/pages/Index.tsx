@@ -6,7 +6,7 @@ import VideoCarousel from "@/components/VideoCarousel";
 import PricingSection from "@/components/PricingSection";
 import Footer from "@/components/Footer";
 import WhatsAppFloat from "@/components/WhatsAppFloat";
-import TeacherBanner from "@/components/TeacherBanner";
+import SecondaryBanner from "@/components/SecondaryBanner";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import { useHomepageAreas } from "@/hooks/useCourseAreas";
 import { supabase } from "@/integrations/supabase/client";
@@ -306,7 +306,7 @@ const Index = () => {
       <div id="pricing">
         <PricingSection />
       </div>
-      <TeacherBanner />
+      <SecondaryBanner />
       <Footer />
       <WhatsAppFloat />
     </div>

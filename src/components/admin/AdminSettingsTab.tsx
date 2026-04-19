@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Settings, Palette, Phone, FileText, Star, Layout, Gift, FolderOpen, Mail, Package, FileSignature, Smartphone, Heart, GraduationCap, Users } from "lucide-react";
+import { Settings, Palette, Phone, FileText, Star, Layout, Gift, FolderOpen, Mail, Package, FileSignature, Smartphone, Heart, GraduationCap, Users, Megaphone } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import SettingsBranding from "./settings/SettingsBranding";
@@ -10,7 +10,7 @@ import SettingsFeaturedVideos from "./settings/SettingsFeaturedVideos";
 import SettingsFreeTrial from "./settings/SettingsFreeTrial";
 import SettingsCourseAreas from "./settings/SettingsCourseAreas";
 import SettingsEmailTemplates from "./settings/SettingsEmailTemplates";
-import SettingsTeacherBanner from "./settings/SettingsTeacherBanner";
+
 import SettingsProductConfig from "./settings/SettingsProductConfig";
 import SettingsTeacherContract from "./settings/SettingsTeacherContract";
 import SettingsTwilio from "./settings/SettingsTwilio";
@@ -24,7 +24,9 @@ const sections = [
   { id: "hero", label: "Banner Visitante", icon: Layout },
   { id: "hero_student", label: "Banner Aluno", icon: GraduationCap },
   { id: "hero_teacher", label: "Banner Professor (logado)", icon: Users },
-  { id: "teacher_banner", label: "Banner Recrutamento", icon: Layout },
+  { id: "secondary", label: "Banner Secundário Visitante", icon: Megaphone },
+  { id: "secondary_student", label: "Banner Secundário Aluno", icon: Megaphone },
+  { id: "secondary_teacher", label: "Banner Secundário Professor", icon: Megaphone },
   { id: "featured", label: "Vídeos em Destaque", icon: Star },
   { id: "areas", label: "Áreas de Cursos", icon: FolderOpen },
   { id: "trial", label: "Teste Grátis", icon: Gift },
@@ -84,7 +86,24 @@ const AdminSettingsTab = () => {
           description="Banner exibido na home para professores logados. Também aparece como um dos slides do carrossel da home do administrador."
         />
       )}
-      {activeSection === "teacher_banner" && <SettingsTeacherBanner />}
+      {activeSection === "secondary" && (
+        <SettingsHeroBanner
+          settingsKey="secondary_banner"
+          description="Banner secundário (acima do rodapé) exibido para visitantes (não logados). O administrador vê os banners de aluno e professor em um carrossel automático."
+        />
+      )}
+      {activeSection === "secondary_student" && (
+        <SettingsHeroBanner
+          settingsKey="secondary_banner_student"
+          description="Banner secundário (acima do rodapé) exibido para alunos logados. Também aparece como um dos slides do carrossel do administrador."
+        />
+      )}
+      {activeSection === "secondary_teacher" && (
+        <SettingsHeroBanner
+          settingsKey="secondary_banner_teacher"
+          description="Banner secundário (acima do rodapé) exibido para professores logados. Também aparece como um dos slides do carrossel do administrador."
+        />
+      )}
       {activeSection === "featured" && <SettingsFeaturedVideos />}
       {activeSection === "areas" && <SettingsCourseAreas />}
       {activeSection === "trial" && <SettingsFreeTrial />}

@@ -42,6 +42,9 @@ export interface HeroBannerSettings {
 export interface HeroBannerCarouselSettings {
   slides: HeroBannerSettings[];
   autoplay_seconds: number;
+  /** Optional toggle. When false, the section is hidden entirely.
+   *  Used by the secondary banner (per role); the main hero ignores it. */
+  enabled?: boolean;
 }
 
 export const MAX_HERO_SLIDES = 5;
@@ -73,6 +76,7 @@ export const normalizeHeroCarousel = (
           typeof obj.autoplay_seconds === "number" && obj.autoplay_seconds > 0
             ? obj.autoplay_seconds
             : DEFAULT_HERO_AUTOPLAY_SECONDS,
+        enabled: typeof obj.enabled === "boolean" ? obj.enabled : true,
       };
     }
     if (
@@ -92,12 +96,14 @@ export const normalizeHeroCarousel = (
           },
         ],
         autoplay_seconds: DEFAULT_HERO_AUTOPLAY_SECONDS,
+        enabled: true,
       };
     }
   }
   return {
     slides: [emptyHeroSlide()],
     autoplay_seconds: DEFAULT_HERO_AUTOPLAY_SECONDS,
+    enabled: true,
   };
 };
 

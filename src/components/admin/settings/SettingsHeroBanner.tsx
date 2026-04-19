@@ -178,9 +178,12 @@ const SettingsHeroBanner = ({
                   : "border-border bg-background text-muted-foreground hover:text-foreground"
               }`}
             >
-              <button type="button" onClick={() => setActiveIndex(i)} className="px-1 font-medium">
-                Slide {i + 1}
-                {slide.title && <span className="hidden md:inline"> · {slide.title.slice(0, 18)}</span>}
+              <button type="button" onClick={() => setActiveIndex(i)} className="px-1 font-medium flex items-center gap-1.5">
+                <span>
+                  Slide {i + 1}
+                  {slide.title && <span className="hidden md:inline"> · {slide.title.slice(0, 18)}</span>}
+                </span>
+                <ScheduleBadge status={getSlideScheduleStatus(slide, now)} />
               </button>
               <button
                 type="button"

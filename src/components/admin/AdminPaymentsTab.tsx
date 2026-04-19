@@ -477,33 +477,63 @@ const AdminPaymentsTab = () => {
         <Button
           size="sm"
           variant="outline"
-          onClick={async () => {
-            const ok = window.confirm(
-              "Isso irá recalcular os valores brutos, taxa e líquidos dos pagamentos pendentes a partir das compras reais (video_purchases) usando os preços por recurso e a % da plataforma. Pagamentos já marcados como pagos não serão alterados. Continuar?"
-            );
-            if (!ok) return;
-            toast({ title: "Recalculando...", description: "Processando compras dos últimos 12 meses." });
-            const { data, error } = await supabase.functions.invoke("recompute-teacher-payments", { body: {} });
-            if (error || (data as any)?.error) {
-              toast({
-                title: "Erro",
-                description: (data as any)?.error || error?.message || "Falha ao recalcular.",
-                variant: "destructive",
-              });
-              return;
-            }
-            const d = data as any;
-            toast({
-              title: "Recálculo concluído",
-              description: `${d.purchases_processed} compras processadas em ${d.buckets} períodos. Atualizado: ${d.results.filter((r: any) => r.action === "updated").length}, criado: ${d.results.filter((r: any) => r.action === "inserted").length}, ignorado (pago): ${d.results.filter((r: any) => r.action === "skipped_paid").length}.`,
-            });
-            fetchData();
-          }}
+          onClick={() => setRecomputeOpen(true)}
           className="ml-auto"
         >
           <RefreshCw className="h-4 w-4 mr-1" /> Recalcular a partir de compras reais
         </Button>
       </div>
+
+      <Dialog open={recomputeOpen} onOpenChange={setRecomputeOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Recalcular pagamentos</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div>
+              <Label>Professor</Label>
+              <Select value={recomputeTeacherId} onValueChange={setRecomputeTeacherId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Todos os professores" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os professores</SelectItem>
+                  {metrics.map((m) => (
+                    <SelectItem key={m.teacher_id} value={m.teacher_id}>
+                      {m.teacher_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Início</Label>
+                <Input type="date" value={recomputeStart} onChange={(e) => setRecomputeStart(e.target.value)} />
+              </div>
+              <div>
+                <Label>Fim</Label>
+                <Input type="date" value={recomputeEnd} onChange={(e) => setRecomputeEnd(e.target.value)} />
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Calcula pagamentos a partir das compras reais usando preços por recurso e % da plataforma.
+              Pagamentos já marcados como pagos não são alterados.
+            </p>
+          </div>
+          <div className="flex gap-2 justify-end">
+            <Button variant="outline" onClick={() => setRecomputeOpen(false)} disabled={recomputeLoading}>
+              Cancelar
+            </Button>
+            <Button variant="outline" onClick={() => handleRecompute(true)} disabled={recomputeLoading}>
+              Pré-visualizar
+            </Button>
+            <Button onClick={() => handleRecompute(false)} disabled={recomputeLoading}>
+              {recomputeLoading ? "Processando..." : "Confirmar recálculo"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {loading ? (
         <p className="text-sm text-muted-foreground">Carregando...</p>

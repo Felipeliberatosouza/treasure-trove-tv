@@ -22,6 +22,7 @@ import AdminLoginAttemptsTab from "@/components/admin/AdminLoginAttemptsTab";
 import AdminCancellationReasonsTab from "@/components/admin/AdminCancellationReasonsTab";
 import AdminCancellationReceiptsTab from "@/components/admin/AdminCancellationReceiptsTab";
 import AdminCommitmentRefundsTab from "@/components/admin/AdminCommitmentRefundsTab";
+import AdminCancellationsTab from "@/components/admin/AdminCancellationsTab";
 import AdminResourcePricingTab from "@/components/admin/AdminResourcePricingTab";
 import AdminUsageHistoryTab from "@/components/admin/AdminUsageHistoryTab";
 

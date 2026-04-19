@@ -13,7 +13,7 @@ import { useHomepageAreas } from "@/hooks/useCourseAreas";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Search, Loader2 } from "lucide-react";
+import { Search, Loader2, Sparkles } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { AnimatePresence, motion } from "framer-motion";
 import type { Video } from "@/data/courses";
@@ -355,15 +355,37 @@ const Index = () => {
                   <Loader2 className="h-5 w-5 animate-spin" />
                   <span className="text-sm">Carregando vídeos populares...</span>
                 </div>
+              ) : popularVideos.length > 0 ? (
+                <VideoCarousel
+                  title="✨ Recomendado para você"
+                  videos={popularVideos}
+                  onVideoClick={handleVideoClick}
+                  showTrialBadge={showTrialBadge}
+                  watchedIds={watchedIds}
+                />
               ) : (
-                popularVideos.length > 0 && (
-                  <VideoCarousel
-                    title="✨ Recomendado para você"
-                    videos={popularVideos}
-                    onVideoClick={handleVideoClick}
-                    showTrialBadge={showTrialBadge}
-                    watchedIds={watchedIds}
-                  />
+                user && role === "student" && (!profile?.areas || profile.areas.length === 0) && (
+                  <div className="px-6 md:px-12 lg:px-20">
+                    <div className="rounded-xl border border-primary/30 bg-gradient-to-br from-primary/10 via-card to-card p-6 md:p-8 flex flex-col md:flex-row items-start md:items-center gap-4 md:gap-6">
+                      <div className="h-12 w-12 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
+                        <Sparkles className="h-6 w-6 text-primary" />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="font-display text-lg font-semibold mb-1">
+                          Personalize suas recomendações
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          Selecione até 3 áreas de interesse e a gente te mostra os melhores conteúdos para você aqui na home.
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => navigate("/dashboard/student?tab=interests")}
+                        className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors whitespace-nowrap"
+                      >
+                        Configurar áreas
+                      </button>
+                    </div>
+                  </div>
                 )
               )}
             </div>

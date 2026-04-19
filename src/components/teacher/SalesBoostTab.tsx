@@ -11,6 +11,9 @@ import {
   MessageCircle,
   Loader2,
   ExternalLink,
+  GripVertical,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
@@ -187,10 +190,51 @@ const SalesBoostTab = () => {
     fetchAll();
   }, [user?.id]);
 
-  const selectedContents = useMemo(
-    () => contents.filter((c) => selectedIds.includes(c.id)),
-    [contents, selectedIds]
-  );
+  // Preserve selection order (drag-and-drop driven)
+  const selectedContents = useMemo(() => {
+    const map = new Map(contents.map((c) => [c.id, c]));
+    return selectedIds.map((id) => map.get(id)).filter(Boolean) as ContentItem[];
+  }, [contents, selectedIds]);
+
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+
+  const handleDragStart = (i: number) => (e: React.DragEvent) => {
+    setDragIndex(i);
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", String(i));
+  };
+  const handleDragOver = (i: number) => (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    setDragOverIndex(i);
+  };
+  const handleDrop = (i: number) => (e: React.DragEvent) => {
+    e.preventDefault();
+    const from = dragIndex;
+    setDragIndex(null);
+    setDragOverIndex(null);
+    if (from === null || from === i) return;
+    setSelectedIds((prev) => {
+      const next = [...prev];
+      const [moved] = next.splice(from, 1);
+      next.splice(i, 0, moved);
+      return next;
+    });
+  };
+  const handleDragEnd = () => {
+    setDragIndex(null);
+    setDragOverIndex(null);
+  };
+  const moveItem = (from: number, to: number) => {
+    if (to < 0 || to >= selectedIds.length) return;
+    setSelectedIds((prev) => {
+      const next = [...prev];
+      const [moved] = next.splice(from, 1);
+      next.splice(to, 0, moved);
+      return next;
+    });
+  };
 
   const toggleSelect = (id: string) => {
     setSelectedIds((prev) => {
@@ -597,6 +641,72 @@ const SalesBoostTab = () => {
               </div>
             )}
           </div>
+
+          {/* Reorder selected contents */}
+          {selectedContents.length > 0 && (
+            <div className="rounded-lg border border-border bg-background/50 p-3">
+              <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
+                <Label className="text-sm font-medium">
+                  Ordem na imagem e legenda
+                </Label>
+                <span className="text-xs text-muted-foreground hidden sm:inline">
+                  Arraste para reordenar
+                </span>
+              </div>
+              <ul className="space-y-1.5">
+                {selectedContents.map((c, i) => {
+                  const isDragging = dragIndex === i;
+                  const isOver = dragOverIndex === i && dragIndex !== null && dragIndex !== i;
+                  return (
+                    <li
+                      key={c.id}
+                      draggable
+                      onDragStart={handleDragStart(i)}
+                      onDragOver={handleDragOver(i)}
+                      onDrop={handleDrop(i)}
+                      onDragEnd={handleDragEnd}
+                      className={`flex items-center gap-2 rounded-md border p-2 text-sm bg-background transition-all ${
+                        isDragging ? "opacity-40" : ""
+                      } ${
+                        isOver
+                          ? "border-primary ring-2 ring-primary/30"
+                          : "border-border"
+                      }`}
+                    >
+                      <GripVertical className="h-4 w-4 text-muted-foreground cursor-grab active:cursor-grabbing flex-shrink-0" />
+                      <span className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-primary/10 text-primary text-xs font-bold flex-shrink-0">
+                        {i + 1}
+                      </span>
+                      <span className="flex-1 truncate">
+                        {c.video_type === "resolucao_questoes" ? "📝 " : "🎬 "}
+                        {c.title}
+                      </span>
+                      <div className="flex items-center gap-0.5 flex-shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => moveItem(i, i - 1)}
+                          disabled={i === 0}
+                          aria-label="Mover para cima"
+                          className="p-1 rounded hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed"
+                        >
+                          <ArrowUp className="h-3.5 w-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => moveItem(i, i + 1)}
+                          disabled={i === selectedContents.length - 1}
+                          aria-label="Mover para baixo"
+                          className="p-1 rounded hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed"
+                        >
+                          <ArrowDown className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          )}
 
           {/* Template picker */}
           <div className="rounded-lg border border-border bg-background/50 p-3">

@@ -315,6 +315,8 @@ Deno.serve(async (req: Request) => {
             subject,
             is_teacher: isTeacher,
             recommended_video_included: recommendedBlock.length > 0,
+            recommended_video_id: recommendedVideoId,
+            recommended_video_source: recommendedSource,
           },
         })
       } catch (logErr) {

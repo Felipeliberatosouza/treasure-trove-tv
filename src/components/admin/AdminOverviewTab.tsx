@@ -108,6 +108,8 @@ const AdminOverviewTab = ({ onNavigate }: AdminOverviewTabProps) => {
       totalViews,
       avgRating,
       unsubscribedEmails: unsubCount ?? 0,
+      totalSalesPosts: salesPostsTotal ?? 0,
+      recentSalesPosts: salesPostsRecent ?? 0,
     });
 
     // Revenue by month

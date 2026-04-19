@@ -1,5 +1,8 @@
+import { useState, useMemo } from "react";
+import { Search } from "lucide-react";
 import { useCourseAreas } from "@/hooks/useCourseAreas";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 
 interface AreaSelectorProps {
   selected: string[];
@@ -7,8 +10,11 @@ interface AreaSelectorProps {
   max?: number;
 }
 
+const SEARCH_THRESHOLD = 10;
+
 const AreaSelector = ({ selected, onChange, max = 3 }: AreaSelectorProps) => {
   const { areas, loading } = useCourseAreas(true);
+  const [search, setSearch] = useState("");
 
   const toggle = (name: string) => {
     if (selected.includes(name)) {
@@ -18,36 +24,69 @@ const AreaSelector = ({ selected, onChange, max = 3 }: AreaSelectorProps) => {
     }
   };
 
+  const sortedAreas = useMemo(
+    () =>
+      [...areas].sort((a, b) =>
+        a.name.localeCompare(b.name, "pt-BR", { sensitivity: "base" })
+      ),
+    [areas]
+  );
+
+  const normalize = (s: string) =>
+    s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+
+  const filteredAreas = useMemo(() => {
+    const q = normalize(search.trim());
+    if (!q) return sortedAreas;
+    return sortedAreas.filter((a) => normalize(a.name).includes(q));
+  }, [sortedAreas, search]);
+
   if (loading) return <p className="text-xs text-muted-foreground">Carregando áreas...</p>;
   if (areas.length === 0) return null;
 
-  const sortedAreas = [...areas].sort((a, b) =>
-    a.name.localeCompare(b.name, "pt-BR", { sensitivity: "base" })
-  );
+  const showSearch = areas.length > SEARCH_THRESHOLD;
 
   return (
     <div>
       <p className="text-xs text-muted-foreground mb-2">
         Selecione até {max} área(s) ({selected.length}/{max})
       </p>
+
+      {showSearch && (
+        <div className="relative mb-3">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            type="text"
+            placeholder="Buscar área..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-8 h-9 bg-secondary"
+          />
+        </div>
+      )}
+
       <div className="flex flex-wrap gap-2">
-        {sortedAreas.map((area) => {
-          const isSelected = selected.includes(area.name);
-          return (
-            <Badge
-              key={area.id}
-              variant={isSelected ? "default" : "outline"}
-              className={`cursor-pointer transition-colors ${
-                isSelected
-                  ? "bg-primary text-primary-foreground"
-                  : "hover:bg-secondary"
-              } ${!isSelected && selected.length >= max ? "opacity-40 cursor-not-allowed" : ""}`}
-              onClick={() => toggle(area.name)}
-            >
-              {area.name}
-            </Badge>
-          );
-        })}
+        {filteredAreas.length === 0 ? (
+          <p className="text-xs text-muted-foreground">Nenhuma área encontrada.</p>
+        ) : (
+          filteredAreas.map((area) => {
+            const isSelected = selected.includes(area.name);
+            return (
+              <Badge
+                key={area.id}
+                variant={isSelected ? "default" : "outline"}
+                className={`cursor-pointer transition-colors ${
+                  isSelected
+                    ? "bg-primary text-primary-foreground"
+                    : "hover:bg-secondary"
+                } ${!isSelected && selected.length >= max ? "opacity-40 cursor-not-allowed" : ""}`}
+                onClick={() => toggle(area.name)}
+              >
+                {area.name}
+              </Badge>
+            );
+          })
+        )}
       </div>
     </div>
   );

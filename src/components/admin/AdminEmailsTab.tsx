@@ -637,6 +637,121 @@ const AdminEmailsTab = () => {
             </div>
           )}
         </div>
+      ) : activeView === "birthdays" ? (
+        /* Birthday Email Log View */
+        <div className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            Histórico dos e-mails automáticos de aniversário enviados pela plataforma. Inclui o template usado e se um cupom foi anexado.
+          </p>
+
+          {/* Stats */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <Card>
+              <CardContent className="pt-4 pb-3 px-4 text-center">
+                <p className="text-2xl font-bold">{birthdayLogs.length}</p>
+                <p className="text-xs text-muted-foreground">Total no período</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-4 pb-3 px-4 text-center">
+                <p className="text-2xl font-bold text-emerald-500">
+                  {birthdayLogs.filter(b => b.is_active_subscriber).length}
+                </p>
+                <p className="text-xs text-muted-foreground">Assinantes ativos</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-4 pb-3 px-4 text-center">
+                <p className="text-2xl font-bold text-amber-500">
+                  {birthdayLogs.filter(b => !b.is_active_subscriber).length}
+                </p>
+                <p className="text-xs text-muted-foreground">Sem assinatura</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-4 pb-3 px-4 text-center">
+                <p className="text-2xl font-bold text-primary">
+                  {birthdayLogs.filter(b => b.coupon_included).length}
+                </p>
+                <p className="text-xs text-muted-foreground">Com cupom</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Filters */}
+          <div className="flex gap-2 flex-wrap items-center">
+            <div className="flex gap-1">
+              {[7, 30, 90, 365].map(d => (
+                <Button
+                  key={d}
+                  size="sm"
+                  variant={birthdayRangeDays === d ? "default" : "outline"}
+                  onClick={() => setBirthdayRangeDays(d)}
+                  className="text-xs"
+                >
+                  {d === 365 ? "1 ano" : `${d} dias`}
+                </Button>
+              ))}
+            </div>
+            <Button variant="outline" size="sm" onClick={fetchBirthdayLogs} disabled={birthdayLoading}>
+              <RefreshCw className={`h-4 w-4 mr-1 ${birthdayLoading ? "animate-spin" : ""}`} />
+              Atualizar
+            </Button>
+          </div>
+
+          {birthdayLoading ? (
+            <p className="text-sm text-muted-foreground text-center py-8">Carregando...</p>
+          ) : birthdayLogs.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-8">Nenhum e-mail de aniversário enviado no período.</p>
+          ) : (
+            <div className="rounded-lg border border-border overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Destinatário</TableHead>
+                    <TableHead>Tipo</TableHead>
+                    <TableHead>Cupom</TableHead>
+                    <TableHead>Data</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {birthdayLogs.map((b) => (
+                    <TableRow key={b.id}>
+                      <TableCell className="text-sm">
+                        <div className="font-medium">{b.recipient_name || "—"}</div>
+                        <div className="text-xs text-muted-foreground">{maskEmail(b.recipient_email)}</div>
+                      </TableCell>
+                      <TableCell>
+                        {b.is_active_subscriber ? (
+                          <Badge variant="outline" className="border-emerald-500/30 text-emerald-600">
+                            Assinante ativo
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="border-amber-500/30 text-amber-600">
+                            Sem assinatura
+                          </Badge>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {b.coupon_included ? (
+                          <Badge variant="outline" className="border-primary/30 text-primary flex items-center gap-1 w-fit">
+                            <Tag className="h-3 w-3" />
+                            {b.coupon_code || "Sim"}
+                          </Badge>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">—</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
+                        {new Date(b.sent_at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </div>
       ) : null}
     </div>
   );

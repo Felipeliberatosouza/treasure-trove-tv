@@ -521,6 +521,74 @@ const AdminPaymentsTab = () => {
             </Dialog>
           </div>
 
+          {/* Filters */}
+          <div className="rounded-lg border border-border p-3 mb-4 bg-card/40">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+              <div>
+                <Label className="text-xs">Professor</Label>
+                <Select value={filterTeacherId} onValueChange={setFilterTeacherId}>
+                  <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos</SelectItem>
+                    {metrics.map((m) => (
+                      <SelectItem key={m.teacher_id} value={m.teacher_id}>{m.teacher_name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-xs">Status</Label>
+                <Select value={filterStatus} onValueChange={setFilterStatus}>
+                  <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos</SelectItem>
+                    <SelectItem value="pending">Pendente</SelectItem>
+                    <SelectItem value="paid">Pago</SelectItem>
+                    <SelectItem value="cancelled">Cancelado</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-xs">Período de</Label>
+                <Input type="date" className="h-9" value={filterStart} onChange={(e) => setFilterStart(e.target.value)} />
+              </div>
+              <div>
+                <Label className="text-xs">Período até</Label>
+                <Input type="date" className="h-9" value={filterEnd} onChange={(e) => setFilterEnd(e.target.value)} />
+              </div>
+              <div className="flex items-end gap-2">
+                {hasActiveFilters && (
+                  <Button size="sm" variant="ghost" className="h-9" onClick={clearFilters}>
+                    <X className="h-4 w-4 mr-1" /> Limpar
+                  </Button>
+                )}
+                <Button size="sm" variant="outline" className="h-9" onClick={handleExportCSV} disabled={filteredPayments.length === 0}>
+                  <Download className="h-4 w-4 mr-1" /> CSV
+                </Button>
+              </div>
+            </div>
+
+            {/* Totals */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-3 pt-3 border-t border-border">
+              <div>
+                <p className="text-xs text-muted-foreground">Registros</p>
+                <p className="font-semibold">{filteredPayments.length}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Bruto total</p>
+                <p className="font-semibold">R$ {totals.gross.toFixed(2)}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Taxa total</p>
+                <p className="font-semibold text-muted-foreground">R$ {totals.fee.toFixed(2)}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Líquido total</p>
+                <p className="font-semibold text-success">R$ {totals.net.toFixed(2)}</p>
+              </div>
+            </div>
+          </div>
+
           <div className="rounded-lg border border-border overflow-hidden">
             <Table>
               <TableHeader>
@@ -536,7 +604,7 @@ const AdminPaymentsTab = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {payments.map((p) => (
+                {filteredPayments.map((p) => (
                   <TableRow key={p.id}>
                     <TableCell className="font-medium">{p.teacher_name}</TableCell>
                     <TableCell className="text-xs text-muted-foreground">
@@ -583,9 +651,11 @@ const AdminPaymentsTab = () => {
                     </TableCell>
                   </TableRow>
                 ))}
-                {payments.length === 0 && (
+                {filteredPayments.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center text-muted-foreground py-8">Nenhum pagamento registrado.</TableCell>
+                    <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
+                      {payments.length === 0 ? "Nenhum pagamento registrado." : "Nenhum pagamento corresponde aos filtros."}
+                    </TableCell>
                   </TableRow>
                 )}
               </TableBody>

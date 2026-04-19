@@ -83,6 +83,9 @@ const TeacherHomeStats = () => {
       const lessonIds = (teacherLessonsIds || []).map((l) => l.id);
       const examIds = (teacherExamsIds || []).map((e) => e.id);
 
+      // Build content filter for ratings (lessons + exams from this teacher)
+      const allContentIds = [...lessonIds, ...examIds];
+
       // Parallel fetches
       const [
         paymentsRes,
@@ -93,6 +96,7 @@ const TeacherHomeStats = () => {
         aulaParticularRes,
         lessonsThisMonthRes,
         examsThisMonthRes,
+        ratingsRes,
       ] = await Promise.all([
         supabase
           .from("teacher_payments")
@@ -134,6 +138,13 @@ const TeacherHomeStats = () => {
           .select("id", { count: "exact", head: true })
           .eq("teacher_id", user.id)
           .gte("created_at", startOfMonth),
+        allContentIds.length > 0
+          ? supabase
+              .from("video_ratings")
+              .select("rating, created_at")
+              .in("content_id", allContentIds)
+              .gte("created_at", threeMonthsAgo)
+          : Promise.resolve({ data: [] } as any),
       ]);
 
       // Sales last 3 months

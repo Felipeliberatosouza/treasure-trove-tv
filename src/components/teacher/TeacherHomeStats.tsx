@@ -187,8 +187,25 @@ const TeacherHomeStats = () => {
           }
         }
       });
+      const monthsPt = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
+      const fmtDay = (d: Date) => {
+        const day = d.getDate();
+        const month = monthsPt[d.getMonth()];
+        return { day, month };
+      };
       setSalesPostsWeekly(
-        weeklyBuckets.map((b, i) => ({ week: `S${i + 1}`, value: b.value }))
+        weeklyBuckets.map((b) => {
+          // end is exclusive (next week start), so last day is end - 1
+          const lastDay = new Date(b.end.getTime() - 24 * 60 * 60 * 1000);
+          const s = fmtDay(b.start);
+          const e = fmtDay(lastDay);
+          const label =
+            s.month === e.month
+              ? `${s.day}-${e.day} ${e.month}`
+              : `${s.day} ${s.month}-${e.day} ${e.month}`;
+          const fullLabel = `${s.day} ${s.month} - ${e.day} ${e.month}`;
+          return { week: label, fullLabel, value: b.value };
+        })
       );
 
       const salesByMonth: Record<string, number> = {};

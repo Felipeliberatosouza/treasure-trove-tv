@@ -1,11 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DollarSign, TrendingUp, Eye, Star, Plus, Pencil, CheckCircle2 } from "lucide-react";
+import { DollarSign, TrendingUp, Eye, Star, Plus, Pencil, CheckCircle2, Download, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -67,6 +67,12 @@ const AdminPaymentsTab = () => {
     status: "pending",
     notes: "",
   });
+
+  // Filters
+  const [filterTeacherId, setFilterTeacherId] = useState<string>("all");
+  const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [filterStart, setFilterStart] = useState<string>("");
+  const [filterEnd, setFilterEnd] = useState<string>("");
 
   const fetchData = async () => {
     setLoading(true);
@@ -314,6 +320,89 @@ const AdminPaymentsTab = () => {
     return <Badge variant="outline" className={map[status] || ""}>{labels[status] || status}</Badge>;
   };
 
+  const filteredPayments = useMemo(() => {
+    return payments.filter((p) => {
+      if (filterTeacherId !== "all" && p.teacher_id !== filterTeacherId) return false;
+      if (filterStatus !== "all" && p.status !== filterStatus) return false;
+      if (filterStart && p.period_end && p.period_end < filterStart) return false;
+      if (filterEnd && p.period_start && p.period_start > filterEnd) return false;
+      return true;
+    });
+  }, [payments, filterTeacherId, filterStatus, filterStart, filterEnd]);
+
+  const totals = useMemo(() => {
+    return filteredPayments.reduce(
+      (acc, p) => {
+        acc.gross += Number(p.gross_amount) || 0;
+        acc.fee += Number(p.platform_fee) || 0;
+        acc.net += Number(p.net_amount) || 0;
+        return acc;
+      },
+      { gross: 0, fee: 0, net: 0 }
+    );
+  }, [filteredPayments]);
+
+  const handleExportCSV = () => {
+    const headers = [
+      "Professor",
+      "Início do Período",
+      "Fim do Período",
+      "Tipo",
+      "Bruto (R$)",
+      "Taxa (R$)",
+      "Líquido (R$)",
+      "Status",
+      "Observações",
+      "Criado em",
+    ];
+    const escape = (v: unknown) => {
+      const s = v === null || v === undefined ? "" : String(v);
+      return `"${s.replace(/"/g, '""')}"`;
+    };
+    const fmtDate = (d?: string) => (d ? new Date(d).toLocaleDateString("pt-BR") : "");
+    const fmtNum = (n: number) => n.toFixed(2).replace(".", ",");
+    const statusLabel: Record<string, string> = { pending: "Pendente", paid: "Pago", cancelled: "Cancelado" };
+    const typeLabel: Record<string, string> = { subscription: "Assinatura", purchase: "Compra Unitária" };
+
+    const rows = filteredPayments.map((p) => [
+      p.teacher_name || "",
+      fmtDate(p.period_start),
+      fmtDate(p.period_end),
+      typeLabel[p.payment_type] || p.payment_type,
+      fmtNum(Number(p.gross_amount) || 0),
+      fmtNum(Number(p.platform_fee) || 0),
+      fmtNum(Number(p.net_amount) || 0),
+      statusLabel[p.status] || p.status,
+      p.notes || "",
+      fmtDate(p.created_at),
+    ]);
+
+    const csv = [headers, ...rows].map((r) => r.map(escape).join(";")).join("\r\n");
+    // UTF-8 BOM for Excel compatibility
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    const ts = new Date().toISOString().slice(0, 10);
+    a.download = `pagamentos-professores-${ts}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    toast({ title: "Exportado", description: `${filteredPayments.length} pagamento(s) exportado(s).` });
+  };
+
+  const clearFilters = () => {
+    setFilterTeacherId("all");
+    setFilterStatus("all");
+    setFilterStart("");
+    setFilterEnd("");
+  };
+
+  const hasActiveFilters =
+    filterTeacherId !== "all" || filterStatus !== "all" || filterStart !== "" || filterEnd !== "";
+
   return (
     <div>
       <h2 className="font-display text-lg font-semibold mb-4 flex items-center gap-2">
@@ -432,6 +521,74 @@ const AdminPaymentsTab = () => {
             </Dialog>
           </div>
 
+          {/* Filters */}
+          <div className="rounded-lg border border-border p-3 mb-4 bg-card/40">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+              <div>
+                <Label className="text-xs">Professor</Label>
+                <Select value={filterTeacherId} onValueChange={setFilterTeacherId}>
+                  <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos</SelectItem>
+                    {metrics.map((m) => (
+                      <SelectItem key={m.teacher_id} value={m.teacher_id}>{m.teacher_name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-xs">Status</Label>
+                <Select value={filterStatus} onValueChange={setFilterStatus}>
+                  <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos</SelectItem>
+                    <SelectItem value="pending">Pendente</SelectItem>
+                    <SelectItem value="paid">Pago</SelectItem>
+                    <SelectItem value="cancelled">Cancelado</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-xs">Período de</Label>
+                <Input type="date" className="h-9" value={filterStart} onChange={(e) => setFilterStart(e.target.value)} />
+              </div>
+              <div>
+                <Label className="text-xs">Período até</Label>
+                <Input type="date" className="h-9" value={filterEnd} onChange={(e) => setFilterEnd(e.target.value)} />
+              </div>
+              <div className="flex items-end gap-2">
+                {hasActiveFilters && (
+                  <Button size="sm" variant="ghost" className="h-9" onClick={clearFilters}>
+                    <X className="h-4 w-4 mr-1" /> Limpar
+                  </Button>
+                )}
+                <Button size="sm" variant="outline" className="h-9" onClick={handleExportCSV} disabled={filteredPayments.length === 0}>
+                  <Download className="h-4 w-4 mr-1" /> CSV
+                </Button>
+              </div>
+            </div>
+
+            {/* Totals */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-3 pt-3 border-t border-border">
+              <div>
+                <p className="text-xs text-muted-foreground">Registros</p>
+                <p className="font-semibold">{filteredPayments.length}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Bruto total</p>
+                <p className="font-semibold">R$ {totals.gross.toFixed(2)}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Taxa total</p>
+                <p className="font-semibold text-muted-foreground">R$ {totals.fee.toFixed(2)}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Líquido total</p>
+                <p className="font-semibold text-success">R$ {totals.net.toFixed(2)}</p>
+              </div>
+            </div>
+          </div>
+
           <div className="rounded-lg border border-border overflow-hidden">
             <Table>
               <TableHeader>
@@ -447,7 +604,7 @@ const AdminPaymentsTab = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {payments.map((p) => (
+                {filteredPayments.map((p) => (
                   <TableRow key={p.id}>
                     <TableCell className="font-medium">{p.teacher_name}</TableCell>
                     <TableCell className="text-xs text-muted-foreground">
@@ -494,9 +651,11 @@ const AdminPaymentsTab = () => {
                     </TableCell>
                   </TableRow>
                 ))}
-                {payments.length === 0 && (
+                {filteredPayments.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center text-muted-foreground py-8">Nenhum pagamento registrado.</TableCell>
+                    <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
+                      {payments.length === 0 ? "Nenhum pagamento registrado." : "Nenhum pagamento corresponde aos filtros."}
+                    </TableCell>
                   </TableRow>
                 )}
               </TableBody>

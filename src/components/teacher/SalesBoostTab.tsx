@@ -937,6 +937,82 @@ const SalesBoostTab = () => {
           )}
         </div>
       </section>
+
+      {/* History */}
+      <section>
+        <h3 className="font-display text-base font-semibold mb-3 flex items-center gap-2">
+          <History className="h-4 w-4 text-primary" /> Histórico de posts gerados
+        </h3>
+        {loadingHistory ? (
+          <p className="text-sm text-muted-foreground">Carregando histórico...</p>
+        ) : history.length === 0 ? (
+          <p className="text-sm text-muted-foreground">
+            Você ainda não gerou nenhum post. Gere acima para começar seu histórico.
+          </p>
+        ) : (
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {history.map((post) => {
+              const tplLabel =
+                TEMPLATES[(post.template as TemplateKey) || "colorful"]?.label ||
+                post.template;
+              return (
+                <div
+                  key={post.id}
+                  className="rounded-lg border border-border bg-secondary/30 overflow-hidden flex flex-col"
+                >
+                  {post.thumbnail_url ? (
+                    <img
+                      src={post.thumbnail_url}
+                      alt="Miniatura do post"
+                      className="w-full aspect-[4/5] object-cover bg-background"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="w-full aspect-[4/5] bg-muted flex items-center justify-center text-xs text-muted-foreground">
+                      Sem miniatura
+                    </div>
+                  )}
+                  <div className="p-3 flex-1 flex flex-col gap-2">
+                    <div className="flex items-center justify-between gap-2 text-xs">
+                      <span className="font-medium text-foreground">{tplLabel}</span>
+                      <span className="text-muted-foreground">
+                        {new Date(post.created_at).toLocaleString("pt-BR", {
+                          day: "2-digit",
+                          month: "2-digit",
+                          year: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground line-clamp-2">
+                      {(post.contents || []).map((c) => c.title).join(" • ") || "Sem conteúdos."}
+                    </p>
+                    <div className="grid grid-cols-2 gap-2 mt-auto pt-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => reuseHistoryPost(post)}
+                        className="gap-1"
+                      >
+                        <Sparkles className="h-3.5 w-3.5" /> Reutilizar
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => deleteHistoryPost(post)}
+                        className="gap-1 text-destructive hover:text-destructive"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" /> Excluir
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </section>
     </div>
   );
 };

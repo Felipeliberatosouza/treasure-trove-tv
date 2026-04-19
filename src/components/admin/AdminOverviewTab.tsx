@@ -156,6 +156,14 @@ const AdminOverviewTab = ({ onNavigate }: AdminOverviewTabProps) => {
     { label: "Pagamentos Pendentes", value: kpis.pendingPayments, icon: DollarSign, color: "text-orange-500", key: "pending_payments" },
     { label: "Avaliação Média", value: kpis.avgRating.toFixed(1) + " ★", icon: Star, color: "text-amber-500", key: "avg_rating" },
     { label: "Descadastros de E-mail", value: kpis.unsubscribedEmails, icon: MailX, color: "text-destructive", key: "unsubscribed" },
+    {
+      label: "Posts de Divulgação",
+      value: `${kpis.totalSalesPosts} (${kpis.recentSalesPosts} em 30d)`,
+      icon: Megaphone,
+      color: "text-pink-500",
+      key: "sales_posts",
+      navigateTo: "sales-posts",
+    },
   ];
 
   const chartConfig = {

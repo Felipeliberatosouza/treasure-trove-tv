@@ -49,6 +49,7 @@ const TeacherHomeStats = () => {
   const [sales, setSales] = useState<SalesPoint[]>([]);
   const [activities, setActivities] = useState<ActivityPoint[]>([]);
   const [pendings, setPendings] = useState<PendingPoint[]>([]);
+  const [ratings, setRatings] = useState<RatingPoint[]>([]);
   const [contentGoal, setContentGoal] = useState<number>(8);
   const [contentPublishedThisMonth, setContentPublishedThisMonth] = useState(0);
 

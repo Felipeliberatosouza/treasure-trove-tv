@@ -583,7 +583,7 @@ const AdminPaymentsTab = () => {
             </TableBody>
           </Table>
         </div>
-      ) : (
+      ) : activeView === "payments" ? (
         <div>
           <div className="flex justify-end mb-4">
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>

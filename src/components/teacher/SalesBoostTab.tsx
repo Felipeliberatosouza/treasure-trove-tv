@@ -151,6 +151,7 @@ const SalesBoostTab = () => {
   const [history, setHistory] = useState<SalesPostRow[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [totalPostsCount, setTotalPostsCount] = useState<number>(0);
+  const [recentPostsCount, setRecentPostsCount] = useState<number>(0);
 
   const MIN_SEL = 3;
   const MAX_SEL = 5;
@@ -210,7 +211,8 @@ const SalesBoostTab = () => {
   const fetchHistory = async () => {
     if (!user?.id) return;
     setLoadingHistory(true);
-    const [{ data, error }, { count }] = await Promise.all([
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+    const [{ data, error }, { count }, { count: recentCount }] = await Promise.all([
       supabase
         .from("teacher_sales_posts")
         .select("id,template,caption,thumbnail_url,thumbnail_path,contents,public_url,created_at")
@@ -221,11 +223,17 @@ const SalesBoostTab = () => {
         .from("teacher_sales_posts")
         .select("*", { count: "exact", head: true })
         .eq("teacher_id", user.id),
+      supabase
+        .from("teacher_sales_posts")
+        .select("*", { count: "exact", head: true })
+        .eq("teacher_id", user.id)
+        .gte("created_at", thirtyDaysAgo),
     ]);
     if (!error && data) {
       setHistory(data as unknown as SalesPostRow[]);
     }
     setTotalPostsCount(count ?? 0);
+    setRecentPostsCount(recentCount ?? 0);
     setLoadingHistory(false);
   };
 
@@ -263,6 +271,8 @@ const SalesBoostTab = () => {
     }
     setHistory((prev) => prev.filter((p) => p.id !== post.id));
     setTotalPostsCount((prev) => Math.max(0, prev - 1));
+    const isRecent = Date.now() - new Date(post.created_at).getTime() < 30 * 24 * 60 * 60 * 1000;
+    if (isRecent) setRecentPostsCount((prev) => Math.max(0, prev - 1));
     toast.success("Post removido do histórico.");
   };
 
@@ -310,6 +320,7 @@ const SalesBoostTab = () => {
       if (inserted) {
         setHistory((prev) => [inserted as unknown as SalesPostRow, ...prev].slice(0, 20));
         setTotalPostsCount((prev) => prev + 1);
+        setRecentPostsCount((prev) => prev + 1);
       }
     } catch (e) {
       console.error("savePostToHistory error", e);
@@ -608,7 +619,7 @@ const SalesBoostTab = () => {
           </h2>
           <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-secondary/50 px-3 py-1 text-xs font-medium text-foreground">
             <History className="h-3.5 w-3.5 text-primary" />
-            {totalPostsCount} {totalPostsCount === 1 ? "post gerado" : "posts gerados"}
+            {totalPostsCount} {totalPostsCount === 1 ? "post" : "posts"} ({recentPostsCount} em 30d)
           </span>
         </div>
         <p className="text-sm text-muted-foreground">

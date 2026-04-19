@@ -21,6 +21,10 @@ const AreaSelector = ({ selected, onChange, max = 3 }: AreaSelectorProps) => {
   if (loading) return <p className="text-xs text-muted-foreground">Carregando áreas...</p>;
   if (areas.length === 0) return null;
 
+  const sortedAreas = [...areas].sort((a, b) =>
+    a.name.localeCompare(b.name, "pt-BR", { sensitivity: "base" })
+  );
+
   return (
     <div>
       <p className="text-xs text-muted-foreground mb-2">

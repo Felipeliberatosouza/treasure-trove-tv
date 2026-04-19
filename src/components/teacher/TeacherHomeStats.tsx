@@ -195,6 +195,30 @@ const TeacherHomeStats = () => {
         },
       ]);
 
+      // Ratings last 3 months (avg per month)
+      const ratingsByMonth: Record<string, { sum: number; count: number }> = {};
+      for (let i = 2; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        ratingsByMonth[`${d.getFullYear()}-${d.getMonth()}`] = { sum: 0, count: 0 };
+      }
+      ((ratingsRes.data as { rating: number; created_at: string }[]) || []).forEach((r) => {
+        const d = new Date(r.created_at);
+        const k = `${d.getFullYear()}-${d.getMonth()}`;
+        if (k in ratingsByMonth) {
+          ratingsByMonth[k].sum += Number(r.rating || 0);
+          ratingsByMonth[k].count += 1;
+        }
+      });
+      const ratingsArr: RatingPoint[] = Object.entries(ratingsByMonth).map(([k, v]) => {
+        const [y, m] = k.split("-").map(Number);
+        return {
+          month: monthLabel(new Date(y, m, 1)),
+          avg: v.count > 0 ? Number((v.sum / v.count).toFixed(2)) : 0,
+          count: v.count,
+        };
+      });
+      setRatings(ratingsArr);
+
       setLoading(false);
     };
     fetchAll();

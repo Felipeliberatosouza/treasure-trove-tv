@@ -190,7 +190,48 @@ const AdminPaymentsTab = () => {
     }
   };
 
-  const statusBadge = (status: string) => {
+  const openEditDialog = (p: Payment) => {
+    setEditingPayment(p);
+    setEditForm({
+      period_start: p.period_start?.slice(0, 10) || "",
+      period_end: p.period_end?.slice(0, 10) || "",
+      payment_type: p.payment_type || "subscription",
+      gross_amount: String(p.gross_amount ?? ""),
+      platform_fee: String(p.platform_fee ?? ""),
+      net_amount: String(p.net_amount ?? ""),
+      status: p.status || "pending",
+      notes: p.notes || "",
+    });
+  };
+
+  const handleEditSave = async () => {
+    if (!editingPayment) return;
+    const { error } = await supabase
+      .from("teacher_payments")
+      .update({
+        period_start: editForm.period_start,
+        period_end: editForm.period_end,
+        payment_type: editForm.payment_type,
+        gross_amount: Number(editForm.gross_amount) || 0,
+        platform_fee: Number(editForm.platform_fee) || 0,
+        net_amount: Number(editForm.net_amount) || 0,
+        status: editForm.status,
+        notes: editForm.notes || null,
+      })
+      .eq("id", editingPayment.id);
+
+    if (error) {
+      toast({ title: "Erro", description: "Falha ao atualizar pagamento.", variant: "destructive" });
+    } else {
+      toast({ title: "Atualizado", description: "Pagamento atualizado com sucesso." });
+      setEditingPayment(null);
+      fetchData();
+    }
+  };
+
+  const handleMarkPaid = async (paymentId: string) => {
+    await handleStatusChange(paymentId, "paid");
+  };
     const map: Record<string, string> = {
       pending: "border-accent/30 text-accent",
       paid: "border-success/30 text-success",

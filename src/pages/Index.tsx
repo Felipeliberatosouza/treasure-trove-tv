@@ -128,8 +128,50 @@ const Index = () => {
     fetchPopular();
   }, [user, profile?.areas, role, watchedIds]);
 
+  // Fetch teacher's own published content
   useEffect(() => {
-    if (areas.length === 0) return;
+    if (!isTeacher || !user) {
+      setTeacherLessons([]);
+      setTeacherExams([]);
+      return;
+    }
+    const fetchOwn = async () => {
+      setLoadingTeacherContent(true);
+      const [lessonsRes, examsRes] = await Promise.all([
+        supabase
+          .from("lessons")
+          .select("*")
+          .eq("teacher_id", user.id)
+          .order("created_at", { ascending: false })
+          .limit(20),
+        supabase
+          .from("exam_solutions")
+          .select("*")
+          .eq("teacher_id", user.id)
+          .order("created_at", { ascending: false })
+          .limit(20),
+      ]);
+      const mapToVideo = (l: any): Video => ({
+        id: l.id,
+        title: l.title,
+        description: l.description || "",
+        thumbnail: l.thumbnail_url || "/placeholder.svg",
+        duration: "",
+        category: (l.areas as string[] || [])[0] || "",
+        instructor: "",
+        lessons: 1,
+        level: "Iniciante" as const,
+        videoUrl: l.video_url || undefined,
+      });
+      setTeacherLessons((lessonsRes.data || []).map(mapToVideo));
+      setTeacherExams((examsRes.data || []).map(mapToVideo));
+      setLoadingTeacherContent(false);
+    };
+    fetchOwn();
+  }, [isTeacher, user]);
+
+  useEffect(() => {
+    if (areas.length === 0 || isTeacher) return;
     const fetchAreaLessons = async () => {
       setLoadingAreas(true);
       const result: Record<string, Video[]> = {};
@@ -161,7 +203,7 @@ const Index = () => {
       setLoadingAreas(false);
     };
     fetchAreaLessons();
-  }, [areas]);
+  }, [areas, isTeacher]);
 
   // Inline search effect
   useEffect(() => {

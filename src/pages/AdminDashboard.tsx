@@ -1,7 +1,7 @@
 import { useState } from "react";
 import MandatoryMfaGuard from "@/components/MandatoryMfaGuard";
 import { motion } from "framer-motion";
-import { ArrowLeft, Users, Video, DollarSign, Shield, LayoutDashboard, Settings, HelpCircle, Mail, CreditCard, Tag, BarChart3, CalendarClock, FileText, Receipt, RotateCcw, TrendingDown } from "lucide-react";
+import { ArrowLeft, Users, Video, DollarSign, Shield, LayoutDashboard, Settings, HelpCircle, Mail, CreditCard, Tag, BarChart3, CalendarClock, FileText, Receipt, RotateCcw, TrendingDown, Megaphone } from "lucide-react";
 import { Link, Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";

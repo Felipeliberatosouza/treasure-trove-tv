@@ -24,6 +24,7 @@ import {
   Layers,
   EyeOff,
 } from "lucide-react";
+import HeroSlidePreview from "./HeroSlidePreview";
 
 type HeroSettingsKey =
   | "hero_banner"

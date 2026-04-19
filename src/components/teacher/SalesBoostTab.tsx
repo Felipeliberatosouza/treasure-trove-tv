@@ -1,0 +1,528 @@
+import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  Megaphone,
+  Video,
+  Mic2,
+  Sparkles,
+  Image as ImageIcon,
+  Copy,
+  Download,
+  Instagram,
+  MessageCircle,
+  Loader2,
+  ExternalLink,
+} from "lucide-react";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { usePlatformSettings } from "@/hooks/usePlatformSettings";
+
+interface ContentItem {
+  id: string;
+  title: string;
+  video_type: string;
+  has_top_questoes: boolean;
+}
+
+const SalesBoostTab = () => {
+  const { profile } = useAuth();
+  const { data: branding } = usePlatformSettings("branding");
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [contents, setContents] = useState<ContentItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [generating, setGenerating] = useState(false);
+  const [imageDataUrl, setImageDataUrl] = useState<string>("");
+  const [caption, setCaption] = useState<string>("");
+
+  const publicUrl = useMemo(() => {
+    if (!profile?.slug) return "";
+    return `${window.location.origin}/professor/${profile.slug}`;
+  }, [profile?.slug]);
+
+  // Fetch teacher's approved content
+  useEffect(() => {
+    const fetchContent = async () => {
+      if (!profile?.user_id) return;
+      setLoading(true);
+      const [lessonsRes, examsRes] = await Promise.all([
+        supabase
+          .from("lessons")
+          .select("id,title,video_type,top_questoes_url")
+          .eq("teacher_id", profile.user_id)
+          .eq("published", true)
+          .eq("admin_approved", true)
+          .order("created_at", { ascending: false })
+          .limit(5),
+        supabase
+          .from("exam_solutions")
+          .select("id,title,video_type,top_questoes_url")
+          .eq("teacher_id", profile.user_id)
+          .eq("published", true)
+          .eq("admin_approved", true)
+          .order("created_at", { ascending: false })
+          .limit(5),
+      ]);
+      const all: ContentItem[] = [
+        ...(lessonsRes.data || []).map((l) => ({
+          id: l.id,
+          title: l.title,
+          video_type: l.video_type,
+          has_top_questoes: !!l.top_questoes_url,
+        })),
+        ...(examsRes.data || []).map((e) => ({
+          id: e.id,
+          title: e.title,
+          video_type: e.video_type,
+          has_top_questoes: !!e.top_questoes_url,
+        })),
+      ].slice(0, 5);
+      setContents(all);
+      setLoading(false);
+    };
+    fetchContent();
+  }, [profile?.user_id]);
+
+  const buildCaption = (items: ContentItem[]) => {
+    const name = profile?.name || "Professor(a)";
+    const areas = (profile?.areas || []).slice(0, 3).join(" • ");
+    const platform = branding?.platform_name || "Revisão Fácil";
+    const bio = profile?.bio?.trim();
+
+    const lines: string[] = [];
+    lines.push(`📚 ${name} na ${platform}!`);
+    if (areas) lines.push(`✨ ${areas}`);
+    lines.push("");
+    if (bio) {
+      lines.push(bio.length > 200 ? bio.slice(0, 197) + "..." : bio);
+      lines.push("");
+    }
+    if (items.length > 0) {
+      lines.push("🎯 Confira meus conteúdos:");
+      items.forEach((c) => {
+        const tag =
+          c.video_type === "resolucao_questoes" ? "📝" : "🎬";
+        lines.push(`${tag} ${c.title}`);
+      });
+      const hasTopQ = items.some((c) => c.has_top_questoes);
+      if (hasTopQ) {
+        lines.push("");
+        lines.push("⭐ Inclui Top Questões de Prova!");
+      }
+      lines.push("");
+    }
+    lines.push(`👉 Acesse: ${publicUrl}`);
+    lines.push("");
+    lines.push(
+      "#RevisaoFacil #Estudos #Concursos #Vestibular #Educação #DicasDeEstudo"
+    );
+    return lines.join("\n");
+  };
+
+  const generatePost = async () => {
+    if (!profile?.slug) {
+      toast.error("Defina sua URL pública (slug) em Dados Pessoais antes de gerar o post.");
+      return;
+    }
+    setGenerating(true);
+    try {
+      // Build caption
+      const cap = buildCaption(contents);
+      setCaption(cap);
+
+      // Build image (1080x1350 portrait — Instagram feed format)
+      const W = 1080;
+      const H = 1350;
+      const canvas = canvasRef.current || document.createElement("canvas");
+      canvas.width = W;
+      canvas.height = H;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) throw new Error("Canvas não suportado");
+
+      // Background gradient
+      const grad = ctx.createLinearGradient(0, 0, W, H);
+      grad.addColorStop(0, "#0f172a");
+      grad.addColorStop(0.5, "#1e1b4b");
+      grad.addColorStop(1, "#7c3aed");
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, W, H);
+
+      // Decorative blobs
+      ctx.globalAlpha = 0.18;
+      ctx.fillStyle = "#a78bfa";
+      ctx.beginPath();
+      ctx.arc(W - 120, 180, 220, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#22d3ee";
+      ctx.beginPath();
+      ctx.arc(140, H - 200, 260, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+
+      // Platform tag
+      const platformName = branding?.platform_name || "Revisão Fácil";
+      ctx.fillStyle = "rgba(255,255,255,0.85)";
+      ctx.font = "600 32px system-ui, -apple-system, sans-serif";
+      ctx.textAlign = "left";
+      ctx.fillText(platformName.toUpperCase(), 80, 110);
+
+      // Avatar (circular)
+      const avatarSize = 220;
+      const avatarX = W / 2 - avatarSize / 2;
+      const avatarY = 180;
+      try {
+        if (profile.avatar_url) {
+          const img = await loadImage(profile.avatar_url);
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(W / 2, avatarY + avatarSize / 2, avatarSize / 2, 0, Math.PI * 2);
+          ctx.closePath();
+          ctx.clip();
+          ctx.drawImage(img, avatarX, avatarY, avatarSize, avatarSize);
+          ctx.restore();
+        } else {
+          // Fallback initials circle
+          ctx.fillStyle = "#fff";
+          ctx.beginPath();
+          ctx.arc(W / 2, avatarY + avatarSize / 2, avatarSize / 2, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#1e1b4b";
+          ctx.font = "bold 110px system-ui, sans-serif";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          const initials = (profile.name || "P")
+            .split(" ")
+            .map((n) => n[0])
+            .slice(0, 2)
+            .join("")
+            .toUpperCase();
+          ctx.fillText(initials, W / 2, avatarY + avatarSize / 2 + 8);
+        }
+      } catch {
+        // ignore avatar errors
+      }
+      // Avatar ring
+      ctx.strokeStyle = "#fff";
+      ctx.lineWidth = 8;
+      ctx.beginPath();
+      ctx.arc(W / 2, avatarY + avatarSize / 2, avatarSize / 2 + 4, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Name
+      ctx.fillStyle = "#fff";
+      ctx.font = "bold 64px system-ui, -apple-system, sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "alphabetic";
+      const nameText = profile.name || "Professor(a)";
+      wrapText(ctx, nameText, W / 2, avatarY + avatarSize + 90, W - 160, 70);
+
+      // Areas
+      const areas = (profile.areas || []).slice(0, 3).join("  •  ");
+      if (areas) {
+        ctx.fillStyle = "#e9d5ff";
+        ctx.font = "500 32px system-ui, sans-serif";
+        ctx.fillText(areas, W / 2, avatarY + avatarSize + 160);
+      }
+
+      // Content list
+      const listStartY = 760;
+      ctx.fillStyle = "#fff";
+      ctx.font = "bold 36px system-ui, sans-serif";
+      ctx.textAlign = "left";
+      ctx.fillText("🎯 Meus conteúdos:", 90, listStartY);
+
+      ctx.font = "500 28px system-ui, sans-serif";
+      ctx.fillStyle = "rgba(255,255,255,0.92)";
+      const items = contents.slice(0, 4);
+      items.forEach((c, i) => {
+        const y = listStartY + 60 + i * 50;
+        const prefix = c.video_type === "resolucao_questoes" ? "📝" : "🎬";
+        const text = `${prefix}  ${truncate(c.title, 42)}`;
+        ctx.fillText(text, 90, y);
+      });
+
+      if (items.some((c) => c.has_top_questoes)) {
+        ctx.fillStyle = "#fde68a";
+        ctx.font = "bold 28px system-ui, sans-serif";
+        ctx.fillText("⭐ Inclui Top Questões de Prova", 90, listStartY + 60 + items.length * 50 + 20);
+      }
+
+      // CTA bar at bottom
+      const ctaY = H - 200;
+      ctx.fillStyle = "rgba(255,255,255,0.95)";
+      roundRect(ctx, 60, ctaY, W - 120, 140, 24);
+      ctx.fill();
+
+      ctx.fillStyle = "#1e1b4b";
+      ctx.font = "bold 30px system-ui, sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("👉 Acesse minha página:", W / 2, ctaY + 50);
+      ctx.fillStyle = "#7c3aed";
+      ctx.font = "bold 34px system-ui, sans-serif";
+      const shortUrl = publicUrl.replace(/^https?:\/\//, "");
+      ctx.fillText(truncate(shortUrl, 40), W / 2, ctaY + 100);
+
+      const dataUrl = canvas.toDataURL("image/png");
+      setImageDataUrl(dataUrl);
+      toast.success("Post gerado com sucesso!");
+    } catch (err) {
+      console.error(err);
+      toast.error("Falha ao gerar post.");
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  const downloadImage = () => {
+    if (!imageDataUrl) return;
+    const a = document.createElement("a");
+    a.href = imageDataUrl;
+    a.download = `revisao-facil-post-${profile?.slug || "professor"}.png`;
+    a.click();
+  };
+
+  const copyCaption = async () => {
+    try {
+      await navigator.clipboard.writeText(caption);
+      toast.success("Legenda copiada!");
+    } catch {
+      toast.error("Não foi possível copiar.");
+    }
+  };
+
+  const openWhatsApp = () => {
+    const text = encodeURIComponent(caption);
+    window.open(`https://wa.me/?text=${text}`, "_blank");
+  };
+
+  const openInstagram = () => {
+    // Instagram has no direct web post API; guide user
+    window.open("https://www.instagram.com/", "_blank");
+    toast.info("Baixe a imagem e cole a legenda no Instagram.", { duration: 5000 });
+  };
+
+  return (
+    <div className="space-y-8">
+      <div>
+        <h2 className="font-display text-lg font-semibold mb-2 flex items-center gap-2">
+          <Megaphone className="h-5 w-5 text-primary" /> Buscar Vendas
+        </h2>
+        <p className="text-sm text-muted-foreground">
+          Aprenda a produzir conteúdo de qualidade e divulgue sua página com posts prontos para Instagram e WhatsApp.
+        </p>
+      </div>
+
+      {/* Tips */}
+      <section>
+        <h3 className="font-display text-base font-semibold mb-3 flex items-center gap-2">
+          <Sparkles className="h-4 w-4 text-primary" /> Dicas para vender mais
+        </h3>
+        <Accordion type="multiple" className="space-y-2">
+          <AccordionItem value="video-quality" className="rounded-lg border border-border px-4">
+            <AccordionTrigger className="text-sm font-medium gap-2">
+              <span className="flex items-center gap-2">
+                <Video className="h-4 w-4 text-primary" /> Como gravar um vídeo com qualidade
+              </span>
+            </AccordionTrigger>
+            <AccordionContent className="text-sm text-muted-foreground space-y-2">
+              <ul className="list-disc pl-5 space-y-1">
+                <li><strong className="text-foreground">Iluminação:</strong> use luz frontal natural (perto de uma janela) ou uma luminária ring light. Nunca grave de costas para a luz.</li>
+                <li><strong className="text-foreground">Áudio:</strong> grave em ambiente silencioso. Um microfone de lapela barato (~R$ 50) faz uma diferença enorme.</li>
+                <li><strong className="text-foreground">Câmera:</strong> celular moderno em modo Full HD (1080p) na horizontal ou vertical, conforme o uso.</li>
+                <li><strong className="text-foreground">Estabilidade:</strong> use tripé ou apoie em superfície firme. Vídeo tremido perde aluno em segundos.</li>
+                <li><strong className="text-foreground">Enquadramento:</strong> rosto centralizado, na altura dos olhos, com o quadro lousa visível atrás de você.</li>
+                <li><strong className="text-foreground">Duração ideal:</strong> 5 a 12 minutos para revisão; 3 a 7 minutos para resolução de questão.</li>
+              </ul>
+            </AccordionContent>
+          </AccordionItem>
+
+          <AccordionItem value="speech" className="rounded-lg border border-border px-4">
+            <AccordionTrigger className="text-sm font-medium gap-2">
+              <span className="flex items-center gap-2">
+                <Mic2 className="h-4 w-4 text-primary" /> Como falar de forma clara e objetiva
+              </span>
+            </AccordionTrigger>
+            <AccordionContent className="text-sm text-muted-foreground space-y-2">
+              <ul className="list-disc pl-5 space-y-1">
+                <li><strong className="text-foreground">Roteiro curto:</strong> escreva os 3 pontos principais antes de gravar. Evita "uhmm" e enrolação.</li>
+                <li><strong className="text-foreground">Comece com o problema:</strong> "Você tem dificuldade em X?" — captura atenção nos primeiros 5 segundos.</li>
+                <li><strong className="text-foreground">Vocabulário acessível:</strong> evite termos técnicos sem explicar. Imagine que está falando com um aluno do 1º ano.</li>
+                <li><strong className="text-foreground">Pausas estratégicas:</strong> respire entre conceitos. Dá tempo de o aluno absorver.</li>
+                <li><strong className="text-foreground">Exemplos concretos:</strong> sempre que apresentar uma fórmula, use 1 exemplo real logo em seguida.</li>
+                <li><strong className="text-foreground">CTA no final:</strong> "Salve esse vídeo, deixe sua dúvida e veja meus outros conteúdos na Revisão Fácil!"</li>
+              </ul>
+            </AccordionContent>
+          </AccordionItem>
+
+          <AccordionItem value="engagement" className="rounded-lg border border-border px-4">
+            <AccordionTrigger className="text-sm font-medium gap-2">
+              <span className="flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-primary" /> Como criar conteúdos que engajam
+              </span>
+            </AccordionTrigger>
+            <AccordionContent className="text-sm text-muted-foreground space-y-3">
+              <div>
+                <p className="font-medium text-foreground mb-1">🎬 Vídeos</p>
+                <ul className="list-disc pl-5 space-y-1">
+                  <li>Títulos com números: "5 erros em derivadas", "3 macetes de redação".</li>
+                  <li>Resolva questões reais e recentes (ENEM, FUVEST, concursos).</li>
+                  <li>Use thumbnails coloridas com texto grande e o seu rosto.</li>
+                </ul>
+              </div>
+              <div>
+                <p className="font-medium text-foreground mb-1">📋 Colinhas</p>
+                <ul className="list-disc pl-5 space-y-1">
+                  <li>1 página apenas, com cores e ícones para destacar fórmulas.</li>
+                  <li>Foque no que mais cai em prova, não em todo o conteúdo.</li>
+                </ul>
+              </div>
+              <div>
+                <p className="font-medium text-foreground mb-1">📚 Resumos</p>
+                <ul className="list-disc pl-5 space-y-1">
+                  <li>Estruture com tópicos curtos, mapas mentais e exemplos.</li>
+                  <li>Inclua "Pegadinhas comuns" no final.</li>
+                </ul>
+              </div>
+              <div>
+                <p className="font-medium text-foreground mb-1">⭐ Top Questões</p>
+                <ul className="list-disc pl-5 space-y-1">
+                  <li>Selecione questões que historicamente caem em provas similares.</li>
+                  <li>Resolva cada uma com vídeo curto + comentário escrito.</li>
+                </ul>
+              </div>
+              <div>
+                <p className="font-medium text-foreground mb-1">📝 Simulados</p>
+                <ul className="list-disc pl-5 space-y-1">
+                  <li>Misture fácil-médio-difícil (50%-30%-20%).</li>
+                  <li>Disponibilize gabarito comentado em PDF.</li>
+                </ul>
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+      </section>
+
+      {/* Post generator */}
+      <section>
+        <h3 className="font-display text-base font-semibold mb-3 flex items-center gap-2">
+          <ImageIcon className="h-4 w-4 text-primary" /> Gerador de post para divulgação
+        </h3>
+        <div className="rounded-xl border border-border bg-secondary/30 p-4 space-y-4">
+          {!profile?.slug && (
+            <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+              Você precisa definir sua <strong>URL pública</strong> em "Dados Pessoais" antes de gerar o post.
+            </div>
+          )}
+          <div className="flex flex-wrap gap-3 items-center">
+            <Button onClick={generatePost} disabled={generating || loading || !profile?.slug} className="gap-2">
+              {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+              Gerar post automaticamente
+            </Button>
+            {publicUrl && (
+              <a
+                href={publicUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1"
+              >
+                <ExternalLink className="h-3 w-3" /> Ver minha página pública
+              </a>
+            )}
+          </div>
+
+          <canvas ref={canvasRef} className="hidden" />
+
+          {imageDataUrl && (
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <Label className="text-xs mb-2 block">Imagem (1080×1350 — Instagram)</Label>
+                <div className="rounded-lg overflow-hidden border border-border bg-background">
+                  <img src={imageDataUrl} alt="Post gerado" className="w-full h-auto" />
+                </div>
+                <Button onClick={downloadImage} variant="outline" size="sm" className="mt-2 gap-2 w-full">
+                  <Download className="h-4 w-4" /> Baixar imagem PNG
+                </Button>
+              </div>
+              <div className="flex flex-col">
+                <Label className="text-xs mb-2 block">Legenda</Label>
+                <Textarea
+                  value={caption}
+                  onChange={(e) => setCaption(e.target.value)}
+                  className="flex-1 min-h-[280px] text-sm font-mono"
+                />
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-2">
+                  <Button onClick={copyCaption} variant="outline" size="sm" className="gap-2">
+                    <Copy className="h-4 w-4" /> Copiar
+                  </Button>
+                  <Button onClick={openInstagram} size="sm" className="gap-2 bg-gradient-to-r from-pink-500 to-purple-600 text-white hover:opacity-90">
+                    <Instagram className="h-4 w-4" /> Instagram
+                  </Button>
+                  <Button onClick={openWhatsApp} size="sm" className="gap-2 bg-green-600 text-white hover:bg-green-700">
+                    <MessageCircle className="h-4 w-4" /> WhatsApp
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  💡 Para o Instagram: baixe a imagem, abra o app e cole a legenda. Para o WhatsApp: o texto e link já vão prontos.
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+      </section>
+    </div>
+  );
+};
+
+// Helpers
+function loadImage(src: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = src;
+  });
+}
+
+function wrapText(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  x: number,
+  y: number,
+  maxWidth: number,
+  lineHeight: number
+) {
+  const words = text.split(" ");
+  let line = "";
+  let curY = y;
+  for (let i = 0; i < words.length; i++) {
+    const test = line + words[i] + " ";
+    if (ctx.measureText(test).width > maxWidth && i > 0) {
+      ctx.fillText(line.trim(), x, curY);
+      line = words[i] + " ";
+      curY += lineHeight;
+    } else {
+      line = test;
+    }
+  }
+  ctx.fillText(line.trim(), x, curY);
+}
+
+function truncate(str: string, n: number) {
+  return str.length > n ? str.slice(0, n - 1) + "…" : str;
+}
+
+function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+export default SalesBoostTab;

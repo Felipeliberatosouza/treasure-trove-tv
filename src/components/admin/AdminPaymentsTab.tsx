@@ -469,6 +469,7 @@ const AdminPaymentsTab = () => {
       setRecomputeOpen(false);
       fetchData();
     }
+    fetchRuns();
   };
 
   return (

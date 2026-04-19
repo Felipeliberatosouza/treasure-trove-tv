@@ -90,9 +90,21 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
       .select("resource_type, price, min_price, platform_percentage")
       .eq("active", true)
       .then(({ data }) => {
-        if (data) setResourcePrices(data as unknown as ResourcePriceInfo[]);
+        if (data) {
+          const list = data as unknown as ResourcePriceInfo[];
+          setResourcePrices(list);
+          // On create, prefill empty price fields with the platform default
+          if (!editData?.id) {
+            const get = (t: string) => list.find((r) => r.resource_type === t)?.price?.toString() ?? "";
+            setPriceRevisoes((p) => p || get("revisoes"));
+            setPriceResumos((p) => p || get("resumos"));
+            setPriceSimulados((p) => p || get("simulados"));
+            setPriceTopQuestoes((p) => p || get("top_questoes"));
+            setPriceColinhas((p) => p || get("colinhas"));
+          }
+        }
       });
-  }, []);
+  }, [editData?.id]);
 
   // Extract audio from a video file and return base64
   const extractAudioBase64 = useCallback(async (file: File): Promise<string> => {

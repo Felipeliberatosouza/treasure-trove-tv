@@ -48,6 +48,11 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
   const [topQuestoesFile, setTopQuestoesFile] = useState<File | null>(null);
   const [colinhaFile, setColinhaFile] = useState<File | null>(null);
   const [videoType, setVideoType] = useState<string>(editData?.video_type || "revisao");
+  const [priceRevisoes, setPriceRevisoes] = useState<string>(editData?.price_revisoes?.toString() ?? editData?.price?.toString() ?? "");
+  const [priceResumos, setPriceResumos] = useState<string>(editData?.price_resumos?.toString() ?? "");
+  const [priceSimulados, setPriceSimulados] = useState<string>(editData?.price_simulados?.toString() ?? "");
+  const [priceTopQuestoes, setPriceTopQuestoes] = useState<string>(editData?.price_top_questoes?.toString() ?? "");
+  const [priceColinhas, setPriceColinhas] = useState<string>(editData?.price_colinhas?.toString() ?? "");
   const [saving, setSaving] = useState(false);
   const [showRecorder, setShowRecorder] = useState(false);
   const [subtitlesVtt, setSubtitlesVtt] = useState<string>("");

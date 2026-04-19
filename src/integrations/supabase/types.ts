@@ -833,6 +833,69 @@ export type Database = {
         }
         Relationships: []
       }
+      recompute_runs: {
+        Row: {
+          buckets_count: number
+          created_at: string
+          dry_run: boolean
+          duration_ms: number | null
+          error_message: string | null
+          id: string
+          inserted_count: number
+          period_end: string
+          period_start: string
+          purchases_processed: number
+          purchases_skipped: number
+          results: Json
+          skipped_paid_count: number
+          source: string
+          status: string
+          teacher_id: string | null
+          triggered_by: string | null
+          updated_count: number
+        }
+        Insert: {
+          buckets_count?: number
+          created_at?: string
+          dry_run?: boolean
+          duration_ms?: number | null
+          error_message?: string | null
+          id?: string
+          inserted_count?: number
+          period_end: string
+          period_start: string
+          purchases_processed?: number
+          purchases_skipped?: number
+          results?: Json
+          skipped_paid_count?: number
+          source?: string
+          status?: string
+          teacher_id?: string | null
+          triggered_by?: string | null
+          updated_count?: number
+        }
+        Update: {
+          buckets_count?: number
+          created_at?: string
+          dry_run?: boolean
+          duration_ms?: number | null
+          error_message?: string | null
+          id?: string
+          inserted_count?: number
+          period_end?: string
+          period_start?: string
+          purchases_processed?: number
+          purchases_skipped?: number
+          results?: Json
+          skipped_paid_count?: number
+          source?: string
+          status?: string
+          teacher_id?: string | null
+          triggered_by?: string | null
+          updated_count?: number
+        }
+        Relationships: []
+      }
       reengagement_email_log: {
         Row: {
           created_at: string

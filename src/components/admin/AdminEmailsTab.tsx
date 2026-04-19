@@ -138,11 +138,25 @@ const AdminEmailsTab = () => {
     setSuppressedLoading(false);
   };
 
+  const fetchBirthdayLogs = async () => {
+    setBirthdayLoading(true);
+    const since = new Date(Date.now() - birthdayRangeDays * 86400000).toISOString();
+    const { data } = await supabase
+      .from("birthday_email_log")
+      .select("*")
+      .gte("sent_at", since)
+      .order("sent_at", { ascending: false })
+      .limit(500);
+    setBirthdayLogs((data as BirthdayLog[]) || []);
+    setBirthdayLoading(false);
+  };
+
   useEffect(() => { fetchLogs(); }, [rangeDays]);
   useEffect(() => {
     if (activeView === "security") fetchSecurityNotifs();
     if (activeView === "suppressed") fetchSuppressedEmails();
-  }, [activeView]);
+    if (activeView === "birthdays") fetchBirthdayLogs();
+  }, [activeView, birthdayRangeDays]);
 
   const updateSecurityStatus = async (id: string, status: string) => {
     await supabase.from("security_notifications").update({ status }).eq("id", id);
@@ -289,6 +303,14 @@ const AdminEmailsTab = () => {
               {pendingSecurityCount}
             </span>
           )}
+        </Button>
+        <Button
+          size="sm"
+          variant={activeView === "birthdays" ? "default" : "outline"}
+          onClick={() => setActiveView("birthdays")}
+          className="text-xs"
+        >
+          <Cake className="h-3.5 w-3.5 mr-1" /> Aniversários
         </Button>
       </div>
 

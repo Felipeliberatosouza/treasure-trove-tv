@@ -271,6 +271,8 @@ const SalesBoostTab = () => {
     }
     setHistory((prev) => prev.filter((p) => p.id !== post.id));
     setTotalPostsCount((prev) => Math.max(0, prev - 1));
+    const isRecent = Date.now() - new Date(post.created_at).getTime() < 30 * 24 * 60 * 60 * 1000;
+    if (isRecent) setRecentPostsCount((prev) => Math.max(0, prev - 1));
     toast.success("Post removido do histórico.");
   };
 

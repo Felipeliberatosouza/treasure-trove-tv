@@ -7,6 +7,7 @@ import {
   HeroBannerSettings,
   normalizeHeroCarousel,
   DEFAULT_HERO_AUTOPLAY_SECONDS,
+  isSlideScheduledNow,
 } from "@/hooks/usePlatformSettings";
 import { useAuth } from "@/contexts/AuthContext";
 import defaultBg from "@/assets/teacher-banner-bg.jpg";

@@ -27,12 +27,6 @@ import AdminUsageHistoryTab from "@/components/admin/AdminUsageHistoryTab";
 
 const tabs = [
   { id: "overview", label: "Visão Geral", icon: LayoutDashboard },
-  { id: "content", label: "Aprovação de Conteúdos", icon: Video },
-  { id: "doubts", label: "Aprovação de Dúvidas", icon: HelpCircle },
-  { id: "payments", label: "Pagamento de Professores", icon: DollarSign },
-  { id: "subscriptions", label: "Vencimento de Assinaturas", icon: CalendarClock },
-  { id: "emails", label: "Monitoramento de E-mails", icon: Mail },
-  { id: "sales-posts", label: "Posts de Divulgação", icon: Megaphone },
   { id: "users", label: "Usuários", icon: Users },
   { id: "plans", label: "Planos", icon: CreditCard },
   { id: "resource-pricing", label: "Preços de Recursos", icon: Tag },
@@ -44,6 +38,13 @@ const tabs = [
   { id: "audit", label: "Auditoria", icon: ScrollText },
   { id: "login-attempts", label: "Tentativas de Login", icon: Activity },
   { id: "settings", label: "Configurações", icon: Settings },
+  // Hidden tabs (acessadas via menu hambúrguer / deep-link, não exibidas no menu lateral)
+  { id: "content", label: "Aprovação de Conteúdos", icon: Video, hidden: true },
+  { id: "doubts", label: "Aprovação de Dúvidas", icon: HelpCircle, hidden: true },
+  { id: "payments", label: "Pagamento de Professores", icon: DollarSign, hidden: true },
+  { id: "subscriptions", label: "Vencimento de Assinaturas", icon: CalendarClock, hidden: true },
+  { id: "emails", label: "Monitoramento de E-mails", icon: Mail, hidden: true },
+  { id: "sales-posts", label: "Posts de Divulgação", icon: Megaphone, hidden: true },
 ] as const;
 
 type TabId = (typeof tabs)[number]["id"];
@@ -80,7 +81,7 @@ const AdminDashboard = () => {
 
         <div className="flex gap-6 flex-col md:flex-row">
           <nav className="flex md:flex-col gap-1 overflow-x-auto md:overflow-visible md:w-56 shrink-0 scrollbar-hide">
-            {tabs.map((tab) => (
+            {tabs.filter((t) => !("hidden" in t && t.hidden)).map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}

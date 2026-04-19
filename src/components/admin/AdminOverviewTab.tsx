@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, PieChart, Pie, Cell, LineChart, Line, CartesianGrid, ResponsiveContainer } from "recharts";
-import { Users, Video, DollarSign, Clock, TrendingUp, Star, MailX } from "lucide-react";
+import { Users, Video, DollarSign, Clock, TrendingUp, Star, MailX, Megaphone } from "lucide-react";
 import KpiDetailDialog from "./KpiDetailDialog";
 
 interface KPIs {
@@ -20,6 +20,12 @@ interface KPIs {
   totalViews: number;
   avgRating: number;
   unsubscribedEmails: number;
+  totalSalesPosts: number;
+  recentSalesPosts: number;
+}
+
+interface AdminOverviewTabProps {
+  onNavigate?: (tabId: string) => void;
 }
 
 const COLORS = [
@@ -29,7 +35,7 @@ const COLORS = [
   "hsl(var(--secondary))",
 ];
 
-const AdminOverviewTab = () => {
+const AdminOverviewTab = ({ onNavigate }: AdminOverviewTabProps) => {
   const [kpis, setKpis] = useState<KPIs | null>(null);
   const [revenueByMonth, setRevenueByMonth] = useState<{ month: string; amount: number }[]>([]);
   const [loading, setLoading] = useState(true);
@@ -44,6 +50,10 @@ const AdminOverviewTab = () => {
   const fetchData = async () => {
     setLoading(true);
 
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const thirtyDaysAgoIso = thirtyDaysAgo.toISOString();
+
     const [
       { data: roles },
       { data: lessons },
@@ -52,6 +62,8 @@ const AdminOverviewTab = () => {
       { data: views },
       { data: ratings },
       { count: unsubCount },
+      { count: salesPostsTotal },
+      { count: salesPostsRecent },
     ] = await Promise.all([
       supabase.from("user_roles").select("role"),
       supabase.from("lessons").select("admin_approved, published"),
@@ -60,6 +72,8 @@ const AdminOverviewTab = () => {
       supabase.from("video_views").select("id"),
       supabase.from("video_ratings").select("rating"),
       supabase.from("profiles").select("*", { count: "exact", head: true }).eq("accepts_marketing", false),
+      supabase.from("teacher_sales_posts").select("*", { count: "exact", head: true }),
+      supabase.from("teacher_sales_posts").select("*", { count: "exact", head: true }).gte("created_at", thirtyDaysAgoIso),
     ]);
 
     const students = roles?.filter((r) => r.role === "student").length ?? 0;
@@ -94,6 +108,8 @@ const AdminOverviewTab = () => {
       totalViews,
       avgRating,
       unsubscribedEmails: unsubCount ?? 0,
+      totalSalesPosts: salesPostsTotal ?? 0,
+      recentSalesPosts: salesPostsRecent ?? 0,
     });
 
     // Revenue by month
@@ -140,6 +156,14 @@ const AdminOverviewTab = () => {
     { label: "Pagamentos Pendentes", value: kpis.pendingPayments, icon: DollarSign, color: "text-orange-500", key: "pending_payments" },
     { label: "Avaliação Média", value: kpis.avgRating.toFixed(1) + " ★", icon: Star, color: "text-amber-500", key: "avg_rating" },
     { label: "Descadastros de E-mail", value: kpis.unsubscribedEmails, icon: MailX, color: "text-destructive", key: "unsubscribed" },
+    {
+      label: "Posts de Divulgação",
+      value: `${kpis.totalSalesPosts} (${kpis.recentSalesPosts} em 30d)`,
+      icon: Megaphone,
+      color: "text-pink-500",
+      key: "sales_posts",
+      navigateTo: "sales-posts",
+    },
   ];
 
   const chartConfig = {
@@ -164,7 +188,13 @@ const AdminOverviewTab = () => {
           <Card
             key={kpi.label}
             className="border-border cursor-pointer hover:ring-2 hover:ring-primary/30 transition-all"
-            onClick={() => openDetail(kpi.key, kpi.label)}
+            onClick={() => {
+              if ((kpi as any).navigateTo && onNavigate) {
+                onNavigate((kpi as any).navigateTo);
+              } else {
+                openDetail(kpi.key, kpi.label);
+              }
+            }}
           >
             <CardContent className="flex items-center gap-3 p-4">
               <kpi.icon className={`h-8 w-8 shrink-0 ${kpi.color}`} />

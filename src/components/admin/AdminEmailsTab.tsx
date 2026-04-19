@@ -102,6 +102,7 @@ const AdminEmailsTab = () => {
   const [birthdayLogs, setBirthdayLogs] = useState<BirthdayLog[]>([]);
   const [birthdayLoading, setBirthdayLoading] = useState(false);
   const [birthdayRangeDays, setBirthdayRangeDays] = useState(30);
+  const [birthdayMonthly, setBirthdayMonthly] = useState<{ month: string; subscribers: number; nonSubscribers: number }[]>([]);
   const { toast } = useToast();
 
   const fetchLogs = async () => {

@@ -31,6 +31,11 @@ interface PendingPoint {
   value: number;
   color: string;
 }
+interface RatingPoint {
+  month: string;
+  avg: number;
+  count: number;
+}
 
 const BRL = (n: number) =>
   n.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });

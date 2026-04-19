@@ -52,6 +52,8 @@ const TeacherHomeStats = () => {
   const [ratings, setRatings] = useState<RatingPoint[]>([]);
   const [contentGoal, setContentGoal] = useState<number>(8);
   const [contentPublishedThisMonth, setContentPublishedThisMonth] = useState(0);
+  const [salesPostsTotal, setSalesPostsTotal] = useState(0);
+  const [salesPostsRecent, setSalesPostsRecent] = useState(0);
 
   useEffect(() => {
     if (!user) return;

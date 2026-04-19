@@ -2,14 +2,37 @@ import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import { Skeleton } from "@/components/ui/skeleton";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { useEffect } from "react";
 
 const fallbackSections = [
   { title: "1. Introdução", content: "A Revisão Fácil valoriza a privacidade dos seus usuários. Esta Política de Privacidade descreve como coletamos, usamos, armazenamos e protegemos suas informações pessoais." },
 ];
 
+/** Normalize a title into a URL-safe anchor id. */
+const slugify = (s: string) =>
+  s
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/^\d+\.\s*/, "") // strip leading "12. "
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+
+const sectionId = (sec: { id?: string; title?: string }, idx: number) =>
+  sec.id?.trim() || (sec.title ? slugify(sec.title) : `secao-${idx + 1}`);
+
 const PrivacyPolicy = () => {
   const { data, loading } = usePlatformSettings("privacy_policy");
   const sections = data?.sections?.length ? data.sections : fallbackSections;
+
+  // Smooth-scroll to hash anchor after sections render
+  useEffect(() => {
+    if (loading) return;
+    const hash = window.location.hash?.slice(1);
+    if (!hash) return;
+    const el = document.getElementById(hash);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [loading, sections.length]);
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
@@ -26,12 +49,15 @@ const PrivacyPolicy = () => {
             </div>
           ) : (
             <div className="space-y-6">
-              {sections.map((sec, idx) => (
-                <section key={idx} className="space-y-2">
-                  {sec.title && <h2 className="text-xl font-semibold">{sec.title}</h2>}
-                  <p className="text-muted-foreground leading-relaxed whitespace-pre-line">{sec.content}</p>
-                </section>
-              ))}
+              {sections.map((sec, idx) => {
+                const id = sectionId(sec, idx);
+                return (
+                  <section key={idx} id={id} className="space-y-2 scroll-mt-24">
+                    {sec.title && <h2 className="text-xl font-semibold">{sec.title}</h2>}
+                    <p className="text-muted-foreground leading-relaxed whitespace-pre-line">{sec.content}</p>
+                  </section>
+                );
+              })}
             </div>
           )}
 

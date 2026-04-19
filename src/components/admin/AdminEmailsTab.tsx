@@ -600,7 +600,7 @@ const AdminEmailsTab = () => {
             </div>
           )}
         </div>
-      )}
+      ) : null}
     </div>
   );
 };

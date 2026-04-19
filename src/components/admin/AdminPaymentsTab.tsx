@@ -34,6 +34,7 @@ interface Payment {
   net_amount: number;
   status: string;
   created_at: string;
+  notes?: string | null;
 }
 
 const AdminPaymentsTab = () => {

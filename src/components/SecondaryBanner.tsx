@@ -7,6 +7,7 @@ import {
   HeroBannerSettings,
   normalizeHeroCarousel,
   DEFAULT_HERO_AUTOPLAY_SECONDS,
+  isSlideScheduledNow,
 } from "@/hooks/usePlatformSettings";
 import { useAuth } from "@/contexts/AuthContext";
 import defaultBg from "@/assets/teacher-banner-bg.jpg";
@@ -38,6 +39,7 @@ const SecondaryBanner = () => {
       if (carousel.enabled === false) return [];
       return carousel.slides
         .filter((s) => s && (s.title || s.subtitle || s.cta_text || s.banner_image_url))
+        .filter((s) => isSlideScheduledNow(s))
         .map((slide) => ({
           slide,
           audience,

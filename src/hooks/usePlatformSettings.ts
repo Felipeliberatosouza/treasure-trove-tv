@@ -41,6 +41,10 @@ export interface HeroBannerSettings {
   banner_image_url?: string;
   /** Visual scheme used by the secondary banner. Ignored by the main hero. */
   color_scheme?: HeroColorScheme;
+  /** Optional ISO datetime string. When set, the slide only appears at/after this moment. */
+  starts_at?: string;
+  /** Optional ISO datetime string. When set, the slide stops appearing at this moment. */
+  ends_at?: string;
 }
 
 export interface HeroBannerCarouselSettings {
@@ -61,7 +65,27 @@ export const emptyHeroSlide = (): HeroBannerSettings => ({
   cta_link: "",
   banner_image_url: "",
   color_scheme: "light",
+  starts_at: "",
+  ends_at: "",
 });
+
+/** Returns true when a slide should be visible right now according to its
+ *  optional schedule window. Empty/invalid dates are treated as "no bound". */
+export const isSlideScheduledNow = (
+  slide: Pick<HeroBannerSettings, "starts_at" | "ends_at">,
+  now: Date = new Date()
+): boolean => {
+  const t = now.getTime();
+  if (slide.starts_at) {
+    const start = Date.parse(slide.starts_at);
+    if (!Number.isNaN(start) && t < start) return false;
+  }
+  if (slide.ends_at) {
+    const end = Date.parse(slide.ends_at);
+    if (!Number.isNaN(end) && t > end) return false;
+  }
+  return true;
+};
 
 /** Coerces legacy single-slide shape `{ title, subtitle, ... }` into the new
  *  carousel shape `{ slides: [...], autoplay_seconds }`. Safe to call on

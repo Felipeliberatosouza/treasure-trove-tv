@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Settings, Palette, Phone, FileText, Star, Layout, Gift, FolderOpen, Mail, Package, FileSignature, Smartphone, Heart, GraduationCap, Users, Megaphone } from "lucide-react";
+import { Settings, Palette, Phone, FileText, Star, Layout, Gift, FolderOpen, Mail, Package, FileSignature, Smartphone, Heart, GraduationCap, Users, Megaphone, Target } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import SettingsBranding from "./settings/SettingsBranding";
@@ -15,6 +15,7 @@ import SettingsProductConfig from "./settings/SettingsProductConfig";
 import SettingsTeacherContract from "./settings/SettingsTeacherContract";
 import SettingsTwilio from "./settings/SettingsTwilio";
 import SettingsRetentionCoupon from "./settings/SettingsRetentionCoupon";
+import SettingsTeacherGoal from "./settings/SettingsTeacherGoal";
 
 const sections = [
   { id: "branding", label: "Identidade Visual", icon: Palette },
@@ -32,6 +33,7 @@ const sections = [
   { id: "trial", label: "Teste Grátis", icon: Gift },
   { id: "products", label: "Config. de Produtos", icon: Package },
   { id: "contract", label: "Contrato do Professor", icon: FileSignature },
+  { id: "teacher_goal", label: "Meta do Professor", icon: Target },
   { id: "twilio", label: "Verificação Celular", icon: Smartphone },
   { id: "retention", label: "Retenção (Cupom)", icon: Heart },
 ] as const;
@@ -109,6 +111,7 @@ const AdminSettingsTab = () => {
       {activeSection === "trial" && <SettingsFreeTrial />}
       {activeSection === "products" && <SettingsProductConfig />}
       {activeSection === "contract" && <SettingsTeacherContract />}
+      {activeSection === "teacher_goal" && <SettingsTeacherGoal />}
       {activeSection === "twilio" && <SettingsTwilio />}
       {activeSection === "retention" && <SettingsRetentionCoupon />}
     </div>

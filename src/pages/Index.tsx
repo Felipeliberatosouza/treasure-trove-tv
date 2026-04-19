@@ -7,6 +7,7 @@ import PricingSection from "@/components/PricingSection";
 import Footer from "@/components/Footer";
 import WhatsAppFloat from "@/components/WhatsAppFloat";
 import SecondaryBanner from "@/components/SecondaryBanner";
+import TeacherHomeStats from "@/components/teacher/TeacherHomeStats";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import { useHomepageAreas } from "@/hooks/useCourseAreas";
 import { supabase } from "@/integrations/supabase/client";

@@ -81,7 +81,7 @@ const AdminDashboard = () => {
 
         <div className="flex gap-6 flex-col md:flex-row">
           <nav className="flex md:flex-col gap-1 overflow-x-auto md:overflow-visible md:w-56 shrink-0 scrollbar-hide">
-            {tabs.map((tab) => (
+            {tabs.filter((t) => !("hidden" in t && t.hidden)).map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}

@@ -265,7 +265,7 @@ const SalesBoostTab = () => {
 
       ctx.font = "500 28px system-ui, sans-serif";
       ctx.fillStyle = "rgba(255,255,255,0.92)";
-      const items = contents.slice(0, 4);
+      const items = selectedContents.slice(0, MAX_SEL);
       items.forEach((c, i) => {
         const y = listStartY + 60 + i * 50;
         const prefix = c.video_type === "resolucao_questoes" ? "📝" : "🎬";

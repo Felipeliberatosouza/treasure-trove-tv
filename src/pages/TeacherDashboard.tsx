@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, User, Lock, Video, FileText, DollarSign, HelpCircle, BookOpen, FileSignature, GraduationCap, Megaphone } from "lucide-react";
+import { ArrowLeft, User, Lock, Video, DollarSign, HelpCircle, BookOpen, FileSignature, GraduationCap, Megaphone, Sparkles } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
 import PersonalDataTab from "@/components/dashboard/PersonalDataTab";
+import ExpertiseAreasTab from "@/components/dashboard/ExpertiseAreasTab";
 import LoginDataTab from "@/components/dashboard/LoginDataTab";
 import LessonsTab from "@/components/dashboard/LessonsTab";
-import ExamSolutionsTab from "@/components/dashboard/ExamSolutionsTab";
 import TeacherDoubtsTab from "@/components/dashboard/TeacherDoubtsTab";
 import TeacherInstructionsTab from "@/components/dashboard/TeacherInstructionsTab";
 import TeacherContractTab from "@/components/dashboard/TeacherContractTab";
@@ -19,13 +19,13 @@ import { toast } from "sonner";
 const teacherTabs = [
   { id: "instructions", label: "Instruções", icon: BookOpen },
   { id: "personal", label: "Dados Pessoais", icon: User },
+  { id: "expertise", label: "Áreas de Expertise", icon: Sparkles },
   { id: "login", label: "Dados de Login", icon: Lock },
   { id: "lessons", label: "Minhas Aulas", icon: Video },
-  { id: "exams", label: "Resoluções de Provas", icon: FileText },
   { id: "doubts", label: "Dúvidas de Alunos", icon: HelpCircle },
-  { id: "sales-boost", label: "Buscar Vendas", icon: Megaphone },
+  { id: "sales-boost", label: "Aumentar Minhas Vendas", icon: Megaphone },
+  { id: "sales", label: "Meu Extrato", icon: DollarSign },
   { id: "contract", label: "Meu Contrato", icon: FileSignature },
-  { id: "sales", label: "Vendas e Recebimentos", icon: DollarSign },
 ] as const;
 
 type TeacherTabId = (typeof teacherTabs)[number]["id"];
@@ -127,7 +127,7 @@ const TeacherDashboard = () => {
                   className="flex items-center gap-2 whitespace-nowrap rounded-lg px-3 py-2 text-sm text-primary hover:bg-secondary transition-colors mt-4 border border-dashed border-primary/30"
                 >
                   <GraduationCap className="h-4 w-4" />
-                  {addingRole ? "Ativando..." : "Tornar-se também aluno"}
+                  {addingRole ? "Ativando..." : "Torne-se também Aluno"}
                 </button>
               )}
             </nav>
@@ -140,15 +140,15 @@ const TeacherDashboard = () => {
             >
               {activeTab === "instructions" && <TeacherInstructionsTab />}
               {activeTab === "personal" && <PersonalDataTab />}
+              {activeTab === "expertise" && <ExpertiseAreasTab />}
               {activeTab === "login" && <LoginDataTab />}
               {activeTab === "lessons" && <LessonsTab />}
-              {activeTab === "exams" && <ExamSolutionsTab />}
               {activeTab === "doubts" && <TeacherDoubtsTab />}
               {activeTab === "sales-boost" && <SalesBoostTab />}
               {activeTab === "contract" && <TeacherContractTab />}
               {activeTab === "sales" && (
                 <div>
-                  <h2 className="font-display text-lg font-semibold mb-4">Vendas e Recebimentos</h2>
+                  <h2 className="font-display text-lg font-semibold mb-4">Meu Extrato</h2>
                   <p className="text-sm text-muted-foreground">Nenhuma venda registrada ainda. Publique seus conteúdos para começar a vender.</p>
                 </div>
               )}

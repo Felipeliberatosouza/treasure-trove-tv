@@ -384,10 +384,6 @@ const PersonalDataTab = () => {
               <p className="text-xs text-muted-foreground mt-1">Utilizada para recebimento do pagamento mensal</p>
             </div>
             <div>
-              <label className="text-sm text-muted-foreground mb-1 block">Áreas de expertise</label>
-              <AreaSelector selected={expertiseAreas} onChange={setExpertiseAreas} max={areas.length || 10} />
-            </div>
-            <div>
               <label className="text-sm text-muted-foreground mb-1 block">Bio</label>
               <Textarea value={bio} onChange={(e) => setBio(e.target.value)} className="bg-secondary" rows={3} />
             </div>

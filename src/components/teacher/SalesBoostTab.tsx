@@ -151,6 +151,7 @@ const SalesBoostTab = () => {
   const [history, setHistory] = useState<SalesPostRow[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [totalPostsCount, setTotalPostsCount] = useState<number>(0);
+  const [recentPostsCount, setRecentPostsCount] = useState<number>(0);
 
   const MIN_SEL = 3;
   const MAX_SEL = 5;

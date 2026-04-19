@@ -602,9 +602,15 @@ const SalesBoostTab = () => {
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="font-display text-lg font-semibold mb-2 flex items-center gap-2">
-          <Megaphone className="h-5 w-5 text-primary" /> Buscar Vendas
-        </h2>
+        <div className="flex items-center justify-between gap-2 flex-wrap mb-2">
+          <h2 className="font-display text-lg font-semibold flex items-center gap-2">
+            <Megaphone className="h-5 w-5 text-primary" /> Buscar Vendas
+          </h2>
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-secondary/50 px-3 py-1 text-xs font-medium text-foreground">
+            <History className="h-3.5 w-3.5 text-primary" />
+            {totalPostsCount} {totalPostsCount === 1 ? "post gerado" : "posts gerados"}
+          </span>
+        </div>
         <p className="text-sm text-muted-foreground">
           Aprenda a produzir conteúdo de qualidade e divulgue sua página com posts prontos para Instagram e WhatsApp.
         </p>

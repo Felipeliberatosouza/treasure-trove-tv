@@ -502,6 +502,9 @@ const SalesBoostTab = () => {
       const dataUrl = canvas.toDataURL("image/png");
       setImageDataUrl(dataUrl);
       toast.success("Post gerado com sucesso!");
+
+      // Persist to history (storage + DB) — non-blocking
+      void savePostToHistory(canvas, cap, selectedContents);
     } catch (err) {
       console.error(err);
       toast.error("Falha ao gerar post.");

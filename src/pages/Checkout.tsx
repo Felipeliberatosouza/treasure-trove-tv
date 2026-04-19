@@ -668,6 +668,17 @@ function CheckoutForm({
         <p className="text-[11px] text-muted-foreground leading-snug">
           Aceitamos Visa, Mastercard, Elo, American Express, Hipercard e outras bandeiras.
         </p>
+        {initialPhone && (
+          <div
+            role="status"
+            className="flex items-start gap-2 rounded-md border border-primary/20 bg-primary/5 px-3 py-2 text-[11px] leading-snug text-foreground/80"
+          >
+            <ShieldCheck className="h-3.5 w-3.5 mt-0.5 text-primary shrink-0" aria-hidden />
+            <span>
+              Telefone verificado será usado para segurança da transação (antifraude).
+            </span>
+          </div>
+        )}
       </Card>
 
       {error && (

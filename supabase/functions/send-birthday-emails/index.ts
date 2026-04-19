@@ -205,15 +205,22 @@ Deno.serve(async (req: Request) => {
       }
     }
 
-    const buildRecommendedVideoBlock = (video: { id: string; title: string; thumbnail_url: string | null } | null) => {
+    const buildRecommendedVideoBlock = (
+      video: { id: string; title: string; thumbnail_url: string | null } | null,
+      source: 'interest_area' | 'global_fallback' | 'none',
+    ) => {
       if (!video) return ''
       const url = `${loginLink}/video/lesson/${video.id}`
       const thumbHtml = video.thumbnail_url
         ? `<img src="${video.thumbnail_url}" alt="${video.title}" style="width:100%;max-width:480px;border-radius:8px;display:block;margin:0 auto 12px;" />`
         : ''
+      const heading =
+        source === 'interest_area'
+          ? '🎁 Sugestão para você'
+          : '🔥 Em alta na plataforma'
       return `
         <div style="margin:24px auto;max-width:520px;padding:16px;border:1px solid #e5e7eb;border-radius:10px;background:#fafafa;text-align:center;">
-          <p style="margin:0 0 8px;font-size:13px;color:#6b7280;text-transform:uppercase;letter-spacing:1px;">🎁 Sugestão para você</p>
+          <p style="margin:0 0 8px;font-size:13px;color:#6b7280;text-transform:uppercase;letter-spacing:1px;">${heading}</p>
           ${thumbHtml}
           <p style="margin:0 0 12px;font-size:16px;font-weight:600;color:#1f2937;">${video.title}</p>
           <a href="${url}" style="display:inline-block;padding:10px 20px;background:#4f46e5;color:#ffffff;text-decoration:none;border-radius:6px;font-weight:600;font-size:14px;">Assistir agora</a>
@@ -243,9 +250,16 @@ Deno.serve(async (req: Request) => {
 
       // Vídeo recomendado: APENAS para alunos (não para professores)
       let recommendedBlock = ''
+      let recommendedSource: 'interest_area' | 'global_fallback' | 'none' = 'none'
+      let recommendedVideoId: string | null = null
       if (!isTeacher) {
-        const video = await recommendVideoForStudent(user.user_id, user.areas as string[] | null)
-        recommendedBlock = buildRecommendedVideoBlock(video)
+        const { video, source } = await recommendVideoForStudent(
+          user.user_id,
+          user.areas as string[] | null,
+        )
+        recommendedSource = source
+        recommendedVideoId = video?.id ?? null
+        recommendedBlock = buildRecommendedVideoBlock(video, source)
       }
 
       let body = (tpl.body_html || '')

@@ -1,12 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Loader2, TrendingUp, Activity, AlertCircle, ArrowUpRight } from "lucide-react";
+import { Loader2, TrendingUp, Activity, AlertCircle, ArrowUpRight, Star, TrendingDown, Minus } from "lucide-react";
 import {
   Bar,
   BarChart,
   CartesianGrid,
   Cell,
+  Line,
+  LineChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -29,6 +31,11 @@ interface PendingPoint {
   value: number;
   color: string;
 }
+interface RatingPoint {
+  month: string;
+  avg: number;
+  count: number;
+}
 
 const BRL = (n: number) =>
   n.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
@@ -42,6 +49,7 @@ const TeacherHomeStats = () => {
   const [sales, setSales] = useState<SalesPoint[]>([]);
   const [activities, setActivities] = useState<ActivityPoint[]>([]);
   const [pendings, setPendings] = useState<PendingPoint[]>([]);
+  const [ratings, setRatings] = useState<RatingPoint[]>([]);
   const [contentGoal, setContentGoal] = useState<number>(8);
   const [contentPublishedThisMonth, setContentPublishedThisMonth] = useState(0);
 
@@ -67,12 +75,16 @@ const TeacherHomeStats = () => {
       const effectiveGoal = personal && personal > 0 ? personal : globalGoal;
       setContentGoal(effectiveGoal);
 
-      // First get teacher's content ids for aula particular count
-      const { data: teacherLessonsIds } = await supabase
-        .from("lessons")
-        .select("id")
-        .eq("teacher_id", user.id);
+      // First get teacher's content ids for aula particular count and ratings
+      const [{ data: teacherLessonsIds }, { data: teacherExamsIds }] = await Promise.all([
+        supabase.from("lessons").select("id").eq("teacher_id", user.id),
+        supabase.from("exam_solutions").select("id").eq("teacher_id", user.id),
+      ]);
       const lessonIds = (teacherLessonsIds || []).map((l) => l.id);
+      const examIds = (teacherExamsIds || []).map((e) => e.id);
+
+      // Build content filter for ratings (lessons + exams from this teacher)
+      const allContentIds = [...lessonIds, ...examIds];
 
       // Parallel fetches
       const [
@@ -84,6 +96,7 @@ const TeacherHomeStats = () => {
         aulaParticularRes,
         lessonsThisMonthRes,
         examsThisMonthRes,
+        ratingsRes,
       ] = await Promise.all([
         supabase
           .from("teacher_payments")
@@ -125,6 +138,13 @@ const TeacherHomeStats = () => {
           .select("id", { count: "exact", head: true })
           .eq("teacher_id", user.id)
           .gte("created_at", startOfMonth),
+        allContentIds.length > 0
+          ? supabase
+              .from("video_ratings")
+              .select("rating, created_at")
+              .in("content_id", allContentIds)
+              .gte("created_at", threeMonthsAgo)
+          : Promise.resolve({ data: [] } as any),
       ]);
 
       // Sales last 3 months
@@ -175,6 +195,30 @@ const TeacherHomeStats = () => {
         },
       ]);
 
+      // Ratings last 3 months (avg per month)
+      const ratingsByMonth: Record<string, { sum: number; count: number }> = {};
+      for (let i = 2; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        ratingsByMonth[`${d.getFullYear()}-${d.getMonth()}`] = { sum: 0, count: 0 };
+      }
+      ((ratingsRes.data as { rating: number; created_at: string }[]) || []).forEach((r) => {
+        const d = new Date(r.created_at);
+        const k = `${d.getFullYear()}-${d.getMonth()}`;
+        if (k in ratingsByMonth) {
+          ratingsByMonth[k].sum += Number(r.rating || 0);
+          ratingsByMonth[k].count += 1;
+        }
+      });
+      const ratingsArr: RatingPoint[] = Object.entries(ratingsByMonth).map(([k, v]) => {
+        const [y, m] = k.split("-").map(Number);
+        return {
+          month: monthLabel(new Date(y, m, 1)),
+          avg: v.count > 0 ? Number((v.sum / v.count).toFixed(2)) : 0,
+          count: v.count,
+        };
+      });
+      setRatings(ratingsArr);
+
       setLoading(false);
     };
     fetchAll();
@@ -189,6 +233,19 @@ const TeacherHomeStats = () => {
     () => pendings.reduce((acc, p) => acc + p.value, 0),
     [pendings]
   );
+
+  const ratingsSummary = useMemo(() => {
+    const totalCount = ratings.reduce((acc, r) => acc + r.count, 0);
+    const weightedSum = ratings.reduce((acc, r) => acc + r.avg * r.count, 0);
+    const avg = totalCount > 0 ? weightedSum / totalCount : 0;
+    const last = ratings[ratings.length - 1]?.avg ?? 0;
+    const prev = ratings[ratings.length - 2]?.avg ?? 0;
+    const delta = last - prev;
+    let trend: "up" | "down" | "flat" = "flat";
+    if (delta > 0.05) trend = "up";
+    else if (delta < -0.05) trend = "down";
+    return { avg, totalCount, trend, delta };
+  }, [ratings]);
 
   if (loading) {
     return (
@@ -205,10 +262,10 @@ const TeacherHomeStats = () => {
     <section className="px-6 md:px-12 lg:px-20">
       <h2 className="font-display text-2xl font-bold mb-1">📊 Seus Resultados</h2>
       <p className="text-sm text-muted-foreground mb-6">
-        Acompanhe vendas, atividades e pendências.
+        Acompanhe vendas, atividades, pendências e avaliações.
       </p>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
         {/* Card 1: Sales */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
@@ -368,6 +425,90 @@ const TeacherHomeStats = () => {
                   ))}
                 </Bar>
               </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </motion.div>
+
+        {/* Card 4: Ratings */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+          className="rounded-xl border border-border bg-card p-5"
+        >
+          <div className="flex items-start justify-between mb-3">
+            <div>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Star className="h-4 w-4" /> Avaliação média (3 meses)
+              </div>
+              <div className="flex items-baseline gap-2 mt-1">
+                <p className="font-display text-2xl font-bold">
+                  {ratingsSummary.avg > 0 ? ratingsSummary.avg.toFixed(1) : "—"}
+                </p>
+                <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+              </div>
+              <div className="flex items-center gap-1 text-xs mt-1">
+                {ratingsSummary.totalCount === 0 ? (
+                  <span className="text-muted-foreground">Sem avaliações ainda</span>
+                ) : ratingsSummary.trend === "up" ? (
+                  <span className="inline-flex items-center gap-1 text-green-600 font-semibold">
+                    <TrendingUp className="h-3 w-3" /> +{ratingsSummary.delta.toFixed(1)} vs mês anterior
+                  </span>
+                ) : ratingsSummary.trend === "down" ? (
+                  <span className="inline-flex items-center gap-1 text-red-600 font-semibold">
+                    <TrendingDown className="h-3 w-3" /> {ratingsSummary.delta.toFixed(1)} vs mês anterior
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 text-muted-foreground">
+                    <Minus className="h-3 w-3" /> estável
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {ratingsSummary.totalCount} avaliação{ratingsSummary.totalCount === 1 ? "" : "ões"}
+              </p>
+            </div>
+          </div>
+          <div className="h-40">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={ratings} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                <XAxis
+                  dataKey="month"
+                  tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <YAxis
+                  domain={[0, 5]}
+                  ticks={[0, 1, 2, 3, 4, 5]}
+                  tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
+                  tickLine={false}
+                  axisLine={false}
+                  width={24}
+                />
+                <Tooltip
+                  cursor={{ stroke: "hsl(var(--muted) / 0.3)" }}
+                  contentStyle={{
+                    background: "hsl(var(--card))",
+                    border: "1px solid hsl(var(--border))",
+                    borderRadius: 8,
+                    fontSize: 12,
+                  }}
+                  formatter={(v: number, _name, props) => [
+                    `${v.toFixed(1)} ⭐ (${props.payload.count} aval.)`,
+                    "Média",
+                  ]}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="avg"
+                  stroke="hsl(48 96% 53%)"
+                  strokeWidth={3}
+                  dot={{ r: 5, fill: "hsl(48 96% 53%)", strokeWidth: 0 }}
+                  activeDot={{ r: 7 }}
+                />
+              </LineChart>
             </ResponsiveContainer>
           </div>
         </motion.div>

@@ -21,6 +21,7 @@ import AdminAuditLogsTab from "@/components/admin/AdminAuditLogsTab";
 import AdminCancellationReceiptsTab from "@/components/admin/AdminCancellationReceiptsTab";
 import AdminCommitmentRefundsTab from "@/components/admin/AdminCommitmentRefundsTab";
 import AdminCancellationReasonsTab from "@/components/admin/AdminCancellationReasonsTab";
+import AdminSalesPostsTab from "@/components/admin/AdminSalesPostsTab";
 
 const tabs = [
   { id: "overview", label: "Visão Geral", icon: LayoutDashboard },

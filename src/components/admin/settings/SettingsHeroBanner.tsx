@@ -54,6 +54,12 @@ const SettingsHeroBanner = ({
   });
   const [activeIndex, setActiveIndex] = useState(0);
   const [saving, setSaving] = useState(false);
+  const [now, setNow] = useState(() => new Date());
+
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 30_000);
+    return () => clearInterval(id);
+  }, []);
 
   useEffect(() => {
     const normalized = normalizeHeroCarousel(data);

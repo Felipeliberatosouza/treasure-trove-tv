@@ -150,7 +150,21 @@ const TeacherHomeStats = () => {
           : Promise.resolve({ data: [] } as any),
       ]);
 
-      // Sales last 3 months
+      // Sales posts counts (total + last 30d)
+      const [{ count: salesPostsTotalCount }, { count: salesPostsRecentCount }] = await Promise.all([
+        supabase
+          .from("teacher_sales_posts")
+          .select("id", { count: "exact", head: true })
+          .eq("teacher_id", user.id),
+        supabase
+          .from("teacher_sales_posts")
+          .select("id", { count: "exact", head: true })
+          .eq("teacher_id", user.id)
+          .gte("created_at", thirtyDaysAgo),
+      ]);
+      setSalesPostsTotal(salesPostsTotalCount ?? 0);
+      setSalesPostsRecent(salesPostsRecentCount ?? 0);
+
       const salesByMonth: Record<string, number> = {};
       for (let i = 2; i >= 0; i--) {
         const d = new Date(now.getFullYear(), now.getMonth() - i, 1);

@@ -38,7 +38,8 @@ const TEMPLATE_LABELS: Record<string, string> = {
   email_confirmation: "Confirmação de E-mail",
   welcome: "Boas-vindas",
   phone_verification: "Verificação por Celular",
-  birthday: "Feliz Aniversário",
+  birthday: "Aniversário (Professores e Alunos sem Assinatura)",
+  birthday_subscriber: "Aniversário (Alunos com Assinatura Ativa)",
   doubt_approved: "Dúvida Aprovada (Professor)",
   doubt_answered: "Dúvida Respondida (Aluno)",
   doubt_submitted: "Dúvida Enviada (Aluno)",
@@ -57,7 +58,8 @@ const TEMPLATE_DESCRIPTIONS: Record<string, string> = {
   email_confirmation: "Enviado após verificação do celular, contém link de confirmação de cadastro.",
   welcome: "Enviado após o usuário confirmar o cadastro pelo link de e-mail.",
   phone_verification: "Mensagem com código de verificação enviada por SMS/WhatsApp.",
-  birthday: "Enviado automaticamente no dia do aniversário do usuário (diariamente às 8h).",
+  birthday: "Enviado no aniversário de PROFESSORES e ALUNOS SEM assinatura ativa (diariamente às 8h). Pode incluir cupom de desconto.",
+  birthday_subscriber: "Enviado no aniversário de ALUNOS COM assinatura ativa (diariamente às 8h). NÃO envia cupom de desconto.",
   doubt_approved: "Enviado ao professor quando uma dúvida de aluno é aprovada pelo administrador.",
   doubt_answered: "Enviado ao aluno quando o professor responde sua dúvida.",
   doubt_submitted: "Mensagem exibida ao aluno após enviar uma dúvida.",
@@ -77,6 +79,7 @@ const TEMPLATE_VARS: Record<string, string[]> = {
   welcome: ["{{name}}", "{{login_link}}"],
   phone_verification: ["{{name}}", "{{code}}", "{{channel}}"],
   birthday: ["{{name}}", "{{login_link}}"],
+  birthday_subscriber: ["{{name}}", "{{login_link}}"],
   doubt_approved: ["{{teacher_name}}", "{{student_name}}", "{{question}}", "{{content_title}}", "{{deadline_days}}"],
   doubt_answered: ["{{student_name}}", "{{teacher_name}}", "{{question}}", "{{answer}}", "{{content_title}}"],
   doubt_submitted: ["{{student_name}}"],
@@ -490,7 +493,19 @@ const SettingsEmailTemplates = () => {
             )}
           </div>
 
-          {/* Cupom de Desconto */}
+          {/* Cupom de Desconto — não disponível para o template de aniversário de assinantes ativos */}
+          {activeKey === "birthday_subscriber" ? (
+            <div className="rounded-lg border border-border p-4 space-y-2 bg-muted/30">
+              <h4 className="text-sm font-semibold flex items-center gap-2">
+                <Tag className="h-4 w-4" /> Cupom de Desconto
+              </h4>
+              <p className="text-xs text-muted-foreground">
+                Este template é destinado a alunos que <strong>já possuem assinatura ativa</strong>.
+                Por isso, não é possível incluir cupom de desconto. Para enviar cupom no aniversário,
+                use o template <strong>"Aniversário (Professores e Alunos sem Assinatura)"</strong>.
+              </p>
+            </div>
+          ) : (
           <div className="rounded-lg border border-border p-4 space-y-3">
             <h4 className="text-sm font-semibold flex items-center gap-2">
               <Tag className="h-4 w-4" /> Cupom de Desconto
@@ -696,6 +711,7 @@ const SettingsEmailTemplates = () => {
               </div>
             )}
           </div>
+          )}
 
           {/* Logo */}
           <div className="space-y-2">

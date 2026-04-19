@@ -403,6 +403,64 @@ const AdminPaymentsTab = () => {
   const hasActiveFilters =
     filterTeacherId !== "all" || filterStatus !== "all" || filterStart !== "" || filterEnd !== "";
 
+  // Recompute dialog state
+  const [recomputeOpen, setRecomputeOpen] = useState(false);
+  const [recomputeTeacherId, setRecomputeTeacherId] = useState<string>("all");
+  const [recomputeStart, setRecomputeStart] = useState<string>(() => {
+    const d = new Date();
+    d.setMonth(d.getMonth() - 12);
+    return d.toISOString().slice(0, 10);
+  });
+  const [recomputeEnd, setRecomputeEnd] = useState<string>(() => new Date().toISOString().slice(0, 10));
+  const [recomputeLoading, setRecomputeLoading] = useState(false);
+
+  const handleRecompute = async (dryRun: boolean) => {
+    if (!recomputeStart || !recomputeEnd) {
+      toast({ title: "Datas obrigatórias", description: "Informe início e fim do período.", variant: "destructive" });
+      return;
+    }
+    if (recomputeStart > recomputeEnd) {
+      toast({ title: "Período inválido", description: "Data inicial deve ser anterior à final.", variant: "destructive" });
+      return;
+    }
+    setRecomputeLoading(true);
+    const body: Record<string, unknown> = {
+      period_start: recomputeStart,
+      period_end: recomputeEnd,
+      dry_run: dryRun,
+    };
+    if (recomputeTeacherId !== "all") body.teacher_id = recomputeTeacherId;
+
+    const { data, error } = await supabase.functions.invoke("recompute-teacher-payments", { body });
+    setRecomputeLoading(false);
+
+    if (error || (data as any)?.error) {
+      toast({
+        title: "Erro",
+        description: (data as any)?.error || error?.message || "Falha ao recalcular.",
+        variant: "destructive",
+      });
+      return;
+    }
+    const d = data as any;
+    const updated = d.results.filter((r: any) => r.action === "updated").length;
+    const inserted = d.results.filter((r: any) => r.action === "inserted").length;
+    const skipped = d.results.filter((r: any) => r.action === "skipped_paid").length;
+    const preview = d.results.filter((r: any) => r.action === "preview").length;
+
+    toast({
+      title: dryRun ? "Pré-visualização" : "Recálculo concluído",
+      description: dryRun
+        ? `${d.purchases_processed} compras em ${preview} período(s) seriam processadas. Use "Confirmar" para aplicar.`
+        : `${d.purchases_processed} compras em ${d.buckets} período(s). Atualizado: ${updated}, criado: ${inserted}, ignorado (pago): ${skipped}.`,
+    });
+
+    if (!dryRun) {
+      setRecomputeOpen(false);
+      fetchData();
+    }
+  };
+
   return (
     <div>
       <h2 className="font-display text-lg font-semibold mb-4 flex items-center gap-2">

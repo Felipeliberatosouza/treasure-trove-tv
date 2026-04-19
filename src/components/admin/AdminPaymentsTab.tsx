@@ -161,7 +161,16 @@ const AdminPaymentsTab = () => {
     setLoading(false);
   };
 
-  useEffect(() => { fetchData(); }, []);
+  const fetchRuns = async () => {
+    const { data } = await supabase
+      .from("recompute_runs" as any)
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(50);
+    setRuns(data || []);
+  };
+
+  useEffect(() => { fetchData(); fetchRuns(); }, []);
 
   const handleCreatePayment = async () => {
     const { error } = await supabase.from("teacher_payments").insert({

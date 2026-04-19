@@ -432,6 +432,14 @@ const AdminEmailsTab = () => {
         >
           <Cake className="h-3.5 w-3.5 mr-1" /> Aniversários
         </Button>
+        <Button
+          size="sm"
+          variant={activeView === "reengagement" ? "default" : "outline"}
+          onClick={() => setActiveView("reengagement")}
+          className="text-xs"
+        >
+          <Heart className="h-3.5 w-3.5 mr-1" /> Reengajamento
+        </Button>
       </div>
 
       {activeView === "emails" ? (

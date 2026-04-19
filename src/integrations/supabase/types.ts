@@ -1272,6 +1272,45 @@ export type Database = {
         }
         Relationships: []
       }
+      teacher_sales_posts: {
+        Row: {
+          caption: string
+          contents: Json
+          created_at: string
+          id: string
+          public_url: string | null
+          teacher_id: string
+          template: string
+          thumbnail_path: string | null
+          thumbnail_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          caption?: string
+          contents?: Json
+          created_at?: string
+          id?: string
+          public_url?: string | null
+          teacher_id: string
+          template?: string
+          thumbnail_path?: string | null
+          thumbnail_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          caption?: string
+          contents?: Json
+          created_at?: string
+          id?: string
+          public_url?: string | null
+          teacher_id?: string
+          template?: string
+          thumbnail_path?: string | null
+          thumbnail_url?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string

@@ -14,6 +14,8 @@ import {
   GripVertical,
   ArrowUp,
   ArrowDown,
+  History,
+  Trash2,
 } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
@@ -30,6 +32,17 @@ interface ContentItem {
   title: string;
   video_type: string;
   has_top_questoes: boolean;
+}
+
+interface SalesPostRow {
+  id: string;
+  template: string;
+  caption: string;
+  thumbnail_url: string | null;
+  thumbnail_path: string | null;
+  contents: ContentItem[];
+  public_url: string | null;
+  created_at: string;
 }
 
 type TemplateKey = "light" | "dark" | "colorful";
@@ -135,6 +148,8 @@ const SalesBoostTab = () => {
   const [caption, setCaption] = useState<string>("");
   const [slug, setSlug] = useState<string>("");
   const [template, setTemplate] = useState<TemplateKey>("colorful");
+  const [history, setHistory] = useState<SalesPostRow[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
 
   const MIN_SEL = 3;
   const MAX_SEL = 5;
@@ -190,7 +205,107 @@ const SalesBoostTab = () => {
     fetchAll();
   }, [user?.id]);
 
-  // Preserve selection order (drag-and-drop driven)
+  // Fetch sales post history
+  const fetchHistory = async () => {
+    if (!user?.id) return;
+    setLoadingHistory(true);
+    const { data, error } = await supabase
+      .from("teacher_sales_posts")
+      .select("id,template,caption,thumbnail_url,thumbnail_path,contents,public_url,created_at")
+      .eq("teacher_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(20);
+    if (!error && data) {
+      setHistory(data as unknown as SalesPostRow[]);
+    }
+    setLoadingHistory(false);
+  };
+
+  useEffect(() => {
+    fetchHistory();
+  }, [user?.id]);
+
+  const reuseHistoryPost = (post: SalesPostRow) => {
+    setTemplate((post.template as TemplateKey) || "colorful");
+    setCaption(post.caption || "");
+    setImageDataUrl(post.thumbnail_url || "");
+    const ids = (post.contents || []).map((c) => c.id).filter(Boolean);
+    if (ids.length) {
+      // Only keep ids that still exist in current contents to allow re-generation
+      const existing = ids.filter((id) => contents.some((c) => c.id === id));
+      if (existing.length) setSelectedIds(existing.slice(0, MAX_SEL));
+    }
+    toast.success("Post carregado do histórico.");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const deleteHistoryPost = async (post: SalesPostRow) => {
+    if (!confirm("Excluir este post do histórico?")) return;
+    // Delete storage object first (best-effort)
+    if (post.thumbnail_path) {
+      await supabase.storage.from("sales-post-thumbnails").remove([post.thumbnail_path]);
+    }
+    const { error } = await supabase
+      .from("teacher_sales_posts")
+      .delete()
+      .eq("id", post.id);
+    if (error) {
+      toast.error("Falha ao excluir post.");
+      return;
+    }
+    setHistory((prev) => prev.filter((p) => p.id !== post.id));
+    toast.success("Post removido do histórico.");
+  };
+
+  const savePostToHistory = async (
+    canvas: HTMLCanvasElement,
+    cap: string,
+    items: ContentItem[]
+  ) => {
+    if (!user?.id) return;
+    try {
+      const blob: Blob | null = await new Promise((resolve) =>
+        canvas.toBlob((b) => resolve(b), "image/png", 0.92)
+      );
+      if (!blob) return;
+      const path = `${user.id}/${Date.now()}.png`;
+      const { error: upErr } = await supabase.storage
+        .from("sales-post-thumbnails")
+        .upload(path, blob, { contentType: "image/png", upsert: false });
+      if (upErr) {
+        console.error("Storage upload failed", upErr);
+        return;
+      }
+      const { data: pub } = supabase.storage
+        .from("sales-post-thumbnails")
+        .getPublicUrl(path);
+
+      const { data: inserted, error: insErr } = await supabase
+        .from("teacher_sales_posts")
+        .insert({
+          teacher_id: user.id,
+          template,
+          caption: cap,
+          thumbnail_url: pub?.publicUrl || null,
+          thumbnail_path: path,
+          contents: items as unknown as never,
+          public_url: publicUrl || null,
+        })
+        .select("id,template,caption,thumbnail_url,thumbnail_path,contents,public_url,created_at")
+        .maybeSingle();
+
+      if (insErr) {
+        console.error("Insert post history failed", insErr);
+        return;
+      }
+      if (inserted) {
+        setHistory((prev) => [inserted as unknown as SalesPostRow, ...prev].slice(0, 20));
+      }
+    } catch (e) {
+      console.error("savePostToHistory error", e);
+    }
+  };
+
   const selectedContents = useMemo(() => {
     const map = new Map(contents.map((c) => [c.id, c]));
     return selectedIds.map((id) => map.get(id)).filter(Boolean) as ContentItem[];
@@ -435,6 +550,9 @@ const SalesBoostTab = () => {
       const dataUrl = canvas.toDataURL("image/png");
       setImageDataUrl(dataUrl);
       toast.success("Post gerado com sucesso!");
+
+      // Persist to history (storage + DB) — non-blocking
+      void savePostToHistory(canvas, cap, selectedContents);
     } catch (err) {
       console.error(err);
       toast.error("Falha ao gerar post.");
@@ -818,6 +936,82 @@ const SalesBoostTab = () => {
             </div>
           )}
         </div>
+      </section>
+
+      {/* History */}
+      <section>
+        <h3 className="font-display text-base font-semibold mb-3 flex items-center gap-2">
+          <History className="h-4 w-4 text-primary" /> Histórico de posts gerados
+        </h3>
+        {loadingHistory ? (
+          <p className="text-sm text-muted-foreground">Carregando histórico...</p>
+        ) : history.length === 0 ? (
+          <p className="text-sm text-muted-foreground">
+            Você ainda não gerou nenhum post. Gere acima para começar seu histórico.
+          </p>
+        ) : (
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {history.map((post) => {
+              const tplLabel =
+                TEMPLATES[(post.template as TemplateKey) || "colorful"]?.label ||
+                post.template;
+              return (
+                <div
+                  key={post.id}
+                  className="rounded-lg border border-border bg-secondary/30 overflow-hidden flex flex-col"
+                >
+                  {post.thumbnail_url ? (
+                    <img
+                      src={post.thumbnail_url}
+                      alt="Miniatura do post"
+                      className="w-full aspect-[4/5] object-cover bg-background"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="w-full aspect-[4/5] bg-muted flex items-center justify-center text-xs text-muted-foreground">
+                      Sem miniatura
+                    </div>
+                  )}
+                  <div className="p-3 flex-1 flex flex-col gap-2">
+                    <div className="flex items-center justify-between gap-2 text-xs">
+                      <span className="font-medium text-foreground">{tplLabel}</span>
+                      <span className="text-muted-foreground">
+                        {new Date(post.created_at).toLocaleString("pt-BR", {
+                          day: "2-digit",
+                          month: "2-digit",
+                          year: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground line-clamp-2">
+                      {(post.contents || []).map((c) => c.title).join(" • ") || "Sem conteúdos."}
+                    </p>
+                    <div className="grid grid-cols-2 gap-2 mt-auto pt-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => reuseHistoryPost(post)}
+                        className="gap-1"
+                      >
+                        <Sparkles className="h-3.5 w-3.5" /> Reutilizar
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => deleteHistoryPost(post)}
+                        className="gap-1 text-destructive hover:text-destructive"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" /> Excluir
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </section>
     </div>
   );

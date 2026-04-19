@@ -911,6 +911,144 @@ const AdminEmailsTab = () => {
             </div>
           )}
         </div>
+      ) : activeView === "reengagement" ? (
+        <div className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            E-mails de reengajamento para alunos sem assistir vídeos e professores sem postar conteúdo.
+          </p>
+
+          <Card>
+            <CardContent className="pt-4 pb-4 px-4 space-y-3">
+              <h3 className="text-sm font-semibold flex items-center gap-2">
+                <Heart className="h-4 w-4 text-rose-500" /> Configuração
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div>
+                  <label className="text-xs text-muted-foreground">Aluno inativo (dias)</label>
+                  <Input
+                    type="number"
+                    min={1}
+                    value={reengagementCfg.student_inactive_days}
+                    onChange={(e) => setReengagementCfg({ ...reengagementCfg, student_inactive_days: Number(e.target.value) })}
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground">Professor inativo (dias)</label>
+                  <Input
+                    type="number"
+                    min={1}
+                    value={reengagementCfg.teacher_inactive_days}
+                    onChange={(e) => setReengagementCfg({ ...reengagementCfg, teacher_inactive_days: Number(e.target.value) })}
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground">Reenviar a cada (dias)</label>
+                  <Input
+                    type="number"
+                    min={1}
+                    value={reengagementCfg.resend_interval_days}
+                    onChange={(e) => setReengagementCfg({ ...reengagementCfg, resend_interval_days: Number(e.target.value) })}
+                  />
+                </div>
+              </div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <Button size="sm" onClick={saveReengagementCfg} disabled={savingReengCfg}>
+                  {savingReengCfg ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : null}
+                  Salvar configuração
+                </Button>
+                <Button size="sm" variant="outline" onClick={triggerReengagementNow} disabled={triggeringReeng}>
+                  {triggeringReeng ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Send className="h-4 w-4 mr-1" />}
+                  Disparar agora
+                </Button>
+                <span className="text-xs text-muted-foreground ml-auto">Disparo automático: diariamente às 09:00 BRT</span>
+              </div>
+            </CardContent>
+          </Card>
+
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            <Card>
+              <CardContent className="pt-4 pb-3 px-4 text-center">
+                <p className="text-2xl font-bold">{reengagementLogs.length}</p>
+                <p className="text-xs text-muted-foreground">Total no período</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-4 pb-3 px-4 text-center">
+                <p className="text-2xl font-bold text-rose-500">
+                  {reengagementLogs.filter((r) => r.template_key === "reengagement_student").length}
+                </p>
+                <p className="text-xs text-muted-foreground">Alunos</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-4 pb-3 px-4 text-center">
+                <p className="text-2xl font-bold text-indigo-500">
+                  {reengagementLogs.filter((r) => r.template_key === "reengagement_teacher").length}
+                </p>
+                <p className="text-xs text-muted-foreground">Professores</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-xs text-muted-foreground">Período:</span>
+            {[7, 30, 90, 180].map((d) => (
+              <Button key={d} size="sm" variant={reengagementRangeDays === d ? "default" : "outline"} onClick={() => setReengagementRangeDays(d)} className="text-xs h-7">
+                {d}d
+              </Button>
+            ))}
+            <Button variant="outline" size="sm" onClick={fetchReengagementData} disabled={reengagementLoading}>
+              <RefreshCw className={`h-4 w-4 mr-1 ${reengagementLoading ? "animate-spin" : ""}`} />
+              Atualizar
+            </Button>
+          </div>
+
+          {reengagementLoading ? (
+            <p className="text-sm text-muted-foreground text-center py-8">Carregando...</p>
+          ) : reengagementLogs.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-8">Nenhum e-mail de reengajamento enviado no período.</p>
+          ) : (
+            <div className="rounded-lg border border-border overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Destinatário</TableHead>
+                    <TableHead>Tipo</TableHead>
+                    <TableHead>Inativo (dias)</TableHead>
+                    <TableHead>Detalhes</TableHead>
+                    <TableHead>Enviado em</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {reengagementLogs.map((r) => (
+                    <TableRow key={r.id}>
+                      <TableCell className="text-sm">
+                        <div className="font-medium">{r.recipient_name || "—"}</div>
+                        <div className="text-xs text-muted-foreground">{maskEmail(r.recipient_email)}</div>
+                      </TableCell>
+                      <TableCell>
+                        {r.template_key === "reengagement_student" ? (
+                          <Badge variant="outline" className="border-rose-500/30 text-rose-600 dark:text-rose-400">Aluno</Badge>
+                        ) : (
+                          <Badge variant="outline" className="border-indigo-500/30 text-indigo-600 dark:text-indigo-400">Professor</Badge>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-sm">{r.days_inactive ?? "—"}</TableCell>
+                      <TableCell className="text-xs text-muted-foreground">
+                        {r.template_key === "reengagement_student"
+                          ? `${r.metadata?.video_ids?.length || 0} vídeo(s) — ${r.metadata?.video_source || "—"}`
+                          : `${r.metadata?.total_videos ?? 0} vídeos · ${r.metadata?.total_views ?? 0} views`}
+                      </TableCell>
+                      <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
+                        {new Date(r.sent_at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </div>
       ) : null}
     </div>
   );

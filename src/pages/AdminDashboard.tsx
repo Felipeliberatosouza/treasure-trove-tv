@@ -6,21 +6,12 @@ import { Link, Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
 import AdminOverviewTab from "@/components/admin/AdminOverviewTab";
-import AdminUsersTab from "@/components/admin/AdminUsersTab";
 import AdminContentTab from "@/components/admin/AdminContentTab";
 import AdminPaymentsTab from "@/components/admin/AdminPaymentsTab";
 import AdminSettingsTab from "@/components/admin/AdminSettingsTab";
 import AdminDoubtsTab from "@/components/admin/AdminDoubtsTab";
 import AdminEmailsTab from "@/components/admin/AdminEmailsTab";
-import AdminPlansTab from "@/components/admin/AdminPlansTab";
-import AdminResourcePricingTab from "@/components/admin/AdminResourcePricingTab";
-import AdminUsageHistoryTab from "@/components/admin/AdminUsageHistoryTab";
 import AdminSubscriptionsTab from "@/components/admin/AdminSubscriptionsTab";
-import AdminSecurityTab from "@/components/admin/AdminSecurityTab";
-import AdminAuditLogsTab from "@/components/admin/AdminAuditLogsTab";
-import AdminCancellationReceiptsTab from "@/components/admin/AdminCancellationReceiptsTab";
-import AdminCommitmentRefundsTab from "@/components/admin/AdminCommitmentRefundsTab";
-import AdminCancellationReasonsTab from "@/components/admin/AdminCancellationReasonsTab";
 import AdminSalesPostsTab from "@/components/admin/AdminSalesPostsTab";
 
 const tabs = [

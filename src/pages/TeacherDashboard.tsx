@@ -147,12 +147,7 @@ const TeacherDashboard = () => {
               {activeTab === "doubts" && <TeacherDoubtsTab />}
               {activeTab === "sales-boost" && <SalesBoostTab />}
               {activeTab === "contract" && <TeacherContractTab />}
-              {activeTab === "sales" && (
-                <div>
-                  <h2 className="font-display text-lg font-semibold mb-4">Meu Extrato</h2>
-                  <p className="text-sm text-muted-foreground">Nenhuma venda registrada ainda. Publique seus conteúdos para começar a vender.</p>
-                </div>
-              )}
+              {activeTab === "sales" && <TeacherStatementTab />}
             </motion.div>
           </div>
         )}

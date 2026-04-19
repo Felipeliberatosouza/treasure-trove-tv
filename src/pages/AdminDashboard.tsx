@@ -97,6 +97,7 @@ const AdminDashboard = () => {
             {activeTab === "doubts" && <AdminDoubtsTab />}
             {activeTab === "payments" && <AdminPaymentsTab />}
             {activeTab === "emails" && <AdminEmailsTab />}
+            {activeTab === "sales-posts" && <AdminSalesPostsTab />}
             {activeTab === "plans" && <AdminPlansTab />}
             {activeTab === "subscriptions" && <AdminSubscriptionsTab />}
             {activeTab === "cancellation-receipts" && <AdminCancellationReceiptsTab />}

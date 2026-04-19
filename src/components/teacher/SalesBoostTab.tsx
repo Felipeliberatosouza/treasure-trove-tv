@@ -152,10 +152,14 @@ const SalesBoostTab = () => {
       toast.error("Defina sua URL pública (slug) em Dados Pessoais antes de gerar o post.");
       return;
     }
+    if (selectedContents.length < MIN_SEL) {
+      toast.error(`Selecione ao menos ${MIN_SEL} conteúdos para o post.`);
+      return;
+    }
     setGenerating(true);
     try {
       // Build caption
-      const cap = buildCaption(contents);
+      const cap = buildCaption(selectedContents);
       setCaption(cap);
 
       // Build image (1080x1350 portrait — Instagram feed format)

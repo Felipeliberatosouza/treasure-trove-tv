@@ -112,12 +112,14 @@ const HeroBanner = ({ onVideoClick, onExploreClick }: HeroBannerProps) => {
       audience: FlatSlide["audience"],
       badge: string
     ): FlatSlide[] =>
-      carousel.slides.map((slide) => ({
-        slide,
-        audience,
-        badge,
-        autoplaySeconds: carousel.autoplay_seconds || DEFAULT_HERO_AUTOPLAY_SECONDS,
-      }));
+      carousel.slides
+        .filter((slide) => isSlideScheduledNow(slide))
+        .map((slide) => ({
+          slide,
+          audience,
+          badge,
+          autoplaySeconds: carousel.autoplay_seconds || DEFAULT_HERO_AUTOPLAY_SECONDS,
+        }));
 
     if (role === "admin") {
       return [

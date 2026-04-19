@@ -446,6 +446,30 @@ const SettingsEmailTemplates = () => {
           >
             <Mail className="h-3.5 w-3.5" />
             {TEMPLATE_LABELS[t.template_key] || t.template_key}
+            {t.template_key === "birthday" && (
+              <span
+                className={`ml-1 inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${
+                  activeKey === t.template_key
+                    ? "bg-primary-foreground/20 text-primary-foreground"
+                    : "bg-amber-500/15 text-amber-700 dark:text-amber-400"
+                }`}
+                title="Enviado a professores e alunos SEM assinatura ativa. Pode incluir cupom."
+              >
+                Sem assinatura
+              </span>
+            )}
+            {t.template_key === "birthday_subscriber" && (
+              <span
+                className={`ml-1 inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${
+                  activeKey === t.template_key
+                    ? "bg-primary-foreground/20 text-primary-foreground"
+                    : "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400"
+                }`}
+                title="Enviado a alunos COM assinatura ativa. Não envia cupom."
+              >
+                Assinatura ativa
+              </span>
+            )}
           </button>
         ))}
       </div>

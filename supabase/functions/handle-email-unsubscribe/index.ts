@@ -33,8 +33,11 @@ Deno.serve(async (req) => {
   let token: string | null = url.searchParams.get('token')
   // scope: 'all' = suppress all emails (current behavior)
   //        'marketing' = only opt-out of marketing emails (transactional still sent)
-  let scope: 'all' | 'marketing' = 'all'
+  //        'feedback' = save a reason on suppressed_emails.metadata after unsubscribe
+  let scope: 'all' | 'marketing' | 'feedback' = 'all'
   let isOneClick = false
+  let feedbackReason: string | null = null
+  let feedbackComment: string | null = null
 
   if (req.method === 'POST') {
     const contentType = req.headers.get('content-type') ?? ''
@@ -49,13 +52,19 @@ Deno.serve(async (req) => {
         const formToken = params.get('token')
         if (formToken) token = formToken
         const formScope = params.get('scope')
-        if (formScope === 'marketing' || formScope === 'all') scope = formScope
+        if (formScope === 'marketing' || formScope === 'all' || formScope === 'feedback') scope = formScope
+        const fr = params.get('feedback_reason')
+        if (fr) feedbackReason = fr
+        const fc = params.get('feedback_comment')
+        if (fc) feedbackComment = fc
       }
     } else {
       try {
         const body = await req.json()
         if (body.token) token = body.token
-        if (body.scope === 'marketing' || body.scope === 'all') scope = body.scope
+        if (body.scope === 'marketing' || body.scope === 'all' || body.scope === 'feedback') scope = body.scope
+        if (typeof body.feedback_reason === 'string') feedbackReason = body.feedback_reason
+        if (typeof body.feedback_comment === 'string') feedbackComment = body.feedback_comment
       } catch {
         // Fall through
       }

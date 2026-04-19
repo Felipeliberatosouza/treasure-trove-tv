@@ -29,6 +29,97 @@ interface ContentItem {
   has_top_questoes: boolean;
 }
 
+type TemplateKey = "light" | "dark" | "colorful";
+
+interface TemplateStyle {
+  key: TemplateKey;
+  label: string;
+  description: string;
+  // Background paint
+  bgStops: [string, string, string];
+  blob1: string;
+  blob2: string;
+  blobAlpha: number;
+  // Text colors
+  platformTag: string;
+  nameColor: string;
+  areasColor: string;
+  listHeading: string;
+  listItem: string;
+  topQuestoesColor: string;
+  // Avatar ring
+  ringColor: string;
+  // CTA bar
+  ctaBg: string;
+  ctaTitle: string;
+  ctaUrl: string;
+  // Preview swatches for the picker
+  swatches: string[];
+}
+
+const TEMPLATES: Record<TemplateKey, TemplateStyle> = {
+  light: {
+    key: "light",
+    label: "Claro",
+    description: "Fundo claro, tipografia escura, sofisticado.",
+    bgStops: ["#fafaf7", "#f1efe9", "#e7e3d8"],
+    blob1: "#cbd5e1",
+    blob2: "#fde68a",
+    blobAlpha: 0.35,
+    platformTag: "rgba(30,27,75,0.65)",
+    nameColor: "#0f172a",
+    areasColor: "#475569",
+    listHeading: "#0f172a",
+    listItem: "rgba(15,23,42,0.85)",
+    topQuestoesColor: "#b45309",
+    ringColor: "#0f172a",
+    ctaBg: "#0f172a",
+    ctaTitle: "#fafaf7",
+    ctaUrl: "#fde68a",
+    swatches: ["#fafaf7", "#e7e3d8", "#0f172a", "#fde68a"],
+  },
+  dark: {
+    key: "dark",
+    label: "Escuro",
+    description: "Fundo escuro, contraste alto, elegante.",
+    bgStops: ["#0a0a0f", "#111118", "#1a1a24"],
+    blob1: "#1f2937",
+    blob2: "#334155",
+    blobAlpha: 0.4,
+    platformTag: "rgba(255,255,255,0.7)",
+    nameColor: "#ffffff",
+    areasColor: "#cbd5e1",
+    listHeading: "#ffffff",
+    listItem: "rgba(255,255,255,0.92)",
+    topQuestoesColor: "#fde68a",
+    ringColor: "#ffffff",
+    ctaBg: "rgba(255,255,255,0.95)",
+    ctaTitle: "#0a0a0f",
+    ctaUrl: "#0a0a0f",
+    swatches: ["#0a0a0f", "#1a1a24", "#ffffff", "#cbd5e1"],
+  },
+  colorful: {
+    key: "colorful",
+    label: "Colorido",
+    description: "Gradiente vibrante, estilo Instagram.",
+    bgStops: ["#0f172a", "#1e1b4b", "#7c3aed"],
+    blob1: "#a78bfa",
+    blob2: "#22d3ee",
+    blobAlpha: 0.18,
+    platformTag: "rgba(255,255,255,0.85)",
+    nameColor: "#ffffff",
+    areasColor: "#e9d5ff",
+    listHeading: "#ffffff",
+    listItem: "rgba(255,255,255,0.92)",
+    topQuestoesColor: "#fde68a",
+    ringColor: "#ffffff",
+    ctaBg: "rgba(255,255,255,0.95)",
+    ctaTitle: "#1e1b4b",
+    ctaUrl: "#7c3aed",
+    swatches: ["#1e1b4b", "#7c3aed", "#22d3ee", "#a78bfa"],
+  },
+};
+
 const SalesBoostTab = () => {
   const { profile, user } = useAuth();
   const { data: branding } = usePlatformSettings("branding");
@@ -40,6 +131,7 @@ const SalesBoostTab = () => {
   const [imageDataUrl, setImageDataUrl] = useState<string>("");
   const [caption, setCaption] = useState<string>("");
   const [slug, setSlug] = useState<string>("");
+  const [template, setTemplate] = useState<TemplateKey>("colorful");
 
   const MIN_SEL = 3;
   const MAX_SEL = 5;
@@ -171,21 +263,23 @@ const SalesBoostTab = () => {
       const ctx = canvas.getContext("2d");
       if (!ctx) throw new Error("Canvas não suportado");
 
+      const t = TEMPLATES[template];
+
       // Background gradient
       const grad = ctx.createLinearGradient(0, 0, W, H);
-      grad.addColorStop(0, "#0f172a");
-      grad.addColorStop(0.5, "#1e1b4b");
-      grad.addColorStop(1, "#7c3aed");
+      grad.addColorStop(0, t.bgStops[0]);
+      grad.addColorStop(0.5, t.bgStops[1]);
+      grad.addColorStop(1, t.bgStops[2]);
       ctx.fillStyle = grad;
       ctx.fillRect(0, 0, W, H);
 
       // Decorative blobs
-      ctx.globalAlpha = 0.18;
-      ctx.fillStyle = "#a78bfa";
+      ctx.globalAlpha = t.blobAlpha;
+      ctx.fillStyle = t.blob1;
       ctx.beginPath();
       ctx.arc(W - 120, 180, 220, 0, Math.PI * 2);
       ctx.fill();
-      ctx.fillStyle = "#22d3ee";
+      ctx.fillStyle = t.blob2;
       ctx.beginPath();
       ctx.arc(140, H - 200, 260, 0, Math.PI * 2);
       ctx.fill();
@@ -193,7 +287,7 @@ const SalesBoostTab = () => {
 
       // Platform tag
       const platformName = branding?.platform_name || "Revisão Fácil";
-      ctx.fillStyle = "rgba(255,255,255,0.85)";
+      ctx.fillStyle = t.platformTag;
       ctx.font = "600 32px system-ui, -apple-system, sans-serif";
       ctx.textAlign = "left";
       ctx.fillText(platformName.toUpperCase(), 80, 110);
@@ -214,11 +308,11 @@ const SalesBoostTab = () => {
           ctx.restore();
         } else {
           // Fallback initials circle
-          ctx.fillStyle = "#fff";
+          ctx.fillStyle = t.ringColor;
           ctx.beginPath();
           ctx.arc(W / 2, avatarY + avatarSize / 2, avatarSize / 2, 0, Math.PI * 2);
           ctx.fill();
-          ctx.fillStyle = "#1e1b4b";
+          ctx.fillStyle = t.nameColor === "#ffffff" ? "#1e1b4b" : "#ffffff";
           ctx.font = "bold 110px system-ui, sans-serif";
           ctx.textAlign = "center";
           ctx.textBaseline = "middle";
@@ -234,14 +328,14 @@ const SalesBoostTab = () => {
         // ignore avatar errors
       }
       // Avatar ring
-      ctx.strokeStyle = "#fff";
+      ctx.strokeStyle = t.ringColor;
       ctx.lineWidth = 8;
       ctx.beginPath();
       ctx.arc(W / 2, avatarY + avatarSize / 2, avatarSize / 2 + 4, 0, Math.PI * 2);
       ctx.stroke();
 
       // Name
-      ctx.fillStyle = "#fff";
+      ctx.fillStyle = t.nameColor;
       ctx.font = "bold 64px system-ui, -apple-system, sans-serif";
       ctx.textAlign = "center";
       ctx.textBaseline = "alphabetic";
@@ -251,20 +345,20 @@ const SalesBoostTab = () => {
       // Areas
       const areas = (profile.areas || []).slice(0, 3).join("  •  ");
       if (areas) {
-        ctx.fillStyle = "#e9d5ff";
+        ctx.fillStyle = t.areasColor;
         ctx.font = "500 32px system-ui, sans-serif";
         ctx.fillText(areas, W / 2, avatarY + avatarSize + 160);
       }
 
       // Content list
       const listStartY = 760;
-      ctx.fillStyle = "#fff";
+      ctx.fillStyle = t.listHeading;
       ctx.font = "bold 36px system-ui, sans-serif";
       ctx.textAlign = "left";
       ctx.fillText("🎯 Meus conteúdos:", 90, listStartY);
 
       ctx.font = "500 28px system-ui, sans-serif";
-      ctx.fillStyle = "rgba(255,255,255,0.92)";
+      ctx.fillStyle = t.listItem;
       const items = selectedContents.slice(0, MAX_SEL);
       items.forEach((c, i) => {
         const y = listStartY + 60 + i * 50;
@@ -274,22 +368,22 @@ const SalesBoostTab = () => {
       });
 
       if (items.some((c) => c.has_top_questoes)) {
-        ctx.fillStyle = "#fde68a";
+        ctx.fillStyle = t.topQuestoesColor;
         ctx.font = "bold 28px system-ui, sans-serif";
         ctx.fillText("⭐ Inclui Top Questões de Prova", 90, listStartY + 60 + items.length * 50 + 20);
       }
 
       // CTA bar at bottom
       const ctaY = H - 200;
-      ctx.fillStyle = "rgba(255,255,255,0.95)";
+      ctx.fillStyle = t.ctaBg;
       roundRect(ctx, 60, ctaY, W - 120, 140, 24);
       ctx.fill();
 
-      ctx.fillStyle = "#1e1b4b";
+      ctx.fillStyle = t.ctaTitle;
       ctx.font = "bold 30px system-ui, sans-serif";
       ctx.textAlign = "center";
       ctx.fillText("👉 Acesse minha página:", W / 2, ctaY + 50);
-      ctx.fillStyle = "#7c3aed";
+      ctx.fillStyle = t.ctaUrl;
       ctx.font = "bold 34px system-ui, sans-serif";
       const shortUrl = publicUrl.replace(/^https?:\/\//, "");
       ctx.fillText(truncate(shortUrl, 40), W / 2, ctaY + 100);
@@ -502,6 +596,51 @@ const SalesBoostTab = () => {
                 })}
               </div>
             )}
+          </div>
+
+          {/* Template picker */}
+          <div className="rounded-lg border border-border bg-background/50 p-3">
+            <Label className="text-sm font-medium mb-2 block">
+              Escolha o estilo visual do post
+            </Label>
+            <div className="grid grid-cols-3 gap-2">
+              {(Object.keys(TEMPLATES) as TemplateKey[]).map((key) => {
+                const tpl = TEMPLATES[key];
+                const active = template === key;
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setTemplate(key)}
+                    className={`group rounded-lg border p-2 text-left transition-all ${
+                      active
+                        ? "border-primary ring-2 ring-primary/40 bg-primary/5"
+                        : "border-border hover:border-primary/50"
+                    }`}
+                    aria-pressed={active}
+                  >
+                    <div
+                      className="h-16 w-full rounded-md mb-2 overflow-hidden flex"
+                      aria-hidden
+                    >
+                      {tpl.swatches.map((c, i) => (
+                        <div
+                          key={i}
+                          className="flex-1 h-full"
+                          style={{ backgroundColor: c }}
+                        />
+                      ))}
+                    </div>
+                    <div className="text-xs font-semibold text-foreground">
+                      {tpl.label}
+                    </div>
+                    <div className="text-[10px] text-muted-foreground leading-tight">
+                      {tpl.description}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           <div className="flex flex-wrap gap-3 items-center">

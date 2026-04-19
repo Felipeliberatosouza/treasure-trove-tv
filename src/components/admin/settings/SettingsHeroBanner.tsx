@@ -7,6 +7,8 @@ import {
   emptyHeroSlide,
   MAX_HERO_SLIDES,
   DEFAULT_HERO_AUTOPLAY_SECONDS,
+  getSlideScheduleStatus,
+  SlideScheduleStatus,
 } from "@/hooks/usePlatformSettings";
 import { useStorageUpload } from "@/hooks/useStorageUpload";
 import { Input } from "@/components/ui/input";

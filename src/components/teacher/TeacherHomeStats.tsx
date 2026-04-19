@@ -54,6 +54,7 @@ const TeacherHomeStats = () => {
   const [contentPublishedThisMonth, setContentPublishedThisMonth] = useState(0);
   const [salesPostsTotal, setSalesPostsTotal] = useState(0);
   const [salesPostsRecent, setSalesPostsRecent] = useState(0);
+  const [salesPostsWeekly, setSalesPostsWeekly] = useState<{ week: string; value: number }[]>([]);
 
   useEffect(() => {
     if (!user) return;

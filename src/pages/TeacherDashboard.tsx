@@ -22,11 +22,12 @@ const teacherTabs = [
   { id: "personal", label: "Dados Pessoais", icon: User },
   { id: "expertise", label: "Áreas de Expertise", icon: Sparkles },
   { id: "login", label: "Dados de Login", icon: Lock },
-  { id: "lessons", label: "Minhas Aulas", icon: Video },
-  { id: "doubts", label: "Dúvidas de Alunos", icon: HelpCircle },
   { id: "sales-boost", label: "Aumentar Minhas Vendas", icon: Megaphone },
   { id: "sales", label: "Meu Extrato", icon: DollarSign },
   { id: "contract", label: "Meu Contrato", icon: FileSignature },
+  // Hidden tabs (acessadas via menu hambúrguer / deep-link, não exibidas no menu lateral)
+  { id: "lessons", label: "Minhas Aulas", icon: Video, hidden: true },
+  { id: "doubts", label: "Dúvidas de Alunos", icon: HelpCircle, hidden: true },
 ] as const;
 
 type TeacherTabId = (typeof teacherTabs)[number]["id"];

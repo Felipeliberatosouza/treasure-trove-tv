@@ -83,21 +83,12 @@ const AdminDashboard = () => {
             className="flex-1 rounded-xl border border-border bg-card p-6 overflow-x-auto"
           >
             {activeTab === "overview" && <AdminOverviewTab onNavigate={(id) => setActiveTab(id as TabId)} />}
-            {activeTab === "users" && <AdminUsersTab />}
             {activeTab === "content" && <AdminContentTab />}
             {activeTab === "doubts" && <AdminDoubtsTab />}
             {activeTab === "payments" && <AdminPaymentsTab />}
+            {activeTab === "subscriptions" && <AdminSubscriptionsTab />}
             {activeTab === "emails" && <AdminEmailsTab />}
             {activeTab === "sales-posts" && <AdminSalesPostsTab />}
-            {activeTab === "plans" && <AdminPlansTab />}
-            {activeTab === "subscriptions" && <AdminSubscriptionsTab />}
-            {activeTab === "cancellation-receipts" && <AdminCancellationReceiptsTab />}
-            {activeTab === "commitment-refunds" && <AdminCommitmentRefundsTab />}
-            {activeTab === "cancellation-reasons" && <AdminCancellationReasonsTab />}
-            {activeTab === "pricing" && <AdminResourcePricingTab />}
-            {activeTab === "usage" && <AdminUsageHistoryTab />}
-            {activeTab === "security" && <AdminSecurityTab />}
-            {activeTab === "audit" && <AdminAuditLogsTab />}
             {activeTab === "settings" && <AdminSettingsTab />}
           </motion.div>
         </div>

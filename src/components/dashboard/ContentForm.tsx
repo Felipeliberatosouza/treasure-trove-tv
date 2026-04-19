@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Upload, X, Image, Video, FileText, ClipboardList, Trophy, StickyNote, Camera } from "lucide-react";
+import { Upload, X, Image, Video, FileText, ClipboardList, Trophy, StickyNote, Camera, DollarSign } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -11,6 +11,21 @@ import AreaSelector from "@/components/AreaSelector";
 import VideoRecorder from "./VideoRecorder";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import { compositeVideo, type ImpactWord } from "@/utils/videoCompositor";
+
+interface ResourcePriceInfo {
+  resource_type: string;
+  price: number;
+  min_price: number;
+  platform_percentage: number;
+}
+
+const RESOURCE_LABELS: Record<string, string> = {
+  revisoes: "Revisão (vídeo)",
+  resumos: "Resumo",
+  simulados: "Simulado",
+  top_questoes: "Top Questões",
+  colinhas: "Colinha",
+};
 
 interface ContentFormProps {
   table: "lessons";
@@ -39,6 +54,7 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
   const [teacherName, setTeacherName] = useState("");
   const [processingUpload, setProcessingUpload] = useState(false);
   const [processingStep, setProcessingStep] = useState("");
+  const [resourcePrices, setResourcePrices] = useState<ResourcePriceInfo[]>([]);
 
   const recordingEnabled = productConfig?.revisoes?.enable_recording ?? false;
   const maxRecordingMinutes = productConfig?.revisoes?.max_recording_minutes ?? 30;
@@ -46,6 +62,8 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
   const enableBlackboard = productConfig?.revisoes?.enable_blackboard ?? false;
   const enableAutoCover = productConfig?.revisoes?.enable_auto_cover ?? false;
   const needsProcessing = enableSubtitles || enableBlackboard || enableAutoCover;
+
+  const revisaoPricing = resourcePrices.find((r) => r.resource_type === "revisoes");
 
   // Fetch teacher name for auto cover
   useEffect(() => {
@@ -59,6 +77,17 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
         if (data?.name) setTeacherName(data.name);
       });
   }, [user]);
+
+  // Fetch resource pricing config to display to teacher
+  useEffect(() => {
+    supabase
+      .from("resource_prices")
+      .select("resource_type, price, min_price, platform_percentage")
+      .eq("active", true)
+      .then(({ data }) => {
+        if (data) setResourcePrices(data as unknown as ResourcePriceInfo[]);
+      });
+  }, []);
 
   // Extract audio from a video file and return base64
   const extractAudioBase64 = useCallback(async (file: File): Promise<string> => {
@@ -254,6 +283,11 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
         ({ error } = await supabase.from(table).update(contentData).eq("id", editData.id));
       } else {
         contentData.teacher_id = user.id;
+        // Use platform_percentage and price from resource_prices config
+        if (revisaoPricing) {
+          contentData.platform_percentage = revisaoPricing.platform_percentage;
+          contentData.price = revisaoPricing.price;
+        }
         contentData.thumbnail_url = thumbnail_url;
         contentData.carousel_cover_url = carousel_cover_url;
         contentData.video_url = video_url;
@@ -473,6 +507,35 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
           </div>
         </div>
       ))}
+
+      {!editData?.id && resourcePrices.length > 0 && (
+        <div className="rounded-lg border border-border bg-secondary/40 p-4 mt-4">
+          <p className="text-sm font-semibold mb-2 flex items-center gap-1">
+            <DollarSign className="h-4 w-4 text-primary" /> Valores e divisão de receita
+          </p>
+          <p className="text-xs text-muted-foreground mb-3">
+            Estes são os valores definidos pela plataforma para cada recurso. O percentual indicado é
+            o que você (professor) recebe sobre cada venda avulsa.
+          </p>
+          <div className="space-y-1.5">
+            {resourcePrices
+              .filter((r) => RESOURCE_LABELS[r.resource_type])
+              .map((r) => {
+                const teacherPct = 100 - (r.platform_percentage || 0);
+                const minLabel = r.min_price > 0 ? ` (mín. R$ ${r.min_price.toFixed(2)})` : "";
+                return (
+                  <div key={r.resource_type} className="flex justify-between text-xs">
+                    <span className="text-muted-foreground">{RESOURCE_LABELS[r.resource_type]}</span>
+                    <span className="font-medium">
+                      R$ {r.price.toFixed(2)}{minLabel} ·{" "}
+                      <span className="text-success">você recebe {teacherPct}%</span>
+                    </span>
+                  </div>
+                );
+              })}
+          </div>
+        </div>
+      )}
 
       <div className="flex gap-3 pt-2">
         <Button type="submit" disabled={saving} className="font-display">

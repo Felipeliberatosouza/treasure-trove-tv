@@ -867,6 +867,8 @@ export type Database = {
         Row: {
           active: boolean
           id: string
+          min_price: number
+          platform_percentage: number
           price: number
           resource_type: string
           updated_at: string
@@ -874,6 +876,8 @@ export type Database = {
         Insert: {
           active?: boolean
           id?: string
+          min_price?: number
+          platform_percentage?: number
           price?: number
           resource_type: string
           updated_at?: string
@@ -881,6 +885,8 @@ export type Database = {
         Update: {
           active?: boolean
           id?: string
+          min_price?: number
+          platform_percentage?: number
           price?: number
           resource_type?: string
           updated_at?: string

@@ -233,6 +233,30 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
     }
     if (!user) return;
 
+    // Validate per-resource prices against admin-configured minimums
+    const priceFields: { type: string; value: string; hasFile: boolean; existing?: string }[] = [
+      { type: "revisoes", value: priceRevisoes, hasFile: !!videoFile, existing: editData?.video_url },
+      { type: "resumos", value: priceResumos, hasFile: !!resumoFile, existing: editData?.resumo_url },
+      { type: "simulados", value: priceSimulados, hasFile: !!simuladoFile, existing: editData?.simulado_url },
+      { type: "top_questoes", value: priceTopQuestoes, hasFile: !!topQuestoesFile, existing: editData?.top_questoes_url },
+      { type: "colinhas", value: priceColinhas, hasFile: !!colinhaFile, existing: editData?.colinha_url },
+    ];
+    for (const f of priceFields) {
+      const provided = f.hasFile || !!f.existing;
+      if (!provided) continue;
+      const cfg = resourcePrices.find((r) => r.resource_type === f.type);
+      if (!cfg) continue;
+      const num = parseFloat(f.value);
+      if (isNaN(num) || num <= 0) {
+        toast.error(`Informe o preço de "${RESOURCE_LABELS[f.type]}"`);
+        return;
+      }
+      if (cfg.min_price > 0 && num < cfg.min_price) {
+        toast.error(`Preço de "${RESOURCE_LABELS[f.type]}" deve ser ≥ R$ ${cfg.min_price.toFixed(2)}`);
+        return;
+      }
+    }
+
     setSaving(true);
     try {
       let thumbnail_url = "";

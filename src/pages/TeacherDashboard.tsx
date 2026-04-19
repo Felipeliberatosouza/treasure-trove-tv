@@ -13,6 +13,7 @@ import TeacherInstructionsTab from "@/components/dashboard/TeacherInstructionsTa
 import TeacherContractTab from "@/components/dashboard/TeacherContractTab";
 import StudentDashboardContent from "@/components/dashboard/StudentDashboardContent";
 import SalesBoostTab from "@/components/teacher/SalesBoostTab";
+import TeacherStatementTab from "@/components/dashboard/TeacherStatementTab";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 

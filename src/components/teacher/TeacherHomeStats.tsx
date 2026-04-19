@@ -66,6 +66,13 @@ const TeacherHomeStats = () => {
       const effectiveGoal = personal && personal > 0 ? personal : globalGoal;
       setContentGoal(effectiveGoal);
 
+      // First get teacher's content ids for aula particular count
+      const { data: teacherLessonsIds } = await supabase
+        .from("lessons")
+        .select("id")
+        .eq("teacher_id", user.id);
+      const lessonIds = (teacherLessonsIds || []).map((l) => l.id);
+
       // Parallel fetches
       const [
         paymentsRes,
@@ -100,10 +107,13 @@ const TeacherHomeStats = () => {
           .select("id", { count: "exact", head: true })
           .eq("teacher_id", user.id)
           .in("status", ["approved", "pending_answer_approval"]),
-        supabase
-          .from("resource_usage")
-          .select("id, content_id, lessons!inner(teacher_id)" as any, { count: "exact", head: true })
-          .eq("resource_type", "aula_particular"),
+        lessonIds.length > 0
+          ? supabase
+              .from("resource_usage")
+              .select("id", { count: "exact", head: true })
+              .eq("resource_type", "aula_particular")
+              .in("content_id", lessonIds)
+          : Promise.resolve({ count: 0 } as any),
         supabase
           .from("lessons")
           .select("id", { count: "exact", head: true })

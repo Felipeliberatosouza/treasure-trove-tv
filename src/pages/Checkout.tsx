@@ -354,7 +354,7 @@ function CheckoutForm({
   const stripe = useStripe();
   const elements = useElements();
   const navigate = useNavigate();
-  const { refreshSubscription } = useAuth();
+  const { user, refreshSubscription } = useAuth();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [cepLoading, setCepLoading] = useState(false);
@@ -461,6 +461,7 @@ function CheckoutForm({
         params: {
           billing_details: {
             name: billing.name.trim(),
+            email: user?.email || undefined,
             address: {
               line1: billing.line1.trim(),
               line2: billing.line2.trim() || undefined,

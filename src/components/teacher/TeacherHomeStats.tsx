@@ -234,6 +234,19 @@ const TeacherHomeStats = () => {
     [pendings]
   );
 
+  const ratingsSummary = useMemo(() => {
+    const totalCount = ratings.reduce((acc, r) => acc + r.count, 0);
+    const weightedSum = ratings.reduce((acc, r) => acc + r.avg * r.count, 0);
+    const avg = totalCount > 0 ? weightedSum / totalCount : 0;
+    const last = ratings[ratings.length - 1]?.avg ?? 0;
+    const prev = ratings[ratings.length - 2]?.avg ?? 0;
+    const delta = last - prev;
+    let trend: "up" | "down" | "flat" = "flat";
+    if (delta > 0.05) trend = "up";
+    else if (delta < -0.05) trend = "down";
+    return { avg, totalCount, trend, delta };
+  }, [ratings]);
+
   if (loading) {
     return (
       <div className="px-6 md:px-12 lg:px-20">
@@ -249,10 +262,10 @@ const TeacherHomeStats = () => {
     <section className="px-6 md:px-12 lg:px-20">
       <h2 className="font-display text-2xl font-bold mb-1">📊 Seus Resultados</h2>
       <p className="text-sm text-muted-foreground mb-6">
-        Acompanhe vendas, atividades e pendências.
+        Acompanhe vendas, atividades, pendências e avaliações.
       </p>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
         {/* Card 1: Sales */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}

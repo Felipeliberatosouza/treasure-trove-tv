@@ -40,12 +40,15 @@ function monthBounds(ym: string): { start: string; end: string } {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
-  try {
-    const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
-    const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
+  const startedAt = Date.now();
+  let triggeredBy: string | null = null;
+  let source = "manual";
+  const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+  const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
+  const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
 
-    const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
+  try {
 
     // Allow scheduled cron invocations via shared secret stored in platform_settings.cron_secret
     const cronSecretHeader = req.headers.get("x-cron-secret") || "";
@@ -57,7 +60,10 @@ Deno.serve(async (req) => {
         .eq("key", "cron_secret")
         .maybeSingle();
       const expected = (settingRow?.value as any)?.token || "";
-      if (expected && cronSecretHeader === expected) isCron = true;
+      if (expected && cronSecretHeader === expected) {
+        isCron = true;
+        source = "cron";
+      }
     }
 
     if (!isCron) {
@@ -74,6 +80,7 @@ Deno.serve(async (req) => {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
+      triggeredBy = user.id;
 
       const { data: roleRow } = await admin
         .from("user_roles")

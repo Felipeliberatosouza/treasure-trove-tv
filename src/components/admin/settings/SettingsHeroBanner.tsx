@@ -336,6 +336,41 @@ const SettingsHeroBanner = ({
             </p>
           </div>
         )}
+
+        {/* Schedule (start / end) — available for hero and secondary alike */}
+        <div className="rounded-md border border-dashed border-border p-3 space-y-3">
+          <Label className="text-sm font-semibold">Agendamento (opcional)</Label>
+          <p className="text-xs text-muted-foreground -mt-1">
+            Mostre este slide apenas dentro de um período. Deixe em branco para sempre exibir.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+              <Label className="text-xs">Início</Label>
+              <Input
+                type="datetime-local"
+                value={activeSlide.starts_at || ""}
+                onChange={(e) => updateActiveSlide({ starts_at: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label className="text-xs">Fim</Label>
+              <Input
+                type="datetime-local"
+                value={activeSlide.ends_at || ""}
+                onChange={(e) => updateActiveSlide({ ends_at: e.target.value })}
+              />
+            </div>
+          </div>
+          {(activeSlide.starts_at || activeSlide.ends_at) && (
+            <button
+              type="button"
+              onClick={() => updateActiveSlide({ starts_at: "", ends_at: "" })}
+              className="text-xs text-muted-foreground hover:text-foreground underline"
+            >
+              Limpar agendamento
+            </button>
+          )}
+        </div>
       </div>
 
       <Button onClick={handleSave} disabled={saving}>

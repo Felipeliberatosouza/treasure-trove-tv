@@ -305,6 +305,37 @@ const SettingsHeroBanner = ({
             placeholder="/cadastro/aluno"
           />
         </div>
+
+        {isSecondary && (
+          <div>
+            <Label className="text-sm">Esquema de cores deste slide</Label>
+            <div className="mt-2 grid grid-cols-3 gap-2">
+              {([
+                { value: "light", label: "Claro", preview: "bg-card text-foreground border-border" },
+                { value: "dark", label: "Escuro", preview: "bg-foreground text-background border-foreground" },
+                { value: "accent", label: "Destaque", preview: "bg-primary text-primary-foreground border-primary" },
+              ] as const).map((opt) => {
+                const current = activeSlide.color_scheme || "light";
+                const selected = current === opt.value;
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => updateActiveSlide({ color_scheme: opt.value })}
+                    className={`rounded-lg border-2 p-3 text-xs font-medium transition-all ${opt.preview} ${
+                      selected ? "ring-2 ring-ring ring-offset-2 ring-offset-background" : "opacity-70 hover:opacity-100"
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">
+              Define a aparência (fundo, texto e botão) deste slide do banner secundário.
+            </p>
+          </div>
+        )}
       </div>
 
       <Button onClick={handleSave} disabled={saving}>

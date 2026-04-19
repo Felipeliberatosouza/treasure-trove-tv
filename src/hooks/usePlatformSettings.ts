@@ -31,12 +31,16 @@ export interface ContactSettings {
   whatsapp_hours: string;
 }
 
+export type HeroColorScheme = "light" | "dark" | "accent";
+
 export interface HeroBannerSettings {
   title: string;
   subtitle: string;
   cta_text: string;
   cta_link: string;
   banner_image_url?: string;
+  /** Visual scheme used by the secondary banner. Ignored by the main hero. */
+  color_scheme?: HeroColorScheme;
 }
 
 export interface HeroBannerCarouselSettings {
@@ -56,6 +60,7 @@ export const emptyHeroSlide = (): HeroBannerSettings => ({
   cta_text: "",
   cta_link: "",
   banner_image_url: "",
+  color_scheme: "light",
 });
 
 /** Coerces legacy single-slide shape `{ title, subtitle, ... }` into the new

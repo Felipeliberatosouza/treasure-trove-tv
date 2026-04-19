@@ -25,6 +25,9 @@ const Unsubscribe = () => {
   const [name, setName] = useState<string | null>(null);
   const [email, setEmail] = useState<string | null>(null);
   const [acceptsMarketing, setAcceptsMarketing] = useState<boolean>(false);
+  const [feedback, setFeedback] = useState<FeedbackState>("hidden");
+  const [feedbackReason, setFeedbackReason] = useState<string>("");
+  const [feedbackComment, setFeedbackComment] = useState<string>("");
 
   useEffect(() => {
     if (!token) {

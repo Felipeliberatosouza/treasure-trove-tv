@@ -20,6 +20,12 @@ interface KPIs {
   totalViews: number;
   avgRating: number;
   unsubscribedEmails: number;
+  totalSalesPosts: number;
+  recentSalesPosts: number;
+}
+
+interface AdminOverviewTabProps {
+  onNavigate?: (tabId: string) => void;
 }
 
 const COLORS = [

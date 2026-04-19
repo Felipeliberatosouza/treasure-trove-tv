@@ -533,35 +533,80 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
             )}
           </div>
         )}
+        {(videoFile || editData?.video_url) && (() => {
+          const cfg = resourcePrices.find((r) => r.resource_type === "revisoes");
+          return (
+            <div className="mt-2 flex items-center gap-2">
+              <DollarSign className="h-3.5 w-3.5 text-muted-foreground" />
+              <Input
+                type="number"
+                step="0.01"
+                min={cfg?.min_price || 0}
+                placeholder={cfg ? `Mín. R$ ${cfg.min_price.toFixed(2)}` : "Preço (R$)"}
+                value={priceRevisoes}
+                onChange={(e) => setPriceRevisoes(e.target.value)}
+                className="bg-secondary text-xs h-9 max-w-[180px]"
+              />
+              {cfg && (
+                <span className="text-[11px] text-muted-foreground">
+                  mín. R$ {cfg.min_price.toFixed(2)} · você recebe {100 - (cfg.platform_percentage || 0)}%
+                </span>
+              )}
+            </div>
+          );
+        })()}
       </div>
 
       <p className="text-sm font-semibold text-muted-foreground pt-2">Materiais complementares</p>
 
       {([
-        { label: "Resumo", icon: FileText, file: resumoFile, setFile: setResumoFile },
-        { label: "Simulado", icon: ClipboardList, file: simuladoFile, setFile: setSimuladoFile },
-        { label: "Top Questões de Provas", icon: Trophy, file: topQuestoesFile, setFile: setTopQuestoesFile },
-        { label: "Colinha", icon: StickyNote, file: colinhaFile, setFile: setColinhaFile },
-      ] as const).map(({ label, icon: Icon, file, setFile }) => (
-        <div key={label}>
-          <label className="text-sm text-muted-foreground mb-1 block flex items-center gap-1">
-            <Icon className="h-3.5 w-3.5" /> {label}
-          </label>
-          <div className="flex items-center gap-2">
-            <Input
-              type="file"
-              accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,image/*"
-              onChange={(e) => setFile(e.target.files?.[0] || null)}
-              className="bg-secondary text-xs"
-            />
-            {file && (
-              <button type="button" onClick={() => setFile(null)} className="text-muted-foreground hover:text-destructive">
-                <X className="h-4 w-4" />
-              </button>
+        { label: "Resumo", icon: FileText, file: resumoFile, setFile: setResumoFile, type: "resumos", priceVal: priceResumos, setPrice: setPriceResumos, existingUrl: editData?.resumo_url },
+        { label: "Simulado", icon: ClipboardList, file: simuladoFile, setFile: setSimuladoFile, type: "simulados", priceVal: priceSimulados, setPrice: setPriceSimulados, existingUrl: editData?.simulado_url },
+        { label: "Top Questões de Provas", icon: Trophy, file: topQuestoesFile, setFile: setTopQuestoesFile, type: "top_questoes", priceVal: priceTopQuestoes, setPrice: setPriceTopQuestoes, existingUrl: editData?.top_questoes_url },
+        { label: "Colinha", icon: StickyNote, file: colinhaFile, setFile: setColinhaFile, type: "colinhas", priceVal: priceColinhas, setPrice: setPriceColinhas, existingUrl: editData?.colinha_url },
+      ] as const).map(({ label, icon: Icon, file, setFile, type, priceVal, setPrice, existingUrl }) => {
+        const cfg = resourcePrices.find((r) => r.resource_type === type);
+        const showPrice = !!file || !!existingUrl;
+        return (
+          <div key={label}>
+            <label className="text-sm text-muted-foreground mb-1 block flex items-center gap-1">
+              <Icon className="h-3.5 w-3.5" /> {label}
+            </label>
+            <div className="flex items-center gap-2">
+              <Input
+                type="file"
+                accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,image/*"
+                onChange={(e) => setFile(e.target.files?.[0] || null)}
+                className="bg-secondary text-xs"
+              />
+              {file && (
+                <button type="button" onClick={() => setFile(null)} className="text-muted-foreground hover:text-destructive">
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+            {showPrice && (
+              <div className="mt-2 flex items-center gap-2">
+                <DollarSign className="h-3.5 w-3.5 text-muted-foreground" />
+                <Input
+                  type="number"
+                  step="0.01"
+                  min={cfg?.min_price || 0}
+                  placeholder={cfg ? `Mín. R$ ${cfg.min_price.toFixed(2)}` : "Preço (R$)"}
+                  value={priceVal}
+                  onChange={(e) => setPrice(e.target.value)}
+                  className="bg-secondary text-xs h-9 max-w-[180px]"
+                />
+                {cfg && (
+                  <span className="text-[11px] text-muted-foreground">
+                    mín. R$ {cfg.min_price.toFixed(2)} · você recebe {100 - (cfg.platform_percentage || 0)}%
+                  </span>
+                )}
+              </div>
             )}
           </div>
-        </div>
-      ))}
+        );
+      })}
 
       {!editData?.id && resourcePrices.length > 0 && (
         <div className="rounded-lg border border-border bg-secondary/40 p-4 mt-4">

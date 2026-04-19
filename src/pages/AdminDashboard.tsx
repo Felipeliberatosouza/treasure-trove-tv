@@ -1,7 +1,7 @@
 import { useState } from "react";
 import MandatoryMfaGuard from "@/components/MandatoryMfaGuard";
 import { motion } from "framer-motion";
-import { ArrowLeft, Users, Video, DollarSign, Shield, LayoutDashboard, Settings, HelpCircle, Mail, CreditCard, Tag, BarChart3, CalendarClock, FileText, Receipt, RotateCcw, TrendingDown } from "lucide-react";
+import { ArrowLeft, Users, Video, DollarSign, Shield, LayoutDashboard, Settings, HelpCircle, Mail, CreditCard, Tag, BarChart3, CalendarClock, FileText, Receipt, RotateCcw, TrendingDown, Megaphone } from "lucide-react";
 import { Link, Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
@@ -21,6 +21,7 @@ import AdminAuditLogsTab from "@/components/admin/AdminAuditLogsTab";
 import AdminCancellationReceiptsTab from "@/components/admin/AdminCancellationReceiptsTab";
 import AdminCommitmentRefundsTab from "@/components/admin/AdminCommitmentRefundsTab";
 import AdminCancellationReasonsTab from "@/components/admin/AdminCancellationReasonsTab";
+import AdminSalesPostsTab from "@/components/admin/AdminSalesPostsTab";
 
 const tabs = [
   { id: "overview", label: "Visão Geral", icon: LayoutDashboard },
@@ -36,6 +37,7 @@ const tabs = [
   { id: "pricing", label: "Preço de Recursos", icon: Tag },
   { id: "usage", label: "Histórico de Uso", icon: BarChart3 },
   { id: "emails", label: "Monitoramento de E-mails", icon: Mail },
+  { id: "sales-posts", label: "Posts de Divulgação", icon: Megaphone },
   { id: "security", label: "Segurança", icon: Shield },
   { id: "audit", label: "Logs de Auditoria", icon: FileText },
   { id: "settings", label: "Configurações", icon: Settings },
@@ -95,6 +97,7 @@ const AdminDashboard = () => {
             {activeTab === "doubts" && <AdminDoubtsTab />}
             {activeTab === "payments" && <AdminPaymentsTab />}
             {activeTab === "emails" && <AdminEmailsTab />}
+            {activeTab === "sales-posts" && <AdminSalesPostsTab />}
             {activeTab === "plans" && <AdminPlansTab />}
             {activeTab === "subscriptions" && <AdminSubscriptionsTab />}
             {activeTab === "cancellation-receipts" && <AdminCancellationReceiptsTab />}

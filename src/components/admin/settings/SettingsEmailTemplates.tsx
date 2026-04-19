@@ -711,6 +711,7 @@ const SettingsEmailTemplates = () => {
               </div>
             )}
           </div>
+          )}
 
           {/* Logo */}
           <div className="space-y-2">

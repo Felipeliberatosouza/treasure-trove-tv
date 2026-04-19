@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -20,6 +20,7 @@ import { RatingStars } from "@/components/VideoDetailModal";
 import ResourceLimitModal from "@/components/ResourceLimitModal";
 import CpfRequiredModal from "@/components/CpfRequiredModal";
 import { useCpfGuard } from "@/hooks/useCpfGuard";
+import { useAutoInterestPromotion } from "@/hooks/useAutoInterestPromotion";
 import { startUnitCheckout } from "@/lib/payments";
 import VLibrasWidget from "@/components/VLibrasWidget";
 
@@ -302,6 +303,7 @@ const VideoPage = () => {
       setViewId(null);
       setShowPaywall(false);
       setIsWatching(true);
+      promotedRef.current = false;
       if (user) startViewTracking(video.id);
     }
   }, [video, user]);
@@ -392,9 +394,26 @@ const VideoPage = () => {
     }
   };
 
-  const handleProgressMilestone = useCallback((pct: number) => {
-    if (pct >= 70) setHasWatched70(true);
-  }, []);
+  const promoteAreas = useAutoInterestPromotion();
+  const promotedRef = useRef(false);
+
+  const handleProgressMilestone = useCallback(async (pct: number) => {
+    if (pct >= 70) {
+      setHasWatched70(true);
+      if (!promotedRef.current) {
+        promotedRef.current = true;
+        const added = await promoteAreas();
+        if (added && added.length > 0) {
+          toast.success(
+            added.length === 1
+              ? `'${added[0]}' foi adicionada às suas áreas de interesse!`
+              : `${added.length} novas áreas foram adicionadas aos seus interesses!`,
+            { description: "Suas recomendações foram personalizadas." }
+          );
+        }
+      }
+    }
+  }, [promoteAreas]);
 
   const handlePreviewLimitReached = useCallback(() => {
     if (limitInfo) {

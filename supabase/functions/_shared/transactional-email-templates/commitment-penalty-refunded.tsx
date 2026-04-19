@@ -4,6 +4,7 @@ import {
   Body, Container, Head, Heading, Html, Preview, Text, Section, Hr,
 } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
+import SignupFooter from './signup-footer.tsx'
 
 const SITE_NAME = 'Revisão Fácil'
 
@@ -14,6 +15,7 @@ interface CommitmentPenaltyRefundedProps {
   refundType?: 'total' | 'partial' | string
   reason?: string
   processedAt?: string
+  unsubscribeUrl?: string
 }
 
 const CommitmentPenaltyRefundedEmail = ({
@@ -23,6 +25,7 @@ const CommitmentPenaltyRefundedEmail = ({
   refundType = 'partial',
   reason,
   processedAt,
+  unsubscribeUrl,
 }: CommitmentPenaltyRefundedProps) => {
   const isTotal = refundType === 'total'
   return (
@@ -85,6 +88,7 @@ const CommitmentPenaltyRefundedEmail = ({
 
           <Hr style={hr} />
           <Text style={footer}>Atenciosamente, equipe {SITE_NAME}</Text>
+          <SignupFooter unsubscribeUrl={unsubscribeUrl} />
         </Container>
       </Body>
     </Html>

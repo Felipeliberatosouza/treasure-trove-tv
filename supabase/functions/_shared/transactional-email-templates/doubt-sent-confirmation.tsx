@@ -3,7 +3,7 @@ import {
   Body, Container, Head, Heading, Html, Preview, Text, Hr,
 } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
-import MarketingFooter from './marketing-footer.tsx'
+import SignupFooter from './signup-footer.tsx'
 
 const SITE_NAME = "Revisão Fácil"
 
@@ -37,7 +37,7 @@ const DoubtSentConfirmationEmail = ({ studentName, question, unsubscribeUrl }: D
           Você receberá um e-mail assim que o professor responder. Acompanhe também pelo seu painel de aluno.
         </Text>
         <Text style={footer}>Equipe {SITE_NAME}</Text>
-        <MarketingFooter unsubscribeUrl={unsubscribeUrl} />
+        <SignupFooter unsubscribeUrl={unsubscribeUrl} />
       </Container>
     </Body>
   </Html>

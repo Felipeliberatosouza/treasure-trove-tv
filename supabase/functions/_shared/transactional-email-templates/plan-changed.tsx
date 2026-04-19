@@ -4,7 +4,7 @@ import {
   Body, Container, Head, Heading, Html, Preview, Text, Section, Hr,
 } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
-import MarketingFooter from './marketing-footer.tsx'
+import SignupFooter from './signup-footer.tsx'
 
 const SITE_NAME = 'Revisão Fácil'
 
@@ -128,7 +128,7 @@ const PlanChangedEmail = ({
           Se tiver dúvidas ou precisar de ajuda, entre em contato conosco.
         </Text>
         <Text style={footer}>Equipe {SITE_NAME}</Text>
-        <MarketingFooter unsubscribeUrl={unsubscribeUrl} />
+        <SignupFooter unsubscribeUrl={unsubscribeUrl} />
       </Container>
     </Body>
   </Html>

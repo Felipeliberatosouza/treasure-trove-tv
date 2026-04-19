@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DollarSign, TrendingUp, Eye, Star, Plus } from "lucide-react";
+import { DollarSign, TrendingUp, Eye, Star, Plus, Pencil, CheckCircle2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -34,6 +34,7 @@ interface Payment {
   net_amount: number;
   status: string;
   created_at: string;
+  notes?: string | null;
 }
 
 const AdminPaymentsTab = () => {
@@ -55,6 +56,17 @@ const AdminPaymentsTab = () => {
     notes: "",
   });
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingPayment, setEditingPayment] = useState<Payment | null>(null);
+  const [editForm, setEditForm] = useState({
+    period_start: "",
+    period_end: "",
+    payment_type: "subscription",
+    gross_amount: "",
+    platform_fee: "",
+    net_amount: "",
+    status: "pending",
+    notes: "",
+  });
 
   const fetchData = async () => {
     setLoading(true);
@@ -176,6 +188,49 @@ const AdminPaymentsTab = () => {
       toast({ title: "Atualizado", description: `Status alterado para ${status}.` });
       fetchData();
     }
+  };
+
+  const openEditDialog = (p: Payment) => {
+    setEditingPayment(p);
+    setEditForm({
+      period_start: p.period_start?.slice(0, 10) || "",
+      period_end: p.period_end?.slice(0, 10) || "",
+      payment_type: p.payment_type || "subscription",
+      gross_amount: String(p.gross_amount ?? ""),
+      platform_fee: String(p.platform_fee ?? ""),
+      net_amount: String(p.net_amount ?? ""),
+      status: p.status || "pending",
+      notes: p.notes || "",
+    });
+  };
+
+  const handleEditSave = async () => {
+    if (!editingPayment) return;
+    const { error } = await supabase
+      .from("teacher_payments")
+      .update({
+        period_start: editForm.period_start,
+        period_end: editForm.period_end,
+        payment_type: editForm.payment_type,
+        gross_amount: Number(editForm.gross_amount) || 0,
+        platform_fee: Number(editForm.platform_fee) || 0,
+        net_amount: Number(editForm.net_amount) || 0,
+        status: editForm.status,
+        notes: editForm.notes || null,
+      })
+      .eq("id", editingPayment.id);
+
+    if (error) {
+      toast({ title: "Erro", description: "Falha ao atualizar pagamento.", variant: "destructive" });
+    } else {
+      toast({ title: "Atualizado", description: "Pagamento atualizado com sucesso." });
+      setEditingPayment(null);
+      fetchData();
+    }
+  };
+
+  const handleMarkPaid = async (paymentId: string) => {
+    await handleStatusChange(paymentId, "paid");
   };
 
   const statusBadge = (status: string) => {
@@ -335,16 +390,36 @@ const AdminPaymentsTab = () => {
                     <TableCell className="text-right font-medium">R$ {Number(p.net_amount).toFixed(2)}</TableCell>
                     <TableCell>{statusBadge(p.status)}</TableCell>
                     <TableCell className="text-right">
-                      <Select value={p.status} onValueChange={(val) => handleStatusChange(p.id, val)}>
-                        <SelectTrigger className="w-[110px] h-8 text-xs">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="pending">Pendente</SelectItem>
-                          <SelectItem value="paid">Pago</SelectItem>
-                          <SelectItem value="cancelled">Cancelado</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <div className="flex items-center justify-end gap-1">
+                        {p.status !== "paid" && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-8 px-2 text-xs"
+                            onClick={() => handleMarkPaid(p.id)}
+                          >
+                            <CheckCircle2 className="h-3.5 w-3.5 mr-1" /> Pago
+                          </Button>
+                        )}
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-8 px-2 text-xs"
+                          onClick={() => openEditDialog(p)}
+                        >
+                          <Pencil className="h-3.5 w-3.5 mr-1" /> Editar
+                        </Button>
+                        <Select value={p.status} onValueChange={(val) => handleStatusChange(p.id, val)}>
+                          <SelectTrigger className="w-[110px] h-8 text-xs">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="pending">Pendente</SelectItem>
+                            <SelectItem value="paid">Pago</SelectItem>
+                            <SelectItem value="cancelled">Cancelado</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -358,6 +433,74 @@ const AdminPaymentsTab = () => {
           </div>
         </div>
       )}
+
+      <Dialog open={!!editingPayment} onOpenChange={(open) => !open && setEditingPayment(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar Pagamento</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="text-sm text-muted-foreground">
+              Professor: <span className="font-medium text-foreground">{editingPayment?.teacher_name}</span>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Início do Período</Label>
+                <Input type="date" value={editForm.period_start} onChange={(e) => setEditForm((p) => ({ ...p, period_start: e.target.value }))} />
+              </div>
+              <div>
+                <Label>Fim do Período</Label>
+                <Input type="date" value={editForm.period_end} onChange={(e) => setEditForm((p) => ({ ...p, period_end: e.target.value }))} />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Tipo</Label>
+                <Select value={editForm.payment_type} onValueChange={(val) => setEditForm((p) => ({ ...p, payment_type: val }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="subscription">Assinatura</SelectItem>
+                    <SelectItem value="purchase">Compra Unitária</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Status</Label>
+                <Select value={editForm.status} onValueChange={(val) => setEditForm((p) => ({ ...p, status: val }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pending">Pendente</SelectItem>
+                    <SelectItem value="paid">Pago</SelectItem>
+                    <SelectItem value="cancelled">Cancelado</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              <div>
+                <Label>Bruto (R$)</Label>
+                <Input type="number" value={editForm.gross_amount} onChange={(e) => setEditForm((p) => ({ ...p, gross_amount: e.target.value }))} />
+              </div>
+              <div>
+                <Label>Taxa (R$)</Label>
+                <Input type="number" value={editForm.platform_fee} onChange={(e) => setEditForm((p) => ({ ...p, platform_fee: e.target.value }))} />
+              </div>
+              <div>
+                <Label>Líquido (R$)</Label>
+                <Input type="number" value={editForm.net_amount} onChange={(e) => setEditForm((p) => ({ ...p, net_amount: e.target.value }))} />
+              </div>
+            </div>
+            <div>
+              <Label>Observações</Label>
+              <Input value={editForm.notes} onChange={(e) => setEditForm((p) => ({ ...p, notes: e.target.value }))} />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setEditingPayment(null)}>Cancelar</Button>
+              <Button onClick={handleEditSave}>Salvar alterações</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

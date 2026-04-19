@@ -50,6 +50,48 @@ export type Database = {
         }
         Relationships: []
       }
+      birthday_email_log: {
+        Row: {
+          coupon_code: string | null
+          coupon_included: boolean
+          created_at: string
+          id: string
+          is_active_subscriber: boolean
+          metadata: Json | null
+          recipient_email: string
+          recipient_name: string | null
+          sent_at: string
+          template_key: string
+          user_id: string
+        }
+        Insert: {
+          coupon_code?: string | null
+          coupon_included?: boolean
+          created_at?: string
+          id?: string
+          is_active_subscriber?: boolean
+          metadata?: Json | null
+          recipient_email: string
+          recipient_name?: string | null
+          sent_at?: string
+          template_key: string
+          user_id: string
+        }
+        Update: {
+          coupon_code?: string | null
+          coupon_included?: boolean
+          created_at?: string
+          id?: string
+          is_active_subscriber?: boolean
+          metadata?: Json | null
+          recipient_email?: string
+          recipient_name?: string | null
+          sent_at?: string
+          template_key?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       commitment_penalty_refunds: {
         Row: {
           admin_id: string

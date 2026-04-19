@@ -20,6 +20,7 @@ import { RatingStars } from "@/components/VideoDetailModal";
 import ResourceLimitModal from "@/components/ResourceLimitModal";
 import CpfRequiredModal from "@/components/CpfRequiredModal";
 import { useCpfGuard } from "@/hooks/useCpfGuard";
+import { useAutoInterestPromotion } from "@/hooks/useAutoInterestPromotion";
 import { startUnitCheckout } from "@/lib/payments";
 import VLibrasWidget from "@/components/VLibrasWidget";
 

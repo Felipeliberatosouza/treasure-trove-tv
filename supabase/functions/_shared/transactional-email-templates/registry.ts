@@ -48,4 +48,5 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'subscription-change-admin-notify': subscriptionChangeAdminNotify,
   'content-edited-admin-notify': contentEditedAdminNotify,
   'commitment-penalty-refunded': commitmentPenaltyRefunded,
+  'teacher-payment-paid': teacherPaymentPaid,
 }

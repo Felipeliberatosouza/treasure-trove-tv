@@ -257,7 +257,55 @@ const SalesBoostTab = () => {
     toast.success("Post removido do histórico.");
   };
 
-  // Preserve selection order (drag-and-drop driven)
+  const savePostToHistory = async (
+    canvas: HTMLCanvasElement,
+    cap: string,
+    items: ContentItem[]
+  ) => {
+    if (!user?.id) return;
+    try {
+      const blob: Blob | null = await new Promise((resolve) =>
+        canvas.toBlob((b) => resolve(b), "image/png", 0.92)
+      );
+      if (!blob) return;
+      const path = `${user.id}/${Date.now()}.png`;
+      const { error: upErr } = await supabase.storage
+        .from("sales-post-thumbnails")
+        .upload(path, blob, { contentType: "image/png", upsert: false });
+      if (upErr) {
+        console.error("Storage upload failed", upErr);
+        return;
+      }
+      const { data: pub } = supabase.storage
+        .from("sales-post-thumbnails")
+        .getPublicUrl(path);
+
+      const { data: inserted, error: insErr } = await supabase
+        .from("teacher_sales_posts")
+        .insert({
+          teacher_id: user.id,
+          template,
+          caption: cap,
+          thumbnail_url: pub?.publicUrl || null,
+          thumbnail_path: path,
+          contents: items as unknown as never,
+          public_url: publicUrl || null,
+        })
+        .select("id,template,caption,thumbnail_url,thumbnail_path,contents,public_url,created_at")
+        .maybeSingle();
+
+      if (insErr) {
+        console.error("Insert post history failed", insErr);
+        return;
+      }
+      if (inserted) {
+        setHistory((prev) => [inserted as unknown as SalesPostRow, ...prev].slice(0, 20));
+      }
+    } catch (e) {
+      console.error("savePostToHistory error", e);
+    }
+  };
+
   const selectedContents = useMemo(() => {
     const map = new Map(contents.map((c) => [c.id, c]));
     return selectedIds.map((id) => map.get(id)).filter(Boolean) as ContentItem[];

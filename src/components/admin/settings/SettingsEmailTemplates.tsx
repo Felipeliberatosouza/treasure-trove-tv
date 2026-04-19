@@ -390,6 +390,69 @@ const SettingsEmailTemplates = () => {
       `;
     }
 
+    // ---------- Fictitious dynamic blocks for preview ----------
+    const sampleVideo = (title: string) => `
+      <td style="padding:8px;vertical-align:top;width:33%;">
+        <a href="#" style="text-decoration:none;color:inherit;display:block;">
+          <div style="background:linear-gradient(135deg,#e0e7ff,#c7d2fe);height:120px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#4338ca;font-size:11px;font-weight:600;">PRÉVIA</div>
+          <p style="margin:8px 0 0;font-size:13px;font-weight:600;color:#1f2937;line-height:1.3;">${title}</p>
+          <p style="margin:6px 0 0;font-size:12px;color:${buttonColor};font-weight:600;">Assistir →</p>
+        </a>
+      </td>`;
+    const recommendedVideosBlock = `
+      <div style="margin:24px 0;">
+        <h3 style="margin:0 0 12px;font-size:16px;color:#111827;text-align:center;">🔥 Bombando agora na plataforma</h3>
+        <table style="width:100%;border-collapse:separate;border-spacing:0;">
+          <tr>
+            ${sampleVideo("Equações do 2º grau — Bhaskara")}
+            ${sampleVideo("Interpretação de Texto ENEM")}
+            ${sampleVideo("Revolução Industrial — Resumo")}
+          </tr>
+        </table>
+      </div>`;
+    const recommendedVideoBlock = `
+      <div style="margin:24px 0;text-align:center;">
+        <h3 style="margin:0 0 12px;font-size:16px;color:#111827;">🎁 Vídeo recomendado para você</h3>
+        <a href="#" style="text-decoration:none;color:inherit;display:inline-block;max-width:320px;">
+          <div style="background:linear-gradient(135deg,#fde68a,#fbbf24);height:160px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#78350f;font-weight:700;">PRÉVIA</div>
+          <p style="margin:10px 0 0;font-size:14px;font-weight:600;color:#1f2937;">Equações do 2º grau — Bhaskara</p>
+          <p style="margin:6px 0 0;font-size:12px;color:${buttonColor};font-weight:600;">Assistir agora →</p>
+        </a>
+      </div>`;
+    const teacherStatsBlock = `
+      <div style="margin:24px 0;padding:16px;border:1px solid #e5e7eb;border-radius:10px;background:#f9fafb;">
+        <h3 style="margin:0 0 12px;font-size:15px;color:#111827;">📊 Seu desempenho até agora</h3>
+        <table style="width:100%;font-size:14px;color:#374151;">
+          <tr><td style="padding:4px 0;">Vídeos publicados:</td><td style="text-align:right;font-weight:600;">12</td></tr>
+          <tr><td style="padding:4px 0;">Visualizações totais:</td><td style="text-align:right;font-weight:600;">1.847</td></tr>
+          <tr><td style="padding:4px 0;">Sua participação:</td><td style="text-align:right;font-weight:600;">70%</td></tr>
+        </table>
+      </div>`;
+    const teacherScenariosBlock = `
+      <div style="margin:24px 0;">
+        <h3 style="margin:0 0 12px;font-size:15px;color:#111827;text-align:center;">💰 Quanto você pode ganhar por vídeo postado/mês</h3>
+        <p style="margin:0 0 12px;font-size:12px;color:#6b7280;text-align:center;">
+          Estimativa baseada no preço médio da plataforma (R$ 5,00) e na sua participação de 70%.
+        </p>
+        <table style="width:100%;border-collapse:collapse;font-size:14px;">
+          <thead>
+            <tr style="background:#f3f4f6;">
+              <th style="padding:10px;text-align:left;border-bottom:1px solid #e5e7eb;">Cenário</th>
+              <th style="padding:10px;text-align:center;border-bottom:1px solid #e5e7eb;">Views/mês</th>
+              <th style="padding:10px;text-align:right;border-bottom:1px solid #e5e7eb;">Ganho/vídeo/mês</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td style="padding:10px;color:#374151;">Conservador</td><td style="padding:10px;text-align:center;color:#374151;">50</td><td style="padding:10px;text-align:right;font-weight:700;color:#059669;">R$ 175,00</td></tr>
+            <tr style="background:#fafafa;"><td style="padding:10px;color:#374151;">Realista</td><td style="padding:10px;text-align:center;color:#374151;">200</td><td style="padding:10px;text-align:right;font-weight:700;color:#059669;">R$ 700,00</td></tr>
+            <tr><td style="padding:10px;color:#374151;">Otimista</td><td style="padding:10px;text-align:center;color:#374151;">500</td><td style="padding:10px;text-align:right;font-weight:700;color:#059669;">R$ 1.750,00</td></tr>
+          </tbody>
+        </table>
+        <p style="margin:12px 0 0;font-size:11px;color:#9ca3af;text-align:center;">
+          * Valores estimados. Ganho real depende do preço definido por você, do percentual da plataforma e do volume de acessos.
+        </p>
+      </div>`;
+
     let body = active.body_html
       .replace(/\{\{name\}\}/g, "João Silva")
       .replace(/\{\{confirmation_link\}\}/g, "#")
@@ -401,7 +464,13 @@ const SettingsEmailTemplates = () => {
       .replace(/\{\{question\}\}/g, "Como resolver essa equação?")
       .replace(/\{\{answer\}\}/g, "Você precisa aplicar a fórmula de Bhaskara...")
       .replace(/\{\{content_title\}\}/g, "Matemática - Equações")
-      .replace(/\{\{deadline_days\}\}/g, "3");
+      .replace(/\{\{deadline_days\}\}/g, "3")
+      .replace(/\{\{recommended_videos_block\}\}/g, recommendedVideosBlock)
+      .replace(/\{\{recommended_video_block\}\}/g, recommendedVideoBlock)
+      .replace(/\{\{teacher_stats_block\}\}/g, teacherStatsBlock)
+      .replace(/\{\{teacher_scenarios_block\}\}/g, teacherScenariosBlock)
+      .replace(/\{\{total_videos\}\}/g, "12")
+      .replace(/\{\{total_views\}\}/g, "1.847");
 
     // Apply heading color to h1, h2, h3 tags in body
     body = body.replace(/<h([1-3])([^>]*)>/gi, (match, level, attrs) => {

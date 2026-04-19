@@ -428,6 +428,90 @@ const TeacherHomeStats = () => {
             </ResponsiveContainer>
           </div>
         </motion.div>
+
+        {/* Card 4: Ratings */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+          className="rounded-xl border border-border bg-card p-5"
+        >
+          <div className="flex items-start justify-between mb-3">
+            <div>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Star className="h-4 w-4" /> Avaliação média (3 meses)
+              </div>
+              <div className="flex items-baseline gap-2 mt-1">
+                <p className="font-display text-2xl font-bold">
+                  {ratingsSummary.avg > 0 ? ratingsSummary.avg.toFixed(1) : "—"}
+                </p>
+                <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+              </div>
+              <div className="flex items-center gap-1 text-xs mt-1">
+                {ratingsSummary.totalCount === 0 ? (
+                  <span className="text-muted-foreground">Sem avaliações ainda</span>
+                ) : ratingsSummary.trend === "up" ? (
+                  <span className="inline-flex items-center gap-1 text-green-600 font-semibold">
+                    <TrendingUp className="h-3 w-3" /> +{ratingsSummary.delta.toFixed(1)} vs mês anterior
+                  </span>
+                ) : ratingsSummary.trend === "down" ? (
+                  <span className="inline-flex items-center gap-1 text-red-600 font-semibold">
+                    <TrendingDown className="h-3 w-3" /> {ratingsSummary.delta.toFixed(1)} vs mês anterior
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 text-muted-foreground">
+                    <Minus className="h-3 w-3" /> estável
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {ratingsSummary.totalCount} avaliação{ratingsSummary.totalCount === 1 ? "" : "ões"}
+              </p>
+            </div>
+          </div>
+          <div className="h-40">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={ratings} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                <XAxis
+                  dataKey="month"
+                  tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <YAxis
+                  domain={[0, 5]}
+                  ticks={[0, 1, 2, 3, 4, 5]}
+                  tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
+                  tickLine={false}
+                  axisLine={false}
+                  width={24}
+                />
+                <Tooltip
+                  cursor={{ stroke: "hsl(var(--muted) / 0.3)" }}
+                  contentStyle={{
+                    background: "hsl(var(--card))",
+                    border: "1px solid hsl(var(--border))",
+                    borderRadius: 8,
+                    fontSize: 12,
+                  }}
+                  formatter={(v: number, _name, props) => [
+                    `${v.toFixed(1)} ⭐ (${props.payload.count} aval.)`,
+                    "Média",
+                  ]}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="avg"
+                  stroke="hsl(48 96% 53%)"
+                  strokeWidth={3}
+                  dot={{ r: 5, fill: "hsl(48 96% 53%)", strokeWidth: 0 }}
+                  activeDot={{ r: 7 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </motion.div>
       </div>
     </section>
   );

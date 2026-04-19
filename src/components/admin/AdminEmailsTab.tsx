@@ -151,6 +151,40 @@ const AdminEmailsTab = () => {
       .order("sent_at", { ascending: false })
       .limit(500);
     setBirthdayLogs((data as BirthdayLog[]) || []);
+
+    // Fetch last 12 months for chart (independent of range filter)
+    const twelveMonthsAgo = new Date();
+    twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 11);
+    twelveMonthsAgo.setDate(1);
+    twelveMonthsAgo.setHours(0, 0, 0, 0);
+    const { data: monthlyData } = await supabase
+      .from("birthday_email_log")
+      .select("sent_at, is_active_subscriber")
+      .gte("sent_at", twelveMonthsAgo.toISOString())
+      .order("sent_at", { ascending: true });
+
+    // Build 12 month buckets
+    const buckets: Record<string, { month: string; subscribers: number; nonSubscribers: number }> = {};
+    const monthNames = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
+    for (let i = 0; i < 12; i++) {
+      const d = new Date(twelveMonthsAgo);
+      d.setMonth(d.getMonth() + i);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      buckets[key] = {
+        month: `${monthNames[d.getMonth()]}/${String(d.getFullYear()).slice(2)}`,
+        subscribers: 0,
+        nonSubscribers: 0,
+      };
+    }
+    (monthlyData || []).forEach((row: any) => {
+      const d = new Date(row.sent_at);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      if (buckets[key]) {
+        if (row.is_active_subscriber) buckets[key].subscribers++;
+        else buckets[key].nonSubscribers++;
+      }
+    });
+    setBirthdayMonthly(Object.values(buckets));
     setBirthdayLoading(false);
   };
 

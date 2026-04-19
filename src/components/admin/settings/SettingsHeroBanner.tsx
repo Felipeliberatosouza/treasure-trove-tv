@@ -23,7 +23,13 @@ import {
   Layers,
 } from "lucide-react";
 
-type HeroSettingsKey = "hero_banner" | "hero_banner_student" | "hero_banner_teacher";
+type HeroSettingsKey =
+  | "hero_banner"
+  | "hero_banner_student"
+  | "hero_banner_teacher"
+  | "secondary_banner"
+  | "secondary_banner_student"
+  | "secondary_banner_teacher";
 
 interface SettingsHeroBannerProps {
   settingsKey?: HeroSettingsKey;

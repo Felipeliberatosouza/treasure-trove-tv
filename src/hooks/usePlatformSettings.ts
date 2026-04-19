@@ -165,6 +165,9 @@ type SettingsMap = {
   hero_banner: HeroBannerCarouselSettings;
   hero_banner_student: HeroBannerCarouselSettings;
   hero_banner_teacher: HeroBannerCarouselSettings;
+  secondary_banner: HeroBannerCarouselSettings;
+  secondary_banner_student: HeroBannerCarouselSettings;
+  secondary_banner_teacher: HeroBannerCarouselSettings;
   featured_videos: FeaturedVideosSettings;
   subscription_plans: SubscriptionPlansSettings;
   video_pricing: VideoPricingSettings;

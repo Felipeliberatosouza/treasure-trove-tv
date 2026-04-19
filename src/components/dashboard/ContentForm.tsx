@@ -283,6 +283,11 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
         ({ error } = await supabase.from(table).update(contentData).eq("id", editData.id));
       } else {
         contentData.teacher_id = user.id;
+        // Use platform_percentage and price from resource_prices config
+        if (revisaoPricing) {
+          contentData.platform_percentage = revisaoPricing.platform_percentage;
+          contentData.price = revisaoPricing.price;
+        }
         contentData.thumbnail_url = thumbnail_url;
         contentData.carousel_cover_url = carousel_cover_url;
         contentData.video_url = video_url;

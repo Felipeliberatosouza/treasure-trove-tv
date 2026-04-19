@@ -48,6 +48,11 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
   const [topQuestoesFile, setTopQuestoesFile] = useState<File | null>(null);
   const [colinhaFile, setColinhaFile] = useState<File | null>(null);
   const [videoType, setVideoType] = useState<string>(editData?.video_type || "revisao");
+  const [priceRevisoes, setPriceRevisoes] = useState<string>(editData?.price_revisoes?.toString() ?? editData?.price?.toString() ?? "");
+  const [priceResumos, setPriceResumos] = useState<string>(editData?.price_resumos?.toString() ?? "");
+  const [priceSimulados, setPriceSimulados] = useState<string>(editData?.price_simulados?.toString() ?? "");
+  const [priceTopQuestoes, setPriceTopQuestoes] = useState<string>(editData?.price_top_questoes?.toString() ?? "");
+  const [priceColinhas, setPriceColinhas] = useState<string>(editData?.price_colinhas?.toString() ?? "");
   const [saving, setSaving] = useState(false);
   const [showRecorder, setShowRecorder] = useState(false);
   const [subtitlesVtt, setSubtitlesVtt] = useState<string>("");
@@ -85,9 +90,21 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
       .select("resource_type, price, min_price, platform_percentage")
       .eq("active", true)
       .then(({ data }) => {
-        if (data) setResourcePrices(data as unknown as ResourcePriceInfo[]);
+        if (data) {
+          const list = data as unknown as ResourcePriceInfo[];
+          setResourcePrices(list);
+          // On create, prefill empty price fields with the platform default
+          if (!editData?.id) {
+            const get = (t: string) => list.find((r) => r.resource_type === t)?.price?.toString() ?? "";
+            setPriceRevisoes((p) => p || get("revisoes"));
+            setPriceResumos((p) => p || get("resumos"));
+            setPriceSimulados((p) => p || get("simulados"));
+            setPriceTopQuestoes((p) => p || get("top_questoes"));
+            setPriceColinhas((p) => p || get("colinhas"));
+          }
+        }
       });
-  }, []);
+  }, [editData?.id]);
 
   // Extract audio from a video file and return base64
   const extractAudioBase64 = useCallback(async (file: File): Promise<string> => {
@@ -216,6 +233,30 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
     }
     if (!user) return;
 
+    // Validate per-resource prices against admin-configured minimums
+    const priceFields: { type: string; value: string; hasFile: boolean; existing?: string }[] = [
+      { type: "revisoes", value: priceRevisoes, hasFile: !!videoFile, existing: editData?.video_url },
+      { type: "resumos", value: priceResumos, hasFile: !!resumoFile, existing: editData?.resumo_url },
+      { type: "simulados", value: priceSimulados, hasFile: !!simuladoFile, existing: editData?.simulado_url },
+      { type: "top_questoes", value: priceTopQuestoes, hasFile: !!topQuestoesFile, existing: editData?.top_questoes_url },
+      { type: "colinhas", value: priceColinhas, hasFile: !!colinhaFile, existing: editData?.colinha_url },
+    ];
+    for (const f of priceFields) {
+      const provided = f.hasFile || !!f.existing;
+      if (!provided) continue;
+      const cfg = resourcePrices.find((r) => r.resource_type === f.type);
+      if (!cfg) continue;
+      const num = parseFloat(f.value);
+      if (isNaN(num) || num <= 0) {
+        toast.error(`Informe o preço de "${RESOURCE_LABELS[f.type]}"`);
+        return;
+      }
+      if (cfg.min_price > 0 && num < cfg.min_price) {
+        toast.error(`Preço de "${RESOURCE_LABELS[f.type]}" deve ser ≥ R$ ${cfg.min_price.toFixed(2)}`);
+        return;
+      }
+    }
+
     setSaving(true);
     try {
       let thumbnail_url = "";
@@ -278,16 +319,30 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
       if (top_questoes_url) contentData.top_questoes_url = top_questoes_url;
       if (colinha_url) contentData.colinha_url = colinha_url;
 
+      // Per-resource prices defined by the teacher (already validated against minimums)
+      const setPrice = (field: string, val: string, hasFile: boolean, existing?: string) => {
+        if (hasFile || existing) {
+          const n = parseFloat(val);
+          if (!isNaN(n) && n > 0) contentData[field] = n;
+        }
+      };
+      setPrice("price_revisoes", priceRevisoes, !!videoFile, editData?.video_url);
+      setPrice("price_resumos", priceResumos, !!resumoFile, editData?.resumo_url);
+      setPrice("price_simulados", priceSimulados, !!simuladoFile, editData?.simulado_url);
+      setPrice("price_top_questoes", priceTopQuestoes, !!topQuestoesFile, editData?.top_questoes_url);
+      setPrice("price_colinhas", priceColinhas, !!colinhaFile, editData?.colinha_url);
+
       let error;
       if (editData?.id) {
         ({ error } = await supabase.from(table).update(contentData).eq("id", editData.id));
       } else {
         contentData.teacher_id = user.id;
-        // Use platform_percentage and price from resource_prices config
+        // platform_percentage from admin config; main price = revisão price chosen by teacher
         if (revisaoPricing) {
           contentData.platform_percentage = revisaoPricing.platform_percentage;
-          contentData.price = revisaoPricing.price;
         }
+        const mainPrice = parseFloat(priceRevisoes);
+        if (!isNaN(mainPrice) && mainPrice > 0) contentData.price = mainPrice;
         contentData.thumbnail_url = thumbnail_url;
         contentData.carousel_cover_url = carousel_cover_url;
         contentData.video_url = video_url;
@@ -478,35 +533,80 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
             )}
           </div>
         )}
+        {(videoFile || editData?.video_url) && (() => {
+          const cfg = resourcePrices.find((r) => r.resource_type === "revisoes");
+          return (
+            <div className="mt-2 flex items-center gap-2">
+              <DollarSign className="h-3.5 w-3.5 text-muted-foreground" />
+              <Input
+                type="number"
+                step="0.01"
+                min={cfg?.min_price || 0}
+                placeholder={cfg ? `Mín. R$ ${cfg.min_price.toFixed(2)}` : "Preço (R$)"}
+                value={priceRevisoes}
+                onChange={(e) => setPriceRevisoes(e.target.value)}
+                className="bg-secondary text-xs h-9 max-w-[180px]"
+              />
+              {cfg && (
+                <span className="text-[11px] text-muted-foreground">
+                  mín. R$ {cfg.min_price.toFixed(2)} · você recebe {100 - (cfg.platform_percentage || 0)}%
+                </span>
+              )}
+            </div>
+          );
+        })()}
       </div>
 
       <p className="text-sm font-semibold text-muted-foreground pt-2">Materiais complementares</p>
 
       {([
-        { label: "Resumo", icon: FileText, file: resumoFile, setFile: setResumoFile },
-        { label: "Simulado", icon: ClipboardList, file: simuladoFile, setFile: setSimuladoFile },
-        { label: "Top Questões de Provas", icon: Trophy, file: topQuestoesFile, setFile: setTopQuestoesFile },
-        { label: "Colinha", icon: StickyNote, file: colinhaFile, setFile: setColinhaFile },
-      ] as const).map(({ label, icon: Icon, file, setFile }) => (
-        <div key={label}>
-          <label className="text-sm text-muted-foreground mb-1 block flex items-center gap-1">
-            <Icon className="h-3.5 w-3.5" /> {label}
-          </label>
-          <div className="flex items-center gap-2">
-            <Input
-              type="file"
-              accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,image/*"
-              onChange={(e) => setFile(e.target.files?.[0] || null)}
-              className="bg-secondary text-xs"
-            />
-            {file && (
-              <button type="button" onClick={() => setFile(null)} className="text-muted-foreground hover:text-destructive">
-                <X className="h-4 w-4" />
-              </button>
+        { label: "Resumo", icon: FileText, file: resumoFile, setFile: setResumoFile, type: "resumos", priceVal: priceResumos, setPrice: setPriceResumos, existingUrl: editData?.resumo_url },
+        { label: "Simulado", icon: ClipboardList, file: simuladoFile, setFile: setSimuladoFile, type: "simulados", priceVal: priceSimulados, setPrice: setPriceSimulados, existingUrl: editData?.simulado_url },
+        { label: "Top Questões de Provas", icon: Trophy, file: topQuestoesFile, setFile: setTopQuestoesFile, type: "top_questoes", priceVal: priceTopQuestoes, setPrice: setPriceTopQuestoes, existingUrl: editData?.top_questoes_url },
+        { label: "Colinha", icon: StickyNote, file: colinhaFile, setFile: setColinhaFile, type: "colinhas", priceVal: priceColinhas, setPrice: setPriceColinhas, existingUrl: editData?.colinha_url },
+      ] as const).map(({ label, icon: Icon, file, setFile, type, priceVal, setPrice, existingUrl }) => {
+        const cfg = resourcePrices.find((r) => r.resource_type === type);
+        const showPrice = !!file || !!existingUrl;
+        return (
+          <div key={label}>
+            <label className="text-sm text-muted-foreground mb-1 block flex items-center gap-1">
+              <Icon className="h-3.5 w-3.5" /> {label}
+            </label>
+            <div className="flex items-center gap-2">
+              <Input
+                type="file"
+                accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,image/*"
+                onChange={(e) => setFile(e.target.files?.[0] || null)}
+                className="bg-secondary text-xs"
+              />
+              {file && (
+                <button type="button" onClick={() => setFile(null)} className="text-muted-foreground hover:text-destructive">
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+            {showPrice && (
+              <div className="mt-2 flex items-center gap-2">
+                <DollarSign className="h-3.5 w-3.5 text-muted-foreground" />
+                <Input
+                  type="number"
+                  step="0.01"
+                  min={cfg?.min_price || 0}
+                  placeholder={cfg ? `Mín. R$ ${cfg.min_price.toFixed(2)}` : "Preço (R$)"}
+                  value={priceVal}
+                  onChange={(e) => setPrice(e.target.value)}
+                  className="bg-secondary text-xs h-9 max-w-[180px]"
+                />
+                {cfg && (
+                  <span className="text-[11px] text-muted-foreground">
+                    mín. R$ {cfg.min_price.toFixed(2)} · você recebe {100 - (cfg.platform_percentage || 0)}%
+                  </span>
+                )}
+              </div>
             )}
           </div>
-        </div>
-      ))}
+        );
+      })}
 
       {!editData?.id && resourcePrices.length > 0 && (
         <div className="rounded-lg border border-border bg-secondary/40 p-4 mt-4">
@@ -514,8 +614,8 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
             <DollarSign className="h-4 w-4 text-primary" /> Valores e divisão de receita
           </p>
           <p className="text-xs text-muted-foreground mb-3">
-            Estes são os valores definidos pela plataforma para cada recurso. O percentual indicado é
-            o que você (professor) recebe sobre cada venda avulsa.
+            Você define o preço de cada recurso, respeitando o valor mínimo configurado pela plataforma.
+            O percentual indicado é o que você (professor) recebe sobre cada venda avulsa.
           </p>
           <div className="space-y-1.5">
             {resourcePrices

@@ -180,14 +180,66 @@ const AdminPaymentsTab = () => {
     }
   };
 
+  const sendPaidEmail = async (payment: Payment) => {
+    try {
+      // Fetch teacher email + pix
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("email, name, pix_key")
+        .eq("user_id", payment.teacher_id)
+        .maybeSingle();
+
+      if (!profile?.email) {
+        console.warn("Professor sem e-mail cadastrado, não enviando notificação", payment.teacher_id);
+        return;
+      }
+
+      const fmt = (n: number) =>
+        n.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      const fmtDate = (d: string) => (d ? new Date(d).toLocaleDateString("pt-BR") : "");
+
+      await supabase.functions.invoke("send-transactional-email", {
+        body: {
+          templateName: "teacher-payment-paid",
+          recipientEmail: profile.email,
+          idempotencyKey: `teacher-payment-paid-${payment.id}`,
+          templateData: {
+            name: profile.name || payment.teacher_name,
+            periodStart: fmtDate(payment.period_start),
+            periodEnd: fmtDate(payment.period_end),
+            paymentType: payment.payment_type === "subscription" ? "Assinatura" : "Compra Unitária",
+            grossAmount: fmt(Number(payment.gross_amount) || 0),
+            platformFee: fmt(Number(payment.platform_fee) || 0),
+            netAmount: fmt(Number(payment.net_amount) || 0),
+            pixKey: profile.pix_key || "",
+            notes: payment.notes || "",
+          },
+        },
+      });
+    } catch (err) {
+      console.error("Falha ao enviar e-mail de pagamento ao professor", err);
+    }
+  };
+
   const handleStatusChange = async (paymentId: string, status: string) => {
+    const payment = payments.find((p) => p.id === paymentId);
+    const wasPaid = payment?.status === "paid";
+
     const { error } = await supabase.from("teacher_payments").update({ status }).eq("id", paymentId);
     if (error) {
       toast({ title: "Erro", description: "Falha ao atualizar status.", variant: "destructive" });
-    } else {
-      toast({ title: "Atualizado", description: `Status alterado para ${status}.` });
-      fetchData();
+      return;
     }
+
+    toast({ title: "Atualizado", description: `Status alterado para ${status}.` });
+
+    // Send email only on transition to paid
+    if (status === "paid" && !wasPaid && payment) {
+      await sendPaidEmail({ ...payment, status: "paid" });
+      toast({ title: "E-mail enviado", description: "Notificação de pagamento enviada ao professor." });
+    }
+
+    fetchData();
   };
 
   const openEditDialog = (p: Payment) => {
@@ -206,6 +258,8 @@ const AdminPaymentsTab = () => {
 
   const handleEditSave = async () => {
     if (!editingPayment) return;
+    const wasPaid = editingPayment.status === "paid";
+
     const { error } = await supabase
       .from("teacher_payments")
       .update({
@@ -222,11 +276,28 @@ const AdminPaymentsTab = () => {
 
     if (error) {
       toast({ title: "Erro", description: "Falha ao atualizar pagamento.", variant: "destructive" });
-    } else {
-      toast({ title: "Atualizado", description: "Pagamento atualizado com sucesso." });
-      setEditingPayment(null);
-      fetchData();
+      return;
     }
+
+    toast({ title: "Atualizado", description: "Pagamento atualizado com sucesso." });
+
+    if (editForm.status === "paid" && !wasPaid) {
+      await sendPaidEmail({
+        ...editingPayment,
+        period_start: editForm.period_start,
+        period_end: editForm.period_end,
+        payment_type: editForm.payment_type,
+        gross_amount: Number(editForm.gross_amount) || 0,
+        platform_fee: Number(editForm.platform_fee) || 0,
+        net_amount: Number(editForm.net_amount) || 0,
+        notes: editForm.notes,
+        status: "paid",
+      });
+      toast({ title: "E-mail enviado", description: "Notificação de pagamento enviada ao professor." });
+    }
+
+    setEditingPayment(null);
+    fetchData();
   };
 
   const handleMarkPaid = async (paymentId: string) => {

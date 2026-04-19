@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import MandatoryMfaGuard from "@/components/MandatoryMfaGuard";
 import { motion } from "framer-motion";
-import { ArrowLeft, Video, DollarSign, Shield, LayoutDashboard, Settings, HelpCircle, Mail, CalendarClock, Megaphone, Users, CreditCard, Tag, FileText, ScrollText, Activity, RefreshCcw, Receipt } from "lucide-react";
+import { ArrowLeft, Video, DollarSign, Shield, LayoutDashboard, Settings, HelpCircle, Mail, CalendarClock, Megaphone, Users, CreditCard, Tag, FileText, ScrollText, Activity, RefreshCcw, Receipt, XCircle } from "lucide-react";
 import { Link, Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
@@ -22,6 +22,7 @@ import AdminLoginAttemptsTab from "@/components/admin/AdminLoginAttemptsTab";
 import AdminCancellationReasonsTab from "@/components/admin/AdminCancellationReasonsTab";
 import AdminCancellationReceiptsTab from "@/components/admin/AdminCancellationReceiptsTab";
 import AdminCommitmentRefundsTab from "@/components/admin/AdminCommitmentRefundsTab";
+import AdminCancellationsTab from "@/components/admin/AdminCancellationsTab";
 import AdminResourcePricingTab from "@/components/admin/AdminResourcePricingTab";
 import AdminUsageHistoryTab from "@/components/admin/AdminUsageHistoryTab";
 
@@ -31,11 +32,13 @@ const tabs = [
   { id: "plans", label: "Planos", icon: CreditCard },
   { id: "resource-pricing", label: "Preços de Recursos", icon: Tag },
   { id: "usage-history", label: "Histórico de Uso", icon: Activity },
-  { id: "cancellation-reasons", label: "Motivos de Cancelamento", icon: FileText },
-  { id: "cancellation-receipts", label: "Recibos de Cancelamento", icon: Receipt },
-  { id: "commitment-refunds", label: "Reembolsos de Compromisso", icon: RefreshCcw },
+  { id: "cancellations", label: "Cancelamentos", icon: XCircle },
   { id: "security", label: "Segurança", icon: Shield },
   { id: "settings", label: "Configurações", icon: Settings },
+  // Hidden: agora acessadas como submenu dentro de Cancelamentos
+  { id: "cancellation-reasons", label: "Motivos de Cancelamento", icon: FileText, hidden: true },
+  { id: "cancellation-receipts", label: "Recibos de Cancelamento", icon: Receipt, hidden: true },
+  { id: "commitment-refunds", label: "Reembolso de Multa de Permanência", icon: RefreshCcw, hidden: true },
   // Hidden: agora acessadas como submenu dentro de Segurança
   { id: "audit", label: "Auditoria", icon: ScrollText, hidden: true },
   { id: "login-attempts", label: "Tentativas de Login", icon: Activity, hidden: true },
@@ -118,6 +121,7 @@ const AdminDashboard = () => {
             {activeTab === "cancellation-reasons" && <AdminCancellationReasonsTab />}
             {activeTab === "cancellation-receipts" && <AdminCancellationReceiptsTab />}
             {activeTab === "commitment-refunds" && <AdminCommitmentRefundsTab />}
+            {activeTab === "cancellations" && <AdminCancellationsTab />}
             {activeTab === "security" && <AdminSecurityTab />}
             {activeTab === "audit" && <AdminAuditLogsTab />}
             {activeTab === "login-attempts" && <AdminLoginAttemptsTab />}

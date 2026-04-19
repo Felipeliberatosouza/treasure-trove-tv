@@ -228,6 +228,7 @@ const Checkout = () => {
                 state={state}
                 initialName={profile?.name || ""}
                 initialCpf={profile?.cpf || ""}
+                initialPhone={profile?.phone_verified ? profile?.phone || "" : ""}
                 onStepChange={setStep}
                 onReady={(submit) => {
                   submitRef.current = submit;
@@ -338,6 +339,7 @@ interface CheckoutFormProps {
   state: EmbeddedCheckoutState;
   initialName: string;
   initialCpf: string;
+  initialPhone?: string;
   onStepChange?: (s: CheckoutStep) => void;
   onReady?: (submit: () => void) => void;
   onSubmittingChange?: (submitting: boolean) => void;
@@ -347,6 +349,7 @@ function CheckoutForm({
   state,
   initialName,
   initialCpf,
+  initialPhone,
   onStepChange,
   onReady,
   onSubmittingChange,
@@ -462,6 +465,12 @@ function CheckoutForm({
           billing_details: {
             name: billing.name.trim(),
             email: user?.email || undefined,
+            phone: (() => {
+              const digits = (initialPhone || "").replace(/\D/g, "");
+              if (!digits) return undefined;
+              // Already starts with country code 55
+              return digits.startsWith("55") ? `+${digits}` : `+55${digits}`;
+            })(),
             address: {
               line1: billing.line1.trim(),
               line2: billing.line2.trim() || undefined,

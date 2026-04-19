@@ -260,99 +260,142 @@ const Index = () => {
     <div className="min-h-screen bg-background text-foreground flex flex-col">
       <Navbar />
       <HeroBanner onVideoClick={handleVideoClick} onExploreClick={handleExploreClick} />
-      <FreeTrialBanner />
+      {!isTeacher && <FreeTrialBanner />}
 
       <div className="space-y-12 py-12">
-        {/* Inline search + Mais Populares */}
-        <div ref={popularSectionRef} className="scroll-mt-20">
-          <AnimatePresence>
-            {inlineSearchOpen && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                className="px-6 md:px-12 lg:px-20 mb-4"
-              >
-                <div className="relative max-w-xl mx-auto">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    ref={inlineSearchRef}
-                    value={inlineQuery}
-                    onChange={(e) => setInlineQuery(e.target.value)}
-                    placeholder="Buscar aulas, provas, conteúdos..."
-                    className="pl-10 pr-10"
+        {isTeacher ? (
+          <>
+            <TeacherHomeStats />
+
+            {loadingTeacherContent ? (
+              <div className="flex items-center justify-center py-16 gap-2 text-muted-foreground">
+                <Loader2 className="h-5 w-5 animate-spin" />
+                <span className="text-sm">Carregando seus conteúdos...</span>
+              </div>
+            ) : (
+              <>
+                {teacherLessons.length > 0 && (
+                  <VideoCarousel
+                    title="🎬 Minhas Aulas"
+                    videos={teacherLessons}
+                    onVideoClick={handleVideoClick}
                   />
-                  {inlineSearching && (
-                    <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
-                  )}
-                  {inlineResults.length > 0 && (
-                    <div className="absolute left-0 right-0 top-full mt-1 rounded-lg border bg-card shadow-lg z-20 max-h-60 overflow-y-auto">
-                      {inlineResults.map((r) => (
-                        <button
-                          key={r.id}
-                          className="w-full text-left px-4 py-2.5 text-sm hover:bg-secondary transition-colors flex items-center gap-2"
-                          onClick={() => {
-                            handleVideoClick(r.id);
-                            setInlineSearchOpen(false);
-                            setInlineQuery("");
-                            setInlineResults([]);
-                          }}
-                        >
-                          <span className="text-xs text-muted-foreground">
-                            {r.type === "lesson" ? "Aula" : "Prova"}
-                          </span>
-                          <span className="text-foreground">{r.title}</span>
-                        </button>
-                      ))}
+                )}
+                {teacherExams.length > 0 && (
+                  <VideoCarousel
+                    title="📝 Minhas Resoluções de Provas"
+                    videos={teacherExams}
+                    onVideoClick={handleVideoClick}
+                  />
+                )}
+                {teacherLessons.length === 0 && teacherExams.length === 0 && (
+                  <div className="px-6 md:px-12 lg:px-20">
+                    <div className="rounded-xl border border-dashed border-border bg-card/50 p-8 text-center">
+                      <p className="text-sm text-muted-foreground">
+                        Você ainda não publicou conteúdos. Acesse o Painel do Professor para começar.
+                      </p>
                     </div>
-                  )}
-                </div>
-              </motion.div>
+                  </div>
+                )}
+              </>
             )}
-          </AnimatePresence>
-
-          {loadingPopular ? (
-            <div className="flex items-center justify-center py-16 gap-2 text-muted-foreground">
-              <Loader2 className="h-5 w-5 animate-spin" />
-              <span className="text-sm">Carregando vídeos populares...</span>
-            </div>
-          ) : (
-            popularVideos.length > 0 && (
-              <VideoCarousel
-                title="🔥 Mais Populares"
-                videos={popularVideos}
-                onVideoClick={handleVideoClick}
-                showTrialBadge={showTrialBadge}
-                watchedIds={watchedIds}
-              />
-            )
-          )}
-        </div>
-
-        {loadingAreas && areas.length > 0 ? (
-          <div className="flex items-center justify-center py-16 gap-2 text-muted-foreground">
-            <Loader2 className="h-5 w-5 animate-spin" />
-            <span className="text-sm">Carregando conteúdos por área...</span>
-          </div>
+          </>
         ) : (
-          areas.map((area) =>
-            areaLessons[area.name] && areaLessons[area.name].length > 0 ? (
-              <VideoCarousel
-                key={area.id}
-                title={`📚 ${area.name}`}
-                videos={areaLessons[area.name]}
-                onVideoClick={handleVideoClick}
-                showTrialBadge={showTrialBadge}
-                watchedIds={watchedIds}
-              />
-            ) : null
-          )
+          <>
+            {/* Inline search + Mais Populares */}
+            <div ref={popularSectionRef} className="scroll-mt-20">
+              <AnimatePresence>
+                {inlineSearchOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="px-6 md:px-12 lg:px-20 mb-4"
+                  >
+                    <div className="relative max-w-xl mx-auto">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        ref={inlineSearchRef}
+                        value={inlineQuery}
+                        onChange={(e) => setInlineQuery(e.target.value)}
+                        placeholder="Buscar aulas, provas, conteúdos..."
+                        className="pl-10 pr-10"
+                      />
+                      {inlineSearching && (
+                        <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
+                      )}
+                      {inlineResults.length > 0 && (
+                        <div className="absolute left-0 right-0 top-full mt-1 rounded-lg border bg-card shadow-lg z-20 max-h-60 overflow-y-auto">
+                          {inlineResults.map((r) => (
+                            <button
+                              key={r.id}
+                              className="w-full text-left px-4 py-2.5 text-sm hover:bg-secondary transition-colors flex items-center gap-2"
+                              onClick={() => {
+                                handleVideoClick(r.id);
+                                setInlineSearchOpen(false);
+                                setInlineQuery("");
+                                setInlineResults([]);
+                              }}
+                            >
+                              <span className="text-xs text-muted-foreground">
+                                {r.type === "lesson" ? "Aula" : "Prova"}
+                              </span>
+                              <span className="text-foreground">{r.title}</span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {loadingPopular ? (
+                <div className="flex items-center justify-center py-16 gap-2 text-muted-foreground">
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  <span className="text-sm">Carregando vídeos populares...</span>
+                </div>
+              ) : (
+                popularVideos.length > 0 && (
+                  <VideoCarousel
+                    title="🔥 Mais Populares"
+                    videos={popularVideos}
+                    onVideoClick={handleVideoClick}
+                    showTrialBadge={showTrialBadge}
+                    watchedIds={watchedIds}
+                  />
+                )
+              )}
+            </div>
+
+            {loadingAreas && areas.length > 0 ? (
+              <div className="flex items-center justify-center py-16 gap-2 text-muted-foreground">
+                <Loader2 className="h-5 w-5 animate-spin" />
+                <span className="text-sm">Carregando conteúdos por área...</span>
+              </div>
+            ) : (
+              areas.map((area) =>
+                areaLessons[area.name] && areaLessons[area.name].length > 0 ? (
+                  <VideoCarousel
+                    key={area.id}
+                    title={`📚 ${area.name}`}
+                    videos={areaLessons[area.name]}
+                    onVideoClick={handleVideoClick}
+                    showTrialBadge={showTrialBadge}
+                    watchedIds={watchedIds}
+                  />
+                ) : null
+              )
+            )}
+          </>
         )}
       </div>
 
-      <div id="pricing">
-        <PricingSection />
-      </div>
+      {!isTeacher && (
+        <div id="pricing">
+          <PricingSection />
+        </div>
+      )}
       <SecondaryBanner />
       <Footer />
       <WhatsAppFloat />
@@ -361,3 +404,4 @@ const Index = () => {
 };
 
 export default Index;
+

@@ -14,7 +14,6 @@ function jsonResponse(data: Record<string, unknown>, status = 200): Response {
 }
 
 Deno.serve(async (req) => {
-  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
@@ -30,35 +29,35 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: 'Server configuration error' }, 500)
   }
 
-  // Extract token from query params (GET) or body (POST)
   const url = new URL(req.url)
   let token: string | null = url.searchParams.get('token')
+  // scope: 'all' = suppress all emails (current behavior)
+  //        'marketing' = only opt-out of marketing emails (transactional still sent)
+  let scope: 'all' | 'marketing' = 'all'
+  let isOneClick = false
 
   if (req.method === 'POST') {
-    // Detect RFC 8058 one-click unsubscribe: POST with form-encoded body
-    // containing "List-Unsubscribe=One-Click". Email clients (Gmail, Apple Mail,
-    // etc.) send this when the user clicks "Unsubscribe" in the mail UI.
     const contentType = req.headers.get('content-type') ?? ''
     if (contentType.includes('application/x-www-form-urlencoded')) {
       const formText = await req.text()
       const params = new URLSearchParams(formText)
-      // For one-click, token comes from query param (already set above).
-      // Otherwise, token may be in the form body.
-      if (!params.get('List-Unsubscribe')) {
+      // RFC 8058 one-click unsubscribe → always treat as 'all' (full opt-out)
+      if (params.get('List-Unsubscribe') === 'One-Click') {
+        isOneClick = true
+        scope = 'all'
+      } else {
         const formToken = params.get('token')
-        if (formToken) {
-          token = formToken
-        }
+        if (formToken) token = formToken
+        const formScope = params.get('scope')
+        if (formScope === 'marketing' || formScope === 'all') scope = formScope
       }
     } else {
-      // JSON body (from the app's unsubscribe page)
       try {
         const body = await req.json()
-        if (body.token) {
-          token = body.token
-        }
+        if (body.token) token = body.token
+        if (body.scope === 'marketing' || body.scope === 'all') scope = body.scope
       } catch {
-        // Fall through — token stays from query param
+        // Fall through
       }
     }
   }
@@ -69,7 +68,6 @@ Deno.serve(async (req) => {
 
   const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-  // Look up the token
   const { data: tokenRecord, error: lookupError } = await supabase
     .from('email_unsubscribe_tokens')
     .select('*')
@@ -80,17 +78,61 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: 'Invalid or expired token' }, 404)
   }
 
-  if (tokenRecord.used_at) {
-    return jsonResponse({ valid: false, reason: 'already_unsubscribed' })
+  const normalizedEmail = tokenRecord.email.toLowerCase()
+
+  // Look up the user's name and current marketing preference for a friendlier UX
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('name, accepts_marketing')
+    .eq('email', normalizedEmail)
+    .maybeSingle()
+
+  // Check if email is already fully suppressed
+  const { data: suppression } = await supabase
+    .from('suppressed_emails')
+    .select('email')
+    .eq('email', normalizedEmail)
+    .maybeSingle()
+
+  if (tokenRecord.used_at && suppression) {
+    return jsonResponse({
+      valid: false,
+      reason: 'already_unsubscribed',
+      name: profile?.name ?? null,
+    })
   }
 
-  // GET: Validate token (the app's unsubscribe page calls this on load)
+  // GET: return validation + user info so the page can personalize
   if (req.method === 'GET') {
-    return jsonResponse({ valid: true })
+    return jsonResponse({
+      valid: true,
+      name: profile?.name ?? null,
+      email: normalizedEmail,
+      accepts_marketing: profile?.accepts_marketing ?? false,
+      already_suppressed: !!suppression,
+    })
   }
 
-  // POST: Process the unsubscribe
-  // Atomic check-and-update to avoid TOCTOU race
+  // POST: process the unsubscribe according to scope
+  if (scope === 'marketing') {
+    // Marketing-only opt-out: just flip accepts_marketing on the profile.
+    // Do NOT add to suppressed_emails (transactional still flows) and do NOT
+    // mark the token as used — user may come back later for full unsubscribe.
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .update({ accepts_marketing: false })
+      .eq('email', normalizedEmail)
+
+    if (profileError) {
+      console.error('Failed to opt out of marketing', { error: profileError, email: normalizedEmail })
+      return jsonResponse({ error: 'Failed to process unsubscribe' }, 500)
+    }
+
+    console.log('Marketing opt-out processed', { email: normalizedEmail })
+    return jsonResponse({ success: true, scope: 'marketing', name: profile?.name ?? null })
+  }
+
+  // scope === 'all' → full unsubscribe (atomic check-and-update)
   const { data: updated, error: updateError } = await supabase
     .from('email_unsubscribe_tokens')
     .update({ used_at: new Date().toISOString() })
@@ -104,41 +146,37 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: 'Failed to process unsubscribe' }, 500)
   }
 
-  if (!updated) {
-    return jsonResponse({ success: false, reason: 'already_unsubscribed' })
+  // Even if token was already used, still ensure suppression is in place
+  // (idempotent — covers one-click retries from email clients)
+  if (!updated && !isOneClick) {
+    return jsonResponse({ success: false, reason: 'already_unsubscribed', name: profile?.name ?? null })
   }
 
-  // Add email to suppressed list (upsert to handle duplicates)
   const { error: suppressError } = await supabase
     .from('suppressed_emails')
     .upsert(
-      { email: tokenRecord.email.toLowerCase(), reason: 'unsubscribe' },
+      { email: normalizedEmail, reason: 'unsubscribe' },
       { onConflict: 'email' },
     )
 
   if (suppressError) {
-    console.error('Failed to suppress email', {
-      error: suppressError,
-      email: tokenRecord.email,
-    })
+    console.error('Failed to suppress email', { error: suppressError, email: normalizedEmail })
     return jsonResponse({ error: 'Failed to process unsubscribe' }, 500)
   }
 
-  // Also update accepts_marketing = false on the user's profile
   const { error: profileError } = await supabase
     .from('profiles')
     .update({ accepts_marketing: false })
-    .eq('email', tokenRecord.email.toLowerCase())
+    .eq('email', normalizedEmail)
 
   if (profileError) {
     console.error('Failed to update accepts_marketing on profile', {
       error: profileError,
-      email: tokenRecord.email,
+      email: normalizedEmail,
     })
-    // Non-fatal: suppression already happened, log but don't fail
   }
 
-  console.log('Email unsubscribed and marketing preference updated', { email: tokenRecord.email })
+  console.log('Email fully unsubscribed', { email: normalizedEmail })
 
-  return jsonResponse({ success: true })
+  return jsonResponse({ success: true, scope: 'all', name: profile?.name ?? null })
 })

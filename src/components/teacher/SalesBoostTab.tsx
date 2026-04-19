@@ -150,6 +150,7 @@ const SalesBoostTab = () => {
   const [template, setTemplate] = useState<TemplateKey>("colorful");
   const [history, setHistory] = useState<SalesPostRow[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
+  const [totalPostsCount, setTotalPostsCount] = useState<number>(0);
 
   const MIN_SEL = 3;
   const MAX_SEL = 5;
@@ -209,15 +210,22 @@ const SalesBoostTab = () => {
   const fetchHistory = async () => {
     if (!user?.id) return;
     setLoadingHistory(true);
-    const { data, error } = await supabase
-      .from("teacher_sales_posts")
-      .select("id,template,caption,thumbnail_url,thumbnail_path,contents,public_url,created_at")
-      .eq("teacher_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(20);
+    const [{ data, error }, { count }] = await Promise.all([
+      supabase
+        .from("teacher_sales_posts")
+        .select("id,template,caption,thumbnail_url,thumbnail_path,contents,public_url,created_at")
+        .eq("teacher_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(20),
+      supabase
+        .from("teacher_sales_posts")
+        .select("*", { count: "exact", head: true })
+        .eq("teacher_id", user.id),
+    ]);
     if (!error && data) {
       setHistory(data as unknown as SalesPostRow[]);
     }
+    setTotalPostsCount(count ?? 0);
     setLoadingHistory(false);
   };
 
@@ -254,6 +262,7 @@ const SalesBoostTab = () => {
       return;
     }
     setHistory((prev) => prev.filter((p) => p.id !== post.id));
+    setTotalPostsCount((prev) => Math.max(0, prev - 1));
     toast.success("Post removido do histórico.");
   };
 
@@ -300,6 +309,7 @@ const SalesBoostTab = () => {
       }
       if (inserted) {
         setHistory((prev) => [inserted as unknown as SalesPostRow, ...prev].slice(0, 20));
+        setTotalPostsCount((prev) => prev + 1);
       }
     } catch (e) {
       console.error("savePostToHistory error", e);
@@ -592,9 +602,15 @@ const SalesBoostTab = () => {
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="font-display text-lg font-semibold mb-2 flex items-center gap-2">
-          <Megaphone className="h-5 w-5 text-primary" /> Buscar Vendas
-        </h2>
+        <div className="flex items-center justify-between gap-2 flex-wrap mb-2">
+          <h2 className="font-display text-lg font-semibold flex items-center gap-2">
+            <Megaphone className="h-5 w-5 text-primary" /> Buscar Vendas
+          </h2>
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-secondary/50 px-3 py-1 text-xs font-medium text-foreground">
+            <History className="h-3.5 w-3.5 text-primary" />
+            {totalPostsCount} {totalPostsCount === 1 ? "post gerado" : "posts gerados"}
+          </span>
+        </div>
         <p className="text-sm text-muted-foreground">
           Aprenda a produzir conteúdo de qualidade e divulgue sua página com posts prontos para Instagram e WhatsApp.
         </p>

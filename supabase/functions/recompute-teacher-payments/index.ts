@@ -45,32 +45,39 @@ Deno.serve(async (req) => {
     const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
 
-    // Validate caller is admin
-    const authHeader = req.headers.get("Authorization") || "";
-    const userClient = createClient(SUPABASE_URL, ANON_KEY, {
-      global: { headers: { Authorization: authHeader } },
-    });
-    const { data: userData } = await userClient.auth.getUser();
-    const user = userData?.user;
-    if (!user) {
-      return new Response(JSON.stringify({ error: "Não autenticado" }), {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
-    const { data: roleRow } = await admin
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", user.id)
-      .eq("role", "admin")
-      .maybeSingle();
-    if (!roleRow) {
-      return new Response(JSON.stringify({ error: "Acesso negado: somente administradores" }), {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+
+    // Allow scheduled cron invocations: caller passes service role key as Bearer
+    const authHeader = req.headers.get("Authorization") || "";
+    const bearer = authHeader.replace(/^Bearer\s+/i, "").trim();
+    const isCron = bearer && bearer === SERVICE_ROLE;
+
+    if (!isCron) {
+      // Validate caller is admin
+      const userClient = createClient(SUPABASE_URL, ANON_KEY, {
+        global: { headers: { Authorization: authHeader } },
       });
+      const { data: userData } = await userClient.auth.getUser();
+      const user = userData?.user;
+      if (!user) {
+        return new Response(JSON.stringify({ error: "Não autenticado" }), {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const { data: roleRow } = await admin
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .eq("role", "admin")
+        .maybeSingle();
+      if (!roleRow) {
+        return new Response(JSON.stringify({ error: "Acesso negado: somente administradores" }), {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
     }
 
     const body = (await req.json().catch(() => ({}))) as RecomputeBody;

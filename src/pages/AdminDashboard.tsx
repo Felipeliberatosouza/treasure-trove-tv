@@ -31,15 +31,6 @@ const tabs = [
   { id: "subscriptions", label: "Vencimento de Assinaturas", icon: CalendarClock },
   { id: "emails", label: "Monitoramento de E-mails", icon: Mail },
   { id: "sales-posts", label: "Posts de Divulgação", icon: Megaphone },
-  { id: "users", label: "Usuários", icon: Users },
-  { id: "plans", label: "Planos de Assinatura", icon: CreditCard },
-  { id: "cancellation-receipts", label: "Comprovantes de Cancelamento", icon: Receipt },
-  { id: "commitment-refunds", label: "Reembolsos de Multa", icon: RotateCcw },
-  { id: "cancellation-reasons", label: "Motivos de Cancelamento", icon: TrendingDown },
-  { id: "pricing", label: "Preço de Recursos", icon: Tag },
-  { id: "usage", label: "Histórico de Uso", icon: BarChart3 },
-  { id: "security", label: "Segurança", icon: Shield },
-  { id: "audit", label: "Logs de Auditoria", icon: FileText },
   { id: "settings", label: "Configurações", icon: Settings },
 ] as const;
 

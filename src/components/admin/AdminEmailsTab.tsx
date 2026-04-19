@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Mail, CheckCircle, XCircle, AlertTriangle, Clock, ChevronLeft, ChevronRight, ShieldAlert, Ban, Search, RefreshCw, Download, Undo2, Loader2 } from "lucide-react";
+import { Mail, CheckCircle, XCircle, AlertTriangle, Clock, ChevronLeft, ChevronRight, ShieldAlert, Ban, Search, RefreshCw, Download, Undo2, Loader2, Cake, Tag } from "lucide-react";
 import { maskEmail } from "@/lib/maskData";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
@@ -38,6 +38,18 @@ interface SuppressedEmail {
   reason: string;
   metadata: any;
   created_at: string;
+}
+
+interface BirthdayLog {
+  id: string;
+  user_id: string;
+  recipient_email: string;
+  recipient_name: string | null;
+  template_key: string;
+  is_active_subscriber: boolean;
+  coupon_included: boolean;
+  coupon_code: string | null;
+  sent_at: string;
 }
 
 const PAGE_SIZE = 50;
@@ -78,13 +90,16 @@ const AdminEmailsTab = () => {
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterTemplate, setFilterTemplate] = useState("all");
   const [page, setPage] = useState(0);
-  const [activeView, setActiveView] = useState<"emails" | "security" | "suppressed">("emails");
+  const [activeView, setActiveView] = useState<"emails" | "security" | "suppressed" | "birthdays">("emails");
   const [securityNotifs, setSecurityNotifs] = useState<SecurityNotification[]>([]);
   const [securityLoading, setSecurityLoading] = useState(false);
   const [suppressedEmails, setSuppressedEmails] = useState<SuppressedEmail[]>([]);
   const [suppressedLoading, setSuppressedLoading] = useState(false);
   const [suppressedSearch, setSuppressedSearch] = useState("");
   const [reactivatingEmail, setReactivatingEmail] = useState<string | null>(null);
+  const [birthdayLogs, setBirthdayLogs] = useState<BirthdayLog[]>([]);
+  const [birthdayLoading, setBirthdayLoading] = useState(false);
+  const [birthdayRangeDays, setBirthdayRangeDays] = useState(30);
   const { toast } = useToast();
 
   const fetchLogs = async () => {

@@ -24,6 +24,7 @@ import {
   Layers,
   EyeOff,
 } from "lucide-react";
+import HeroSlidePreview from "./HeroSlidePreview";
 
 type HeroSettingsKey =
   | "hero_banner"
@@ -230,6 +231,20 @@ const SettingsHeroBanner = ({
         <h3 className="font-semibold text-sm flex items-center gap-2">
           Editando slide {activeIndex + 1}
         </h3>
+
+        <HeroSlidePreview
+          slide={activeSlide}
+          isSecondary={isSecondary}
+          badge={
+            settingsKey.endsWith("_student")
+              ? "Visão do aluno"
+              : settingsKey.endsWith("_teacher")
+              ? "Visão do professor"
+              : isSecondary
+              ? "Destaque"
+              : "Em destaque"
+          }
+        />
 
         <div>
           <Label>Título Principal</Label>

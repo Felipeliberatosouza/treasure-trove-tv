@@ -62,14 +62,40 @@ const Unsubscribe = () => {
       const { data } = await supabase.functions.invoke("handle-email-unsubscribe", {
         body: { token, scope },
       });
-      if (data?.success && scope === "all") setStatus("success_all");
-      else if (data?.success && scope === "marketing") setStatus("success_marketing");
-      else if (data?.reason === "already_unsubscribed") setStatus("already");
-      else setStatus("error");
+      if (data?.success && scope === "all") {
+        setStatus("success_all");
+        setFeedback("asking");
+      } else if (data?.success && scope === "marketing") {
+        setStatus("success_marketing");
+      } else if (data?.reason === "already_unsubscribed") {
+        setStatus("already");
+        setFeedback("asking");
+      } else {
+        setStatus("error");
+      }
     } catch {
       setStatus("error");
     } finally {
       setProcessing(null);
+    }
+  };
+
+  const submitFeedback = async () => {
+    if (!feedbackReason) return;
+    setFeedback("submitting");
+    try {
+      await supabase.functions.invoke("handle-email-unsubscribe", {
+        body: {
+          token,
+          scope: "feedback",
+          feedback_reason: feedbackReason,
+          feedback_comment: feedbackComment.trim() || null,
+        },
+      });
+    } catch {
+      // Silently ignore — feedback is optional, never block the user
+    } finally {
+      setFeedback("submitted");
     }
   };
 

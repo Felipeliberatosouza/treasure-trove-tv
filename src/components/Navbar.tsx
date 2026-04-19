@@ -52,6 +52,15 @@ const teacherMenuItems = [
   { label: "Minhas Colinhas", href: "/minhas-colinhas" },
 ];
 
+const adminMenuItems = [
+  { label: "Aprovação de Conteúdos", href: "/dashboard/admin?tab=content" },
+  { label: "Aprovação de Dúvidas", href: "/dashboard/admin?tab=doubts" },
+  { label: "Pagamento de Professores", href: "/dashboard/admin?tab=payments" },
+  { label: "Vencimento de Assinaturas", href: "/dashboard/admin?tab=subscriptions" },
+  { label: "Monitoramento de E-mails", href: "/dashboard/admin?tab=emails" },
+  { label: "Posts de Divulgação", href: "/dashboard/admin?tab=sales-posts" },
+];
+
 const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -67,11 +76,13 @@ const Navbar = () => {
   const { isActive: hasActiveSubscription } = useActiveSubscription();
 
   const baseMenu = user
-    ? role === "teacher"
-      ? teacherMenuItems
-      : loggedMenuItems
+    ? role === "admin"
+      ? adminMenuItems
+      : role === "teacher"
+        ? teacherMenuItems
+        : loggedMenuItems
     : publicMenuItems;
-  const menuItems = user && role !== "teacher" && hasActiveSubscription
+  const menuItems = user && role === "student" && hasActiveSubscription
     ? [subscriberMenuItem, ...baseMenu]
     : baseMenu;
 

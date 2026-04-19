@@ -221,6 +221,72 @@ const Unsubscribe = () => {
             </div>
           )}
 
+          {(status === "success_all" || status === "already") && feedback === "asking" && (
+            <div className="rounded-lg border border-border p-4 space-y-3 text-left">
+              <div className="flex items-start gap-3">
+                <MessageSquare className="h-5 w-5 text-primary mt-0.5 shrink-0" />
+                <div className="space-y-1">
+                  <h2 className="text-sm font-semibold">
+                    Pode nos contar o motivo? <span className="text-muted-foreground font-normal">(opcional)</span>
+                  </h2>
+                  <p className="text-xs text-muted-foreground">
+                    Sua resposta nos ajuda a melhorar nossas comunicações.
+                  </p>
+                </div>
+              </div>
+              <RadioGroup value={feedbackReason} onValueChange={setFeedbackReason} className="space-y-2">
+                {FEEDBACK_OPTIONS.map((opt) => (
+                  <div key={opt.value} className="flex items-center space-x-2">
+                    <RadioGroupItem value={opt.value} id={`reason-${opt.value}`} />
+                    <Label htmlFor={`reason-${opt.value}`} className="text-sm font-normal cursor-pointer">
+                      {opt.label}
+                    </Label>
+                  </div>
+                ))}
+              </RadioGroup>
+              {feedbackReason === "other" && (
+                <Textarea
+                  placeholder="Conte-nos mais (opcional)..."
+                  value={feedbackComment}
+                  onChange={(e) => setFeedbackComment(e.target.value)}
+                  maxLength={500}
+                  className="text-sm"
+                  rows={3}
+                />
+              )}
+              <div className="flex gap-2 pt-1">
+                <Button
+                  onClick={submitFeedback}
+                  disabled={!feedbackReason}
+                  size="sm"
+                  className="flex-1"
+                >
+                  Enviar
+                </Button>
+                <Button
+                  onClick={() => setFeedback("submitted")}
+                  variant="ghost"
+                  size="sm"
+                >
+                  Pular
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {(status === "success_all" || status === "already") && feedback === "submitting" && (
+            <div className="rounded-lg border border-border p-4 flex items-center justify-center gap-2 text-sm text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Enviando...
+            </div>
+          )}
+
+          {(status === "success_all" || status === "already") && feedback === "submitted" && (
+            <p className="text-center text-xs text-muted-foreground">
+              Obrigado pelo seu retorno! 💜
+            </p>
+          )}
+
           {status === "invalid" && (
             <div className="text-center space-y-4">
               <AlertCircle className="h-12 w-12 mx-auto text-destructive" />

@@ -300,7 +300,12 @@ Deno.serve(async (req) => {
     )
   }
 
-  // 4. Check accepts_marketing and inject unsubscribeUrl into templateData
+  // 4. Inject unsubscribeUrl into templateData.
+  // - `unsubscribeUrl` is set whenever the recipient has a profile (i.e. is a
+  //   registered user). All emails to registered users include a link to stop
+  //   receiving emails — required for transparency/compliance.
+  // - `marketingUnsubscribeUrl` is set only when accepts_marketing = true,
+  //   for the dedicated marketing footer (kept for backward compatibility).
   const { data: recipientProfile } = await supabase
     .from('profiles')
     .select('accepts_marketing')
@@ -308,10 +313,15 @@ Deno.serve(async (req) => {
     .maybeSingle()
 
   const enrichedTemplateData = { ...templateData }
+  const baseUrl = Deno.env.get('SUPABASE_URL')
+  const unsubscribeUrl = `${baseUrl}/functions/v1/handle-email-unsubscribe?token=${unsubscribeToken}`
+
+  if (recipientProfile) {
+    // Registered user → always include unsubscribe link
+    enrichedTemplateData.unsubscribeUrl = unsubscribeUrl
+  }
   if (recipientProfile?.accepts_marketing) {
-    const baseUrl = Deno.env.get('SUPABASE_URL')
-    enrichedTemplateData.unsubscribeUrl =
-      `${baseUrl}/functions/v1/handle-email-unsubscribe?token=${unsubscribeToken}`
+    enrichedTemplateData.marketingUnsubscribeUrl = unsubscribeUrl
   }
 
   // 5. Render React Email template to HTML and plain text

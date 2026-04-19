@@ -54,6 +54,7 @@ const TeacherHomeStats = () => {
   const [contentPublishedThisMonth, setContentPublishedThisMonth] = useState(0);
   const [salesPostsTotal, setSalesPostsTotal] = useState(0);
   const [salesPostsRecent, setSalesPostsRecent] = useState(0);
+  const [salesPostsWeekly, setSalesPostsWeekly] = useState<{ week: string; value: number }[]>([]);
 
   useEffect(() => {
     if (!user) return;
@@ -150,8 +151,9 @@ const TeacherHomeStats = () => {
           : Promise.resolve({ data: [] } as any),
       ]);
 
-      // Sales posts counts (total + last 30d)
-      const [{ count: salesPostsTotalCount }, { count: salesPostsRecentCount }] = await Promise.all([
+      // Sales posts counts (total + last 30d) and weekly breakdown (last 4 weeks)
+      const fourWeeksAgo = new Date(now.getTime() - 28 * 24 * 60 * 60 * 1000);
+      const [{ count: salesPostsTotalCount }, { count: salesPostsRecentCount }, { data: weeklyPostsData }] = await Promise.all([
         supabase
           .from("teacher_sales_posts")
           .select("id", { count: "exact", head: true })
@@ -161,9 +163,33 @@ const TeacherHomeStats = () => {
           .select("id", { count: "exact", head: true })
           .eq("teacher_id", user.id)
           .gte("created_at", thirtyDaysAgo),
+        supabase
+          .from("teacher_sales_posts")
+          .select("created_at")
+          .eq("teacher_id", user.id)
+          .gte("created_at", fourWeeksAgo.toISOString()),
       ]);
       setSalesPostsTotal(salesPostsTotalCount ?? 0);
       setSalesPostsRecent(salesPostsRecentCount ?? 0);
+
+      // Bucket into 4 weekly bins (week 0 = oldest, week 3 = current)
+      const weeklyBuckets = [0, 1, 2, 3].map((i) => {
+        const start = new Date(now.getTime() - (4 - i) * 7 * 24 * 60 * 60 * 1000);
+        const end = new Date(now.getTime() - (3 - i) * 7 * 24 * 60 * 60 * 1000);
+        return { start, end, value: 0 };
+      });
+      ((weeklyPostsData as { created_at: string }[]) || []).forEach((p) => {
+        const t = new Date(p.created_at).getTime();
+        for (const b of weeklyBuckets) {
+          if (t >= b.start.getTime() && t < b.end.getTime()) {
+            b.value += 1;
+            break;
+          }
+        }
+      });
+      setSalesPostsWeekly(
+        weeklyBuckets.map((b, i) => ({ week: `S${i + 1}`, value: b.value }))
+      );
 
       const salesByMonth: Record<string, number> = {};
       for (let i = 2; i >= 0; i--) {
@@ -548,13 +574,33 @@ const TeacherHomeStats = () => {
               </p>
             </div>
           </div>
-          <div className="flex-1 flex items-center justify-center">
-            <div className="relative">
-              <div className="absolute inset-0 rounded-full bg-primary/10 blur-2xl" aria-hidden />
-              <div className="relative flex h-24 w-24 items-center justify-center rounded-full border border-primary/30 bg-primary/5">
-                <Megaphone className="h-10 w-10 text-primary" />
-              </div>
+          <div className="flex-1 min-h-[120px]">
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">
+              Últimas 4 semanas
             </div>
+            <ResponsiveContainer width="100%" height={110}>
+              <BarChart data={salesPostsWeekly} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                <XAxis
+                  dataKey="week"
+                  tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <YAxis hide allowDecimals={false} />
+                <Tooltip
+                  cursor={{ fill: "hsl(var(--muted) / 0.3)" }}
+                  contentStyle={{
+                    background: "hsl(var(--card))",
+                    border: "1px solid hsl(var(--border))",
+                    borderRadius: 8,
+                    fontSize: 12,
+                  }}
+                  formatter={(v: number) => [`${v} ${v === 1 ? "post" : "posts"}`, "Criados"]}
+                />
+                <Bar dataKey="value" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
           </div>
           <Link
             to="/dashboard/teacher?tab=sales-boost"

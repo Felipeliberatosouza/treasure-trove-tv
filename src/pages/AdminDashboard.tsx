@@ -32,11 +32,13 @@ const tabs = [
   { id: "plans", label: "Planos", icon: CreditCard },
   { id: "resource-pricing", label: "Preços de Recursos", icon: Tag },
   { id: "usage-history", label: "Histórico de Uso", icon: Activity },
-  { id: "cancellation-reasons", label: "Motivos de Cancelamento", icon: FileText },
-  { id: "cancellation-receipts", label: "Recibos de Cancelamento", icon: Receipt },
-  { id: "commitment-refunds", label: "Reembolsos de Compromisso", icon: RefreshCcw },
+  { id: "cancellations", label: "Cancelamentos", icon: XCircle },
   { id: "security", label: "Segurança", icon: Shield },
   { id: "settings", label: "Configurações", icon: Settings },
+  // Hidden: agora acessadas como submenu dentro de Cancelamentos
+  { id: "cancellation-reasons", label: "Motivos de Cancelamento", icon: FileText, hidden: true },
+  { id: "cancellation-receipts", label: "Recibos de Cancelamento", icon: Receipt, hidden: true },
+  { id: "commitment-refunds", label: "Reembolso de Multa de Permanência", icon: RefreshCcw, hidden: true },
   // Hidden: agora acessadas como submenu dentro de Segurança
   { id: "audit", label: "Auditoria", icon: ScrollText, hidden: true },
   { id: "login-attempts", label: "Tentativas de Login", icon: Activity, hidden: true },

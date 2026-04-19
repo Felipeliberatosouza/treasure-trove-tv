@@ -34,11 +34,15 @@ const SalesBoostTab = () => {
   const { data: branding } = usePlatformSettings("branding");
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [contents, setContents] = useState<ContentItem[]>([]);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [imageDataUrl, setImageDataUrl] = useState<string>("");
   const [caption, setCaption] = useState<string>("");
   const [slug, setSlug] = useState<string>("");
+
+  const MIN_SEL = 3;
+  const MAX_SEL = 5;
 
   const publicUrl = useMemo(() => {
     if (!slug) return "";

@@ -210,15 +210,22 @@ const SalesBoostTab = () => {
   const fetchHistory = async () => {
     if (!user?.id) return;
     setLoadingHistory(true);
-    const { data, error } = await supabase
-      .from("teacher_sales_posts")
-      .select("id,template,caption,thumbnail_url,thumbnail_path,contents,public_url,created_at")
-      .eq("teacher_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(20);
+    const [{ data, error }, { count }] = await Promise.all([
+      supabase
+        .from("teacher_sales_posts")
+        .select("id,template,caption,thumbnail_url,thumbnail_path,contents,public_url,created_at")
+        .eq("teacher_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(20),
+      supabase
+        .from("teacher_sales_posts")
+        .select("*", { count: "exact", head: true })
+        .eq("teacher_id", user.id),
+    ]);
     if (!error && data) {
       setHistory(data as unknown as SalesPostRow[]);
     }
+    setTotalPostsCount(count ?? 0);
     setLoadingHistory(false);
   };
 

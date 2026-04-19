@@ -12,6 +12,21 @@ import VideoRecorder from "./VideoRecorder";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import { compositeVideo, type ImpactWord } from "@/utils/videoCompositor";
 
+interface ResourcePriceInfo {
+  resource_type: string;
+  price: number;
+  min_price: number;
+  platform_percentage: number;
+}
+
+const RESOURCE_LABELS: Record<string, string> = {
+  revisoes: "Revisão (vídeo)",
+  resumos: "Resumo",
+  simulados: "Simulado",
+  top_questoes: "Top Questões",
+  colinhas: "Colinha",
+};
+
 interface ContentFormProps {
   table: "lessons";
   editData?: any;

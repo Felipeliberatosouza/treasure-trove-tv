@@ -68,6 +68,12 @@ const AdminPaymentsTab = () => {
     notes: "",
   });
 
+  // Filters
+  const [filterTeacherId, setFilterTeacherId] = useState<string>("all");
+  const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [filterStart, setFilterStart] = useState<string>("");
+  const [filterEnd, setFilterEnd] = useState<string>("");
+
   const fetchData = async () => {
     setLoading(true);
 

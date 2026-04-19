@@ -54,7 +54,7 @@ const TeacherHomeStats = () => {
   const [contentPublishedThisMonth, setContentPublishedThisMonth] = useState(0);
   const [salesPostsTotal, setSalesPostsTotal] = useState(0);
   const [salesPostsRecent, setSalesPostsRecent] = useState(0);
-  const [salesPostsWeekly, setSalesPostsWeekly] = useState<{ week: string; value: number }[]>([]);
+  const [salesPostsWeekly, setSalesPostsWeekly] = useState<{ week: string; fullLabel?: string; value: number }[]>([]);
 
   useEffect(() => {
     if (!user) return;
@@ -612,6 +612,10 @@ const TeacherHomeStats = () => {
                     border: "1px solid hsl(var(--border))",
                     borderRadius: 8,
                     fontSize: 12,
+                  }}
+                  labelFormatter={(_, payload) => {
+                    const item = payload?.[0]?.payload as { fullLabel?: string; week?: string } | undefined;
+                    return item?.fullLabel || item?.week || "";
                   }}
                   formatter={(v: number) => [`${v} ${v === 1 ? "post" : "posts"}`, "Criados"]}
                 />

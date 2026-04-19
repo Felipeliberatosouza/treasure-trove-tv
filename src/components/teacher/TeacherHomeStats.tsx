@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Loader2, TrendingUp, Activity, AlertCircle, ArrowUpRight, Star, TrendingDown, Minus } from "lucide-react";
+import { Loader2, TrendingUp, Activity, AlertCircle, ArrowUpRight, Star, TrendingDown, Minus, Megaphone } from "lucide-react";
 import {
   Bar,
   BarChart,
@@ -52,6 +52,8 @@ const TeacherHomeStats = () => {
   const [ratings, setRatings] = useState<RatingPoint[]>([]);
   const [contentGoal, setContentGoal] = useState<number>(8);
   const [contentPublishedThisMonth, setContentPublishedThisMonth] = useState(0);
+  const [salesPostsTotal, setSalesPostsTotal] = useState(0);
+  const [salesPostsRecent, setSalesPostsRecent] = useState(0);
 
   useEffect(() => {
     if (!user) return;
@@ -61,6 +63,7 @@ const TeacherHomeStats = () => {
       const now = new Date();
       const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
       const threeMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 2, 1).toISOString();
+      const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
 
       // Goal: profile override or global setting
       const { data: goalSetting } = await supabase
@@ -147,7 +150,21 @@ const TeacherHomeStats = () => {
           : Promise.resolve({ data: [] } as any),
       ]);
 
-      // Sales last 3 months
+      // Sales posts counts (total + last 30d)
+      const [{ count: salesPostsTotalCount }, { count: salesPostsRecentCount }] = await Promise.all([
+        supabase
+          .from("teacher_sales_posts")
+          .select("id", { count: "exact", head: true })
+          .eq("teacher_id", user.id),
+        supabase
+          .from("teacher_sales_posts")
+          .select("id", { count: "exact", head: true })
+          .eq("teacher_id", user.id)
+          .gte("created_at", thirtyDaysAgo),
+      ]);
+      setSalesPostsTotal(salesPostsTotalCount ?? 0);
+      setSalesPostsRecent(salesPostsRecentCount ?? 0);
+
       const salesByMonth: Record<string, number> = {};
       for (let i = 2; i >= 0; i--) {
         const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
@@ -265,7 +282,7 @@ const TeacherHomeStats = () => {
         Acompanhe vendas, atividades, pendências e avaliações.
       </p>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4">
         {/* Card 1: Sales */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
@@ -511,6 +528,41 @@ const TeacherHomeStats = () => {
               </LineChart>
             </ResponsiveContainer>
           </div>
+        </motion.div>
+
+        {/* Card 5: Sales Posts */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="rounded-xl border border-border bg-card p-5 flex flex-col"
+        >
+          <div className="flex items-start justify-between mb-3">
+            <div>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Megaphone className="h-4 w-4" /> Posts de Divulgação
+              </div>
+              <p className="font-display text-2xl font-bold mt-1">{salesPostsTotal}</p>
+              <p className="text-xs text-muted-foreground">
+                {salesPostsRecent} {salesPostsRecent === 1 ? "novo" : "novos"} em 30 dias
+              </p>
+            </div>
+          </div>
+          <div className="flex-1 flex items-center justify-center">
+            <div className="relative">
+              <div className="absolute inset-0 rounded-full bg-primary/10 blur-2xl" aria-hidden />
+              <div className="relative flex h-24 w-24 items-center justify-center rounded-full border border-primary/30 bg-primary/5">
+                <Megaphone className="h-10 w-10 text-primary" />
+              </div>
+            </div>
+          </div>
+          <Link
+            to="/dashboard/teacher?tab=sales-boost"
+            className="mt-3 inline-flex items-center justify-center gap-1 text-xs font-semibold text-primary hover:underline"
+          >
+            {salesPostsTotal === 0 ? "Criar meu primeiro post" : "Gerar novo post"}
+            <ArrowUpRight className="h-3 w-3" />
+          </Link>
         </motion.div>
       </div>
     </section>

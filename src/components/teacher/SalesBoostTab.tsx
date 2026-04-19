@@ -619,7 +619,7 @@ const SalesBoostTab = () => {
           </h2>
           <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-secondary/50 px-3 py-1 text-xs font-medium text-foreground">
             <History className="h-3.5 w-3.5 text-primary" />
-            {totalPostsCount} {totalPostsCount === 1 ? "post gerado" : "posts gerados"}
+            {totalPostsCount} {totalPostsCount === 1 ? "post" : "posts"} ({recentPostsCount} em 30d)
           </span>
         </div>
         <p className="text-sm text-muted-foreground">

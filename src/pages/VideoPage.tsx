@@ -303,6 +303,7 @@ const VideoPage = () => {
       setViewId(null);
       setShowPaywall(false);
       setIsWatching(true);
+      promotedRef.current = false;
       if (user) startViewTracking(video.id);
     }
   }, [video, user]);

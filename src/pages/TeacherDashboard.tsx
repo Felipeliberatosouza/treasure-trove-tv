@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowLeft, User, Lock, Video, FileText, DollarSign, HelpCircle, BookOpen, FileSignature, GraduationCap } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
 import PersonalDataTab from "@/components/dashboard/PersonalDataTab";
@@ -29,10 +29,28 @@ const teacherTabs = [
 type TeacherTabId = (typeof teacherTabs)[number]["id"];
 
 const TeacherDashboard = () => {
-  const [activeTab, setActiveTab] = useState<TeacherTabId>("instructions");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialTab = (searchParams.get("tab") as TeacherTabId) || "instructions";
+  const [activeTab, setActiveTab] = useState<TeacherTabId>(initialTab);
   const [activePanel, setActivePanel] = useState<"teacher" | "student">("teacher");
   const { profile, allRoles, addStudentRole } = useAuth();
   const [addingRole, setAddingRole] = useState(false);
+
+  useEffect(() => {
+    const urlTab = searchParams.get("tab");
+    if (urlTab && urlTab !== activeTab && teacherTabs.some((t) => t.id === urlTab)) {
+      setActiveTab(urlTab as TeacherTabId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
+  const handleTabChange = (id: TeacherTabId) => {
+    setActiveTab(id);
+    const next = new URLSearchParams(searchParams);
+    next.set("tab", id);
+    if (id !== "doubts") next.delete("filter");
+    setSearchParams(next, { replace: true });
+  };
 
   const hasStudentRole = allRoles.includes("student");
 
@@ -88,7 +106,7 @@ const TeacherDashboard = () => {
               {teacherTabs.map((tab) => (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
+                  onClick={() => handleTabChange(tab.id)}
                   className={`flex items-center gap-2 whitespace-nowrap rounded-lg px-3 py-2 text-sm transition-colors ${
                     activeTab === tab.id
                       ? "bg-primary text-primary-foreground font-medium"

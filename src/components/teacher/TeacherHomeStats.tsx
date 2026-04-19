@@ -63,6 +63,7 @@ const TeacherHomeStats = () => {
       const now = new Date();
       const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
       const threeMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 2, 1).toISOString();
+      const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
 
       // Goal: profile override or global setting
       const { data: goalSetting } = await supabase

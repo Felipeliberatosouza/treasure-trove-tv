@@ -31,7 +31,7 @@ const tabs = [
   { id: "users", label: "Usuários", icon: Users },
   { id: "plans", label: "Planos", icon: CreditCard },
   { id: "resource-pricing", label: "Preços de Recursos", icon: Tag },
-  { id: "usage-history", label: "Histórico de Uso", icon: Activity },
+  { id: "usage-history", label: "Histórico de Uso", icon: Activity, hidden: true },
   { id: "cancellations", label: "Cancelamentos", icon: XCircle },
   { id: "security", label: "Segurança", icon: Shield },
   { id: "settings", label: "Configurações", icon: Settings },
@@ -114,7 +114,7 @@ const AdminDashboard = () => {
             {activeTab === "subscriptions" && <AdminSubscriptionsTab />}
             {activeTab === "emails" && <AdminEmailsTab />}
             {activeTab === "sales-posts" && <AdminSalesPostsTab />}
-            {activeTab === "users" && <AdminUsersTab />}
+            {activeTab === "users" && <AdminUsersWrapperTab />}
             {activeTab === "plans" && <AdminPlansTab />}
             {activeTab === "resource-pricing" && <AdminResourcePricingTab />}
             {activeTab === "usage-history" && <AdminUsageHistoryTab />}

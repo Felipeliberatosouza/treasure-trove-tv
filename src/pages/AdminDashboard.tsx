@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import MandatoryMfaGuard from "@/components/MandatoryMfaGuard";
 import { motion } from "framer-motion";
-import { ArrowLeft, Video, DollarSign, Shield, LayoutDashboard, Settings, HelpCircle, Mail, CalendarClock, Megaphone } from "lucide-react";
+import { ArrowLeft, Video, DollarSign, Shield, LayoutDashboard, Settings, HelpCircle, Mail, CalendarClock, Megaphone, Users, CreditCard, Tag, FileText, ScrollText, Activity, RefreshCcw, Receipt } from "lucide-react";
 import { Link, Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
@@ -13,6 +14,16 @@ import AdminDoubtsTab from "@/components/admin/AdminDoubtsTab";
 import AdminEmailsTab from "@/components/admin/AdminEmailsTab";
 import AdminSubscriptionsTab from "@/components/admin/AdminSubscriptionsTab";
 import AdminSalesPostsTab from "@/components/admin/AdminSalesPostsTab";
+import AdminUsersTab from "@/components/admin/AdminUsersTab";
+import AdminPlansTab from "@/components/admin/AdminPlansTab";
+import AdminSecurityTab from "@/components/admin/AdminSecurityTab";
+import AdminAuditLogsTab from "@/components/admin/AdminAuditLogsTab";
+import AdminLoginAttemptsTab from "@/components/admin/AdminLoginAttemptsTab";
+import AdminCancellationReasonsTab from "@/components/admin/AdminCancellationReasonsTab";
+import AdminCancellationReceiptsTab from "@/components/admin/AdminCancellationReceiptsTab";
+import AdminCommitmentRefundsTab from "@/components/admin/AdminCommitmentRefundsTab";
+import AdminResourcePricingTab from "@/components/admin/AdminResourcePricingTab";
+import AdminUsageHistoryTab from "@/components/admin/AdminUsageHistoryTab";
 
 const tabs = [
   { id: "overview", label: "Visão Geral", icon: LayoutDashboard },
@@ -22,14 +33,32 @@ const tabs = [
   { id: "subscriptions", label: "Vencimento de Assinaturas", icon: CalendarClock },
   { id: "emails", label: "Monitoramento de E-mails", icon: Mail },
   { id: "sales-posts", label: "Posts de Divulgação", icon: Megaphone },
+  { id: "users", label: "Usuários", icon: Users },
+  { id: "plans", label: "Planos", icon: CreditCard },
+  { id: "resource-pricing", label: "Preços de Recursos", icon: Tag },
+  { id: "usage-history", label: "Histórico de Uso", icon: Activity },
+  { id: "cancellation-reasons", label: "Motivos de Cancelamento", icon: FileText },
+  { id: "cancellation-receipts", label: "Recibos de Cancelamento", icon: Receipt },
+  { id: "commitment-refunds", label: "Reembolsos de Compromisso", icon: RefreshCcw },
+  { id: "security", label: "Segurança", icon: Shield },
+  { id: "audit", label: "Auditoria", icon: ScrollText },
+  { id: "login-attempts", label: "Tentativas de Login", icon: Activity },
   { id: "settings", label: "Configurações", icon: Settings },
 ] as const;
 
 type TabId = (typeof tabs)[number]["id"];
 
 const AdminDashboard = () => {
+  const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState<TabId>("overview");
   const { role, loading } = useAuth();
+
+  useEffect(() => {
+    const tabParam = searchParams.get("tab") as TabId | null;
+    if (tabParam && tabs.some((t) => t.id === tabParam)) {
+      setActiveTab(tabParam);
+    }
+  }, [searchParams]);
 
   if (loading) return <div className="min-h-screen bg-background flex items-center justify-center text-muted-foreground">Carregando...</div>;
   if (role !== "admin") return <Navigate to="/" replace />;
@@ -80,6 +109,16 @@ const AdminDashboard = () => {
             {activeTab === "subscriptions" && <AdminSubscriptionsTab />}
             {activeTab === "emails" && <AdminEmailsTab />}
             {activeTab === "sales-posts" && <AdminSalesPostsTab />}
+            {activeTab === "users" && <AdminUsersTab />}
+            {activeTab === "plans" && <AdminPlansTab />}
+            {activeTab === "resource-pricing" && <AdminResourcePricingTab />}
+            {activeTab === "usage-history" && <AdminUsageHistoryTab />}
+            {activeTab === "cancellation-reasons" && <AdminCancellationReasonsTab />}
+            {activeTab === "cancellation-receipts" && <AdminCancellationReceiptsTab />}
+            {activeTab === "commitment-refunds" && <AdminCommitmentRefundsTab />}
+            {activeTab === "security" && <AdminSecurityTab />}
+            {activeTab === "audit" && <AdminAuditLogsTab />}
+            {activeTab === "login-attempts" && <AdminLoginAttemptsTab />}
             {activeTab === "settings" && <AdminSettingsTab />}
           </motion.div>
         </div>

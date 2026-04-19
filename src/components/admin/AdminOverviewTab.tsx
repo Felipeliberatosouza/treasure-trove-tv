@@ -188,7 +188,13 @@ const AdminOverviewTab = ({ onNavigate }: AdminOverviewTabProps) => {
           <Card
             key={kpi.label}
             className="border-border cursor-pointer hover:ring-2 hover:ring-primary/30 transition-all"
-            onClick={() => openDetail(kpi.key, kpi.label)}
+            onClick={() => {
+              if ((kpi as any).navigateTo && onNavigate) {
+                onNavigate((kpi as any).navigateTo);
+              } else {
+                openDetail(kpi.key, kpi.label);
+              }
+            }}
           >
             <CardContent className="flex items-center gap-3 p-4">
               <kpi.icon className={`h-8 w-8 shrink-0 ${kpi.color}`} />

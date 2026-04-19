@@ -1,9 +1,13 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { DollarSign, TrendingUp, Receipt, Wallet } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DollarSign, TrendingUp, Receipt, Wallet, Download, X } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -68,6 +72,10 @@ const TeacherStatementTab = () => {
   const [payments, setPayments] = useState<TeacherPayment[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [periodStart, setPeriodStart] = useState<string>("");
+  const [periodEnd, setPeriodEnd] = useState<string>("");
+
   useEffect(() => {
     const load = async () => {
       if (!user) return;
@@ -77,33 +85,134 @@ const TeacherStatementTab = () => {
         .select("*")
         .eq("teacher_id", user.id)
         .order("period_end", { ascending: false })
-        .limit(50);
+        .limit(200);
       if (!error && data) setPayments(data as TeacherPayment[]);
       setLoading(false);
     };
     load();
   }, [user]);
 
-  const totals = payments.reduce(
-    (acc, p) => {
-      acc.gross += Number(p.gross_amount) || 0;
-      acc.fee += Number(p.platform_fee) || 0;
-      acc.net += Number(p.net_amount) || 0;
-      return acc;
-    },
-    { gross: 0, fee: 0, net: 0 }
+  const filteredPayments = useMemo(() => {
+    return payments.filter((p) => {
+      if (statusFilter !== "all" && p.status !== statusFilter) return false;
+      if (periodStart && p.period_end < periodStart) return false;
+      if (periodEnd && p.period_start > periodEnd) return false;
+      return true;
+    });
+  }, [payments, statusFilter, periodStart, periodEnd]);
+
+  const totals = useMemo(
+    () =>
+      filteredPayments.reduce(
+        (acc, p) => {
+          acc.gross += Number(p.gross_amount) || 0;
+          acc.fee += Number(p.platform_fee) || 0;
+          acc.net += Number(p.net_amount) || 0;
+          return acc;
+        },
+        { gross: 0, fee: 0, net: 0 }
+      ),
+    [filteredPayments]
   );
 
-  const paidNet = payments
-    .filter((p) => p.status === "paid")
-    .reduce((sum, p) => sum + (Number(p.net_amount) || 0), 0);
+  const paidNet = useMemo(
+    () =>
+      filteredPayments
+        .filter((p) => p.status === "paid")
+        .reduce((sum, p) => sum + (Number(p.net_amount) || 0), 0),
+    [filteredPayments]
+  );
+
+  const hasFilters = statusFilter !== "all" || periodStart || periodEnd;
+  const clearFilters = () => {
+    setStatusFilter("all");
+    setPeriodStart("");
+    setPeriodEnd("");
+  };
+
+  const handleExportCSV = () => {
+    const headers = ["Período Início", "Período Fim", "Tipo", "Bruto (R$)", "Taxa (R$)", "Líquido (R$)", "Status", "Visualizações", "Avaliação Média", "Observações"];
+    const escape = (v: string | number | null | undefined) => {
+      const s = String(v ?? "");
+      if (s.includes(";") || s.includes("\"") || s.includes("\n")) {
+        return `"${s.replace(/"/g, '""')}"`;
+      }
+      return s;
+    };
+    const rows = filteredPayments.map((p) => [
+      formatDate(p.period_start),
+      formatDate(p.period_end),
+      paymentTypeLabel(p.payment_type),
+      Number(p.gross_amount || 0).toFixed(2).replace(".", ","),
+      Number(p.platform_fee || 0).toFixed(2).replace(".", ","),
+      Number(p.net_amount || 0).toFixed(2).replace(".", ","),
+      statusLabel(p.status).label,
+      p.total_views ?? 0,
+      p.avg_rating != null ? Number(p.avg_rating).toFixed(2).replace(".", ",") : "",
+      p.notes ?? "",
+    ]);
+    const csv = [headers, ...rows].map((r) => r.map(escape).join(";")).join("\r\n");
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `meu-extrato-${format(new Date(), "yyyy-MM-dd")}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <div>
-      <h2 className="font-display text-lg font-semibold mb-1">Meu Extrato</h2>
-      <p className="text-sm text-muted-foreground mb-6">
-        Acompanhe seus recebimentos como professor: valor bruto, taxa da plataforma e valor líquido.
-      </p>
+      <div className="flex items-start justify-between gap-3 mb-1 flex-wrap">
+        <div>
+          <h2 className="font-display text-lg font-semibold">Meu Extrato</h2>
+          <p className="text-sm text-muted-foreground">
+            Acompanhe seus recebimentos como professor: valor bruto, taxa da plataforma e valor líquido.
+          </p>
+        </div>
+        <Button variant="outline" size="sm" onClick={handleExportCSV} disabled={filteredPayments.length === 0}>
+          <Download className="h-4 w-4 mr-2" /> Exportar CSV
+        </Button>
+      </div>
+
+      {/* Filtros */}
+      <Card className="p-4 my-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+          <div>
+            <Label className="text-xs">Status</Label>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos</SelectItem>
+                <SelectItem value="pending">Pendente</SelectItem>
+                <SelectItem value="processing">Processando</SelectItem>
+                <SelectItem value="paid">Pago</SelectItem>
+                <SelectItem value="failed">Falhou</SelectItem>
+                <SelectItem value="cancelled">Cancelado</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label className="text-xs">De (período fim ≥)</Label>
+            <Input type="date" value={periodStart} onChange={(e) => setPeriodStart(e.target.value)} />
+          </div>
+          <div>
+            <Label className="text-xs">Até (período início ≤)</Label>
+            <Input type="date" value={periodEnd} onChange={(e) => setPeriodEnd(e.target.value)} />
+          </div>
+          <div className="flex items-end">
+            {hasFilters && (
+              <Button variant="ghost" size="sm" onClick={clearFilters} className="w-full">
+                <X className="h-4 w-4 mr-1" /> Limpar filtros
+              </Button>
+            )}
+          </div>
+        </div>
+      </Card>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
         <Card className="p-4">
@@ -136,11 +245,13 @@ const TeacherStatementTab = () => {
 
       {loading ? (
         <p className="text-sm text-muted-foreground">Carregando extrato...</p>
-      ) : payments.length === 0 ? (
+      ) : filteredPayments.length === 0 ? (
         <Card className="p-8 text-center">
           <DollarSign className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
           <p className="text-sm text-muted-foreground">
-            Nenhum pagamento registrado ainda. Publique e divulgue seus conteúdos para começar a receber.
+            {payments.length === 0
+              ? "Nenhum pagamento registrado ainda. Publique e divulgue seus conteúdos para começar a receber."
+              : "Nenhum pagamento encontrado com os filtros aplicados."}
           </p>
         </Card>
       ) : (
@@ -159,7 +270,7 @@ const TeacherStatementTab = () => {
                 </tr>
               </thead>
               <tbody>
-                {payments.map((p) => {
+                {filteredPayments.map((p) => {
                   const st = statusLabel(p.status);
                   return (
                     <tr key={p.id} className="border-t border-border">
@@ -182,7 +293,7 @@ const TeacherStatementTab = () => {
 
           {/* Mobile cards */}
           <div className="md:hidden flex flex-col gap-3">
-            {payments.map((p) => {
+            {filteredPayments.map((p) => {
               const st = statusLabel(p.status);
               return (
                 <Card key={p.id} className="p-4">

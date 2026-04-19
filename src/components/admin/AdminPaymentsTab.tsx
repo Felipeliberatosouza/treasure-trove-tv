@@ -232,6 +232,8 @@ const AdminPaymentsTab = () => {
   const handleMarkPaid = async (paymentId: string) => {
     await handleStatusChange(paymentId, "paid");
   };
+
+  const statusBadge = (status: string) => {
     const map: Record<string, string> = {
       pending: "border-accent/30 text-accent",
       paid: "border-success/30 text-success",

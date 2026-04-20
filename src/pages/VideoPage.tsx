@@ -25,6 +25,7 @@ import { startUnitCheckout } from "@/lib/payments";
 import VLibrasWidget from "@/components/VLibrasWidget";
 import SimuladoModal from "@/components/SimuladoModal";
 import MaterialViewerModal, { type MaterialKind } from "@/components/MaterialViewerModal";
+import AdminVideoModerationPanel from "@/components/admin/AdminVideoModerationPanel";
 import { useLessonMaterials } from "@/hooks/useLessonMaterials";
 
 const DEMO_VIDEO_URL = "/demo-course.mp4";
@@ -32,7 +33,8 @@ const DEMO_VIDEO_URL = "/demo-course.mp4";
 const VideoPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user, loading: authLoading } = useAuth();
+  const { user, allRoles, loading: authLoading } = useAuth();
+  const isAdmin = allRoles.includes("admin");
   const trial = useFreeTrial();
   const { data: branding } = usePlatformSettings("branding");
   const { data: videoPricing } = usePlatformSettings("video_pricing");

@@ -108,6 +108,7 @@ const VideoPage = () => {
         .maybeSingle();
       if (lesson) {
         const lessonVideoUrl = await resolveVideoPlaybackUrl(lesson.video_url);
+        setRawVideoUrl(lesson.video_url || null);
         setDbVideo({
           id: lesson.id,
           title: lesson.title,
@@ -134,6 +135,7 @@ const VideoPage = () => {
         .maybeSingle();
       if (exam) {
         const examVideoUrl = await resolveVideoPlaybackUrl(exam.video_url);
+        setRawVideoUrl(exam.video_url || null);
         setDbVideo({
           id: exam.id,
           title: exam.title,

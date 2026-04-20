@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Plus, Trash2, DollarSign, FileText, ClipboardList, Trophy, StickyNote, Info } from "lucide-react";
+import { Plus, Trash2, DollarSign, FileText, ClipboardList, Trophy, StickyNote, Info, Sparkles, Loader2 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export interface QuizQuestion {

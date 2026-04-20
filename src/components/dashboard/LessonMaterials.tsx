@@ -137,9 +137,12 @@ interface SimuladoMaterialProps {
   questions: QuizQuestion[];
   setQuestions: (q: QuizQuestion[]) => void;
   cfg?: MaterialPriceInfo;
+  onGenerate?: () => Promise<void> | void;
+  generating?: boolean;
+  canGenerate?: boolean;
 }
 
-export const SimuladoMaterial = ({ offered, setOffered, price, setPrice, questions, setQuestions, cfg }: SimuladoMaterialProps) => {
+export const SimuladoMaterial = ({ offered, setOffered, price, setPrice, questions, setQuestions, cfg, onGenerate, generating, canGenerate }: SimuladoMaterialProps) => {
   const updateQuestion = (idx: number, patch: Partial<QuizQuestion>) => {
     setQuestions(questions.map((q, i) => (i === idx ? { ...q, ...patch } : q)));
   };

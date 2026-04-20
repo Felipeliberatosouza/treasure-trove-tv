@@ -302,6 +302,35 @@ const SettingsEmailTemplates = () => {
     setApplyingAll(false);
   };
 
+  const handleApplySenderToAll = async () => {
+    if (!active) return;
+    const confirmApply = window.confirm(
+      `Deseja aplicar o remetente (caixa de saída) de "${TEMPLATE_LABELS[activeKey] || activeKey}" a todos os outros templates? Isso sobrescreverá o e-mail e nome de remetente de todos os templates.`
+    );
+    if (!confirmApply) return;
+
+    setApplyingAll(true);
+    const senderFields = {
+      from_email: active.from_email,
+      from_name: active.from_name,
+    };
+
+    const { error } = await supabase
+      .from("email_templates")
+      .update(senderFields as any)
+      .neq("id", active.id);
+
+    if (error) {
+      toast.error("Erro ao aplicar remetente aos outros templates.");
+    } else {
+      setTemplates((prev) =>
+        prev.map((t) => (t.id === active.id ? t : { ...t, ...senderFields }))
+      );
+      toast.success("Remetente aplicado a todos os templates!");
+    }
+    setApplyingAll(false);
+  };
+
   const buildFooterHtml = () => {
     if (!contactData || !active) return "";
     const linkColor = active.link_color || "#6366f1";
@@ -674,6 +703,16 @@ const SettingsEmailTemplates = () => {
                 )}
               </div>
             </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="mt-2"
+              disabled={applyingAll}
+              onClick={handleApplySenderToAll}
+            >
+              <Copy className="h-4 w-4 mr-1" />
+              {applyingAll ? "Aplicando..." : "Aplicar este remetente a todos os templates"}
+            </Button>
           </div>
 
           {(activeKey === "birthday_subscriber" || activeKey === "birthday_teacher") ? (

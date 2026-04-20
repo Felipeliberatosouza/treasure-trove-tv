@@ -353,9 +353,12 @@ interface ColinhaMaterialProps {
   bullets: string[];
   setBullets: (b: string[]) => void;
   cfg?: MaterialPriceInfo;
+  onGenerate?: () => Promise<void> | void;
+  generating?: boolean;
+  canGenerate?: boolean;
 }
 
-export const ColinhaMaterial = ({ offered, setOffered, price, setPrice, bullets, setBullets, cfg }: ColinhaMaterialProps) => {
+export const ColinhaMaterial = ({ offered, setOffered, price, setPrice, bullets, setBullets, cfg, onGenerate, generating, canGenerate }: ColinhaMaterialProps) => {
   const update = (idx: number, value: string) => setBullets(bullets.map((b, i) => (i === idx ? value : b)));
   const add = () => setBullets([...bullets, ""]);
   const remove = (idx: number) => {
@@ -378,6 +381,11 @@ export const ColinhaMaterial = ({ offered, setOffered, price, setPrice, bullets,
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
+        {onGenerate && (
+          <div className="ml-auto">
+            <AiGenerateButton onGenerate={onGenerate} loading={!!generating} disabled={!canGenerate} />
+          </div>
+        )}
       </div>
       <PriceHeader label="Colinha" offered={offered} setOffered={setOffered} price={price} setPrice={setPrice} cfg={cfg} />
       {offered && (

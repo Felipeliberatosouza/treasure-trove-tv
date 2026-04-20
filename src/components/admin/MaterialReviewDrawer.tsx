@@ -146,6 +146,7 @@ const MaterialReviewDrawer = ({ open, onClose, lessonId, lessonTitle, onChanged 
   const [loading, setLoading] = useState(true);
   const [rejecting, setRejecting] = useState<MaterialMeta | null>(null);
   const [reason, setReason] = useState("");
+  const [testingMaterial, setTestingMaterial] = useState<"simulado" | "colinhas" | null>(null);
 
   const load = async () => {
     setLoading(true);

@@ -271,6 +271,34 @@ const MaterialReviewDrawer = ({ open, onClose, lessonId, lessonTitle, onChanged 
   };
 
   const offered = metas.filter((m) => m.offered);
+  const pendingMaterials = offered.filter((m) => m.submitted_for_review && !m.admin_approved);
+
+  const handleApproveAll = async () => {
+    if (pendingMaterials.length === 0) return;
+    const { data: userRes } = await supabase.auth.getUser();
+    const updates = pendingMaterials.map((meta) =>
+      supabase
+        .from("lesson_material_meta")
+        .update({
+          admin_approved: true,
+          submitted_for_review: false,
+          rejection_reason: null,
+          reviewed_at: new Date().toISOString(),
+          reviewed_by: userRes.user?.id,
+        })
+        .eq("id", meta.id)
+    );
+    const results = await Promise.all(updates);
+    const errors = results.filter((r) => r.error);
+    if (errors.length > 0) {
+      toast({ title: "Erro", description: `Falha ao aprovar ${errors.length} material(is).`, variant: "destructive" });
+    } else {
+      await logAction("material_approved_all", { targetTable: "lesson_material_meta", metadata: { lesson_id: lessonId, count: pendingMaterials.length } });
+      toast({ title: "Todos aprovados", description: `${pendingMaterials.length} material(is) aprovado(s).` });
+    }
+    load();
+    onChanged?.();
+  };
 
   return (
     <>

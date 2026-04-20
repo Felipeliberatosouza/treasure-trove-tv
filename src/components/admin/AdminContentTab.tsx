@@ -38,6 +38,7 @@ const AdminContentTab = () => {
   const [filterType, setFilterType] = useState("all");
   const [rejectItem, setRejectItem] = useState<ContentItem | null>(null);
   const [rejectReason, setRejectReason] = useState("");
+  const [materialReview, setMaterialReview] = useState<ContentItem | null>(null);
   const { toast } = useToast();
 
   const fetchContent = async () => {
@@ -331,6 +332,15 @@ const AdminContentTab = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      {materialReview && (
+        <MaterialReviewDrawer
+          open={!!materialReview}
+          onClose={() => setMaterialReview(null)}
+          lessonId={materialReview.id}
+          lessonTitle={materialReview.title}
+          onChanged={fetchContent}
+        />
+      )}
     </div>
   );
 };

@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Card, CardContent } from "@/components/ui/card";
-import { Play } from "lucide-react";
+import MaterialViewerModal from "@/components/MaterialViewerModal";
+import SimuladoModal from "@/components/SimuladoModal";
+import ColinhaFlashcardModal from "@/components/ColinhaFlashcardModal";
 import type { LucideIcon } from "lucide-react";
 
 interface Lesson {
@@ -26,6 +27,7 @@ interface MaterialShowcaseProps {
 const MaterialShowcase = ({ title, description, icon: Icon, materialType }: MaterialShowcaseProps) => {
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selected, setSelected] = useState<Lesson | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -85,7 +87,7 @@ const MaterialShowcase = ({ title, description, icon: Icon, materialType }: Mate
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {lessons.map((lesson) => (
-                <Link key={lesson.id} to={`/video/${lesson.id}`}>
+                <button key={lesson.id} type="button" onClick={() => setSelected(lesson)} className="text-left">
                   <Card className="overflow-hidden transition-transform hover:scale-[1.02] hover:border-primary/50 cursor-pointer h-full">
                     <div className="relative aspect-video bg-muted">
                       {lesson.thumbnail_url ? (
@@ -96,7 +98,7 @@ const MaterialShowcase = ({ title, description, icon: Icon, materialType }: Mate
                         </div>
                       )}
                       <div className="absolute inset-0 flex items-center justify-center bg-background/0 hover:bg-background/30 transition-colors">
-                        <Play className="h-10 w-10 text-foreground opacity-0 hover:opacity-100 transition-opacity" />
+                        <Icon className="h-10 w-10 text-foreground opacity-0 hover:opacity-100 transition-opacity" />
                       </div>
                     </div>
                     <CardContent className="p-3">
@@ -106,13 +108,39 @@ const MaterialShowcase = ({ title, description, icon: Icon, materialType }: Mate
                       )}
                     </CardContent>
                   </Card>
-                </Link>
+                </button>
               ))}
             </div>
           )}
         </div>
       </div>
       <Footer />
+
+      {selected && materialType === "simulado" && (
+        <SimuladoModal
+          open
+          onClose={() => setSelected(null)}
+          lessonId={selected.id}
+          lessonTitle={selected.title}
+        />
+      )}
+      {selected && materialType === "colinhas" && (
+        <ColinhaFlashcardModal
+          open
+          onClose={() => setSelected(null)}
+          lessonId={selected.id}
+          lessonTitle={selected.title}
+        />
+      )}
+      {selected && (materialType === "resumo" || materialType === "top_questoes") && (
+        <MaterialViewerModal
+          open
+          onClose={() => setSelected(null)}
+          lessonId={selected.id}
+          lessonTitle={selected.title}
+          kind={materialType}
+        />
+      )}
     </div>
   );
 };

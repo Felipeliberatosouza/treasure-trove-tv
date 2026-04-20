@@ -28,8 +28,11 @@ import { template as subscriptionChangeAdminNotify } from './subscription-change
 import { template as contentEditedAdminNotify } from './content-edited-admin-notify.tsx'
 import { template as commitmentPenaltyRefunded } from './commitment-penalty-refunded.tsx'
 import { template as teacherPaymentPaid } from './teacher-payment-paid.tsx'
+import { template as passwordRecovery } from './password-recovery.tsx'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
+  'password_recovery': passwordRecovery,
+  'password-recovery': passwordRecovery,
   'doubt-approved': doubtApproved,
   'doubt-answered': doubtAnswered,
   'doubt-sent-confirmation': doubtSentConfirmation,

@@ -392,6 +392,27 @@ Deno.serve(async (req) => {
       ? template.subject(templateData)
       : template.subject
 
+  // 5.2 Resolve sender (From: header) — admin-configured per template_key
+  // Falls back to platform default (SITE_NAME <noreply@FROM_DOMAIN>) when not set.
+  let fromHeader = `${SITE_NAME} <noreply@${FROM_DOMAIN}>`
+  try {
+    const { data: tplSender } = await supabase
+      .from('email_templates')
+      .select('from_email, from_name')
+      .eq('template_key', templateName)
+      .maybeSingle()
+    const customEmail = (tplSender?.from_email || '').trim()
+    const customName = (tplSender?.from_name || '').trim()
+    if (customEmail) {
+      const name = customName || SITE_NAME
+      fromHeader = `${name} <${customEmail}>`
+    } else if (customName) {
+      fromHeader = `${customName} <noreply@${FROM_DOMAIN}>`
+    }
+  } catch (e) {
+    console.error('Custom sender lookup failed (non-fatal)', e)
+  }
+
   // 5. Enqueue the pre-rendered email for async processing by the dispatcher.
   // The dispatcher (process-email-queue) handles sending, retries, and rate-limit backoff.
 
@@ -408,7 +429,7 @@ Deno.serve(async (req) => {
     payload: {
       message_id: messageId,
       to: effectiveRecipient,
-      from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
+      from: fromHeader,
       sender_domain: SENDER_DOMAIN,
       subject: resolvedSubject,
       html,

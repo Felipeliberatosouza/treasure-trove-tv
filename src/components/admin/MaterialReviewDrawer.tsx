@@ -360,6 +360,18 @@ const MaterialReviewDrawer = ({ open, onClose, lessonId, lessonTitle, onChanged 
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <SimuladoModal
+        open={testingMaterial === "simulado"}
+        onClose={() => setTestingMaterial(null)}
+        lessonId={lessonId}
+        lessonTitle={lessonTitle}
+      />
+      <ColinhaFlashcardModal
+        open={testingMaterial === "colinhas"}
+        onClose={() => setTestingMaterial(null)}
+        lessonId={lessonId}
+        lessonTitle={lessonTitle}
+      />
     </>
   );
 };

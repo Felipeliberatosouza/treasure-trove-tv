@@ -929,6 +929,9 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
         questions={quizQuestions}
         setQuestions={setQuizQuestions}
         cfg={cfgFor("simulados")}
+        onGenerate={() => generateMaterialWithAi("simulado")}
+        generating={aiGenerating === "simulado"}
+        canGenerate={canGenerateAi}
       />
 
       <TopQuestionsMaterial
@@ -939,6 +942,9 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
         questions={topQuestions}
         setQuestions={setTopQuestions}
         cfg={cfgFor("top_questoes")}
+        onGenerate={() => generateMaterialWithAi("top_questoes")}
+        generating={aiGenerating === "top_questoes"}
+        canGenerate={canGenerateAi}
       />
 
       <ColinhaMaterial
@@ -949,6 +955,9 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
         bullets={bullets}
         setBullets={setBullets}
         cfg={cfgFor("colinhas")}
+        onGenerate={() => generateMaterialWithAi("colinha")}
+        generating={aiGenerating === "colinha"}
+        canGenerate={canGenerateAi}
       />
 
       <div className="flex gap-3 pt-2">

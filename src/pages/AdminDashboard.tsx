@@ -23,14 +23,12 @@ import AdminCancellationReasonsTab from "@/components/admin/AdminCancellationRea
 import AdminCancellationReceiptsTab from "@/components/admin/AdminCancellationReceiptsTab";
 import AdminCommitmentRefundsTab from "@/components/admin/AdminCommitmentRefundsTab";
 import AdminCancellationsTab from "@/components/admin/AdminCancellationsTab";
-import AdminResourcePricingTab from "@/components/admin/AdminResourcePricingTab";
 import AdminUsageHistoryTab from "@/components/admin/AdminUsageHistoryTab";
 
 const tabs = [
   { id: "overview", label: "Visão Geral", icon: LayoutDashboard },
   { id: "users", label: "Usuários", icon: Users },
   { id: "plans", label: "Planos", icon: CreditCard },
-  { id: "resource-pricing", label: "Preços de Recursos", icon: Tag },
   { id: "usage-history", label: "Histórico de Uso", icon: Activity, hidden: true },
   { id: "cancellations", label: "Cancelamentos", icon: XCircle },
   { id: "security", label: "Segurança", icon: Shield },
@@ -116,7 +114,6 @@ const AdminDashboard = () => {
             {activeTab === "sales-posts" && <AdminSalesPostsTab />}
             {activeTab === "users" && <AdminUsersWrapperTab />}
             {activeTab === "plans" && <AdminPlansTab />}
-            {activeTab === "resource-pricing" && <AdminResourcePricingTab />}
             {activeTab === "usage-history" && <AdminUsageHistoryTab />}
             {activeTab === "cancellation-reasons" && <AdminCancellationReasonsTab />}
             {activeTab === "cancellation-receipts" && <AdminCancellationReceiptsTab />}

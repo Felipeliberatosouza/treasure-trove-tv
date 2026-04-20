@@ -265,9 +265,12 @@ interface TopQuestionsMaterialProps {
   questions: TopQuestion[];
   setQuestions: (q: TopQuestion[]) => void;
   cfg?: MaterialPriceInfo;
+  onGenerate?: () => Promise<void> | void;
+  generating?: boolean;
+  canGenerate?: boolean;
 }
 
-export const TopQuestionsMaterial = ({ offered, setOffered, price, setPrice, questions, setQuestions, cfg }: TopQuestionsMaterialProps) => {
+export const TopQuestionsMaterial = ({ offered, setOffered, price, setPrice, questions, setQuestions, cfg, onGenerate, generating, canGenerate }: TopQuestionsMaterialProps) => {
   const update = (idx: number, patch: Partial<TopQuestion>) => {
     setQuestions(questions.map((q, i) => (i === idx ? { ...q, ...patch } : q)));
   };
@@ -282,6 +285,11 @@ export const TopQuestionsMaterial = ({ offered, setOffered, price, setPrice, que
       <div className="flex items-center gap-2 mb-3">
         <Trophy className="h-4 w-4 text-primary" />
         <h4 className="text-sm font-semibold">Top Questões de Prova</h4>
+        {onGenerate && (
+          <div className="ml-auto">
+            <AiGenerateButton onGenerate={onGenerate} loading={!!generating} disabled={!canGenerate} />
+          </div>
+        )}
       </div>
       <PriceHeader label="Top Questões" offered={offered} setOffered={setOffered} price={price} setPrice={setPrice} cfg={cfg} />
       {offered && (

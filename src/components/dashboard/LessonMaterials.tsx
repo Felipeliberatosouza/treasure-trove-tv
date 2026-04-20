@@ -98,9 +98,10 @@ interface ResumoMaterialProps {
   text: string;
   setText: (v: string) => void;
   cfg?: MaterialPriceInfo;
+  textMax?: number;
 }
 
-export const ResumoMaterial = ({ offered, setOffered, price, setPrice, text, setText, cfg }: ResumoMaterialProps) => (
+export const ResumoMaterial = ({ offered, setOffered, price, setPrice, text, setText, cfg, textMax = 250 }: ResumoMaterialProps) => (
   <div className="rounded-lg border border-border bg-card p-4">
     <div className="flex items-center gap-2 mb-3">
       <FileText className="h-4 w-4 text-primary" />
@@ -114,13 +115,13 @@ export const ResumoMaterial = ({ offered, setOffered, price, setPrice, text, set
         </label>
         <Textarea
           value={text}
-          maxLength={250}
+          maxLength={textMax}
           onChange={(e) => setText(e.target.value)}
           rows={4}
           className="bg-secondary text-sm"
-          placeholder="Resumo da aula em até 250 caracteres"
+          placeholder={`Resumo da aula em até ${textMax} caracteres`}
         />
-        <p className="text-[11px] text-muted-foreground mt-1 text-right">{text.length}/250</p>
+        <p className="text-[11px] text-muted-foreground mt-1 text-right">{text.length}/{textMax}</p>
       </div>
     )}
   </div>

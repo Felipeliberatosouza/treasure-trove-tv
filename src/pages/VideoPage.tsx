@@ -691,25 +691,31 @@ const VideoPage = () => {
               {user && !hasWatched70 && <p className="text-xs italic text-muted-foreground">Assista pelo menos 70% do vídeo para poder avaliar.</p>}
             </div>
 
-            <div className="grid grid-cols-3 gap-3 sm:grid-cols-6">
-              {[
-                { icon: FileText, label: "Resumo" },
-                { icon: ClipboardList, label: "Simulado" },
-                { icon: Trophy, label: "Top Questões" },
-                { icon: StickyNote, label: "Colinha" },
-                { icon: HelpCircle, label: "Dúvidas", action: handleOpenDoubts },
-                { icon: CalendarCheck, label: "Aula Particular" },
-              ].map(({ icon: Icon, label, action }) => (
-                <button
-                  key={label}
-                  onClick={action}
-                  className="flex flex-col items-center gap-1.5 rounded-xl border border-border bg-secondary/30 p-3 transition-colors hover:bg-secondary/60"
-                >
-                  <Icon className="h-6 w-6 text-foreground" />
-                  <span className="text-center text-[10px] leading-tight text-muted-foreground sm:text-xs">{label}</span>
-                </button>
-              ))}
-            </div>
+            {(() => {
+              const items: { icon: typeof FileText; label: string; action?: () => void; show: boolean }[] = [
+                { icon: FileText, label: "Resumo", show: materials.resumo, action: () => setMaterialModal("resumo") },
+                { icon: ClipboardList, label: "Simulado", show: materials.simulado, action: () => setIsSimuladoOpen(true) },
+                { icon: Trophy, label: "Top Questões", show: materials.top_questoes, action: () => setMaterialModal("top_questoes") },
+                { icon: StickyNote, label: "Colinha", show: materials.colinhas, action: () => setMaterialModal("colinhas") },
+                { icon: HelpCircle, label: "Dúvidas", show: true, action: handleOpenDoubts },
+                { icon: CalendarCheck, label: "Aula Particular", show: true },
+              ].filter((i) => i.show);
+              if (items.length === 0) return null;
+              return (
+                <div className="grid grid-cols-3 gap-3 sm:grid-cols-6">
+                  {items.map(({ icon: Icon, label, action }) => (
+                    <button
+                      key={label}
+                      onClick={action}
+                      className="flex flex-col items-center gap-1.5 rounded-xl border border-border bg-secondary/30 p-3 transition-colors hover:bg-secondary/60"
+                    >
+                      <Icon className="h-6 w-6 text-foreground" />
+                      <span className="text-center text-[10px] leading-tight text-muted-foreground sm:text-xs">{label}</span>
+                    </button>
+                  ))}
+                </div>
+              );
+            })()}
 
             {user && !trial.loading && (
               <>

@@ -1,9 +1,10 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Upload, X, Image, Video, FileText, ClipboardList, Trophy, StickyNote, Camera, DollarSign } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { Upload, X, Image as ImageIcon, Video, Camera, DollarSign, CheckCircle2, AlertCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -11,6 +12,16 @@ import AreaSelector from "@/components/AreaSelector";
 import VideoRecorder from "./VideoRecorder";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import { compositeVideo, type ImpactWord } from "@/utils/videoCompositor";
+import { generateDefaultCover } from "@/utils/coverGenerator";
+import {
+  ResumoMaterial,
+  SimuladoMaterial,
+  TopQuestionsMaterial,
+  ColinhaMaterial,
+  type QuizQuestion,
+  type TopQuestion,
+  type MaterialPriceInfo,
+} from "./LessonMaterials";
 
 interface ResourcePriceInfo {
   resource_type: string;
@@ -27,6 +38,9 @@ const RESOURCE_LABELS: Record<string, string> = {
   colinhas: "Colinha",
 };
 
+const TITLE_MAX = 100;
+const DESCRIPTION_MAX = 200;
+
 interface ContentFormProps {
   table: "lessons";
   editData?: any;
@@ -34,25 +48,45 @@ interface ContentFormProps {
   onCancel: () => void;
 }
 
+const emptyQuiz = (): QuizQuestion[] =>
+  Array.from({ length: 5 }, () => ({ question: "", options: ["", "", ""], correct_index: 0 }));
+const emptyTop = (): TopQuestion[] => Array.from({ length: 5 }, () => ({ question: "", answer: "" }));
+const emptyBullets = (): string[] => Array.from({ length: 10 }, () => "");
+
 const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) => {
   const { user } = useAuth();
   const { data: productConfig } = usePlatformSettings("product_config");
+
+  // Core fields
   const [title, setTitle] = useState(editData?.title || "");
   const [description, setDescription] = useState(editData?.description || "");
   const [selectedAreas, setSelectedAreas] = useState<string[]>(editData?.areas || []);
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [carouselFile, setCarouselFile] = useState<File | null>(null);
   const [videoFile, setVideoFile] = useState<File | null>(null);
-  const [resumoFile, setResumoFile] = useState<File | null>(null);
-  const [simuladoFile, setSimuladoFile] = useState<File | null>(null);
-  const [topQuestoesFile, setTopQuestoesFile] = useState<File | null>(null);
-  const [colinhaFile, setColinhaFile] = useState<File | null>(null);
   const [videoType, setVideoType] = useState<string>(editData?.video_type || "revisao");
-  const [priceRevisoes, setPriceRevisoes] = useState<string>(editData?.price_revisoes?.toString() ?? editData?.price?.toString() ?? "");
-  const [priceResumos, setPriceResumos] = useState<string>(editData?.price_resumos?.toString() ?? "");
-  const [priceSimulados, setPriceSimulados] = useState<string>(editData?.price_simulados?.toString() ?? "");
-  const [priceTopQuestoes, setPriceTopQuestoes] = useState<string>(editData?.price_top_questoes?.toString() ?? "");
-  const [priceColinhas, setPriceColinhas] = useState<string>(editData?.price_colinhas?.toString() ?? "");
+  const [priceRevisoes, setPriceRevisoes] = useState<string>(
+    editData?.price_revisoes?.toString() ?? editData?.price?.toString() ?? "",
+  );
+
+  // Materials state
+  const [resumoOffered, setResumoOffered] = useState(true);
+  const [resumoPrice, setResumoPrice] = useState("");
+  const [resumoText, setResumoText] = useState("");
+  const [resumoTouched, setResumoTouched] = useState(false);
+
+  const [simuladoOffered, setSimuladoOffered] = useState(true);
+  const [simuladoPrice, setSimuladoPrice] = useState("");
+  const [quizQuestions, setQuizQuestions] = useState<QuizQuestion[]>(emptyQuiz());
+
+  const [topOffered, setTopOffered] = useState(true);
+  const [topPrice, setTopPrice] = useState("");
+  const [topQuestions, setTopQuestions] = useState<TopQuestion[]>(emptyTop());
+
+  const [colinhaOffered, setColinhaOffered] = useState(true);
+  const [colinhaPrice, setColinhaPrice] = useState("");
+  const [bullets, setBullets] = useState<string[]>(emptyBullets());
+
   const [saving, setSaving] = useState(false);
   const [showRecorder, setShowRecorder] = useState(false);
   const [subtitlesVtt, setSubtitlesVtt] = useState<string>("");
@@ -69,8 +103,19 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
   const needsProcessing = enableSubtitles || enableBlackboard || enableAutoCover;
 
   const revisaoPricing = resourcePrices.find((r) => r.resource_type === "revisoes");
+  const cfgFor = (t: string): MaterialPriceInfo | undefined => {
+    const r = resourcePrices.find((x) => x.resource_type === t);
+    return r ? { price: r.price, min_price: r.min_price, platform_percentage: r.platform_percentage } : undefined;
+  };
 
-  // Fetch teacher name for auto cover
+  // Auto-fill resumo from description until user edits it manually
+  useEffect(() => {
+    if (!resumoTouched) {
+      setResumoText(description.slice(0, 250));
+    }
+  }, [description, resumoTouched]);
+
+  // Fetch teacher name
   useEffect(() => {
     if (!user) return;
     supabase
@@ -83,7 +128,7 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
       });
   }, [user]);
 
-  // Fetch resource pricing config to display to teacher
+  // Fetch resource pricing config
   useEffect(() => {
     supabase
       .from("resource_prices")
@@ -93,53 +138,208 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
         if (data) {
           const list = data as unknown as ResourcePriceInfo[];
           setResourcePrices(list);
-          // On create, prefill empty price fields with the platform default
           if (!editData?.id) {
             const get = (t: string) => list.find((r) => r.resource_type === t)?.price?.toString() ?? "";
             setPriceRevisoes((p) => p || get("revisoes"));
-            setPriceResumos((p) => p || get("resumos"));
-            setPriceSimulados((p) => p || get("simulados"));
-            setPriceTopQuestoes((p) => p || get("top_questoes"));
-            setPriceColinhas((p) => p || get("colinhas"));
+            setResumoPrice((p) => p || get("resumos"));
+            setSimuladoPrice((p) => p || get("simulados"));
+            setTopPrice((p) => p || get("top_questoes"));
+            setColinhaPrice((p) => p || get("colinhas"));
           }
         }
       });
   }, [editData?.id]);
 
-  // Extract audio from a video file and return base64
+  // Load existing materials when editing
+  useEffect(() => {
+    if (!editData?.id) return;
+    (async () => {
+      const lessonId = editData.id;
+      const [meta, sum, qz, tq, ch] = await Promise.all([
+        (supabase as any).from("lesson_material_meta").select("*").eq("lesson_id", lessonId),
+        (supabase as any).from("lesson_summaries").select("*").eq("lesson_id", lessonId).maybeSingle(),
+        (supabase as any).from("lesson_quiz_questions").select("*").eq("lesson_id", lessonId).order("position"),
+        (supabase as any).from("lesson_top_questions").select("*").eq("lesson_id", lessonId).order("position"),
+        (supabase as any).from("lesson_cheatsheet_items").select("*").eq("lesson_id", lessonId).order("position"),
+      ]);
+      const metaMap: Record<string, { offered: boolean; price: number }> = {};
+      ((meta.data as any[]) || []).forEach((m) => {
+        metaMap[m.material_type] = { offered: m.offered, price: Number(m.price) };
+      });
+      if (metaMap.resumo) {
+        setResumoOffered(metaMap.resumo.offered);
+        setResumoPrice(String(metaMap.resumo.price || ""));
+      }
+      if (metaMap.simulado) {
+        setSimuladoOffered(metaMap.simulado.offered);
+        setSimuladoPrice(String(metaMap.simulado.price || ""));
+      }
+      if (metaMap.top_questoes) {
+        setTopOffered(metaMap.top_questoes.offered);
+        setTopPrice(String(metaMap.top_questoes.price || ""));
+      }
+      if (metaMap.colinha) {
+        setColinhaOffered(metaMap.colinha.offered);
+        setColinhaPrice(String(metaMap.colinha.price || ""));
+      }
+      if (sum.data?.content) {
+        setResumoText(sum.data.content);
+        setResumoTouched(true);
+      }
+      const quizRows = (qz.data as any[]) || [];
+      if (quizRows.length > 0) {
+        const loaded = quizRows.map((r) => ({
+          question: r.question,
+          options: Array.isArray(r.options) ? r.options : [],
+          correct_index: r.correct_index ?? 0,
+        }));
+        setQuizQuestions(loaded.length >= 5 ? loaded : [...loaded, ...emptyQuiz().slice(loaded.length)]);
+      }
+      const topRows = (tq.data as any[]) || [];
+      if (topRows.length > 0) {
+        const loaded = topRows.map((r) => ({ question: r.question, answer: r.answer }));
+        setTopQuestions(loaded.length >= 5 ? loaded : [...loaded, ...emptyTop().slice(loaded.length)]);
+      }
+      const chRows = (ch.data as any[]) || [];
+      if (chRows.length > 0) {
+        const loaded = chRows.map((r) => r.text as string);
+        setBullets(loaded.length >= 10 ? loaded : [...loaded, ...emptyBullets().slice(loaded.length)]);
+      }
+    })();
+  }, [editData?.id]);
+
+  // ============================================================
+  // Validation + progress
+  // ============================================================
+  const validations = useMemo(() => {
+    const items: { key: string; label: string; valid: boolean }[] = [];
+    items.push({ key: "title", label: "Nome da aula", valid: title.trim().length > 0 && title.length <= TITLE_MAX });
+    items.push({ key: "type", label: "Tipo de aula", valid: !!videoType });
+    items.push({
+      key: "areas",
+      label: "Áreas do conteúdo",
+      valid: selectedAreas.length > 0,
+    });
+    items.push({
+      key: "description",
+      label: "Descrição da aula",
+      valid: description.trim().length > 0 && description.length <= DESCRIPTION_MAX,
+    });
+    items.push({
+      key: "video",
+      label: "Vídeo",
+      valid: !!videoFile || !!editData?.video_url,
+    });
+    items.push({
+      key: "video_price",
+      label: "Preço da revisão",
+      valid: parseFloat(priceRevisoes) > 0,
+    });
+    // Capa do vídeo / carrossel: optional (auto-generated). Always valid.
+    items.push({ key: "thumb", label: "Capa do vídeo (auto se vazio)", valid: true });
+    items.push({ key: "carousel", label: "Capa para carrossel (auto se vazio)", valid: true });
+
+    // Materials
+    if (resumoOffered) {
+      items.push({
+        key: "resumo",
+        label: "Resumo (texto + preço)",
+        valid: resumoText.trim().length > 0 && resumoText.length <= 250 && parseFloat(resumoPrice) > 0,
+      });
+    }
+    if (simuladoOffered) {
+      const allFilled =
+        quizQuestions.length >= 5 &&
+        quizQuestions.every(
+          (q) =>
+            q.question.trim().length > 0 &&
+            q.options.length >= 3 &&
+            q.options.every((o) => o.trim().length > 0) &&
+            q.correct_index >= 0 &&
+            q.correct_index < q.options.length,
+        );
+      items.push({
+        key: "simulado",
+        label: "Simulado (≥5 questões + preço)",
+        valid: allFilled && parseFloat(simuladoPrice) > 0,
+      });
+    }
+    if (topOffered) {
+      const ok =
+        topQuestions.length >= 5 &&
+        topQuestions.every((q) => q.question.trim().length > 0 && q.answer.trim().length > 0);
+      items.push({
+        key: "top",
+        label: "Top Questões (≥5 + preço)",
+        valid: ok && parseFloat(topPrice) > 0,
+      });
+    }
+    if (colinhaOffered) {
+      const ok = bullets.length >= 10 && bullets.every((b) => b.trim().length > 0);
+      items.push({
+        key: "colinha",
+        label: "Colinha (≥10 bullets + preço)",
+        valid: ok && parseFloat(colinhaPrice) > 0,
+      });
+    }
+    return items;
+  }, [
+    title,
+    videoType,
+    selectedAreas,
+    description,
+    videoFile,
+    editData?.video_url,
+    priceRevisoes,
+    resumoOffered,
+    resumoText,
+    resumoPrice,
+    simuladoOffered,
+    quizQuestions,
+    simuladoPrice,
+    topOffered,
+    topQuestions,
+    topPrice,
+    colinhaOffered,
+    bullets,
+    colinhaPrice,
+  ]);
+
+  const validCount = validations.filter((v) => v.valid).length;
+  const progress = Math.round((validCount / validations.length) * 100);
+  const allValid = validCount === validations.length;
+  const missing = validations.filter((v) => !v.valid);
+
+  // ============================================================
+  // Video processing helpers (preserved from original)
+  // ============================================================
   const extractAudioBase64 = useCallback(async (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
       const video = document.createElement("video");
       video.preload = "auto";
       video.muted = true;
       video.src = URL.createObjectURL(file);
-
       video.onloadedmetadata = async () => {
         try {
           const audioCtx = new AudioContext();
           const source = audioCtx.createMediaElementSource(video);
           const dest = audioCtx.createMediaStreamDestination();
           source.connect(dest);
-
           const audioRecorder = new MediaRecorder(dest.stream, { mimeType: "audio/webm" });
           const chunks: Blob[] = [];
           audioRecorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
-
           const done = new Promise<Blob>((res) => {
             audioRecorder.onstop = () => res(new Blob(chunks, { type: "audio/webm" }));
           });
-
           audioRecorder.start(500);
           video.muted = false;
           video.playbackRate = 16;
           await video.play();
-
           video.onended = () => {
             audioRecorder.stop();
             audioCtx.close();
             URL.revokeObjectURL(video.src);
           };
-
           const audioBlob = await done;
           const reader = new FileReader();
           reader.onloadend = () => {
@@ -153,7 +353,6 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
           reject(err);
         }
       };
-
       video.onerror = () => {
         URL.revokeObjectURL(video.src);
         reject(new Error("Failed to load video"));
@@ -161,97 +360,84 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
     });
   }, []);
 
-  // Process an uploaded video file through the AI pipeline
-  const processUploadedVideo = useCallback(async (file: File): Promise<{ processedFile: File; vtt: string }> => {
-    setProcessingUpload(true);
-    setProcessingStep("Extraindo áudio do vídeo...");
-
-    let impactWords: ImpactWord[] = [];
-    let vtt = "";
-
-    try {
-      if (enableSubtitles || enableBlackboard) {
-        const audioBase64 = await extractAudioBase64(file);
-        setProcessingStep("Transcrevendo áudio com IA...");
-
-        const { data: funcData, error: funcError } = await supabase.functions.invoke(
-          "process-recorded-video",
-          { body: { audioBase64, title, mimeType: "audio/webm" } }
-        );
-
-        if (funcError) {
-          console.error("Transcription function error:", funcError);
-          toast.error("Erro na transcrição. O vídeo será salvo sem legendas/quadro negro.");
-        } else if (funcData) {
-          vtt = funcData.subtitlesVtt || "";
-          impactWords = funcData.impactWords || [];
+  const processUploadedVideo = useCallback(
+    async (file: File): Promise<{ processedFile: File; vtt: string }> => {
+      setProcessingUpload(true);
+      setProcessingStep("Extraindo áudio do vídeo...");
+      let impactWords: ImpactWord[] = [];
+      let vtt = "";
+      try {
+        if (enableSubtitles || enableBlackboard) {
+          const audioBase64 = await extractAudioBase64(file);
+          setProcessingStep("Transcrevendo áudio com IA...");
+          const { data: funcData, error: funcError } = await supabase.functions.invoke(
+            "process-recorded-video",
+            { body: { audioBase64, title, mimeType: "audio/webm" } },
+          );
+          if (funcError) {
+            console.error("Transcription function error:", funcError);
+            toast.error("Erro na transcrição. O vídeo será salvo sem legendas/quadro negro.");
+          } else if (funcData) {
+            vtt = funcData.subtitlesVtt || "";
+            impactWords = funcData.impactWords || [];
+          }
         }
+        if ((enableBlackboard && impactWords.length > 0) || enableAutoCover) {
+          setProcessingStep("Processando vídeo com quadro negro e capa...");
+          const videoBlob = new Blob([await file.arrayBuffer()], { type: file.type });
+          const compositedBlob = await compositeVideo(videoBlob, {
+            impactWords: enableBlackboard ? impactWords : [],
+            introTitle: enableAutoCover ? title : undefined,
+            introArea: enableAutoCover ? (selectedAreas[0] || "") : undefined,
+            introTeacher: enableAutoCover ? teacherName : undefined,
+            onProgress: () => {},
+          });
+          const processedFile = new File([compositedBlob], `processado-${Date.now()}.webm`, { type: compositedBlob.type });
+          return { processedFile, vtt };
+        }
+        return { processedFile: file, vtt };
+      } finally {
+        setProcessingUpload(false);
+        setProcessingStep("");
       }
-
-      if ((enableBlackboard && impactWords.length > 0) || enableAutoCover) {
-        setProcessingStep("Processando vídeo com quadro negro e capa...");
-
-        const videoBlob = new Blob([await file.arrayBuffer()], { type: file.type });
-        const compositedBlob = await compositeVideo(videoBlob, {
-          impactWords: enableBlackboard ? impactWords : [],
-          introTitle: enableAutoCover ? title : undefined,
-          introArea: enableAutoCover ? (selectedAreas[0] || "") : undefined,
-          introTeacher: enableAutoCover ? teacherName : undefined,
-          onProgress: () => {},
-        });
-
-        const processedFile = new File([compositedBlob], `processado-${Date.now()}.webm`, { type: compositedBlob.type });
-        return { processedFile, vtt };
-      }
-
-      return { processedFile: file, vtt };
-    } finally {
-      setProcessingUpload(false);
-      setProcessingStep("");
-    }
-  }, [enableSubtitles, enableBlackboard, enableAutoCover, title, selectedAreas, teacherName, extractAudioBase64]);
+    },
+    [enableSubtitles, enableBlackboard, enableAutoCover, title, selectedAreas, teacherName, extractAudioBase64],
+  );
 
   const uploadFile = async (file: File, bucket: string) => {
     const ext = file.name.split(".").pop();
     const path = `${user!.id}/${Date.now()}.${ext}`;
     const { error } = await supabase.storage.from(bucket).upload(path, file);
     if (error) throw error;
-
-    if (bucket === "videos") {
-      return path;
-    }
-
+    if (bucket === "videos") return path;
     const { data } = supabase.storage.from(bucket).getPublicUrl(path);
     return data.publicUrl;
   };
 
+  // ============================================================
+  // Submit
+  // ============================================================
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim()) {
-      toast.error("Preencha o título");
+    if (!user) return;
+    if (!allValid) {
+      toast.error(`Faltam ${missing.length} campo(s): ${missing.map((m) => m.label).join(", ")}`);
       return;
     }
-    if (!user) return;
 
-    // Validate per-resource prices against admin-configured minimums
-    const priceFields: { type: string; value: string; hasFile: boolean; existing?: string }[] = [
-      { type: "revisoes", value: priceRevisoes, hasFile: !!videoFile, existing: editData?.video_url },
-      { type: "resumos", value: priceResumos, hasFile: !!resumoFile, existing: editData?.resumo_url },
-      { type: "simulados", value: priceSimulados, hasFile: !!simuladoFile, existing: editData?.simulado_url },
-      { type: "top_questoes", value: priceTopQuestoes, hasFile: !!topQuestoesFile, existing: editData?.top_questoes_url },
-      { type: "colinhas", value: priceColinhas, hasFile: !!colinhaFile, existing: editData?.colinha_url },
+    // Validate prices vs minimums
+    const priceFields: { type: string; value: string; offered: boolean }[] = [
+      { type: "revisoes", value: priceRevisoes, offered: true },
+      { type: "resumos", value: resumoPrice, offered: resumoOffered },
+      { type: "simulados", value: simuladoPrice, offered: simuladoOffered },
+      { type: "top_questoes", value: topPrice, offered: topOffered },
+      { type: "colinhas", value: colinhaPrice, offered: colinhaOffered },
     ];
     for (const f of priceFields) {
-      const provided = f.hasFile || !!f.existing;
-      if (!provided) continue;
+      if (!f.offered) continue;
       const cfg = resourcePrices.find((r) => r.resource_type === f.type);
-      if (!cfg) continue;
       const num = parseFloat(f.value);
-      if (isNaN(num) || num <= 0) {
-        toast.error(`Informe o preço de "${RESOURCE_LABELS[f.type]}"`);
-        return;
-      }
-      if (cfg.min_price > 0 && num < cfg.min_price) {
+      if (cfg && cfg.min_price > 0 && num < cfg.min_price) {
         toast.error(`Preço de "${RESOURCE_LABELS[f.type]}" deve ser ≥ R$ ${cfg.min_price.toFixed(2)}`);
         return;
       }
@@ -262,15 +448,37 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
       let thumbnail_url = "";
       let carousel_cover_url = "";
       let video_url = "";
-      let resumo_url = "";
-      let simulado_url = "";
-      let top_questoes_url = "";
-      let colinha_url = "";
-      let duvidas_url = "";
-      let aula_particular_url = "";
 
-      if (thumbnailFile) thumbnail_url = await uploadFile(thumbnailFile, "thumbnails");
-      if (carouselFile) carousel_cover_url = await uploadFile(carouselFile, "carousel-covers");
+      // Auto-generate covers if not provided
+      const today = new Date();
+      const thumbToUpload =
+        thumbnailFile ||
+        (!editData?.thumbnail_url
+          ? await generateDefaultCover({
+              title,
+              teacherName,
+              date: today,
+              width: 1280,
+              height: 720,
+              variant: "thumbnail",
+            })
+          : null);
+      const carouselToUpload =
+        carouselFile ||
+        (!editData?.carousel_cover_url
+          ? await generateDefaultCover({
+              title,
+              teacherName,
+              date: today,
+              width: 1600,
+              height: 600,
+              variant: "carousel",
+            })
+          : null);
+
+      if (thumbToUpload) thumbnail_url = await uploadFile(thumbToUpload, "thumbnails");
+      if (carouselToUpload) carousel_cover_url = await uploadFile(carouselToUpload, "carousel-covers");
+
       let subtitles_url = "";
       if (videoFile) {
         let finalVideoFile = videoFile;
@@ -291,10 +499,6 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
         }
         video_url = await uploadFile(finalVideoFile, "videos");
       }
-      if (resumoFile) resumo_url = await uploadFile(resumoFile, "materials");
-      if (simuladoFile) simulado_url = await uploadFile(simuladoFile, "materials");
-      if (topQuestoesFile) top_questoes_url = await uploadFile(topQuestoesFile, "materials");
-      if (colinhaFile) colinha_url = await uploadFile(colinhaFile, "materials");
 
       if (subtitlesVtt && !subtitles_url) {
         const vttBlob = new Blob([subtitlesVtt], { type: "text/vtt" });
@@ -310,74 +514,106 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
         published: true,
         admin_approved: false,
       };
-
       if (thumbnail_url) contentData.thumbnail_url = thumbnail_url;
       if (carousel_cover_url) contentData.carousel_cover_url = carousel_cover_url;
       if (video_url) contentData.video_url = video_url;
-      if (resumo_url) contentData.resumo_url = resumo_url;
-      if (simulado_url) contentData.simulado_url = simulado_url;
-      if (top_questoes_url) contentData.top_questoes_url = top_questoes_url;
-      if (colinha_url) contentData.colinha_url = colinha_url;
 
-      // Per-resource prices defined by the teacher (already validated against minimums)
-      const setPrice = (field: string, val: string, hasFile: boolean, existing?: string) => {
-        if (hasFile || existing) {
-          const n = parseFloat(val);
-          if (!isNaN(n) && n > 0) contentData[field] = n;
-        }
+      // Per-resource prices (legacy columns kept in sync for compatibility)
+      const setPrice = (field: string, val: string, offered: boolean) => {
+        if (!offered) return;
+        const n = parseFloat(val);
+        if (!isNaN(n) && n > 0) contentData[field] = n;
       };
-      setPrice("price_revisoes", priceRevisoes, !!videoFile, editData?.video_url);
-      setPrice("price_resumos", priceResumos, !!resumoFile, editData?.resumo_url);
-      setPrice("price_simulados", priceSimulados, !!simuladoFile, editData?.simulado_url);
-      setPrice("price_top_questoes", priceTopQuestoes, !!topQuestoesFile, editData?.top_questoes_url);
-      setPrice("price_colinhas", priceColinhas, !!colinhaFile, editData?.colinha_url);
+      setPrice("price_revisoes", priceRevisoes, true);
+      setPrice("price_resumos", resumoPrice, resumoOffered);
+      setPrice("price_simulados", simuladoPrice, simuladoOffered);
+      setPrice("price_top_questoes", topPrice, topOffered);
+      setPrice("price_colinhas", colinhaPrice, colinhaOffered);
 
-      let error;
+      let lessonId: string;
       if (editData?.id) {
-        ({ error } = await supabase.from(table).update(contentData).eq("id", editData.id));
+        const { error } = await supabase.from(table).update(contentData).eq("id", editData.id);
+        if (error) throw error;
+        lessonId = editData.id;
       } else {
         contentData.teacher_id = user.id;
-        // platform_percentage from admin config; main price = revisão price chosen by teacher
-        if (revisaoPricing) {
-          contentData.platform_percentage = revisaoPricing.platform_percentage;
-        }
+        if (revisaoPricing) contentData.platform_percentage = revisaoPricing.platform_percentage;
         const mainPrice = parseFloat(priceRevisoes);
         if (!isNaN(mainPrice) && mainPrice > 0) contentData.price = mainPrice;
-        contentData.thumbnail_url = thumbnail_url;
-        contentData.carousel_cover_url = carousel_cover_url;
-        contentData.video_url = video_url;
-        contentData.resumo_url = resumo_url;
-        contentData.simulado_url = simulado_url;
-        contentData.top_questoes_url = top_questoes_url;
-        contentData.colinha_url = colinha_url;
-        contentData.duvidas_url = duvidas_url;
-        contentData.aula_particular_url = aula_particular_url;
-        ({ error } = await supabase.from(table).insert(contentData));
+        const { data: inserted, error } = await supabase.from(table).insert(contentData).select("id").single();
+        if (error) throw error;
+        lessonId = (inserted as any).id;
       }
 
-      if (error) throw error;
+      // Save structured materials (upsert pattern: clear children + reinsert)
+      const sb = supabase as any;
 
-      // Notify admins when editing previously approved content
+      // Meta
+      const metas = [
+        { material_type: "resumo", offered: resumoOffered, price: parseFloat(resumoPrice) || 0 },
+        { material_type: "simulado", offered: simuladoOffered, price: parseFloat(simuladoPrice) || 0 },
+        { material_type: "top_questoes", offered: topOffered, price: parseFloat(topPrice) || 0 },
+        { material_type: "colinha", offered: colinhaOffered, price: parseFloat(colinhaPrice) || 0 },
+      ].map((m) => ({ ...m, lesson_id: lessonId }));
+      await sb.from("lesson_material_meta").delete().eq("lesson_id", lessonId);
+      await sb.from("lesson_material_meta").insert(metas);
+
+      // Resumo
+      await sb.from("lesson_summaries").delete().eq("lesson_id", lessonId);
+      if (resumoOffered) {
+        await sb.from("lesson_summaries").insert({ lesson_id: lessonId, content: resumoText });
+      }
+
+      // Simulado
+      await sb.from("lesson_quiz_questions").delete().eq("lesson_id", lessonId);
+      if (simuladoOffered) {
+        const rows = quizQuestions.map((q, i) => ({
+          lesson_id: lessonId,
+          position: i,
+          question: q.question,
+          options: q.options,
+          correct_index: q.correct_index,
+        }));
+        await sb.from("lesson_quiz_questions").insert(rows);
+      }
+
+      // Top questions
+      await sb.from("lesson_top_questions").delete().eq("lesson_id", lessonId);
+      if (topOffered) {
+        const rows = topQuestions.map((q, i) => ({
+          lesson_id: lessonId,
+          position: i,
+          question: q.question,
+          answer: q.answer,
+        }));
+        await sb.from("lesson_top_questions").insert(rows);
+      }
+
+      // Cheatsheet
+      await sb.from("lesson_cheatsheet_items").delete().eq("lesson_id", lessonId);
+      if (colinhaOffered) {
+        const rows = bullets.map((b, i) => ({ lesson_id: lessonId, position: i, text: b }));
+        await sb.from("lesson_cheatsheet_items").insert(rows);
+      }
+
+      // Notify admins on edits of approved content
       if (editData?.id && editData?.admin_approved) {
         const { data: adminRoles } = await supabase
           .from("user_roles")
           .select("user_id")
           .eq("role", "admin");
-
         if (adminRoles && adminRoles.length > 0) {
           const { data: teacherProfile } = await supabase
             .from("profiles")
             .select("name, email")
             .eq("user_id", user.id)
             .maybeSingle();
-
           for (const admin of adminRoles) {
             const { data: adminProfile } = await supabase
               .from("profiles")
               .select("email")
               .eq("user_id", admin.user_id)
               .maybeSingle();
-
             if (adminProfile?.email) {
               supabase.functions.invoke("send-transactional-email", {
                 body: {
@@ -401,7 +637,7 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
         editData?.id
           ? "Conteúdo atualizado e reenviado para aprovação!"
           : "Sua aula foi enviada para aprovação da Revisão Fácil! Se estiver de acordo com as regras da plataforma, será publicada em até 3 dias úteis. Você receberá um e-mail com a confirmação da publicação ou com orientações sobre eventuais ajustes necessários.",
-        { duration: editData?.id ? 5000 : 12000 }
+        { duration: editData?.id ? 5000 : 12000 },
       );
       onSaved();
     } catch (err: any) {
@@ -411,9 +647,38 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 max-w-lg">
+    <form onSubmit={handleSubmit} className="space-y-5 max-w-2xl">
+      {/* Progress bar */}
+      <div className="sticky top-0 z-10 -mx-2 px-2 py-3 bg-background/95 backdrop-blur border-b border-border">
+        <div className="flex items-center justify-between mb-1.5">
+          <p className="text-xs font-semibold text-muted-foreground">
+            Progresso da aula: {validCount}/{validations.length} campos preenchidos
+          </p>
+          <span className={`text-xs font-bold ${allValid ? "text-success" : "text-primary"}`}>{progress}%</span>
+        </div>
+        <Progress value={progress} className="h-2" />
+        {!allValid && missing.length > 0 && (
+          <details className="mt-2 text-xs">
+            <summary className="cursor-pointer text-muted-foreground flex items-center gap-1">
+              <AlertCircle className="h-3 w-3" /> Faltam {missing.length} item(s) — clique para ver
+            </summary>
+            <ul className="mt-1.5 pl-4 space-y-0.5 text-muted-foreground">
+              {missing.map((m) => (
+                <li key={m.key}>• {m.label}</li>
+              ))}
+            </ul>
+          </details>
+        )}
+        {allValid && (
+          <p className="mt-1.5 text-xs text-success flex items-center gap-1">
+            <CheckCircle2 className="h-3 w-3" /> Tudo pronto para enviar!
+          </p>
+        )}
+      </div>
+
+      {/* Type */}
       <div>
-        <label className="text-sm text-muted-foreground mb-1 block">Tipo de aula</label>
+        <label className="text-sm text-muted-foreground mb-1 block">Tipo de aula *</label>
         <Select value={videoType} onValueChange={setVideoType}>
           <SelectTrigger className="bg-secondary">
             <SelectValue placeholder="Selecione o tipo" />
@@ -425,24 +690,48 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
         </Select>
       </div>
 
+      {/* Title */}
       <div>
-        <label className="text-sm text-muted-foreground mb-1 block">Nome da aula</label>
-        <Input value={title} onChange={(e) => setTitle(e.target.value)} className="bg-secondary" />
+        <label className="text-sm text-muted-foreground mb-1 block">Nome da aula *</label>
+        <Input
+          value={title}
+          maxLength={TITLE_MAX}
+          onChange={(e) => setTitle(e.target.value)}
+          className="bg-secondary"
+          placeholder="Ex: Revisão de Direito Constitucional"
+        />
+        <p className="text-[11px] text-muted-foreground text-right mt-0.5">
+          {title.length}/{TITLE_MAX}
+        </p>
       </div>
 
+      {/* Areas */}
       <div>
-        <label className="text-sm text-muted-foreground mb-1 block">Áreas do conteúdo</label>
+        <label className="text-sm text-muted-foreground mb-1 block">Áreas do conteúdo *</label>
         <AreaSelector selected={selectedAreas} onChange={setSelectedAreas} max={3} />
       </div>
 
+      {/* Description */}
       <div>
-        <label className="text-sm text-muted-foreground mb-1 block">Descrição</label>
-        <Textarea value={description} onChange={(e) => setDescription(e.target.value)} className="bg-secondary" rows={3} />
+        <label className="text-sm text-muted-foreground mb-1 block">Descrição da aula *</label>
+        <Textarea
+          value={description}
+          maxLength={DESCRIPTION_MAX}
+          onChange={(e) => setDescription(e.target.value)}
+          className="bg-secondary"
+          rows={3}
+          placeholder="Resumo curto sobre o que será abordado"
+        />
+        <p className="text-[11px] text-muted-foreground text-right mt-0.5">
+          {description.length}/{DESCRIPTION_MAX}
+        </p>
       </div>
 
+      {/* Thumbnail */}
       <div>
         <label className="text-sm text-muted-foreground mb-1 block flex items-center gap-1">
-          <Image className="h-3.5 w-3.5" /> Capa do vídeo
+          <ImageIcon className="h-3.5 w-3.5" /> Capa do vídeo
+          <span className="text-[10px] text-muted-foreground">(opcional — geramos uma capa padrão se vazio)</span>
         </label>
         <div className="flex items-center gap-2">
           <Input
@@ -459,9 +748,11 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
         </div>
       </div>
 
+      {/* Carousel */}
       <div>
         <label className="text-sm text-muted-foreground mb-1 block flex items-center gap-1">
-          <Image className="h-3.5 w-3.5" /> Capa para carrossel
+          <ImageIcon className="h-3.5 w-3.5" /> Capa para carrossel
+          <span className="text-[10px] text-muted-foreground">(opcional — geramos uma capa padrão se vazio)</span>
         </label>
         <div className="flex items-center gap-2">
           <Input
@@ -478,11 +769,11 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
         </div>
       </div>
 
+      {/* Video */}
       <div>
         <label className="text-sm text-muted-foreground mb-1 block flex items-center gap-1">
-          <Video className="h-3.5 w-3.5" /> Vídeo
+          <Video className="h-3.5 w-3.5" /> Vídeo *
         </label>
-
         {showRecorder ? (
           <VideoRecorder
             maxMinutes={maxRecordingMinutes}
@@ -516,13 +807,7 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
               )}
             </div>
             {recordingEnabled && (
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                onClick={() => setShowRecorder(true)}
-                className="gap-1"
-              >
+              <Button type="button" size="sm" variant="outline" onClick={() => setShowRecorder(true)} className="gap-1">
                 <Camera className="h-4 w-4" /> Gravar Vídeo
               </Button>
             )}
@@ -533,6 +818,7 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
             )}
           </div>
         )}
+        {/* Revisão price */}
         {(videoFile || editData?.video_url) && (() => {
           const cfg = resourcePrices.find((r) => r.resource_type === "revisoes");
           return (
@@ -542,14 +828,14 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
                 type="number"
                 step="0.01"
                 min={cfg?.min_price || 0}
-                placeholder={cfg ? `Mín. R$ ${cfg.min_price.toFixed(2)}` : "Preço (R$)"}
+                placeholder={cfg ? `Sugerido R$ ${cfg.price.toFixed(2)} · mín. R$ ${cfg.min_price.toFixed(2)}` : "Preço (R$)"}
                 value={priceRevisoes}
                 onChange={(e) => setPriceRevisoes(e.target.value)}
-                className="bg-secondary text-xs h-9 max-w-[180px]"
+                className="bg-secondary text-xs h-9 max-w-[220px]"
               />
               {cfg && (
                 <span className="text-[11px] text-muted-foreground">
-                  mín. R$ {cfg.min_price.toFixed(2)} · você recebe {100 - (cfg.platform_percentage || 0)}%
+                  você recebe {100 - (cfg.platform_percentage || 0)}%
                 </span>
               )}
             </div>
@@ -557,88 +843,53 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
         })()}
       </div>
 
-      <p className="text-sm font-semibold text-muted-foreground pt-2">Materiais complementares</p>
+      <p className="text-sm font-semibold pt-2 border-t border-border">Materiais complementares</p>
 
-      {([
-        { label: "Resumo", icon: FileText, file: resumoFile, setFile: setResumoFile, type: "resumos", priceVal: priceResumos, setPrice: setPriceResumos, existingUrl: editData?.resumo_url },
-        { label: "Simulado", icon: ClipboardList, file: simuladoFile, setFile: setSimuladoFile, type: "simulados", priceVal: priceSimulados, setPrice: setPriceSimulados, existingUrl: editData?.simulado_url },
-        { label: "Top Questões de Provas", icon: Trophy, file: topQuestoesFile, setFile: setTopQuestoesFile, type: "top_questoes", priceVal: priceTopQuestoes, setPrice: setPriceTopQuestoes, existingUrl: editData?.top_questoes_url },
-        { label: "Colinha", icon: StickyNote, file: colinhaFile, setFile: setColinhaFile, type: "colinhas", priceVal: priceColinhas, setPrice: setPriceColinhas, existingUrl: editData?.colinha_url },
-      ] as const).map(({ label, icon: Icon, file, setFile, type, priceVal, setPrice, existingUrl }) => {
-        const cfg = resourcePrices.find((r) => r.resource_type === type);
-        const showPrice = !!file || !!existingUrl;
-        return (
-          <div key={label}>
-            <label className="text-sm text-muted-foreground mb-1 block flex items-center gap-1">
-              <Icon className="h-3.5 w-3.5" /> {label}
-            </label>
-            <div className="flex items-center gap-2">
-              <Input
-                type="file"
-                accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,image/*"
-                onChange={(e) => setFile(e.target.files?.[0] || null)}
-                className="bg-secondary text-xs"
-              />
-              {file && (
-                <button type="button" onClick={() => setFile(null)} className="text-muted-foreground hover:text-destructive">
-                  <X className="h-4 w-4" />
-                </button>
-              )}
-            </div>
-            {showPrice && (
-              <div className="mt-2 flex items-center gap-2">
-                <DollarSign className="h-3.5 w-3.5 text-muted-foreground" />
-                <Input
-                  type="number"
-                  step="0.01"
-                  min={cfg?.min_price || 0}
-                  placeholder={cfg ? `Mín. R$ ${cfg.min_price.toFixed(2)}` : "Preço (R$)"}
-                  value={priceVal}
-                  onChange={(e) => setPrice(e.target.value)}
-                  className="bg-secondary text-xs h-9 max-w-[180px]"
-                />
-                {cfg && (
-                  <span className="text-[11px] text-muted-foreground">
-                    mín. R$ {cfg.min_price.toFixed(2)} · você recebe {100 - (cfg.platform_percentage || 0)}%
-                  </span>
-                )}
-              </div>
-            )}
-          </div>
-        );
-      })}
+      <ResumoMaterial
+        offered={resumoOffered}
+        setOffered={setResumoOffered}
+        price={resumoPrice}
+        setPrice={setResumoPrice}
+        text={resumoText}
+        setText={(v) => {
+          setResumoText(v);
+          setResumoTouched(true);
+        }}
+        cfg={cfgFor("resumos")}
+      />
 
-      {!editData?.id && resourcePrices.length > 0 && (
-        <div className="rounded-lg border border-border bg-secondary/40 p-4 mt-4">
-          <p className="text-sm font-semibold mb-2 flex items-center gap-1">
-            <DollarSign className="h-4 w-4 text-primary" /> Valores e divisão de receita
-          </p>
-          <p className="text-xs text-muted-foreground mb-3">
-            Você define o preço de cada recurso, respeitando o valor mínimo configurado pela plataforma.
-            O percentual indicado é o que você (professor) recebe sobre cada venda avulsa.
-          </p>
-          <div className="space-y-1.5">
-            {resourcePrices
-              .filter((r) => RESOURCE_LABELS[r.resource_type])
-              .map((r) => {
-                const teacherPct = 100 - (r.platform_percentage || 0);
-                const minLabel = r.min_price > 0 ? ` (mín. R$ ${r.min_price.toFixed(2)})` : "";
-                return (
-                  <div key={r.resource_type} className="flex justify-between text-xs">
-                    <span className="text-muted-foreground">{RESOURCE_LABELS[r.resource_type]}</span>
-                    <span className="font-medium">
-                      R$ {r.price.toFixed(2)}{minLabel} ·{" "}
-                      <span className="text-success">você recebe {teacherPct}%</span>
-                    </span>
-                  </div>
-                );
-              })}
-          </div>
-        </div>
-      )}
+      <SimuladoMaterial
+        offered={simuladoOffered}
+        setOffered={setSimuladoOffered}
+        price={simuladoPrice}
+        setPrice={setSimuladoPrice}
+        questions={quizQuestions}
+        setQuestions={setQuizQuestions}
+        cfg={cfgFor("simulados")}
+      />
+
+      <TopQuestionsMaterial
+        offered={topOffered}
+        setOffered={setTopOffered}
+        price={topPrice}
+        setPrice={setTopPrice}
+        questions={topQuestions}
+        setQuestions={setTopQuestions}
+        cfg={cfgFor("top_questoes")}
+      />
+
+      <ColinhaMaterial
+        offered={colinhaOffered}
+        setOffered={setColinhaOffered}
+        price={colinhaPrice}
+        setPrice={setColinhaPrice}
+        bullets={bullets}
+        setBullets={setBullets}
+        cfg={cfgFor("colinhas")}
+      />
 
       <div className="flex gap-3 pt-2">
-        <Button type="submit" disabled={saving} className="font-display">
+        <Button type="submit" disabled={saving || !allValid} className="font-display">
           <Upload className="h-4 w-4 mr-1" />
           {saving ? (processingUpload ? processingStep || "Processando..." : "Enviando...") : editData?.id ? "Salvar Alterações" : "Submeter para Aprovação"}
         </Button>

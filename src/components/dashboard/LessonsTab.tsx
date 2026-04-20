@@ -20,6 +20,8 @@ const LessonsTab = () => {
   const [loading, setLoading] = useState(true);
   const [hasValidContract, setHasValidContract] = useState<boolean | null>(null);
 
+  const [materialsByLesson, setMaterialsByLesson] = useState<Record<string, { offered: number; total: number; pending: number }>>({});
+
   const fetchLessons = async () => {
     if (!user) return;
     setLoading(true);
@@ -28,7 +30,26 @@ const LessonsTab = () => {
       .select("*")
       .eq("teacher_id", user.id)
       .order("created_at", { ascending: false });
-    setLessons(data || []);
+    const list = data || [];
+    setLessons(list);
+
+    // Fetch material meta for these lessons
+    const ids = list.map((l) => l.id);
+    if (ids.length > 0) {
+      const { data: metas } = await supabase
+        .from("lesson_material_meta")
+        .select("lesson_id, offered, admin_approved, submitted_for_review")
+        .in("lesson_id", ids);
+      const TOTAL_MATERIALS = 4; // resumo, simulado, top_questoes, colinhas
+      const map: Record<string, { offered: number; total: number; pending: number }> = {};
+      list.forEach((l) => { map[l.id] = { offered: 0, total: TOTAL_MATERIALS, pending: 0 }; });
+      (metas || []).forEach((m) => {
+        if (!map[m.lesson_id]) return;
+        if (m.offered) map[m.lesson_id].offered += 1;
+        if (m.offered && !m.admin_approved) map[m.lesson_id].pending += 1;
+      });
+      setMaterialsByLesson(map);
+    }
     setLoading(false);
   };
 

@@ -1,170 +1,391 @@
 import { useEffect, useState } from "react";
-import { usePlatformSettings, ProductConfigSettings } from "@/hooks/usePlatformSettings";
+import {
+  usePlatformSettings,
+  ProductConfigSettings,
+  DEFAULT_PRODUCT_CONFIG,
+} from "@/hooks/usePlatformSettings";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Save, Video, FileText, StickyNote, Trophy, ClipboardList, Subtitles, PenTool, Image } from "lucide-react";
+import {
+  Save,
+  Video,
+  FileText,
+  StickyNote,
+  Trophy,
+  ClipboardList,
+  Subtitles,
+  PenTool,
+  Image,
+  Tag,
+  Settings as SettingsIcon,
+  Type,
+  ListChecks,
+} from "lucide-react";
+import AdminResourcePricingTab from "@/components/admin/AdminResourcePricingTab";
 
-const defaultConfig: ProductConfigSettings = {
-  revisoes: {
-    max_recording_minutes: 30,
-    enable_recording: true,
-    enable_subtitles: false,
-    enable_blackboard: false,
-    enable_auto_cover: false,
-  },
-  colinhas: {},
-  resumos: {},
-  top_questoes: {},
-  simulados: {},
-};
+type SubSection = "general" | "pricing" | "limits" | "minimums";
 
 const SettingsProductConfig = () => {
   const { data, loading, update } = usePlatformSettings("product_config");
-  const [form, setForm] = useState<ProductConfigSettings>(defaultConfig);
+  const [form, setForm] = useState<ProductConfigSettings>(DEFAULT_PRODUCT_CONFIG);
   const [saving, setSaving] = useState(false);
+  const [section, setSection] = useState<SubSection>("general");
 
   useEffect(() => {
     if (data) {
-      const merged = { ...defaultConfig, ...(data as unknown as ProductConfigSettings) };
-      merged.revisoes = { ...defaultConfig.revisoes, ...merged.revisoes };
-      setForm(merged);
+      const d = data as unknown as Partial<ProductConfigSettings>;
+      setForm({
+        revisoes: { ...DEFAULT_PRODUCT_CONFIG.revisoes, ...(d.revisoes || {}) },
+        resumos: { ...DEFAULT_PRODUCT_CONFIG.resumos, ...(d.resumos || {}) },
+        simulados: { ...DEFAULT_PRODUCT_CONFIG.simulados, ...(d.simulados || {}) },
+        top_questoes: { ...DEFAULT_PRODUCT_CONFIG.top_questoes, ...(d.top_questoes || {}) },
+        colinhas: { ...DEFAULT_PRODUCT_CONFIG.colinhas, ...(d.colinhas || {}) },
+      });
     }
   }, [data]);
 
   const handleSave = async () => {
     setSaving(true);
-    await update(form as any);
+    await update(form);
     setSaving(false);
   };
 
-  const updateRevisoes = (key: string, value: any) => {
-    setForm({ ...form, revisoes: { ...form.revisoes, [key]: value } });
-  };
+  const updRev = (k: keyof ProductConfigSettings["revisoes"], v: any) =>
+    setForm({ ...form, revisoes: { ...form.revisoes, [k]: v } });
+  const numField = (val: number, fb: number) =>
+    Number.isFinite(val) && val > 0 ? val : fb;
 
   if (loading) return <p className="text-sm text-muted-foreground">Carregando...</p>;
 
+  const subTabs: { id: SubSection; label: string; icon: any }[] = [
+    { id: "general", label: "Geral", icon: SettingsIcon },
+    { id: "pricing", label: "Preços de Recursos", icon: Tag },
+    { id: "limits", label: "Limites de Texto", icon: Type },
+    { id: "minimums", label: "Quantidades Mínimas", icon: ListChecks },
+  ];
+
   return (
-    <div className="space-y-6 max-w-lg">
-      {/* Revisões - Parâmetros de Gravação */}
-      <div className="rounded-lg border border-border p-4 space-y-4">
-        <h3 className="font-display text-sm font-semibold flex items-center gap-2">
-          <Video className="h-4 w-4 text-primary" /> Revisões — Gravação de Vídeo
-        </h3>
+    <div className="space-y-6">
+      <div className="flex gap-2 flex-wrap border-b border-border pb-3">
+        {subTabs.map((t) => (
+          <button
+            key={t.id}
+            onClick={() => setSection(t.id)}
+            className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs transition-colors ${
+              section === t.id
+                ? "bg-primary text-primary-foreground font-medium"
+                : "bg-secondary text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <t.icon className="h-3.5 w-3.5" />
+            {t.label}
+          </button>
+        ))}
+      </div>
 
-        <div className="flex items-center gap-2">
-          <Switch
-            checked={form.revisoes.enable_recording}
-            onCheckedChange={(v) => updateRevisoes("enable_recording", v)}
-          />
-          <Label className="cursor-pointer">Habilitar gravação de vídeo pelo professor</Label>
-        </div>
+      {section === "pricing" && <AdminResourcePricingTab />}
 
-        <div>
-          <Label>Tempo máximo de gravação (minutos)</Label>
-          <Input
-            type="number"
-            min={1}
-            max={120}
-            value={form.revisoes.max_recording_minutes}
-            onChange={(e) => {
-              const raw = e.target.value;
-              const num = raw === "" ? 0 : parseInt(raw);
-              updateRevisoes("max_recording_minutes", isNaN(num) ? 0 : num);
-            }}
-            onBlur={() => {
-              if (!form.revisoes.max_recording_minutes || form.revisoes.max_recording_minutes < 1) {
-                updateRevisoes("max_recording_minutes", 1);
-              }
-            }}
-          />
-          <p className="text-xs text-muted-foreground mt-1">
-            Limite em minutos para cada gravação de vídeo feita pelo professor.
-          </p>
-        </div>
+      {section === "general" && (
+        <div className="space-y-6 max-w-lg">
+          <div className="rounded-lg border border-border p-4 space-y-4">
+            <h3 className="font-display text-sm font-semibold flex items-center gap-2">
+              <Video className="h-4 w-4 text-primary" /> Revisões — Gravação de Vídeo
+            </h3>
 
-        <div className="border-t border-border pt-3 space-y-3">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-            Processamento automático de vídeo (IA)
-          </p>
+            <div className="flex items-center gap-2">
+              <Switch
+                checked={form.revisoes.enable_recording}
+                onCheckedChange={(v) => updRev("enable_recording", v)}
+              />
+              <Label className="cursor-pointer">Habilitar gravação de vídeo pelo professor</Label>
+            </div>
 
-          <div className="flex items-center gap-2">
-            <Switch
-              checked={form.revisoes.enable_subtitles}
-              onCheckedChange={(v) => updateRevisoes("enable_subtitles", v)}
-            />
-            <Label className="cursor-pointer flex items-center gap-1.5">
-              <Subtitles className="h-3.5 w-3.5 text-primary" />
-              Legendas automáticas
-            </Label>
+            <div>
+              <Label>Tempo máximo de gravação (minutos)</Label>
+              <Input
+                type="number"
+                min={1}
+                max={120}
+                value={form.revisoes.max_recording_minutes}
+                onChange={(e) => updRev("max_recording_minutes", parseInt(e.target.value) || 0)}
+                onBlur={() => {
+                  if (!form.revisoes.max_recording_minutes || form.revisoes.max_recording_minutes < 1)
+                    updRev("max_recording_minutes", 1);
+                }}
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Limite em minutos para cada gravação de vídeo feita pelo professor.
+              </p>
+            </div>
+
+            <div className="border-t border-border pt-3 space-y-3">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                Processamento automático de vídeo (IA)
+              </p>
+
+              <div className="flex items-center gap-2">
+                <Switch
+                  checked={form.revisoes.enable_subtitles}
+                  onCheckedChange={(v) => updRev("enable_subtitles", v)}
+                />
+                <Label className="cursor-pointer flex items-center gap-1.5">
+                  <Subtitles className="h-3.5 w-3.5 text-primary" /> Legendas automáticas
+                </Label>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Switch
+                  checked={form.revisoes.enable_blackboard}
+                  onCheckedChange={(v) => updRev("enable_blackboard", v)}
+                />
+                <Label className="cursor-pointer flex items-center gap-1.5">
+                  <PenTool className="h-3.5 w-3.5 text-primary" /> Quadro negro com palavras de impacto
+                </Label>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Switch
+                  checked={form.revisoes.enable_auto_cover}
+                  onCheckedChange={(v) => updRev("enable_auto_cover", v)}
+                />
+                <Label className="cursor-pointer flex items-center gap-1.5">
+                  <Image className="h-3.5 w-3.5 text-primary" /> Capa automática de introdução
+                </Label>
+              </div>
+            </div>
           </div>
-          <p className="text-xs text-muted-foreground ml-10">
-            Gera legendas por IA após a gravação. Exibidas no player de vídeo.
-          </p>
 
-          <div className="flex items-center gap-2">
-            <Switch
-              checked={form.revisoes.enable_blackboard}
-              onCheckedChange={(v) => updateRevisoes("enable_blackboard", v)}
-            />
-            <Label className="cursor-pointer flex items-center gap-1.5">
-              <PenTool className="h-3.5 w-3.5 text-primary" />
-              Quadro negro com palavras de impacto
-            </Label>
-          </div>
-          <p className="text-xs text-muted-foreground ml-10">
-            A IA extrai termos-chave da fala do professor e os exibe em um quadro negro embutido no vídeo.
-          </p>
-
-          <div className="flex items-center gap-2">
-            <Switch
-              checked={form.revisoes.enable_auto_cover}
-              onCheckedChange={(v) => updateRevisoes("enable_auto_cover", v)}
-            />
-            <Label className="cursor-pointer flex items-center gap-1.5">
-              <Image className="h-3.5 w-3.5 text-primary" />
-              Capa automática de introdução
-            </Label>
-          </div>
-          <p className="text-xs text-muted-foreground ml-10">
-            Gera uma capa de introdução com título, área e nome do professor no início do vídeo.
-          </p>
+          <Button onClick={handleSave} disabled={saving}>
+            <Save className="h-4 w-4 mr-2" /> {saving ? "Salvando..." : "Salvar Configurações"}
+          </Button>
         </div>
-      </div>
+      )}
 
-      {/* Outros recursos - placeholder */}
-      <div className="rounded-lg border border-border p-4 space-y-2">
-        <h3 className="font-display text-sm font-semibold flex items-center gap-2">
-          <FileText className="h-4 w-4 text-primary" /> Resumos
-        </h3>
-        <p className="text-xs text-muted-foreground">Configurações de resumos serão adicionadas em breve.</p>
-      </div>
+      {section === "limits" && (
+        <div className="space-y-4 max-w-2xl">
+          <p className="text-sm text-muted-foreground">
+            Defina o número máximo de caracteres permitido em cada campo dos formulários do professor.
+            Esses limites são aplicados em tempo real conforme o professor digita.
+          </p>
 
-      <div className="rounded-lg border border-border p-4 space-y-2">
-        <h3 className="font-display text-sm font-semibold flex items-center gap-2">
-          <StickyNote className="h-4 w-4 text-primary" /> Colinhas
-        </h3>
-        <p className="text-xs text-muted-foreground">Configurações de colinhas serão adicionadas em breve.</p>
-      </div>
+          <div className="rounded-lg border border-border p-4 space-y-3">
+            <h3 className="font-display text-sm font-semibold flex items-center gap-2">
+              <Video className="h-4 w-4 text-primary" /> Aula (Revisão)
+            </h3>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Título — máx. caracteres</Label>
+                <Input
+                  type="number" min={10} max={500}
+                  value={form.revisoes.title_max}
+                  onChange={(e) => updRev("title_max", numField(parseInt(e.target.value), 100))}
+                />
+              </div>
+              <div>
+                <Label>Descrição — máx. caracteres</Label>
+                <Input
+                  type="number" min={20} max={2000}
+                  value={form.revisoes.description_max}
+                  onChange={(e) => updRev("description_max", numField(parseInt(e.target.value), 200))}
+                />
+              </div>
+            </div>
+          </div>
 
-      <div className="rounded-lg border border-border p-4 space-y-2">
-        <h3 className="font-display text-sm font-semibold flex items-center gap-2">
-          <Trophy className="h-4 w-4 text-primary" /> Top Questões de Provas
-        </h3>
-        <p className="text-xs text-muted-foreground">Configurações de Top Questões serão adicionadas em breve.</p>
-      </div>
+          <div className="rounded-lg border border-border p-4 space-y-3">
+            <h3 className="font-display text-sm font-semibold flex items-center gap-2">
+              <FileText className="h-4 w-4 text-primary" /> Resumo
+            </h3>
+            <div>
+              <Label>Texto do resumo — máx. caracteres</Label>
+              <Input
+                type="number" min={50} max={2000}
+                value={form.resumos.text_max}
+                onChange={(e) =>
+                  setForm({ ...form, resumos: { text_max: numField(parseInt(e.target.value), 250) } })
+                }
+              />
+            </div>
+          </div>
 
-      <div className="rounded-lg border border-border p-4 space-y-2">
-        <h3 className="font-display text-sm font-semibold flex items-center gap-2">
-          <ClipboardList className="h-4 w-4 text-primary" /> Simulados
-        </h3>
-        <p className="text-xs text-muted-foreground">Configurações de simulados serão adicionadas em breve.</p>
-      </div>
+          <div className="rounded-lg border border-border p-4 space-y-3">
+            <h3 className="font-display text-sm font-semibold flex items-center gap-2">
+              <ClipboardList className="h-4 w-4 text-primary" /> Simulado
+            </h3>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Pergunta — máx. caracteres</Label>
+                <Input
+                  type="number" min={20} max={1000}
+                  value={form.simulados.question_max}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      simulados: { ...form.simulados, question_max: numField(parseInt(e.target.value), 200) },
+                    })
+                  }
+                />
+              </div>
+              <div>
+                <Label>Alternativa — máx. caracteres</Label>
+                <Input
+                  type="number" min={10} max={500}
+                  value={form.simulados.option_max}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      simulados: { ...form.simulados, option_max: numField(parseInt(e.target.value), 200) },
+                    })
+                  }
+                />
+              </div>
+            </div>
+          </div>
 
-      <Button onClick={handleSave} disabled={saving}>
-        <Save className="h-4 w-4 mr-2" /> {saving ? "Salvando..." : "Salvar Configurações"}
-      </Button>
+          <div className="rounded-lg border border-border p-4 space-y-3">
+            <h3 className="font-display text-sm font-semibold flex items-center gap-2">
+              <Trophy className="h-4 w-4 text-primary" /> Top Questões
+            </h3>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Pergunta — máx. caracteres</Label>
+                <Input
+                  type="number" min={20} max={1000}
+                  value={form.top_questoes.question_max}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      top_questoes: { ...form.top_questoes, question_max: numField(parseInt(e.target.value), 300) },
+                    })
+                  }
+                />
+              </div>
+              <div>
+                <Label>Resposta — máx. caracteres</Label>
+                <Input
+                  type="number" min={20} max={1000}
+                  value={form.top_questoes.answer_max}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      top_questoes: { ...form.top_questoes, answer_max: numField(parseInt(e.target.value), 300) },
+                    })
+                  }
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-lg border border-border p-4 space-y-3">
+            <h3 className="font-display text-sm font-semibold flex items-center gap-2">
+              <StickyNote className="h-4 w-4 text-primary" /> Colinha
+            </h3>
+            <div>
+              <Label>Bullet — máx. caracteres</Label>
+              <Input
+                type="number" min={20} max={500}
+                value={form.colinhas.bullet_max}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    colinhas: { ...form.colinhas, bullet_max: numField(parseInt(e.target.value), 100) },
+                  })
+                }
+              />
+            </div>
+          </div>
+
+          <Button onClick={handleSave} disabled={saving}>
+            <Save className="h-4 w-4 mr-2" /> {saving ? "Salvando..." : "Salvar Limites"}
+          </Button>
+        </div>
+      )}
+
+      {section === "minimums" && (
+        <div className="space-y-4 max-w-2xl">
+          <p className="text-sm text-muted-foreground">
+            Quantidade mínima de itens que o professor deve preencher em cada material antes de publicar.
+          </p>
+
+          <div className="rounded-lg border border-border p-4 space-y-3">
+            <h3 className="font-display text-sm font-semibold flex items-center gap-2">
+              <ClipboardList className="h-4 w-4 text-primary" /> Simulado
+            </h3>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Mín. de questões</Label>
+                <Input
+                  type="number" min={1} max={50}
+                  value={form.simulados.min_questions}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      simulados: { ...form.simulados, min_questions: numField(parseInt(e.target.value), 5) },
+                    })
+                  }
+                />
+              </div>
+              <div>
+                <Label>Mín. de alternativas por questão</Label>
+                <Input
+                  type="number" min={2} max={10}
+                  value={form.simulados.min_options}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      simulados: { ...form.simulados, min_options: numField(parseInt(e.target.value), 3) },
+                    })
+                  }
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-lg border border-border p-4 space-y-3">
+            <h3 className="font-display text-sm font-semibold flex items-center gap-2">
+              <Trophy className="h-4 w-4 text-primary" /> Top Questões
+            </h3>
+            <div>
+              <Label>Mín. de perguntas</Label>
+              <Input
+                type="number" min={1} max={50}
+                value={form.top_questoes.min_questions}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    top_questoes: { ...form.top_questoes, min_questions: numField(parseInt(e.target.value), 5) },
+                  })
+                }
+              />
+            </div>
+          </div>
+
+          <div className="rounded-lg border border-border p-4 space-y-3">
+            <h3 className="font-display text-sm font-semibold flex items-center gap-2">
+              <StickyNote className="h-4 w-4 text-primary" /> Colinha
+            </h3>
+            <div>
+              <Label>Mín. de bullets</Label>
+              <Input
+                type="number" min={3} max={50}
+                value={form.colinhas.min_bullets}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    colinhas: { ...form.colinhas, min_bullets: numField(parseInt(e.target.value), 10) },
+                  })
+                }
+              />
+            </div>
+          </div>
+
+          <Button onClick={handleSave} disabled={saving}>
+            <Save className="h-4 w-4 mr-2" /> {saving ? "Salvando..." : "Salvar Mínimos"}
+          </Button>
+        </div>
+      )}
     </div>
   );
 };

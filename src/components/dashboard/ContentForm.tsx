@@ -10,7 +10,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import AreaSelector from "@/components/AreaSelector";
 import VideoRecorder from "./VideoRecorder";
-import { usePlatformSettings } from "@/hooks/usePlatformSettings";
+import { usePlatformSettings, DEFAULT_PRODUCT_CONFIG } from "@/hooks/usePlatformSettings";
 import { compositeVideo, type ImpactWord } from "@/utils/videoCompositor";
 import { generateDefaultCover } from "@/utils/coverGenerator";
 import {
@@ -38,8 +38,9 @@ const RESOURCE_LABELS: Record<string, string> = {
   colinhas: "Colinha",
 };
 
-const TITLE_MAX = 100;
-const DESCRIPTION_MAX = 200;
+// Default fallbacks; overridden by admin product_config at runtime
+const DEFAULT_TITLE_MAX = DEFAULT_PRODUCT_CONFIG.revisoes.title_max;
+const DEFAULT_DESCRIPTION_MAX = DEFAULT_PRODUCT_CONFIG.revisoes.description_max;
 
 interface ContentFormProps {
   table: "lessons";
@@ -56,6 +57,15 @@ const emptyBullets = (): string[] => Array.from({ length: 10 }, () => "");
 const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) => {
   const { user } = useAuth();
   const { data: productConfig } = usePlatformSettings("product_config");
+  const pc = {
+    revisoes: { ...DEFAULT_PRODUCT_CONFIG.revisoes, ...(productConfig?.revisoes || {}) },
+    resumos: { ...DEFAULT_PRODUCT_CONFIG.resumos, ...(productConfig?.resumos || {}) },
+    simulados: { ...DEFAULT_PRODUCT_CONFIG.simulados, ...(productConfig?.simulados || {}) },
+    top_questoes: { ...DEFAULT_PRODUCT_CONFIG.top_questoes, ...(productConfig?.top_questoes || {}) },
+    colinhas: { ...DEFAULT_PRODUCT_CONFIG.colinhas, ...(productConfig?.colinhas || {}) },
+  };
+  const TITLE_MAX = pc.revisoes.title_max;
+  const DESCRIPTION_MAX = pc.revisoes.description_max;
 
   // Core fields
   const [title, setTitle] = useState(editData?.title || "");
@@ -919,6 +929,7 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
           setResumoTouched(true);
         }}
         cfg={cfgFor("resumos")}
+        textMax={pc.resumos.text_max}
       />
 
       <SimuladoMaterial
@@ -932,6 +943,10 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
         onGenerate={() => generateMaterialWithAi("simulado")}
         generating={aiGenerating === "simulado"}
         canGenerate={canGenerateAi}
+        questionMax={pc.simulados.question_max}
+        optionMax={pc.simulados.option_max}
+        minQuestions={pc.simulados.min_questions}
+        minOptions={pc.simulados.min_options}
       />
 
       <TopQuestionsMaterial
@@ -945,6 +960,9 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
         onGenerate={() => generateMaterialWithAi("top_questoes")}
         generating={aiGenerating === "top_questoes"}
         canGenerate={canGenerateAi}
+        questionMax={pc.top_questoes.question_max}
+        answerMax={pc.top_questoes.answer_max}
+        minQuestions={pc.top_questoes.min_questions}
       />
 
       <ColinhaMaterial
@@ -958,6 +976,8 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
         onGenerate={() => generateMaterialWithAi("colinha")}
         generating={aiGenerating === "colinha"}
         canGenerate={canGenerateAi}
+        bulletMax={pc.colinhas.bullet_max}
+        minBullets={pc.colinhas.min_bullets}
       />
 
       <div className="flex gap-3 pt-2">

@@ -638,7 +638,44 @@ const SettingsEmailTemplates = () => {
             )}
           </div>
 
-          {/* Cupom de Desconto — não disponível para assinantes ativos nem para professores */}
+          {/* Caixa de saída (sender) por template */}
+          <div className="rounded-lg border border-border p-4 space-y-3">
+            <h4 className="text-sm font-semibold flex items-center gap-2">
+              <Mail className="h-4 w-4" /> Caixa de Saída
+            </h4>
+            <p className="text-xs text-muted-foreground">
+              Configure de qual endereço este e-mail será enviado. Deixe em branco para usar o remetente padrão da plataforma (<code className="font-mono">noreply@notify.revisaofacil.com</code>).
+              <br />
+              <strong>Atenção:</strong> o domínio do e-mail deve estar verificado no servidor de e-mail. E-mails de domínios não verificados podem falhar no envio.
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs">Nome do remetente</Label>
+                <Input
+                  value={active.from_name || ""}
+                  onChange={(e) => updateField("from_name", e.target.value)}
+                  placeholder="Ex: Suporte Revisão Fácil"
+                  maxLength={100}
+                />
+              </div>
+              <div>
+                <Label className="text-xs">E-mail do remetente</Label>
+                <Input
+                  type="email"
+                  value={active.from_email || ""}
+                  onChange={(e) => updateField("from_email", e.target.value.toLowerCase().trim())}
+                  placeholder="Ex: suporte@notify.revisaofacil.com"
+                  maxLength={150}
+                />
+                {active.from_email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(active.from_email) && (
+                  <p className="text-xs mt-1 text-destructive">
+                    ⚠️ E-mail inválido.
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+
           {(activeKey === "birthday_subscriber" || activeKey === "birthday_teacher") ? (
             <div className="rounded-lg border border-border p-4 space-y-2 bg-muted/30">
               <h4 className="text-sm font-semibold flex items-center gap-2">

@@ -1,0 +1,186 @@
+// Generate draft lesson material (simulado / top_questoes / colinha) using Lovable AI Gateway.
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+type MaterialKind = "simulado" | "top_questoes" | "colinha";
+
+interface RequestBody {
+  kind: MaterialKind;
+  title: string;
+  description: string;
+  area?: string;
+}
+
+const TOOL_BY_KIND: Record<MaterialKind, any> = {
+  simulado: {
+    type: "function",
+    function: {
+      name: "generate_simulado",
+      description: "Gera 5 questões de múltipla escolha (4 alternativas) com gabarito.",
+      parameters: {
+        type: "object",
+        properties: {
+          questions: {
+            type: "array",
+            minItems: 5,
+            maxItems: 5,
+            items: {
+              type: "object",
+              properties: {
+                question: { type: "string", description: "Enunciado, até 200 caracteres." },
+                options: {
+                  type: "array",
+                  minItems: 4,
+                  maxItems: 4,
+                  items: { type: "string", description: "Alternativa, até 200 caracteres." },
+                },
+                correct_index: { type: "integer", minimum: 0, maximum: 3 },
+              },
+              required: ["question", "options", "correct_index"],
+              additionalProperties: false,
+            },
+          },
+        },
+        required: ["questions"],
+        additionalProperties: false,
+      },
+    },
+  },
+  top_questoes: {
+    type: "function",
+    function: {
+      name: "generate_top_questoes",
+      description: "Gera 5 perguntas abertas com respostas curtas e objetivas.",
+      parameters: {
+        type: "object",
+        properties: {
+          questions: {
+            type: "array",
+            minItems: 5,
+            maxItems: 5,
+            items: {
+              type: "object",
+              properties: {
+                question: { type: "string", description: "Pergunta aberta, até 300 caracteres." },
+                answer: { type: "string", description: "Resposta textual, até 300 caracteres." },
+              },
+              required: ["question", "answer"],
+              additionalProperties: false,
+            },
+          },
+        },
+        required: ["questions"],
+        additionalProperties: false,
+      },
+    },
+  },
+  colinha: {
+    type: "function",
+    function: {
+      name: "generate_colinha",
+      description: "Gera 10 bullets curtos para revisão rápida do conteúdo.",
+      parameters: {
+        type: "object",
+        properties: {
+          bullets: {
+            type: "array",
+            minItems: 10,
+            maxItems: 10,
+            items: { type: "string", description: "Bullet curto, até 100 caracteres." },
+          },
+        },
+        required: ["bullets"],
+        additionalProperties: false,
+      },
+    },
+  },
+};
+
+const SYSTEM_PROMPTS: Record<MaterialKind, string> = {
+  simulado:
+    "Você é um professor brasileiro especialista. Gere 5 questões objetivas de múltipla escolha com 4 alternativas, marcando o gabarito. Use português claro, sem ambiguidade. Cada enunciado e alternativa devem ser curtos (máx. 200 caracteres).",
+  top_questoes:
+    "Você é um professor brasileiro especialista. Gere 5 perguntas abertas mais cobradas em provas sobre o tema, com respostas textuais objetivas (máx. 300 caracteres cada).",
+  colinha:
+    "Você é um professor brasileiro especialista. Gere exatamente 10 bullets curtos (máx. 100 caracteres cada) que ajudem o aluno a relembrar rapidamente os pontos-chave da aula.",
+};
+
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  try {
+    const body = (await req.json()) as RequestBody;
+    if (!body?.kind || !body?.title) {
+      return new Response(JSON.stringify({ error: "kind e title são obrigatórios" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const tool = TOOL_BY_KIND[body.kind];
+    if (!tool) {
+      return new Response(JSON.stringify({ error: "kind inválido" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const apiKey = Deno.env.get("LOVABLE_API_KEY");
+    if (!apiKey) throw new Error("LOVABLE_API_KEY não configurada");
+
+    const userPrompt = `Aula: "${body.title}"${body.area ? ` (área: ${body.area})` : ""}\n\nDescrição: ${body.description || "(não informada)"}\n\nGere o material no formato solicitado.`;
+
+    const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "google/gemini-3-flash-preview",
+        messages: [
+          { role: "system", content: SYSTEM_PROMPTS[body.kind] },
+          { role: "user", content: userPrompt },
+        ],
+        tools: [tool],
+        tool_choice: { type: "function", function: { name: tool.function.name } },
+      }),
+    });
+
+    if (aiResp.status === 429) {
+      return new Response(JSON.stringify({ error: "Limite de uso da IA atingido. Tente novamente em instantes." }), {
+        status: 429,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    if (aiResp.status === 402) {
+      return new Response(JSON.stringify({ error: "Créditos de IA esgotados. Adicione créditos no workspace." }), {
+        status: 402,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    if (!aiResp.ok) {
+      const t = await aiResp.text();
+      console.error("AI gateway error:", aiResp.status, t);
+      return new Response(JSON.stringify({ error: "Falha ao gerar com IA" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const data = await aiResp.json();
+    const call = data.choices?.[0]?.message?.tool_calls?.[0];
+    if (!call?.function?.arguments) {
+      return new Response(JSON.stringify({ error: "Resposta inválida da IA" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const parsed = JSON.parse(call.function.arguments);
+    return new Response(JSON.stringify(parsed), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  } catch (e) {
+    console.error("generate-lesson-material error:", e);
+    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : String(e) }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+});

@@ -329,6 +329,8 @@ export type Database = {
           coupon_starts_at: string | null
           created_at: string
           font_family: string
+          from_email: string
+          from_name: string
           heading_color: string
           id: string
           link_color: string
@@ -352,6 +354,8 @@ export type Database = {
           coupon_starts_at?: string | null
           created_at?: string
           font_family?: string
+          from_email?: string
+          from_name?: string
           heading_color?: string
           id?: string
           link_color?: string
@@ -375,6 +379,8 @@ export type Database = {
           coupon_starts_at?: string | null
           created_at?: string
           font_family?: string
+          from_email?: string
+          from_name?: string
           heading_color?: string
           id?: string
           link_color?: string

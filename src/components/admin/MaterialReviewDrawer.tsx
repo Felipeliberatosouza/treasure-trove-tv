@@ -7,8 +7,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuditLog } from "@/hooks/useAuditLog";
-import { CheckCircle, XCircle, FileText, ClipboardList, Trophy, StickyNote, Eye, AlertCircle } from "lucide-react";
+import { CheckCircle, XCircle, FileText, ClipboardList, Trophy, StickyNote, Eye, AlertCircle, Play } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import SimuladoModal from "@/components/SimuladoModal";
+import ColinhaFlashcardModal from "@/components/ColinhaFlashcardModal";
 
 interface Props {
   open: boolean;

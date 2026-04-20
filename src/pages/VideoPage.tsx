@@ -742,7 +742,7 @@ const VideoPage = () => {
               );
             })()}
 
-            {user && !trial.loading && (
+            {user && !trial.loading && !isAdmin && (
               <>
                 {trial.hasActiveTrial && (
                   <div className="flex items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 p-3">
@@ -761,23 +761,34 @@ const VideoPage = () => {
               </>
             )}
 
-            <div className="space-y-3 rounded-xl border border-border bg-secondary/30 p-4">
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Opções de acesso</p>
-              {isWatching && !showPaywall && (
-                <div className="py-1 text-center text-xs text-muted-foreground">
-                  {hasFullAccess ? "🎬 Reproduzindo — assista 70% para poder avaliar" : "🎬 Prévia gratuita — até 20% do vídeo"}
-                </div>
-              )}
-              {canStartTrial && (
-                <Button onClick={handleStartTrial} disabled={startingTrial} className="w-full gap-2 font-display font-semibold" variant="outline">
-                  <Gift className="h-4 w-4" /> {startingTrial ? "Ativando..." : "Iniciar Teste Grátis"}
-                </Button>
-              )}
-              <Button onClick={handleSubscribe} className="w-full gap-2 font-display font-semibold"><Zap className="h-4 w-4" /> Assinar — acesso total</Button>
-              {priceLabel && (
-                <Button onClick={handleBuyUnit} disabled={buyDisabled} variant="outline" className="w-full gap-2 font-display font-semibold"><ShoppingCart className="h-4 w-4" /> {buying ? "Processando..." : `Comprar este vídeo — ${priceLabel}`}</Button>
-              )}
-            </div>
+            {isAdmin && (
+              <AdminVideoModerationPanel
+                contentId={video.id}
+                contentType={contentType}
+                videoUrl={rawVideoUrl}
+                onChanged={() => window.location.reload()}
+              />
+            )}
+
+            {!isAdmin && (
+              <div className="space-y-3 rounded-xl border border-border bg-secondary/30 p-4">
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Opções de acesso</p>
+                {isWatching && !showPaywall && (
+                  <div className="py-1 text-center text-xs text-muted-foreground">
+                    {hasFullAccess ? "🎬 Reproduzindo — assista 70% para poder avaliar" : "🎬 Prévia gratuita — até 20% do vídeo"}
+                  </div>
+                )}
+                {canStartTrial && (
+                  <Button onClick={handleStartTrial} disabled={startingTrial} className="w-full gap-2 font-display font-semibold" variant="outline">
+                    <Gift className="h-4 w-4" /> {startingTrial ? "Ativando..." : "Iniciar Teste Grátis"}
+                  </Button>
+                )}
+                <Button onClick={handleSubscribe} className="w-full gap-2 font-display font-semibold"><Zap className="h-4 w-4" /> Assinar — acesso total</Button>
+                {priceLabel && (
+                  <Button onClick={handleBuyUnit} disabled={buyDisabled} variant="outline" className="w-full gap-2 font-display font-semibold"><ShoppingCart className="h-4 w-4" /> {buying ? "Processando..." : `Comprar este vídeo — ${priceLabel}`}</Button>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -23,6 +23,9 @@ import { useCpfGuard } from "@/hooks/useCpfGuard";
 import { useAutoInterestPromotion } from "@/hooks/useAutoInterestPromotion";
 import { startUnitCheckout } from "@/lib/payments";
 import VLibrasWidget from "@/components/VLibrasWidget";
+import SimuladoModal from "@/components/SimuladoModal";
+import MaterialViewerModal, { type MaterialKind } from "@/components/MaterialViewerModal";
+import { useLessonMaterials } from "@/hooks/useLessonMaterials";
 
 const DEMO_VIDEO_URL = "/demo-course.mp4";
 
@@ -62,6 +65,9 @@ const VideoPage = () => {
   const [userProvaVote, setUserProvaVote] = useState<boolean | null>(null);
   const [votingProva, setVotingProva] = useState(false);
   const [isDoubtsOpen, setIsDoubtsOpen] = useState(false);
+  const [isSimuladoOpen, setIsSimuladoOpen] = useState(false);
+  const [materialModal, setMaterialModal] = useState<MaterialKind | null>(null);
+  const { availability: materials } = useLessonMaterials(id || null);
 
   const resolveVideoPlaybackUrl = useCallback(async (storedVideoUrl?: string | null) => {
     if (!storedVideoUrl) return undefined;

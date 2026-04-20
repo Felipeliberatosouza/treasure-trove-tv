@@ -634,7 +634,7 @@ const VideoPage = () => {
               </div>
             )}
 
-            {showPaywall && (
+            {showPaywall && !isAdmin && (
               <div className="absolute inset-0 z-10 flex flex-col items-center justify-center overflow-y-auto bg-background/90 p-4 text-center backdrop-blur-sm sm:p-6">
                 <div className="my-auto flex w-full max-w-xs flex-col items-center">
                   <div className="mb-2 rounded-full bg-primary/10 p-2 sm:mb-3 sm:p-3"><Lock className="h-6 w-6 text-primary sm:h-8 sm:w-8" /></div>

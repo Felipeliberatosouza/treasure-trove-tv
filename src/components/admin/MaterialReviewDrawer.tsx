@@ -7,8 +7,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuditLog } from "@/hooks/useAuditLog";
-import { CheckCircle, XCircle, FileText, ClipboardList, Trophy, StickyNote, Eye, AlertCircle } from "lucide-react";
+import { CheckCircle, XCircle, FileText, ClipboardList, Trophy, StickyNote, Eye, AlertCircle, Play } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import SimuladoModal from "@/components/SimuladoModal";
+import ColinhaFlashcardModal from "@/components/ColinhaFlashcardModal";
 
 interface Props {
   open: boolean;
@@ -144,6 +146,7 @@ const MaterialReviewDrawer = ({ open, onClose, lessonId, lessonTitle, onChanged 
   const [loading, setLoading] = useState(true);
   const [rejecting, setRejecting] = useState<MaterialMeta | null>(null);
   const [reason, setReason] = useState("");
+  const [testingMaterial, setTestingMaterial] = useState<"simulado" | "colinhas" | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -318,6 +321,11 @@ const MaterialReviewDrawer = ({ open, onClose, lessonId, lessonTitle, onChanged 
                         )}
 
                         <div className="flex gap-2 flex-wrap">
+                          {(m.material_type === "simulado" || m.material_type === "colinhas") && (
+                            <Button size="sm" variant="outline" className="h-8" onClick={() => setTestingMaterial(m.material_type as "simulado" | "colinhas")}>
+                              <Play className="h-3.5 w-3.5 mr-1" /> Testar como aluno
+                            </Button>
+                          )}
                           {!m.admin_approved && (
                             <Button size="sm" variant="ghost" className="h-8 text-green-600 dark:text-green-400 hover:text-green-500" onClick={() => handleApprove(m)}>
                               <CheckCircle className="h-3.5 w-3.5 mr-1" /> Aprovar
@@ -352,6 +360,18 @@ const MaterialReviewDrawer = ({ open, onClose, lessonId, lessonTitle, onChanged 
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <SimuladoModal
+        open={testingMaterial === "simulado"}
+        onClose={() => setTestingMaterial(null)}
+        lessonId={lessonId}
+        lessonTitle={lessonTitle}
+      />
+      <ColinhaFlashcardModal
+        open={testingMaterial === "colinhas"}
+        onClose={() => setTestingMaterial(null)}
+        lessonId={lessonId}
+        lessonTitle={lessonTitle}
+      />
     </>
   );
 };

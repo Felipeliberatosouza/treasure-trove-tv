@@ -180,12 +180,18 @@ export const SimuladoMaterial = ({ offered, setOffered, price, setPrice, questio
       <div className="flex items-center gap-2 mb-3">
         <ClipboardList className="h-4 w-4 text-primary" />
         <h4 className="text-sm font-semibold">Simulado</h4>
+        {onGenerate && (
+          <div className="ml-auto">
+            <AiGenerateButton onGenerate={onGenerate} loading={!!generating} disabled={!canGenerate} />
+          </div>
+        )}
       </div>
       <PriceHeader label="Simulado" offered={offered} setOffered={setOffered} price={price} setPrice={setPrice} cfg={cfg} />
       {offered && (
         <div className="space-y-4">
           <p className="text-xs text-muted-foreground">
             Mínimo de 5 questões fechadas com pelo menos 3 alternativas. Marque a alternativa correta (gabarito).
+            {onGenerate && " Use \"Gerar com IA\" para criar um rascunho a partir do título e descrição."}
           </p>
           {questions.map((q, qi) => (
             <div key={qi} className="rounded-md border border-border/60 bg-secondary/30 p-3 space-y-2">

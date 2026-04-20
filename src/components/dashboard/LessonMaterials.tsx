@@ -65,6 +65,28 @@ const PriceHeader = ({ label, offered, setOffered, price, setPrice, cfg }: Price
   </div>
 );
 
+interface AiGenerateButtonProps {
+  onGenerate: () => Promise<void> | void;
+  loading: boolean;
+  disabled?: boolean;
+  label?: string;
+}
+
+const AiGenerateButton = ({ onGenerate, loading, disabled, label = "Gerar com IA" }: AiGenerateButtonProps) => (
+  <Button
+    type="button"
+    size="sm"
+    variant="outline"
+    onClick={() => onGenerate()}
+    disabled={loading || disabled}
+    className="gap-1.5 h-8 text-xs"
+    title="Gera um rascunho com base no título e descrição da aula. Você pode editar depois."
+  >
+    {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+    {loading ? "Gerando..." : label}
+  </Button>
+);
+
 // ============================================================
 // Resumo
 // ============================================================

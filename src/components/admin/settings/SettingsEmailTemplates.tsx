@@ -258,6 +258,8 @@ const SettingsEmailTemplates = () => {
         coupon_message: active.coupon_message,
         coupon_expires_at: active.coupon_expires_at,
         coupon_starts_at: active.coupon_starts_at,
+        from_email: (active.from_email || "").trim(),
+        from_name: (active.from_name || "").trim(),
       } as any)
       .eq("id", active.id);
 

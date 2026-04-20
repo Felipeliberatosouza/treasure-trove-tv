@@ -289,8 +289,9 @@ const MaterialReviewDrawer = ({ open, onClose, lessonId, lessonTitle, onChanged 
                   offered.map((m) => {
                     const cfg = TYPE_LABELS[m.material_type] || { label: m.material_type, icon: FileText };
                     const Icon = cfg.icon;
+                    const isPending = m.submitted_for_review && !m.admin_approved;
                     return (
-                      <div key={m.id} className="rounded-lg border border-border bg-card p-3 space-y-3">
+                      <div key={m.id} className={`rounded-lg border bg-card p-3 space-y-3 ${isPending ? 'border-amber-500 ring-1 ring-amber-500/20' : 'border-border'}`}>
                         <div className="flex items-center justify-between gap-2 flex-wrap">
                           <div className="flex items-center gap-2">
                             <Icon className="h-4 w-4 text-primary" />

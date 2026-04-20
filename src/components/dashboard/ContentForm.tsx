@@ -94,6 +94,69 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
   const [processingUpload, setProcessingUpload] = useState(false);
   const [processingStep, setProcessingStep] = useState("");
   const [resourcePrices, setResourcePrices] = useState<ResourcePriceInfo[]>([]);
+  const [aiGenerating, setAiGenerating] = useState<null | "simulado" | "top_questoes" | "colinha">(null);
+
+  const canGenerateAi = title.trim().length > 0 && description.trim().length > 0;
+
+  const generateMaterialWithAi = async (kind: "simulado" | "top_questoes" | "colinha") => {
+    if (!canGenerateAi) {
+      toast.error("Preencha o nome e a descrição da aula antes de gerar com IA.");
+      return;
+    }
+    setAiGenerating(kind);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-lesson-material", {
+        body: { kind, title, description, area: selectedAreas[0] || "" },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      if (kind === "simulado" && Array.isArray(data?.questions)) {
+        const cleaned: QuizQuestion[] = data.questions.slice(0, 5).map((q: any) => ({
+          question: String(q.question || "").slice(0, 200),
+          options: (Array.isArray(q.options) ? q.options : []).slice(0, 4).map((o: any) => String(o || "").slice(0, 200)),
+          correct_index: Math.max(0, Math.min(3, Number(q.correct_index ?? 0))),
+        }));
+        if (cleaned.length === 5 && cleaned.every((q) => q.options.length >= 3)) {
+          setQuizQuestions(cleaned);
+          toast.success("Simulado gerado! Revise antes de publicar.");
+        } else {
+          throw new Error("Resposta da IA incompleta");
+        }
+      } else if (kind === "top_questoes" && Array.isArray(data?.questions)) {
+        const cleaned: TopQuestion[] = data.questions.slice(0, 5).map((q: any) => ({
+          question: String(q.question || "").slice(0, 300),
+          answer: String(q.answer || "").slice(0, 300),
+        }));
+        if (cleaned.length === 5) {
+          setTopQuestions(cleaned);
+          toast.success("Top Questões geradas! Revise antes de publicar.");
+        } else {
+          throw new Error("Resposta da IA incompleta");
+        }
+      } else if (kind === "colinha" && Array.isArray(data?.bullets)) {
+        const cleaned = data.bullets.slice(0, 10).map((b: any) => String(b || "").slice(0, 100));
+        if (cleaned.length === 10) {
+          setBullets(cleaned);
+          toast.success("Colinha gerada! Revise antes de publicar.");
+        } else {
+          throw new Error("Resposta da IA incompleta");
+        }
+      } else {
+        throw new Error("Resposta inesperada da IA");
+      }
+    } catch (err: any) {
+      const msg = err?.message || "Falha ao gerar com IA";
+      if (msg.toLowerCase().includes("rate") || msg.includes("429")) {
+        toast.error("Limite de uso da IA atingido. Tente novamente em instantes.");
+      } else if (msg.includes("402") || msg.toLowerCase().includes("crédito")) {
+        toast.error("Créditos de IA esgotados. Adicione créditos no workspace.");
+      } else {
+        toast.error(msg);
+      }
+    } finally {
+      setAiGenerating(null);
+    }
+  };
 
   const recordingEnabled = productConfig?.revisoes?.enable_recording ?? false;
   const maxRecordingMinutes = productConfig?.revisoes?.max_recording_minutes ?? 30;
@@ -866,6 +929,9 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
         questions={quizQuestions}
         setQuestions={setQuizQuestions}
         cfg={cfgFor("simulados")}
+        onGenerate={() => generateMaterialWithAi("simulado")}
+        generating={aiGenerating === "simulado"}
+        canGenerate={canGenerateAi}
       />
 
       <TopQuestionsMaterial
@@ -876,6 +942,9 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
         questions={topQuestions}
         setQuestions={setTopQuestions}
         cfg={cfgFor("top_questoes")}
+        onGenerate={() => generateMaterialWithAi("top_questoes")}
+        generating={aiGenerating === "top_questoes"}
+        canGenerate={canGenerateAi}
       />
 
       <ColinhaMaterial
@@ -886,6 +955,9 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
         bullets={bullets}
         setBullets={setBullets}
         cfg={cfgFor("colinhas")}
+        onGenerate={() => generateMaterialWithAi("colinha")}
+        generating={aiGenerating === "colinha"}
+        canGenerate={canGenerateAi}
       />
 
       <div className="flex gap-3 pt-2">

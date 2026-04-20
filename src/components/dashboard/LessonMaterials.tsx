@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Plus, Trash2, DollarSign, FileText, ClipboardList, Trophy, StickyNote, Info } from "lucide-react";
+import { Plus, Trash2, DollarSign, FileText, ClipboardList, Trophy, StickyNote, Info, Sparkles, Loader2 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export interface QuizQuestion {
@@ -65,6 +65,28 @@ const PriceHeader = ({ label, offered, setOffered, price, setPrice, cfg }: Price
   </div>
 );
 
+interface AiGenerateButtonProps {
+  onGenerate: () => Promise<void> | void;
+  loading: boolean;
+  disabled?: boolean;
+  label?: string;
+}
+
+const AiGenerateButton = ({ onGenerate, loading, disabled, label = "Gerar com IA" }: AiGenerateButtonProps) => (
+  <Button
+    type="button"
+    size="sm"
+    variant="outline"
+    onClick={() => onGenerate()}
+    disabled={loading || disabled}
+    className="gap-1.5 h-8 text-xs"
+    title="Gera um rascunho com base no título e descrição da aula. Você pode editar depois."
+  >
+    {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+    {loading ? "Gerando..." : label}
+  </Button>
+);
+
 // ============================================================
 // Resumo
 // ============================================================
@@ -115,9 +137,12 @@ interface SimuladoMaterialProps {
   questions: QuizQuestion[];
   setQuestions: (q: QuizQuestion[]) => void;
   cfg?: MaterialPriceInfo;
+  onGenerate?: () => Promise<void> | void;
+  generating?: boolean;
+  canGenerate?: boolean;
 }
 
-export const SimuladoMaterial = ({ offered, setOffered, price, setPrice, questions, setQuestions, cfg }: SimuladoMaterialProps) => {
+export const SimuladoMaterial = ({ offered, setOffered, price, setPrice, questions, setQuestions, cfg, onGenerate, generating, canGenerate }: SimuladoMaterialProps) => {
   const updateQuestion = (idx: number, patch: Partial<QuizQuestion>) => {
     setQuestions(questions.map((q, i) => (i === idx ? { ...q, ...patch } : q)));
   };
@@ -155,12 +180,18 @@ export const SimuladoMaterial = ({ offered, setOffered, price, setPrice, questio
       <div className="flex items-center gap-2 mb-3">
         <ClipboardList className="h-4 w-4 text-primary" />
         <h4 className="text-sm font-semibold">Simulado</h4>
+        {onGenerate && (
+          <div className="ml-auto">
+            <AiGenerateButton onGenerate={onGenerate} loading={!!generating} disabled={!canGenerate} />
+          </div>
+        )}
       </div>
       <PriceHeader label="Simulado" offered={offered} setOffered={setOffered} price={price} setPrice={setPrice} cfg={cfg} />
       {offered && (
         <div className="space-y-4">
           <p className="text-xs text-muted-foreground">
             Mínimo de 5 questões fechadas com pelo menos 3 alternativas. Marque a alternativa correta (gabarito).
+            {onGenerate && " Use \"Gerar com IA\" para criar um rascunho a partir do título e descrição."}
           </p>
           {questions.map((q, qi) => (
             <div key={qi} className="rounded-md border border-border/60 bg-secondary/30 p-3 space-y-2">
@@ -234,9 +265,12 @@ interface TopQuestionsMaterialProps {
   questions: TopQuestion[];
   setQuestions: (q: TopQuestion[]) => void;
   cfg?: MaterialPriceInfo;
+  onGenerate?: () => Promise<void> | void;
+  generating?: boolean;
+  canGenerate?: boolean;
 }
 
-export const TopQuestionsMaterial = ({ offered, setOffered, price, setPrice, questions, setQuestions, cfg }: TopQuestionsMaterialProps) => {
+export const TopQuestionsMaterial = ({ offered, setOffered, price, setPrice, questions, setQuestions, cfg, onGenerate, generating, canGenerate }: TopQuestionsMaterialProps) => {
   const update = (idx: number, patch: Partial<TopQuestion>) => {
     setQuestions(questions.map((q, i) => (i === idx ? { ...q, ...patch } : q)));
   };
@@ -251,6 +285,11 @@ export const TopQuestionsMaterial = ({ offered, setOffered, price, setPrice, que
       <div className="flex items-center gap-2 mb-3">
         <Trophy className="h-4 w-4 text-primary" />
         <h4 className="text-sm font-semibold">Top Questões de Prova</h4>
+        {onGenerate && (
+          <div className="ml-auto">
+            <AiGenerateButton onGenerate={onGenerate} loading={!!generating} disabled={!canGenerate} />
+          </div>
+        )}
       </div>
       <PriceHeader label="Top Questões" offered={offered} setOffered={setOffered} price={price} setPrice={setPrice} cfg={cfg} />
       {offered && (
@@ -314,9 +353,12 @@ interface ColinhaMaterialProps {
   bullets: string[];
   setBullets: (b: string[]) => void;
   cfg?: MaterialPriceInfo;
+  onGenerate?: () => Promise<void> | void;
+  generating?: boolean;
+  canGenerate?: boolean;
 }
 
-export const ColinhaMaterial = ({ offered, setOffered, price, setPrice, bullets, setBullets, cfg }: ColinhaMaterialProps) => {
+export const ColinhaMaterial = ({ offered, setOffered, price, setPrice, bullets, setBullets, cfg, onGenerate, generating, canGenerate }: ColinhaMaterialProps) => {
   const update = (idx: number, value: string) => setBullets(bullets.map((b, i) => (i === idx ? value : b)));
   const add = () => setBullets([...bullets, ""]);
   const remove = (idx: number) => {
@@ -339,6 +381,11 @@ export const ColinhaMaterial = ({ offered, setOffered, price, setPrice, bullets,
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
+        {onGenerate && (
+          <div className="ml-auto">
+            <AiGenerateButton onGenerate={onGenerate} loading={!!generating} disabled={!canGenerate} />
+          </div>
+        )}
       </div>
       <PriceHeader label="Colinha" offered={offered} setOffered={setOffered} price={price} setPrice={setPrice} cfg={cfg} />
       {offered && (

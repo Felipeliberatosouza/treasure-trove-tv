@@ -32,11 +32,14 @@ interface EmailTemplate {
   coupon_message: string;
   coupon_expires_at: string | null;
   coupon_starts_at: string | null;
+  from_email: string;
+  from_name: string;
 }
 
 const TEMPLATE_LABELS: Record<string, string> = {
   email_confirmation: "Confirmação de E-mail",
   welcome: "Boas-vindas",
+  password_recovery: "Recuperação de Senha",
   phone_verification: "Verificação por Celular",
   birthday: "Aniversário",
   birthday_subscriber: "Aniversário",
@@ -60,7 +63,26 @@ const TEMPLATE_LABELS: Record<string, string> = {
 const TEMPLATE_DESCRIPTIONS: Record<string, string> = {
   email_confirmation: "Enviado após verificação do celular, contém link de confirmação de cadastro.",
   welcome: "Enviado após o usuário confirmar o cadastro pelo link de e-mail.",
+  password_recovery: "Enviado quando o usuário solicita recuperação de senha em 'Esqueci minha senha'. Contém link seguro válido por 1 hora.",
   phone_verification: "Mensagem com código de verificação enviada por SMS/WhatsApp.",
+  birthday: "Enviado no aniversário de ALUNOS SEM assinatura ativa (diariamente às 8h). Texto motivacional + vídeo recomendado da área de interesse + pode incluir cupom de desconto.",
+  birthday_subscriber: "Enviado no aniversário de ALUNOS COM assinatura ativa (diariamente às 8h). Texto motivacional + vídeo recomendado da área de interesse. NÃO envia cupom.",
+  birthday_teacher: "Enviado no aniversário de PROFESSORES (diariamente às 8h). Mensagem de parabéns e agradecimento pela parceria. NÃO envia cupom nem vídeo recomendado.",
+  reengagement_student: "Enviado a ALUNOS que não acessam vídeos há 14+ dias (configurável). Inclui 3 vídeos mais assistidos das áreas de interesse que ele ainda não viu (com fallback global). Reenviado no máximo a cada 30 dias.",
+  reengagement_teacher: "Enviado a PROFESSORES que não publicam conteúdo há 30+ dias (configurável). Inclui o desempenho atual (vídeos publicados, views) e simulação de ganhos em 3 cenários (Conservador/Realista/Otimista). Reenviado no máximo a cada 30 dias.",
+  doubt_approved: "Enviado ao professor quando uma dúvida de aluno é aprovada pelo administrador.",
+  doubt_answered: "Enviado ao aluno quando o professor responde sua dúvida.",
+  doubt_submitted: "Mensagem exibida ao aluno após enviar uma dúvida.",
+  new_content: "Enviado aos alunos quando um novo conteúdo é publicado na plataforma.",
+  payment_confirmation: "Enviado ao aluno após pagamento aprovado (assinatura ou compra avulsa).",
+  new_student_admin: "Notifica o administrador quando um novo aluno se cadastra.",
+  new_teacher_admin: "Notifica o administrador quando um novo professor se cadastra.",
+  content_approved: "Enviado ao professor quando seu conteúdo é aprovado pelo administrador.",
+  content_rejected: "Enviado ao professor quando seu conteúdo precisa de ajustes.",
+  contract_signed: "Confirmação enviada ao professor após assinar o contrato.",
+  subscription_expiring: "Enviado automaticamente alguns dias antes do vencimento da assinatura do aluno.",
+  subscription_cancelled: "Enviado ao aluno quando sua assinatura é cancelada ou expira.",
+};
   birthday: "Enviado no aniversário de ALUNOS SEM assinatura ativa (diariamente às 8h). Texto motivacional + vídeo recomendado da área de interesse + pode incluir cupom de desconto.",
   birthday_subscriber: "Enviado no aniversário de ALUNOS COM assinatura ativa (diariamente às 8h). Texto motivacional + vídeo recomendado da área de interesse. NÃO envia cupom.",
   birthday_teacher: "Enviado no aniversário de PROFESSORES (diariamente às 8h). Mensagem de parabéns e agradecimento pela parceria. NÃO envia cupom nem vídeo recomendado.",

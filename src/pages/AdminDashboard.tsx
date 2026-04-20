@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import MandatoryMfaGuard from "@/components/MandatoryMfaGuard";
 import { motion } from "framer-motion";
-import { ArrowLeft, Video, DollarSign, Shield, LayoutDashboard, Settings, HelpCircle, Mail, CalendarClock, Megaphone, Users, CreditCard, Tag, FileText, ScrollText, Activity, RefreshCcw, Receipt, XCircle } from "lucide-react";
+import { ArrowLeft, Video, DollarSign, Shield, LayoutDashboard, Settings, HelpCircle, Mail, CalendarClock, Megaphone, Users, CreditCard, FileText, ScrollText, Activity, RefreshCcw, Receipt, XCircle } from "lucide-react";
 import { Link, Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";

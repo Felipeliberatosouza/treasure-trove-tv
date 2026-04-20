@@ -25,6 +25,7 @@ import { startUnitCheckout } from "@/lib/payments";
 import VLibrasWidget from "@/components/VLibrasWidget";
 import SimuladoModal from "@/components/SimuladoModal";
 import MaterialViewerModal, { type MaterialKind } from "@/components/MaterialViewerModal";
+import AdminVideoModerationPanel from "@/components/admin/AdminVideoModerationPanel";
 import { useLessonMaterials } from "@/hooks/useLessonMaterials";
 
 const DEMO_VIDEO_URL = "/demo-course.mp4";
@@ -32,7 +33,8 @@ const DEMO_VIDEO_URL = "/demo-course.mp4";
 const VideoPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user, loading: authLoading } = useAuth();
+  const { user, allRoles, loading: authLoading } = useAuth();
+  const isAdmin = allRoles.includes("admin");
   const trial = useFreeTrial();
   const { data: branding } = usePlatformSettings("branding");
   const { data: videoPricing } = usePlatformSettings("video_pricing");
@@ -60,6 +62,7 @@ const VideoPage = () => {
   const [teacherId, setTeacherId] = useState<string | null>(null);
   const [videoType, setVideoType] = useState<string | null>(null);
   const [unitPrice, setUnitPrice] = useState<number | null>(null);
+  const [rawVideoUrl, setRawVideoUrl] = useState<string | null>(null);
   const [buying, setBuying] = useState(false);
   const [provaVotePercent, setProvaVotePercent] = useState<number | null>(null);
   const [userProvaVote, setUserProvaVote] = useState<boolean | null>(null);
@@ -105,6 +108,7 @@ const VideoPage = () => {
         .maybeSingle();
       if (lesson) {
         const lessonVideoUrl = await resolveVideoPlaybackUrl(lesson.video_url);
+        setRawVideoUrl(lesson.video_url || null);
         setDbVideo({
           id: lesson.id,
           title: lesson.title,
@@ -131,6 +135,7 @@ const VideoPage = () => {
         .maybeSingle();
       if (exam) {
         const examVideoUrl = await resolveVideoPlaybackUrl(exam.video_url);
+        setRawVideoUrl(exam.video_url || null);
         setDbVideo({
           id: exam.id,
           title: exam.title,
@@ -629,7 +634,7 @@ const VideoPage = () => {
               </div>
             )}
 
-            {showPaywall && (
+            {showPaywall && !isAdmin && (
               <div className="absolute inset-0 z-10 flex flex-col items-center justify-center overflow-y-auto bg-background/90 p-4 text-center backdrop-blur-sm sm:p-6">
                 <div className="my-auto flex w-full max-w-xs flex-col items-center">
                   <div className="mb-2 rounded-full bg-primary/10 p-2 sm:mb-3 sm:p-3"><Lock className="h-6 w-6 text-primary sm:h-8 sm:w-8" /></div>
@@ -737,7 +742,7 @@ const VideoPage = () => {
               );
             })()}
 
-            {user && !trial.loading && (
+            {user && !trial.loading && !isAdmin && (
               <>
                 {trial.hasActiveTrial && (
                   <div className="flex items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 p-3">
@@ -756,23 +761,34 @@ const VideoPage = () => {
               </>
             )}
 
-            <div className="space-y-3 rounded-xl border border-border bg-secondary/30 p-4">
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Opções de acesso</p>
-              {isWatching && !showPaywall && (
-                <div className="py-1 text-center text-xs text-muted-foreground">
-                  {hasFullAccess ? "🎬 Reproduzindo — assista 70% para poder avaliar" : "🎬 Prévia gratuita — até 20% do vídeo"}
-                </div>
-              )}
-              {canStartTrial && (
-                <Button onClick={handleStartTrial} disabled={startingTrial} className="w-full gap-2 font-display font-semibold" variant="outline">
-                  <Gift className="h-4 w-4" /> {startingTrial ? "Ativando..." : "Iniciar Teste Grátis"}
-                </Button>
-              )}
-              <Button onClick={handleSubscribe} className="w-full gap-2 font-display font-semibold"><Zap className="h-4 w-4" /> Assinar — acesso total</Button>
-              {priceLabel && (
-                <Button onClick={handleBuyUnit} disabled={buyDisabled} variant="outline" className="w-full gap-2 font-display font-semibold"><ShoppingCart className="h-4 w-4" /> {buying ? "Processando..." : `Comprar este vídeo — ${priceLabel}`}</Button>
-              )}
-            </div>
+            {isAdmin && (
+              <AdminVideoModerationPanel
+                contentId={video.id}
+                contentType={contentType}
+                videoUrl={rawVideoUrl}
+                onChanged={() => window.location.reload()}
+              />
+            )}
+
+            {!isAdmin && (
+              <div className="space-y-3 rounded-xl border border-border bg-secondary/30 p-4">
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Opções de acesso</p>
+                {isWatching && !showPaywall && (
+                  <div className="py-1 text-center text-xs text-muted-foreground">
+                    {hasFullAccess ? "🎬 Reproduzindo — assista 70% para poder avaliar" : "🎬 Prévia gratuita — até 20% do vídeo"}
+                  </div>
+                )}
+                {canStartTrial && (
+                  <Button onClick={handleStartTrial} disabled={startingTrial} className="w-full gap-2 font-display font-semibold" variant="outline">
+                    <Gift className="h-4 w-4" /> {startingTrial ? "Ativando..." : "Iniciar Teste Grátis"}
+                  </Button>
+                )}
+                <Button onClick={handleSubscribe} className="w-full gap-2 font-display font-semibold"><Zap className="h-4 w-4" /> Assinar — acesso total</Button>
+                {priceLabel && (
+                  <Button onClick={handleBuyUnit} disabled={buyDisabled} variant="outline" className="w-full gap-2 font-display font-semibold"><ShoppingCart className="h-4 w-4" /> {buying ? "Processando..." : `Comprar este vídeo — ${priceLabel}`}</Button>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>

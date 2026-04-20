@@ -77,7 +77,7 @@ const CountdownUnit = ({ value, label }: { value: number; label: string }) => (
 );
 
 const FreeTrialBanner = () => {
-  const { user } = useAuth();
+  const { user, allRoles } = useAuth();
   const trial = useFreeTrial();
   const [starting, setStarting] = useState(false);
 
@@ -85,6 +85,9 @@ const FreeTrialBanner = () => {
 
   // Don't render if trial feature is disabled or still loading
   if (trial.loading || !trial.trialEnabled) return null;
+
+  // Admins don't see trial banners — they have full unrestricted access
+  if (allRoles.includes("admin")) return null;
 
   // Don't show if user already has an expired trial
   if (trial.trialRow && !trial.hasActiveTrial) return null;

@@ -1,25 +1,13 @@
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
+import MaterialShowcase from "@/components/MaterialShowcase";
 import { StickyNote } from "lucide-react";
 
 const Colinhas = () => (
-  <div className="min-h-screen bg-background text-foreground flex flex-col">
-    <Navbar />
-    <div className="flex-1 px-6 pt-24 pb-12 md:px-16 lg:px-32">
-      <div className="mx-auto max-w-5xl space-y-8">
-        <div className="flex items-center gap-3">
-          <StickyNote className="h-8 w-8 text-primary" />
-          <h1 className="font-display text-3xl font-bold text-gradient">Minhas Colinhas</h1>
-        </div>
-        <p className="text-muted-foreground text-lg">Resumos rápidos e fórmulas essenciais em um só lugar.</p>
-        <div className="rounded-xl border border-border bg-card p-12 text-center">
-          <StickyNote className="mx-auto h-12 w-12 text-muted-foreground/40 mb-4" />
-          <p className="text-muted-foreground">Em breve teremos conteúdos disponíveis aqui.</p>
-        </div>
-      </div>
-    </div>
-    <Footer />
-  </div>
+  <MaterialShowcase
+    title="Colinhas"
+    description="Bullets rápidos para relembrar o conteúdo essencial em segundos."
+    icon={StickyNote}
+    materialType="colinhas"
+  />
 );
 
 export default Colinhas;

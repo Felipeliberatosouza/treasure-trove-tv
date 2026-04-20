@@ -579,30 +579,45 @@ export type Database = {
       }
       lesson_material_meta: {
         Row: {
+          admin_approved: boolean
           created_at: string
           id: string
           lesson_id: string
           material_type: string
           offered: boolean
           price: number
+          rejection_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          submitted_for_review: boolean
           updated_at: string
         }
         Insert: {
+          admin_approved?: boolean
           created_at?: string
           id?: string
           lesson_id: string
           material_type: string
           offered?: boolean
           price?: number
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          submitted_for_review?: boolean
           updated_at?: string
         }
         Update: {
+          admin_approved?: boolean
           created_at?: string
           id?: string
           lesson_id?: string
           material_type?: string
           offered?: boolean
           price?: number
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          submitted_for_review?: boolean
           updated_at?: string
         }
         Relationships: [

@@ -20,6 +20,8 @@ const LessonsTab = () => {
   const [loading, setLoading] = useState(true);
   const [hasValidContract, setHasValidContract] = useState<boolean | null>(null);
 
+  const [materialsByLesson, setMaterialsByLesson] = useState<Record<string, { offered: number; total: number; pending: number }>>({});
+
   const fetchLessons = async () => {
     if (!user) return;
     setLoading(true);
@@ -28,7 +30,26 @@ const LessonsTab = () => {
       .select("*")
       .eq("teacher_id", user.id)
       .order("created_at", { ascending: false });
-    setLessons(data || []);
+    const list = data || [];
+    setLessons(list);
+
+    // Fetch material meta for these lessons
+    const ids = list.map((l) => l.id);
+    if (ids.length > 0) {
+      const { data: metas } = await supabase
+        .from("lesson_material_meta")
+        .select("lesson_id, offered, admin_approved, submitted_for_review")
+        .in("lesson_id", ids);
+      const TOTAL_MATERIALS = 4; // resumo, simulado, top_questoes, colinhas
+      const map: Record<string, { offered: number; total: number; pending: number }> = {};
+      list.forEach((l) => { map[l.id] = { offered: 0, total: TOTAL_MATERIALS, pending: 0 }; });
+      (metas || []).forEach((m) => {
+        if (!map[m.lesson_id]) return;
+        if (m.offered) map[m.lesson_id].offered += 1;
+        if (m.offered && !m.admin_approved) map[m.lesson_id].pending += 1;
+      });
+      setMaterialsByLesson(map);
+    }
     setLoading(false);
   };
 
@@ -124,60 +145,82 @@ const LessonsTab = () => {
           {lessons.map((lesson) => {
             const isPending = lesson.published && !lesson.admin_approved;
             const canDelete = isPending || (!lesson.published && !lesson.admin_approved);
+            const matStats = materialsByLesson[lesson.id] || { offered: 0, total: 4, pending: 0 };
+            const matPercent = Math.round((matStats.offered / matStats.total) * 100);
+            const incentive = matStats.offered < matStats.total
+              ? `Adicione mais ${matStats.total - matStats.offered} recurso(s) para aumentar o engajamento`
+              : "Aula completa! 🎉";
             return (
-              <div key={lesson.id} className="flex items-center gap-3 rounded-lg border border-border bg-secondary/50 p-3">
-                {lesson.thumbnail_url ? (
-                  <img src={lesson.thumbnail_url} alt="" className="h-14 w-20 rounded object-cover" />
-                ) : (
-                  <div className="flex h-14 w-20 items-center justify-center rounded bg-muted">
-                    <Video className="h-5 w-5 text-muted-foreground" />
+              <div key={lesson.id} className="rounded-lg border border-border bg-secondary/50 p-3 space-y-2">
+                <div className="flex items-center gap-3">
+                  {lesson.thumbnail_url ? (
+                    <img src={lesson.thumbnail_url} alt="" className="h-14 w-20 rounded object-cover" />
+                  ) : (
+                    <div className="flex h-14 w-20 items-center justify-center rounded bg-muted">
+                      <Video className="h-5 w-5 text-muted-foreground" />
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="text-sm font-medium truncate">{lesson.title}</p>
+                      {lesson.published && lesson.admin_approved ? (
+                        <Badge variant="default" className="shrink-0 bg-green-600 text-xs">Aprovado</Badge>
+                      ) : isPending ? (
+                        <Badge variant="secondary" className="shrink-0 bg-yellow-500/20 text-yellow-700 dark:text-yellow-400 text-xs">Pendente</Badge>
+                      ) : (
+                        <Badge variant="destructive" className="shrink-0 text-xs">Rejeitado</Badge>
+                      )}
+                      {matStats.pending > 0 && (
+                        <Badge variant="outline" className="shrink-0 border-accent/40 text-accent text-[10px]">
+                          {matStats.pending} material(is) em revisão
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground truncate">{lesson.description || "Sem descrição"}</p>
                   </div>
-                )}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm font-medium truncate">{lesson.title}</p>
-                    {lesson.published && lesson.admin_approved ? (
-                      <Badge variant="default" className="shrink-0 bg-green-600 text-xs">Aprovado</Badge>
-                    ) : isPending ? (
-                      <Badge variant="secondary" className="shrink-0 bg-yellow-500/20 text-yellow-700 dark:text-yellow-400 text-xs">Pendente</Badge>
-                    ) : (
-                      <Badge variant="destructive" className="shrink-0 text-xs">Rejeitado</Badge>
-                    )}
-                  </div>
-                  <p className="text-xs text-muted-foreground truncate">{lesson.description || "Sem descrição"}</p>
-                </div>
-                <div className="flex items-center gap-1 shrink-0">
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="h-8 w-8"
-                    onClick={() => {
-                      if (lesson.admin_approved) {
-                        if (!confirm("Ao editar um conteúdo já aprovado, ele voltará para pendência de aprovação. Deseja continuar?")) return;
-                      }
-                      setEditingLesson(lesson); setShowForm(true);
-                    }}
-                    title="Editar"
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  {canDelete && (
+                  <div className="flex items-center gap-1 shrink-0">
                     <Button
                       size="icon"
                       variant="ghost"
-                      className="h-8 w-8 text-destructive hover:text-destructive"
-                      onClick={async () => {
-                        if (!confirm("Tem certeza que deseja excluir esta aula?")) return;
-                        const { error } = await supabase.from("lessons").delete().eq("id", lesson.id);
-                        if (error) { toast.error("Erro ao excluir"); return; }
-                        toast.success("Aula excluída");
-                        fetchLessons();
+                      className="h-8 w-8"
+                      onClick={() => {
+                        if (lesson.admin_approved) {
+                          if (!confirm("Ao editar um conteúdo já aprovado, ele voltará para pendência de aprovação. Deseja continuar?")) return;
+                        }
+                        setEditingLesson(lesson); setShowForm(true);
                       }}
-                      title="Excluir"
+                      title="Editar"
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Pencil className="h-4 w-4" />
                     </Button>
-                  )}
+                    {canDelete && (
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-8 w-8 text-destructive hover:text-destructive"
+                        onClick={async () => {
+                          if (!confirm("Tem certeza que deseja excluir esta aula?")) return;
+                          const { error } = await supabase.from("lessons").delete().eq("id", lesson.id);
+                          if (error) { toast.error("Erro ao excluir"); return; }
+                          toast.success("Aula excluída");
+                          fetchLessons();
+                        }}
+                        title="Excluir"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between text-[11px]">
+                    <span className="text-muted-foreground">Recursos oferecidos: <strong className="text-foreground">{matStats.offered}/{matStats.total}</strong></span>
+                    <span className={matStats.offered === matStats.total ? "text-green-600 dark:text-green-400 font-medium" : "text-muted-foreground"}>{matPercent}%</span>
+                  </div>
+                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                    <div className="h-full bg-primary transition-all" style={{ width: `${matPercent}%` }} />
+                  </div>
+                  <p className="text-[10px] text-muted-foreground italic">{incentive}</p>
                 </div>
               </div>
             );

@@ -6,11 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, CheckCircle, XCircle, Video, FileText, DollarSign, Eye } from "lucide-react";
+import { Search, CheckCircle, XCircle, Video, FileText, DollarSign, Eye, Layers } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuditLog } from "@/hooks/useAuditLog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import MaterialReviewDrawer from "./MaterialReviewDrawer";
 
 interface ContentItem {
   id: string;
@@ -37,6 +38,7 @@ const AdminContentTab = () => {
   const [filterType, setFilterType] = useState("all");
   const [rejectItem, setRejectItem] = useState<ContentItem | null>(null);
   const [rejectReason, setRejectReason] = useState("");
+  const [materialReview, setMaterialReview] = useState<ContentItem | null>(null);
   const { toast } = useToast();
 
   const fetchContent = async () => {
@@ -273,6 +275,11 @@ const AdminContentTab = () => {
                       >
                         <Eye className="h-4 w-4 mr-1" /> Assistir
                       </Button>
+                      {item.type === "lesson" && (
+                        <Button size="sm" variant="ghost" className="h-8" onClick={() => setMaterialReview(item)}>
+                          <Layers className="h-4 w-4 mr-1" /> Materiais
+                        </Button>
+                      )}
                       {item.published && !item.admin_approved && (
                         <>
                           <Button size="sm" variant="ghost" className="h-8 text-green-500 hover:text-green-400" onClick={() => handleApprove(item)}>
@@ -325,6 +332,15 @@ const AdminContentTab = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      {materialReview && (
+        <MaterialReviewDrawer
+          open={!!materialReview}
+          onClose={() => setMaterialReview(null)}
+          lessonId={materialReview.id}
+          lessonTitle={materialReview.title}
+          onChanged={fetchContent}
+        />
+      )}
     </div>
   );
 };

@@ -321,6 +321,11 @@ const MaterialReviewDrawer = ({ open, onClose, lessonId, lessonTitle, onChanged 
                         )}
 
                         <div className="flex gap-2 flex-wrap">
+                          {(m.material_type === "simulado" || m.material_type === "colinhas") && (
+                            <Button size="sm" variant="outline" className="h-8" onClick={() => setTestingMaterial(m.material_type as "simulado" | "colinhas")}>
+                              <Play className="h-3.5 w-3.5 mr-1" /> Testar como aluno
+                            </Button>
+                          )}
                           {!m.admin_approved && (
                             <Button size="sm" variant="ghost" className="h-8 text-green-600 dark:text-green-400 hover:text-green-500" onClick={() => handleApprove(m)}>
                               <CheckCircle className="h-3.5 w-3.5 mr-1" /> Aprovar

@@ -314,6 +314,16 @@ const MaterialReviewDrawer = ({ open, onClose, lessonId, lessonTitle, onChanged 
 
               {/* Coluna direita: prévia dos materiais */}
               <div className="space-y-3">
+                {pendingMaterials.length > 0 && (
+                  <div className="flex items-center justify-between rounded-lg border border-border bg-card p-3">
+                    <div className="text-sm">
+                      <span className="font-medium">{pendingMaterials.length}</span> material(is) pendente(s) de revisão
+                    </div>
+                    <Button size="sm" variant="default" className="gap-1.5" onClick={handleApproveAll}>
+                      <CheckCircle className="h-3.5 w-3.5" /> Aprovar tudo
+                    </Button>
+                  </div>
+                )}
                 {offered.length === 0 ? (
                   <p className="text-sm text-muted-foreground">Nenhum material oferecido pelo professor nesta aula.</p>
                 ) : (

@@ -261,12 +261,44 @@ export interface ProductConfigSettings {
     enable_subtitles: boolean;
     enable_blackboard: boolean;
     enable_auto_cover: boolean;
+    title_max: number;
+    description_max: number;
   };
-  colinhas: Record<string, unknown>;
-  resumos: Record<string, unknown>;
-  top_questoes: Record<string, unknown>;
-  simulados: Record<string, unknown>;
+  resumos: {
+    text_max: number;
+  };
+  simulados: {
+    question_max: number;
+    option_max: number;
+    min_questions: number;
+    min_options: number;
+  };
+  top_questoes: {
+    question_max: number;
+    answer_max: number;
+    min_questions: number;
+  };
+  colinhas: {
+    bullet_max: number;
+    min_bullets: number;
+  };
 }
+
+export const DEFAULT_PRODUCT_CONFIG: ProductConfigSettings = {
+  revisoes: {
+    max_recording_minutes: 30,
+    enable_recording: true,
+    enable_subtitles: false,
+    enable_blackboard: false,
+    enable_auto_cover: false,
+    title_max: 100,
+    description_max: 200,
+  },
+  resumos: { text_max: 250 },
+  simulados: { question_max: 200, option_max: 200, min_questions: 5, min_options: 3 },
+  top_questoes: { question_max: 300, answer_max: 300, min_questions: 5 },
+  colinhas: { bullet_max: 100, min_bullets: 10 },
+};
 
 export function usePlatformSettings<K extends keyof SettingsMap>(key: K) {
   const [data, setData] = useState<SettingsMap[K] | null>(null);

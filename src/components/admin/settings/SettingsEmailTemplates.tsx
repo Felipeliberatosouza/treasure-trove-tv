@@ -703,6 +703,16 @@ const SettingsEmailTemplates = () => {
                 )}
               </div>
             </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="mt-2"
+              disabled={applyingAll}
+              onClick={handleApplySenderToAll}
+            >
+              <Copy className="h-4 w-4 mr-1" />
+              {applyingAll ? "Aplicando..." : "Aplicar este remetente a todos os templates"}
+            </Button>
           </div>
 
           {(activeKey === "birthday_subscriber" || activeKey === "birthday_teacher") ? (

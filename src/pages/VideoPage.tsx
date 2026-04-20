@@ -499,6 +499,26 @@ const VideoPage = () => {
 
       <CpfRequiredModal open={showCpfModal} onClose={() => setShowCpfModal(false)} onComplete={onCpfComplete} />
 
+      {video && (
+        <>
+          <SimuladoModal
+            open={isSimuladoOpen}
+            onClose={() => setIsSimuladoOpen(false)}
+            lessonId={video.id}
+            lessonTitle={video.title}
+          />
+          {materialModal && (
+            <MaterialViewerModal
+              open={!!materialModal}
+              onClose={() => setMaterialModal(null)}
+              lessonId={video.id}
+              lessonTitle={video.title}
+              kind={materialModal}
+            />
+          )}
+        </>
+      )}
+
       {limitInfo && (
         <ResourceLimitModal
           open={showLimitModal}

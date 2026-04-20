@@ -62,6 +62,7 @@ const VideoPage = () => {
   const [teacherId, setTeacherId] = useState<string | null>(null);
   const [videoType, setVideoType] = useState<string | null>(null);
   const [unitPrice, setUnitPrice] = useState<number | null>(null);
+  const [rawVideoUrl, setRawVideoUrl] = useState<string | null>(null);
   const [buying, setBuying] = useState(false);
   const [provaVotePercent, setProvaVotePercent] = useState<number | null>(null);
   const [userProvaVote, setUserProvaVote] = useState<boolean | null>(null);

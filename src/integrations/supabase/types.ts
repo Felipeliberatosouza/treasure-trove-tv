@@ -545,6 +545,187 @@ export type Database = {
         }
         Relationships: []
       }
+      lesson_cheatsheet_items: {
+        Row: {
+          created_at: string
+          id: string
+          lesson_id: string
+          position: number
+          text: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          lesson_id: string
+          position?: number
+          text: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          lesson_id?: string
+          position?: number
+          text?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lesson_cheatsheet_items_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lesson_material_meta: {
+        Row: {
+          created_at: string
+          id: string
+          lesson_id: string
+          material_type: string
+          offered: boolean
+          price: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          lesson_id: string
+          material_type: string
+          offered?: boolean
+          price?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          lesson_id?: string
+          material_type?: string
+          offered?: boolean
+          price?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lesson_material_meta_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lesson_quiz_questions: {
+        Row: {
+          correct_index: number
+          created_at: string
+          id: string
+          lesson_id: string
+          options: Json
+          position: number
+          question: string
+          updated_at: string
+        }
+        Insert: {
+          correct_index?: number
+          created_at?: string
+          id?: string
+          lesson_id: string
+          options?: Json
+          position?: number
+          question: string
+          updated_at?: string
+        }
+        Update: {
+          correct_index?: number
+          created_at?: string
+          id?: string
+          lesson_id?: string
+          options?: Json
+          position?: number
+          question?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lesson_quiz_questions_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lesson_summaries: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          lesson_id: string
+          updated_at: string
+        }
+        Insert: {
+          content?: string
+          created_at?: string
+          id?: string
+          lesson_id: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          lesson_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lesson_summaries_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: true
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lesson_top_questions: {
+        Row: {
+          answer: string
+          created_at: string
+          id: string
+          lesson_id: string
+          position: number
+          question: string
+          updated_at: string
+        }
+        Insert: {
+          answer: string
+          created_at?: string
+          id?: string
+          lesson_id: string
+          position?: number
+          question: string
+          updated_at?: string
+        }
+        Update: {
+          answer?: string
+          created_at?: string
+          id?: string
+          lesson_id?: string
+          position?: number
+          question?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lesson_top_questions_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lessons: {
         Row: {
           admin_approved: boolean | null
@@ -1556,6 +1737,10 @@ export type Database = {
       }
       is_course_owner: {
         Args: { _course_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_lesson_owner: {
+        Args: { _lesson_id: string; _user_id: string }
         Returns: boolean
       }
       is_login_blocked: { Args: { check_email: string }; Returns: boolean }

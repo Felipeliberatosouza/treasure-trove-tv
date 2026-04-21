@@ -23,6 +23,7 @@ import {
 } from "@/hooks/usePlatformSettings";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import LessonReadyChecklist from "@/components/LessonReadyChecklist";
 
 interface ScheduledLesson {
   id: string;
@@ -328,6 +329,15 @@ const MinhasAulasAgendadas = () => {
 
         {lesson.cancellation_reason && (
           <p className="text-xs text-muted-foreground italic">{lesson.cancellation_reason}</p>
+        )}
+
+        {allowCancel && (
+          <LessonReadyChecklist
+            lessonId={lesson.id}
+            durationMinutes={lesson.duration_minutes}
+            cancelHours={cfg.free_cancel_window_hours}
+            meetingUrl={lesson.meeting_url}
+          />
         )}
 
         {allowCancel && (

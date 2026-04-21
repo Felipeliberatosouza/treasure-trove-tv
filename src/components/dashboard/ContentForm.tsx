@@ -874,7 +874,26 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
 
       {/* Description */}
       <div>
-        <label className="text-sm text-muted-foreground mb-1 block">Descrição da aula *</label>
+        <div className="flex items-center justify-between gap-2 mb-1">
+          <label className="text-sm text-muted-foreground">Descrição da aula *</label>
+          {subtitlesVtt && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleRegenerateDescription}
+              disabled={regeneratingDescription}
+              className="h-7 text-[11px] gap-1"
+            >
+              {regeneratingDescription ? (
+                <Loader2 className="h-3 w-3 animate-spin" />
+              ) : (
+                <Sparkles className="h-3 w-3" />
+              )}
+              {regeneratingDescription ? "Gerando..." : "Regerar resumo com IA"}
+            </Button>
+          )}
+        </div>
         <Textarea
           value={description}
           maxLength={DESCRIPTION_MAX}

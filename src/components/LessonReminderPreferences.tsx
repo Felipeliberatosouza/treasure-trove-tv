@@ -180,6 +180,7 @@ const LessonReminderPreferences = () => {
         );
       }
       setLoading(false);
+      setIsDirty(false);
     })();
     return () => {
       cancelled = true;

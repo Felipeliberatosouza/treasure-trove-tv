@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, User, Lock, Video, DollarSign, HelpCircle, BookOpen, FileSignature, GraduationCap, Megaphone, Sparkles, CalendarClock } from "lucide-react";
+import { ArrowLeft, User, Lock, Video, DollarSign, HelpCircle, BookOpen, FileSignature, GraduationCap, Megaphone, Sparkles, CalendarClock, CalendarDays } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
@@ -15,6 +15,7 @@ import StudentDashboardContent from "@/components/dashboard/StudentDashboardCont
 import SalesBoostTab from "@/components/teacher/SalesBoostTab";
 import TeacherStatementTab from "@/components/dashboard/TeacherStatementTab";
 import TeacherAulaParticularRulesTab from "@/components/dashboard/TeacherAulaParticularRulesTab";
+import TeacherAgendaTab from "@/components/dashboard/TeacherAgendaTab";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
@@ -27,6 +28,7 @@ const teacherTabs = [
   { id: "sales", label: "Meu Extrato", icon: DollarSign },
   { id: "contract", label: "Meu Contrato", icon: FileSignature },
   { id: "aula-particular", label: "Aula Particular", icon: CalendarClock },
+  { id: "agenda", label: "Minha Agenda", icon: CalendarDays },
   // Hidden tabs (acessadas via menu hambúrguer / deep-link, não exibidas no menu lateral)
   { id: "lessons", label: "Minhas Aulas", icon: Video, hidden: true },
   { id: "doubts", label: "Dúvidas de Alunos", icon: HelpCircle, hidden: true },
@@ -152,6 +154,7 @@ const TeacherDashboard = () => {
               {activeTab === "contract" && <TeacherContractTab />}
               {activeTab === "sales" && <TeacherStatementTab />}
               {activeTab === "aula-particular" && <TeacherAulaParticularRulesTab />}
+              {activeTab === "agenda" && <TeacherAgendaTab />}
             </motion.div>
           </div>
         )}

@@ -3,7 +3,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { CalendarDays, Clock, AlertTriangle, Loader2, X, CalendarCog } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { Navigate, Link } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -103,6 +103,8 @@ const MinhasAulasAgendadas = () => {
   const { user, allRoles } = useAuth();
   const isTeacher = allRoles.includes("teacher");
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const [navigatingToAgenda, setNavigatingToAgenda] = useState(false);
   const { data: cfgRaw } = usePlatformSettings("aula_particular_config");
   const cfg: AulaParticularConfigSettings = cfgRaw ?? DEFAULT_AULA_PARTICULAR_CONFIG;
 
@@ -358,11 +360,34 @@ const MinhasAulasAgendadas = () => {
               </h1>
             </div>
             {isTeacher && (
-              <Button asChild variant="outline" className="gap-2">
-                <Link to="/dashboard/teacher?tab=agenda">
-                  <CalendarCog className="h-4 w-4" />
-                  Atualizar minha Agenda
-                </Link>
+              <Button
+                variant="outline"
+                className="gap-2"
+                disabled={navigatingToAgenda}
+                onClick={() => {
+                  if (navigatingToAgenda) return;
+                  setNavigatingToAgenda(true);
+                  toast({
+                    title: "Abrindo sua agenda…",
+                    description: "Carregando os horários de aula particular.",
+                  });
+                  // Pequeno delay para o usuário ver o feedback antes da troca de rota
+                  setTimeout(() => {
+                    navigate("/dashboard/teacher?tab=agenda");
+                  }, 250);
+                }}
+              >
+                {navigatingToAgenda ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Abrindo agenda…
+                  </>
+                ) : (
+                  <>
+                    <CalendarCog className="h-4 w-4" />
+                    Atualizar minha Agenda
+                  </>
+                )}
               </Button>
             )}
           </div>

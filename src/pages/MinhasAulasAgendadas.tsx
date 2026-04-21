@@ -1,7 +1,16 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { CalendarDays, Clock, AlertTriangle, Loader2, X, CalendarCog } from "lucide-react";
+import {
+  CalendarDays,
+  Clock,
+  AlertTriangle,
+  Loader2,
+  X,
+  CalendarCog,
+  Video,
+  LinkIcon,
+} from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -161,6 +170,52 @@ const MinhasAulasAgendadas = () => {
     fetchLessons();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
+
+  /** Tracks the previous meeting_url for each upcoming lesson. When a lesson
+   *  transitions from "no link" to "has link" while still in the future, we
+   *  surface a toast so the student knows the teacher just published it. */
+  const prevMeetingUrlsRef = useRef<Record<string, string | null>>({});
+  useEffect(() => {
+    const prev = prevMeetingUrlsRef.current;
+    const next: Record<string, string | null> = {};
+    lessons.forEach((l) => {
+      next[l.id] = l.meeting_url ?? null;
+      const isUpcoming = ["pending", "confirmed"].includes(l.status);
+      const startsInFuture = new Date(l.scheduled_at).getTime() > Date.now();
+      const had = prev[l.id];
+      // Only notify when we already had a snapshot (avoids first-load noise).
+      if (
+        isUpcoming &&
+        startsInFuture &&
+        had !== undefined &&
+        !had &&
+        l.meeting_url
+      ) {
+        toast({
+          title: "Link da reunião disponível!",
+          description: `O professor disponibilizou o link para "${l.title}".`,
+        });
+      }
+    });
+    prevMeetingUrlsRef.current = next;
+  }, [lessons, toast]);
+
+  /** While there are upcoming lessons missing a meeting link, poll every 60s
+   *  so the student gets the notification quickly without a manual refresh. */
+  useEffect(() => {
+    const needsPolling = lessons.some(
+      (l) =>
+        ["pending", "confirmed"].includes(l.status) &&
+        !l.meeting_url &&
+        new Date(l.scheduled_at).getTime() > Date.now(),
+    );
+    if (!needsPolling) return;
+    const id = window.setInterval(() => {
+      fetchLessons();
+    }, 60_000);
+    return () => window.clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lessons]);
 
   const cancelInfo = useMemo(() => {
     if (!cancelTarget) return null;
@@ -325,6 +380,29 @@ const MinhasAulasAgendadas = () => {
               em cobrança da taxa de cancelamento.
             </span>
           </div>
+        )}
+
+        {allowCancel && (
+          lesson.meeting_url ? (
+            <a
+              href={lesson.meeting_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 rounded-md border border-primary/40 bg-primary/10 p-3 text-xs text-primary hover:bg-primary/15 transition-colors"
+            >
+              <Video className="h-4 w-4 shrink-0" />
+              <span className="font-medium">Link da reunião disponível</span>
+              <LinkIcon className="h-3 w-3 ml-auto" />
+            </a>
+          ) : (
+            <div className="flex items-start gap-2 rounded-md border border-warning/40 bg-warning/10 p-3 text-xs text-warning">
+              <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+              <span>
+                O <strong>link da reunião</strong> ainda não foi disponibilizado pelo professor.
+                Você será avisado assim que ele aparecer aqui.
+              </span>
+            </div>
+          )
         )}
 
         {lesson.cancellation_reason && (

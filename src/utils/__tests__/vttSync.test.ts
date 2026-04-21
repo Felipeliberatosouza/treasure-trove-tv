@@ -1,5 +1,11 @@
-import { describe, it, expect } from "vitest";
-import { shiftVtt, secondsToVttTimestamp } from "../vttSync";
+import { describe, it, expect, afterEach } from "vitest";
+import {
+  shiftVtt,
+  secondsToVttTimestamp,
+  setDefaultShiftToleranceSec,
+  getDefaultShiftToleranceSec,
+  DEFAULT_SHIFT_TOLERANCE_SEC,
+} from "../vttSync";
 
 const SAMPLE_VTT = `WEBVTT
 
@@ -45,5 +51,44 @@ describe("shiftVtt", () => {
     expect(secondsToVttTimestamp(0)).toBe("00:00:00.000");
     expect(secondsToVttTimestamp(4.5)).toBe("00:00:04.500");
     expect(secondsToVttTimestamp(3661.123)).toBe("01:01:01.123");
+  });
+
+  describe("tolerance configuration", () => {
+    afterEach(() => {
+      setDefaultShiftToleranceSec(DEFAULT_SHIFT_TOLERANCE_SEC);
+    });
+
+    it("uses the default tolerance when none is provided", () => {
+      const r = shiftVtt(SAMPLE_VTT, 4);
+      expect(r.toleranceSec).toBe(DEFAULT_SHIFT_TOLERANCE_SEC);
+      expect(r.valid).toBe(true);
+    });
+
+    it("respects per-call tolerance override", () => {
+      const r = shiftVtt(SAMPLE_VTT, 4, { toleranceSec: 0.05 });
+      expect(r.toleranceSec).toBe(0.05);
+      expect(r.valid).toBe(true);
+    });
+
+    it("flags as invalid when tolerance is set to 0 with no rounding errors", () => {
+      // Even an exact integer offset is fine at 0 tolerance because
+      // we use strict < comparison; ensure tolerance plumbs through.
+      const r = shiftVtt(SAMPLE_VTT, 4, { toleranceSec: 0 });
+      expect(r.toleranceSec).toBe(0);
+      // delta is 0 for exact arithmetic, but valid checks `< 0` -> false
+      expect(r.valid).toBe(false);
+    });
+
+    it("allows updating the global default tolerance", () => {
+      setDefaultShiftToleranceSec(0.01);
+      expect(getDefaultShiftToleranceSec()).toBe(0.01);
+      const r = shiftVtt(SAMPLE_VTT, 4);
+      expect(r.toleranceSec).toBe(0.01);
+    });
+
+    it("rejects invalid tolerance values", () => {
+      expect(() => setDefaultShiftToleranceSec(-1)).toThrow();
+      expect(() => setDefaultShiftToleranceSec(Number.NaN)).toThrow();
+    });
   });
 });

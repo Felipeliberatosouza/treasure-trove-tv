@@ -42,16 +42,50 @@ export interface ShiftResult {
   offsetSec: number;
   samples: ShiftSample[];
   valid: boolean;
+  toleranceSec: number;
+}
+
+/**
+ * Default validation tolerance in seconds. WebVTT timestamps have a
+ * resolution of 1ms (3 decimal digits), so 2ms covers a single rounding
+ * step on each side. Override per-call via {@link shiftVtt}'s options or
+ * globally via {@link setDefaultShiftToleranceSec} when targeting browsers
+ * that need a looser margin.
+ */
+export const DEFAULT_SHIFT_TOLERANCE_SEC = 0.002;
+
+let currentDefaultToleranceSec = DEFAULT_SHIFT_TOLERANCE_SEC;
+
+/** Update the global default tolerance used by `shiftVtt` when no override is passed. */
+export const setDefaultShiftToleranceSec = (toleranceSec: number): void => {
+  if (!Number.isFinite(toleranceSec) || toleranceSec < 0) {
+    throw new Error("toleranceSec must be a non-negative finite number");
+  }
+  currentDefaultToleranceSec = toleranceSec;
+};
+
+/** Read the current global default tolerance (seconds). */
+export const getDefaultShiftToleranceSec = (): number => currentDefaultToleranceSec;
+
+export interface ShiftOptions {
+  /** Validation tolerance in seconds. Defaults to {@link getDefaultShiftToleranceSec}. */
+  toleranceSec?: number;
 }
 
 /**
  * Shift every cue timestamp in a VTT string by `offsetSec` seconds.
  * Performs a sample validation comparing 3 cues (first, middle, last)
- * to ensure each shifted start equals original + offset within 1ms.
+ * to ensure each shifted start equals original + offset within
+ * `options.toleranceSec` (defaults to {@link DEFAULT_SHIFT_TOLERANCE_SEC}).
  */
-export const shiftVtt = (vtt: string, offsetSec: number): ShiftResult => {
+export const shiftVtt = (
+  vtt: string,
+  offsetSec: number,
+  options: ShiftOptions = {},
+): ShiftResult => {
+  const toleranceSec = options.toleranceSec ?? currentDefaultToleranceSec;
   if (!vtt || offsetSec === 0) {
-    return { vtt, cueCount: 0, offsetSec, samples: [], valid: true };
+    return { vtt, cueCount: 0, offsetSec, samples: [], valid: true, toleranceSec };
   }
 
   const originalStarts: number[] = [];
@@ -92,12 +126,13 @@ export const shiftVtt = (vtt: string, offsetSec: number): ShiftResult => {
     }
   }
 
-  const valid = samples.every((s) => s.delta < 0.002);
+  const valid = samples.every((s) => s.delta < toleranceSec);
   return {
     vtt: shifted,
     cueCount: originalStarts.length,
     offsetSec,
     samples,
+    toleranceSec,
     valid,
   };
 };

@@ -856,11 +856,50 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
             lessonTitle={title}
             lessonArea={selectedAreas[0] || ""}
             teacherName={teacherName}
-            onRecorded={(file, vtt) => {
+            onRecorded={async (file, vtt) => {
               setVideoFile(file);
               if (vtt) setSubtitlesVtt(vtt);
               setShowRecorder(false);
               toast.success("Vídeo gravado e processado com sucesso!");
+
+              // Auto-generate description from VTT transcript using AI
+              if (vtt && (!description || description.trim().length === 0)) {
+                const transcript = vttToPlainText(vtt);
+                if (transcript.trim().length > 0) {
+                  const toastId = toast.loading("Gerando resumo da aula com IA...");
+                  try {
+                    const { data, error } = await supabase.functions.invoke(
+                      "generate-lesson-material",
+                      {
+                        body: {
+                          kind: "description",
+                          title: title || "Aula",
+                          area: selectedAreas[0] || "",
+                          transcript,
+                          maxChars: DESCRIPTION_MAX,
+                        },
+                      },
+                    );
+                    if (error) throw error;
+                    const generated = (data?.description || "").trim().slice(0, DESCRIPTION_MAX);
+                    if (generated) {
+                      setDescription(generated);
+                      toast.success("Resumo da aula preenchido automaticamente!", { id: toastId });
+                    } else {
+                      toast.dismiss(toastId);
+                    }
+                  } catch (err) {
+                    console.error("Failed to generate description from transcript", err);
+                    toast.error("Não foi possível gerar o resumo automaticamente.", { id: toastId });
+                  }
+                }
+              }
+
+              // Inform teacher about next steps with AI assistance
+              toast.info(
+                "Agora preencha os recursos da aula (Resumo, Simulado, Top Questões e Colinha). Você pode usar a IA gratuita disponível em cada recurso para gerar o conteúdo automaticamente.",
+                { duration: 9000 },
+              );
             }}
             onCancel={() => setShowRecorder(false)}
           />

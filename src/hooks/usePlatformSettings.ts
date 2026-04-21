@@ -272,6 +272,9 @@ export interface AulaParticularConfigSettings {
   fee_split_platform_pct: number;
   /** Percentual da taxa que vai para o professor. */
   fee_split_teacher_pct: number;
+  /** Janelas (em horas) antes do início da aula em que disparamos lembretes
+   *  por WhatsApp/SMS para aluno e professor. Ex.: [24, 2]. */
+  reminder_windows_hours: number[];
 }
 
 export const DEFAULT_AULA_PARTICULAR_CONFIG: AulaParticularConfigSettings = {
@@ -281,6 +284,7 @@ export const DEFAULT_AULA_PARTICULAR_CONFIG: AulaParticularConfigSettings = {
   late_cancel_fee_value: 50,
   fee_split_platform_pct: 30,
   fee_split_teacher_pct: 70,
+  reminder_windows_hours: [24, 2],
 };
 
 export interface ProductConfigSettings {

@@ -280,6 +280,44 @@ const TeacherAgendaTab = () => {
     fetchAll();
   };
 
+  // Toggle block/unblock of a single slot via partial-day exception
+  const toggleSlotBlock = async (slot: {
+    start: Date;
+    end: Date;
+    booked: BookingRow | null;
+    blockedExceptionId: string | null;
+  }) => {
+    if (!user || slot.booked) return;
+    if (slot.blockedExceptionId) {
+      const { error } = await supabase
+        .from("teacher_availability_exceptions")
+        .delete()
+        .eq("id", slot.blockedExceptionId);
+      if (error) {
+        toast({ title: "Erro", description: error.message, variant: "destructive" });
+        return;
+      }
+      toast({ title: "Slot desbloqueado" });
+    } else {
+      const { error } = await supabase
+        .from("teacher_availability_exceptions")
+        .insert({
+          teacher_id: user.id,
+          exception_date: format(slot.start, "yyyy-MM-dd"),
+          exception_type: "unavailable",
+          start_time: format(slot.start, "HH:mm:ss"),
+          end_time: format(slot.end, "HH:mm:ss"),
+          notes: "Slot bloqueado pelo professor",
+        });
+      if (error) {
+        toast({ title: "Erro", description: error.message, variant: "destructive" });
+        return;
+      }
+      toast({ title: "Slot bloqueado" });
+    }
+    fetchAll();
+  };
+
   // ---- Visualização semanal ----
   const weekDays = useMemo(
     () => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)),
@@ -333,12 +371,21 @@ const TeacherAgendaTab = () => {
     end: Date;
     booked: BookingRow | null;
     source: "recurring" | "extra";
+    blockedExceptionId: string | null;
   };
 
   const slotsForDate = (date: Date): DaySlot[] => {
     const wins = windowsForDate(date);
     const dur = cfg.lesson_duration_minutes;
     const slots: DaySlot[] = [];
+    const dayIso = format(date, "yyyy-MM-dd");
+    const partialBlocks = exceptions.filter(
+      (e) =>
+        e.exception_date === dayIso &&
+        e.exception_type === "unavailable" &&
+        e.start_time &&
+        e.end_time
+    );
 
     for (const w of wins) {
       let cursor = new Date(w.start);
@@ -359,11 +406,20 @@ const TeacherAgendaTab = () => {
             );
           }) ?? null;
 
+        const blockMatch =
+          partialBlocks.find((e) => {
+            const eStart = parseISO(`${dayIso}T${e.start_time}`);
+            const eEnd = parseISO(`${dayIso}T${e.end_time}`);
+            // Slot is fully covered by this block range
+            return eStart <= slotStart && eEnd >= slotEnd;
+          }) ?? null;
+
         slots.push({
           start: slotStart,
           end: slotEnd,
           booked: bookedHit,
           source: w.source,
+          blockedExceptionId: blockMatch?.id ?? null,
         });
         cursor = addMinutes(cursor, dur);
       }
@@ -434,6 +490,11 @@ const TeacherAgendaTab = () => {
                 </Button>
               </div>
             </div>
+            <p className="text-xs text-muted-foreground">
+              Clique em um horário livre para <strong>bloquear</strong> o slot, ou em um
+              slot bloqueado para <strong>desbloqueá-lo</strong>. Slots bloqueados ficam
+              indisponíveis no agendamento dos alunos automaticamente.
+            </p>
 
             <div className="grid grid-cols-1 md:grid-cols-7 gap-2">
               {weekDays.map((d) => {
@@ -481,28 +542,41 @@ const TeacherAgendaTab = () => {
 
                     <div className="flex flex-col gap-1">
                       {slots.map((s) => (
-                        <div
+                        <button
+                          type="button"
                           key={s.start.toISOString()}
-                          className={`rounded px-2 py-1 text-[11px] flex items-center justify-between gap-1 ${
+                          disabled={!!s.booked}
+                          onClick={() => toggleSlotBlock(s)}
+                          className={`rounded px-2 py-1 text-[11px] flex items-center justify-between gap-1 transition-colors text-left ${
                             s.booked
-                              ? "bg-primary/15 text-primary border border-primary/30"
+                              ? "bg-primary/15 text-primary border border-primary/30 cursor-not-allowed"
+                              : s.blockedExceptionId
+                              ? "bg-destructive/15 text-destructive border border-destructive/40 hover:bg-destructive/25 line-through"
                               : s.source === "extra"
-                              ? "bg-accent/15 text-foreground border border-accent/40"
-                              : "bg-secondary text-foreground"
+                              ? "bg-accent/15 text-foreground border border-accent/40 hover:bg-accent/25"
+                              : "bg-secondary text-foreground hover:bg-secondary/70"
                           }`}
-                          title={s.booked ? `Reservada: ${s.booked.title}` : "Livre"}
+                          title={
+                            s.booked
+                              ? `Reservada: ${s.booked.title}`
+                              : s.blockedExceptionId
+                              ? "Slot bloqueado — clique para desbloquear"
+                              : "Slot livre — clique para bloquear"
+                          }
                         >
                           <span className="font-mono">
                             {format(s.start, "HH:mm")}
                           </span>
                           {s.booked ? (
                             <CheckCircle2 className="h-3 w-3" />
+                          ) : s.blockedExceptionId ? (
+                            <Ban className="h-3 w-3" />
                           ) : s.source === "extra" ? (
                             <Sparkles className="h-3 w-3" />
                           ) : (
                             <CircleSlash className="h-3 w-3 opacity-30" />
                           )}
-                        </div>
+                        </button>
                       ))}
                     </div>
                   </div>
@@ -522,6 +596,10 @@ const TeacherAgendaTab = () => {
               <span className="flex items-center gap-1">
                 <span className="inline-block w-3 h-3 rounded bg-primary/40 border border-primary/60" />{" "}
                 Reservada
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="inline-block w-3 h-3 rounded bg-destructive/30 border border-destructive/50" />{" "}
+                Slot bloqueado
               </span>
               <span className="flex items-center gap-1">
                 <span className="inline-block w-3 h-3 rounded bg-destructive/30" /> Dia

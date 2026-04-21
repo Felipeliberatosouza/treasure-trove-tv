@@ -1528,6 +1528,98 @@ export type Database = {
         }
         Relationships: []
       }
+      support_ticket_messages: {
+        Row: {
+          author_id: string
+          author_type: string
+          created_at: string
+          id: string
+          message: string
+          ticket_id: string
+        }
+        Insert: {
+          author_id: string
+          author_type: string
+          created_at?: string
+          id?: string
+          message: string
+          ticket_id: string
+        }
+        Update: {
+          author_id?: string
+          author_type?: string
+          created_at?: string
+          id?: string
+          message?: string
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_ticket_messages_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "support_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      support_tickets: {
+        Row: {
+          assigned_admin_id: string | null
+          category: string
+          closed_at: string | null
+          created_at: string
+          description: string
+          first_responded_at: string | null
+          id: string
+          priority: string
+          resolved_at: string | null
+          response_due_at: string
+          status: string
+          subject: string
+          ticket_number: number
+          updated_at: string
+          user_id: string
+          user_role: string
+        }
+        Insert: {
+          assigned_admin_id?: string | null
+          category: string
+          closed_at?: string | null
+          created_at?: string
+          description: string
+          first_responded_at?: string | null
+          id?: string
+          priority?: string
+          resolved_at?: string | null
+          response_due_at: string
+          status?: string
+          subject: string
+          ticket_number?: number
+          updated_at?: string
+          user_id: string
+          user_role: string
+        }
+        Update: {
+          assigned_admin_id?: string | null
+          category?: string
+          closed_at?: string | null
+          created_at?: string
+          description?: string
+          first_responded_at?: string | null
+          id?: string
+          priority?: string
+          resolved_at?: string | null
+          response_due_at?: string
+          status?: string
+          subject?: string
+          ticket_number?: number
+          updated_at?: string
+          user_id?: string
+          user_role?: string
+        }
+        Relationships: []
+      }
       suppressed_emails: {
         Row: {
           created_at: string
@@ -1947,6 +2039,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_business_days: {
+        Args: { days: number; start_ts: string }
+        Returns: string
+      }
       add_student_role_to_self: { Args: never; Returns: boolean }
       delete_email: {
         Args: { message_id: number; queue_name: string }

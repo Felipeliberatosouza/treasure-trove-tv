@@ -548,7 +548,7 @@ const VideoPage = () => {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <HelpCircle className="h-5 w-5 text-primary" />
-              Dúvidas sobre este conteúdo
+              Tire suas Dúvidas
             </DialogTitle>
           </DialogHeader>
 
@@ -572,6 +572,18 @@ const VideoPage = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      {teacherId && video && (
+        <BookLessonModal
+          open={isBookLessonOpen}
+          onClose={() => setIsBookLessonOpen(false)}
+          teacherId={teacherId}
+          teacherName={teacherProfile?.name || video.instructor || null}
+          contentId={video.id}
+          contentType={contentType}
+          contentTitle={video.title}
+        />
+      )}
 
       <div className="flex-1 pt-16">
         <div className="px-4 py-3 md:px-12 lg:px-20">

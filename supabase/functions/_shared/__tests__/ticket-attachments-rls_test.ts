@@ -42,8 +42,20 @@ async function createUser(role: "student" | "admin") {
   if (error) throw error;
   const userId = data.user!.id;
 
-  // Ensure profile exists (handle_new_user trigger creates it; insert role explicitly).
-  await admin.from("user_roles").insert({ user_id: userId, role }).then(() => {});
+  // The handle_new_user trigger inserts a profile with cpf='' (which collides on
+  // the unique cpf constraint across multiple test users). Null it out.
+  await admin
+    .from("profiles")
+    .update({ cpf: null })
+    .eq("user_id", userId);
+
+  // Trigger already inserts a 'student' role. Add 'admin' if needed.
+  if (role === "admin") {
+    await admin
+      .from("user_roles")
+      .insert({ user_id: userId, role: "admin" })
+      .then(() => {});
+  }
 
   // Sign in to get a JWT-bound client.
   const client = createClient(SUPABASE_URL, ANON_KEY, {

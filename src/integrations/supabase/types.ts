@@ -1232,6 +1232,53 @@ export type Database = {
           },
         ]
       }
+      scheduled_lesson_reminders: {
+        Row: {
+          channel: string
+          created_at: string
+          error_message: string | null
+          id: string
+          lesson_id: string
+          recipient_type: string
+          recipient_user_id: string
+          reminder_hours: number
+          status: string
+          twilio_sid: string | null
+        }
+        Insert: {
+          channel: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          lesson_id: string
+          recipient_type: string
+          recipient_user_id: string
+          reminder_hours: number
+          status?: string
+          twilio_sid?: string | null
+        }
+        Update: {
+          channel?: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          lesson_id?: string
+          recipient_type?: string
+          recipient_user_id?: string
+          reminder_hours?: number
+          status?: string
+          twilio_sid?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scheduled_lesson_reminders_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "scheduled_lessons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       scheduled_lessons: {
         Row: {
           cancellation_reason: string | null

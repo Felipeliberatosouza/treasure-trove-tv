@@ -593,6 +593,10 @@ const TeacherAgendaTab = () => {
                 Reservada
               </span>
               <span className="flex items-center gap-1">
+                <span className="inline-block w-3 h-3 rounded bg-destructive/30 border border-destructive/50" />{" "}
+                Slot bloqueado
+              </span>
+              <span className="flex items-center gap-1">
                 <span className="inline-block w-3 h-3 rounded bg-destructive/30" /> Dia
                 bloqueado
               </span>

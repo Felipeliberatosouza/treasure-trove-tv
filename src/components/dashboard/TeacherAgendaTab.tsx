@@ -299,6 +299,75 @@ const TeacherAgendaTab = () => {
       }
       toast({ title: "Slot desbloqueado" });
     } else {
+      // ---- Validação de sobreposição antes de bloquear ----
+      const dayIso = format(slot.start, "yyyy-MM-dd");
+
+      // 1) Reserva existente sobrepondo o slot (mesmo que não preencha 100%)
+      const overlappingBooking = bookings.find((b) => {
+        const bStart = parseISO(b.scheduled_at);
+        const bEnd = addMinutes(bStart, b.duration_minutes);
+        return (
+          isSameDay(bStart, slot.start) && bStart < slot.end && bEnd > slot.start
+        );
+      });
+      if (overlappingBooking) {
+        toast({
+          title: "Não é possível bloquear este slot",
+          description: `Existe uma reserva (${overlappingBooking.title}) às ${format(
+            parseISO(overlappingBooking.scheduled_at),
+            "HH:mm",
+          )} que se sobrepõe a este horário. Cancele a reserva antes de bloquear.`,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // 2) Exceção parcial existente (unavailable ou extra) que sobrepõe o slot
+      //    sem cobri-lo totalmente — sinal de configuração ambígua.
+      const overlappingException = exceptions.find((e) => {
+        if (e.exception_date !== dayIso) return false;
+        if (!e.start_time || !e.end_time) return false; // dia inteiro tratado em outro fluxo
+        const eStart = parseISO(`${dayIso}T${e.start_time}`);
+        const eEnd = parseISO(`${dayIso}T${e.end_time}`);
+        const overlaps = eStart < slot.end && eEnd > slot.start;
+        const fullyCovers = eStart <= slot.start && eEnd >= slot.end;
+        // Já totalmente coberto por unavailable: nem chegaria aqui (botão já estaria "desbloquear").
+        // Reportamos sobreposição parcial OU cobertura por janela "extra".
+        return overlaps && (!fullyCovers || e.exception_type === "extra");
+      });
+      if (overlappingException) {
+        const eStart = overlappingException.start_time?.slice(0, 5) ?? "";
+        const eEnd = overlappingException.end_time?.slice(0, 5) ?? "";
+        const tipo =
+          overlappingException.exception_type === "extra"
+            ? "janela extra"
+            : "bloqueio";
+        toast({
+          title: "Slot sobreposto a outra exceção",
+          description: `Já existe ${tipo} das ${eStart} às ${eEnd} neste dia que se sobrepõe parcialmente a este horário. Ajuste a exceção existente antes de criar um novo bloqueio.`,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // 3) Bloqueio dia inteiro vigente
+      const fullDayBlock = exceptions.find(
+        (e) =>
+          e.exception_date === dayIso &&
+          e.exception_type === "unavailable" &&
+          !e.start_time &&
+          !e.end_time,
+      );
+      if (fullDayBlock) {
+        toast({
+          title: "Dia já bloqueado",
+          description:
+            "Este dia inteiro já está marcado como indisponível. Remova o bloqueio do dia para gerenciar slots individuais.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const { error } = await supabase
         .from("teacher_availability_exceptions")
         .insert({

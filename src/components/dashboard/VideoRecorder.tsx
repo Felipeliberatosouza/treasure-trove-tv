@@ -5,6 +5,7 @@ import { Video, Square, RotateCcw, Check, X, Camera, Loader2 } from "lucide-reac
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { compositeVideo, ImpactWord } from "@/utils/videoCompositor";
+import { shiftVtt } from "@/utils/vttSync";
 
 interface VideoRecorderProps {
   maxMinutes: number;

@@ -175,17 +175,43 @@ const Navbar = () => {
         </Link>
 
         <div className="hidden items-center gap-5 md:flex">
-          {menuItems.map((item) =>
-            item.href.startsWith("#") ? (
-              <a key={item.label} href={item.href} className="text-sm text-muted-foreground transition-colors hover:text-foreground whitespace-nowrap">
+          {menuItems.map((item) => {
+            if (item.children && item.children.length > 0) {
+              return (
+                <div key={item.label} className="relative group">
+                  <button
+                    type="button"
+                    className="text-sm text-muted-foreground transition-colors hover:text-foreground whitespace-nowrap"
+                  >
+                    {item.label}
+                  </button>
+                  <div className="absolute left-0 top-full pt-2 hidden group-hover:block z-50">
+                    <div className="min-w-[220px] rounded-md border border-border bg-background shadow-lg py-1">
+                      {item.children.map((child) => (
+                        <Link
+                          key={child.label}
+                          to={child.href}
+                          className="block px-3 py-2 text-sm text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+                        >
+                          {child.label}
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              );
+            }
+            const href = item.href ?? "#";
+            return href.startsWith("#") ? (
+              <a key={item.label} href={href} className="text-sm text-muted-foreground transition-colors hover:text-foreground whitespace-nowrap">
                 {item.label}
               </a>
             ) : (
-              <Link key={item.label} to={item.href} className="text-sm text-muted-foreground transition-colors hover:text-foreground whitespace-nowrap">
+              <Link key={item.label} to={href} className="text-sm text-muted-foreground transition-colors hover:text-foreground whitespace-nowrap">
                 {item.label}
               </Link>
-            )
-          )}
+            );
+          })}
         </div>
 
         <div className="flex items-center gap-3">

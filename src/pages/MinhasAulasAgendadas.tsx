@@ -63,6 +63,42 @@ const computeLateFee = (price: number, cfg: AulaParticularConfigSettings) => {
   return Number(((price * cfg.late_cancel_fee_value) / 100).toFixed(2));
 };
 
+/** Chave de storage por aula. Mantemos o nonce ativo por lesson_id para que,
+ *  se o aluno recarregar a página no meio de uma cobrança parcial, o retry
+ *  reutilize o mesmo nonce e bata na chave de idempotência do Stripe. */
+const NONCE_STORAGE_PREFIX = "late-cancel-nonce:";
+const nonceStorageKey = (lessonId: string) => `${NONCE_STORAGE_PREFIX}${lessonId}`;
+
+const generateNonce = () =>
+  typeof crypto !== "undefined" && "randomUUID" in crypto
+    ? crypto.randomUUID()
+    : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+const getOrCreatePersistentNonce = (lessonId: string): string => {
+  if (typeof window === "undefined" || !window.sessionStorage) {
+    return generateNonce();
+  }
+  const key = nonceStorageKey(lessonId);
+  const existing = window.sessionStorage.getItem(key);
+  if (existing && existing.length >= 8) return existing;
+  const created = generateNonce();
+  try {
+    window.sessionStorage.setItem(key, created);
+  } catch {
+    /* storage cheio/bloqueado: segue só em memória */
+  }
+  return created;
+};
+
+const clearPersistentNonce = (lessonId: string) => {
+  if (typeof window === "undefined" || !window.sessionStorage) return;
+  try {
+    window.sessionStorage.removeItem(nonceStorageKey(lessonId));
+  } catch {
+    /* noop */
+  }
+};
+
 const MinhasAulasAgendadas = () => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -136,6 +172,9 @@ const MinhasAulasAgendadas = () => {
   if (!user) return <Navigate to="/login" replace />;
 
   const closeCancelModal = () => {
+    // Limpamos o nonce persistido apenas quando o fluxo é abandonado/finalizado
+    // pelo usuário. Recargas de página NÃO chamam isto, então o nonce sobrevive.
+    if (cancelTarget) clearPersistentNonce(cancelTarget.id);
     setCancelTarget(null);
     setAcknowledgedFee(false);
     setCancelNonce(null);
@@ -144,12 +183,10 @@ const MinhasAulasAgendadas = () => {
   const openCancelModal = (lesson: ScheduledLesson) => {
     setCancelTarget(lesson);
     setAcknowledgedFee(false);
-    // Gera novo nonce a cada abertura do fluxo de cancelamento.
-    setCancelNonce(
-      typeof crypto !== "undefined" && "randomUUID" in crypto
-        ? crypto.randomUUID()
-        : `${Date.now()}-${Math.random().toString(36).slice(2)}`,
-    );
+    // Reaproveita nonce persistido para esta aula (caso o aluno tenha
+    // recarregado a página no meio de um cancelamento parcial). Se não houver,
+    // um novo é gerado e gravado em sessionStorage.
+    setCancelNonce(getOrCreatePersistentNonce(lesson.id));
   };
 
   const handleConfirmCancel = async () => {

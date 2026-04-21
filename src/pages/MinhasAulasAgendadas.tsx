@@ -171,6 +171,52 @@ const MinhasAulasAgendadas = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
+  /** Tracks the previous meeting_url for each upcoming lesson. When a lesson
+   *  transitions from "no link" to "has link" while still in the future, we
+   *  surface a toast so the student knows the teacher just published it. */
+  const prevMeetingUrlsRef = useRef<Record<string, string | null>>({});
+  useEffect(() => {
+    const prev = prevMeetingUrlsRef.current;
+    const next: Record<string, string | null> = {};
+    lessons.forEach((l) => {
+      next[l.id] = l.meeting_url ?? null;
+      const isUpcoming = ["pending", "confirmed"].includes(l.status);
+      const startsInFuture = new Date(l.scheduled_at).getTime() > Date.now();
+      const had = prev[l.id];
+      // Only notify when we already had a snapshot (avoids first-load noise).
+      if (
+        isUpcoming &&
+        startsInFuture &&
+        had !== undefined &&
+        !had &&
+        l.meeting_url
+      ) {
+        toast({
+          title: "Link da reunião disponível!",
+          description: `O professor disponibilizou o link para "${l.title}".`,
+        });
+      }
+    });
+    prevMeetingUrlsRef.current = next;
+  }, [lessons, toast]);
+
+  /** While there are upcoming lessons missing a meeting link, poll every 60s
+   *  so the student gets the notification quickly without a manual refresh. */
+  useEffect(() => {
+    const needsPolling = lessons.some(
+      (l) =>
+        ["pending", "confirmed"].includes(l.status) &&
+        !l.meeting_url &&
+        new Date(l.scheduled_at).getTime() > Date.now(),
+    );
+    if (!needsPolling) return;
+    const id = window.setInterval(() => {
+      fetchLessons();
+    }, 60_000);
+    return () => window.clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lessons]);
+
   const cancelInfo = useMemo(() => {
     if (!cancelTarget) return null;
     const scheduledMs = new Date(cancelTarget.scheduled_at).getTime();

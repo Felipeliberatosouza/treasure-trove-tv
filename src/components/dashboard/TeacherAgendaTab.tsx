@@ -280,6 +280,44 @@ const TeacherAgendaTab = () => {
     fetchAll();
   };
 
+  // Toggle block/unblock of a single slot via partial-day exception
+  const toggleSlotBlock = async (slot: {
+    start: Date;
+    end: Date;
+    booked: BookingRow | null;
+    blockedExceptionId: string | null;
+  }) => {
+    if (!user || slot.booked) return;
+    if (slot.blockedExceptionId) {
+      const { error } = await supabase
+        .from("teacher_availability_exceptions")
+        .delete()
+        .eq("id", slot.blockedExceptionId);
+      if (error) {
+        toast({ title: "Erro", description: error.message, variant: "destructive" });
+        return;
+      }
+      toast({ title: "Slot desbloqueado" });
+    } else {
+      const { error } = await supabase
+        .from("teacher_availability_exceptions")
+        .insert({
+          teacher_id: user.id,
+          exception_date: format(slot.start, "yyyy-MM-dd"),
+          exception_type: "unavailable",
+          start_time: format(slot.start, "HH:mm:ss"),
+          end_time: format(slot.end, "HH:mm:ss"),
+          notes: "Slot bloqueado pelo professor",
+        });
+      if (error) {
+        toast({ title: "Erro", description: error.message, variant: "destructive" });
+        return;
+      }
+      toast({ title: "Slot bloqueado" });
+    }
+    fetchAll();
+  };
+
   // ---- Visualização semanal ----
   const weekDays = useMemo(
     () => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)),

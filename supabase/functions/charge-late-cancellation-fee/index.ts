@@ -13,6 +13,13 @@ const log = (s: string, d?: unknown) =>
 
 interface ReqBody {
   lesson_id: string;
+  /**
+   * Nonce gerado pelo cliente (uuid v4) por tentativa de cancelamento.
+   * Combinado com lesson_id forma a Idempotency-Key enviada ao Stripe,
+   * impedindo cobrança duplicada em retries automáticos do mesmo "click"
+   * e ainda permitindo nova cobrança se o aluno reabrir o fluxo (novo nonce).
+   */
+  cancel_nonce?: string;
 }
 
 interface AulaCfg {
@@ -58,6 +65,10 @@ serve(async (req) => {
 
     const body = (await req.json()) as ReqBody;
     if (!body.lesson_id) throw new Error("lesson_id obrigatório");
+    const nonce = (body.cancel_nonce ?? "").trim();
+    if (!nonce || nonce.length < 8 || nonce.length > 80) {
+      throw new Error("cancel_nonce inválido");
+    }
 
     // 1) Load lesson and ensure ownership + cancellable status
     const { data: lesson, error: le } = await sb
@@ -100,6 +111,10 @@ serve(async (req) => {
 
     log("computed fee", { fee, platformShare, teacherShare, hoursUntil });
 
+    // Idempotency: lesson_id + nonce. Se o mesmo par já foi cobrado, o Stripe
+    // devolve o mesmo PaymentIntent em vez de criar um novo.
+    const idempotencyKey = `late_cancel:${lesson.id}:${nonce}`;
+
     // 3) Locate Stripe customer + default payment method
     const { data: profile } = await sb
       .from("profiles")
@@ -130,22 +145,31 @@ serve(async (req) => {
     // 4) Charge fee via off-session PaymentIntent
     let charge;
     try {
-      charge = await stripe.paymentIntents.create({
-        amount: amountCents,
-        currency: "brl",
-        customer: customerId,
-        payment_method: pmId,
-        off_session: true,
-        confirm: true,
-        description: `Taxa de cancelamento tardio - Aula ${lesson.id}`,
-        metadata: {
-          lesson_id: lesson.id,
-          student_id: user.id,
-          teacher_id: lesson.teacher_id,
-          fee_type: "late_cancel",
-          platform_share: String(platformShare),
-          teacher_share: String(teacherShare),
+      charge = await stripe.paymentIntents.create(
+        {
+          amount: amountCents,
+          currency: "brl",
+          customer: customerId,
+          payment_method: pmId,
+          off_session: true,
+          confirm: true,
+          description: `Taxa de cancelamento tardio - Aula ${lesson.id}`,
+          metadata: {
+            lesson_id: lesson.id,
+            student_id: user.id,
+            teacher_id: lesson.teacher_id,
+            fee_type: "late_cancel",
+            platform_share: String(platformShare),
+            teacher_share: String(teacherShare),
+            cancel_nonce: nonce,
+          },
         },
+        { idempotencyKey },
+      );
+      log("Stripe charge result", {
+        id: charge.id,
+        status: charge.status,
+        idempotent_replay: (charge as unknown as { livemode?: boolean }) && false,
       });
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);

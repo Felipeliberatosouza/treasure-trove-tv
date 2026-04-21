@@ -1,5 +1,6 @@
-import { BookOpen, Video, FileText, HelpCircle, Calendar, DollarSign, ShieldCheck, AlertTriangle } from "lucide-react";
+import { BookOpen, Video, FileText, HelpCircle, Calendar, DollarSign, ShieldCheck, AlertTriangle, GraduationCap } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import TeacherAulaParticularRulesTab from "@/components/dashboard/TeacherAulaParticularRulesTab";
 
 const TeacherInstructionsTab = () => {
   return (
@@ -111,6 +112,19 @@ const TeacherInstructionsTab = () => {
             <p>
               Recomendamos usar ferramentas como <strong className="text-foreground">Calendly</strong>, <strong className="text-foreground">Google Agenda</strong> ou qualquer plataforma de agendamento online para gerar o link.
             </p>
+          </AccordionContent>
+        </AccordionItem>
+
+        {/* Regras de Aula Particular */}
+        <AccordionItem value="aula-particular-rules" className="rounded-lg border border-border px-4">
+          <AccordionTrigger className="text-sm font-medium gap-2">
+            <span className="flex items-center gap-2">
+              <GraduationCap className="h-4 w-4 text-primary" />
+              Regras de Aula Particular
+            </span>
+          </AccordionTrigger>
+          <AccordionContent className="text-sm text-muted-foreground pt-2">
+            <TeacherAulaParticularRulesTab />
           </AccordionContent>
         </AccordionItem>
 

@@ -42,10 +42,22 @@ const loggedMenuItems = [
   { label: "Aula Particular: Agende/Acesse", href: "/minhas-aulas-agendadas" },
 ];
 
-const teacherMenuItems = [
+type MenuItem = {
+  label: string;
+  href?: string;
+  children?: { label: string; href: string }[];
+};
+
+const teacherMenuItems: MenuItem[] = [
   { label: "Minhas Revisões: Gravar Nova Aula", href: "/dashboard/teacher?tab=lessons" },
   { label: "Responder Dúvidas de Alunos", href: "/dashboard/teacher?tab=doubts" },
-  { label: "Aula Particular: Acesse Aulas/ Atualize Agenda", href: "/minhas-aulas-agendadas" },
+  {
+    label: "Aula Particular: Acesse Aulas/ Atualize Agenda",
+    children: [
+      { label: "Acessar Aulas", href: "/minhas-aulas-agendadas" },
+      { label: "Atualizar Agenda", href: "/dashboard/teacher?tab=agenda" },
+    ],
+  },
   { label: "Meus Resumos", href: "/meus-resumos" },
   { label: "Meus Simulados", href: "/meus-simulados" },
   { label: "Minhas Top Questões de Provas", href: "/minhas-top-questoes" },

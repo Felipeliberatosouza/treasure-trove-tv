@@ -154,6 +154,7 @@ const TeacherDashboard = () => {
               {activeTab === "contract" && <TeacherContractTab />}
               {activeTab === "sales" && <TeacherStatementTab />}
               {activeTab === "aula-particular" && <TeacherAulaParticularRulesTab />}
+              {activeTab === "agenda" && <TeacherAgendaTab />}
             </motion.div>
           </div>
         )}

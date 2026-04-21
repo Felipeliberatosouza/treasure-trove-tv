@@ -213,8 +213,34 @@ const VideoRecorder = ({
       }
 
       // Step 2: Composite video with blackboard/intro if needed
-      if (enableBlackboard && impactWords.length > 0 || enableAutoCover) {
-        setProcessingStep("Processando vídeo com quadro negro...");
+      const shouldComposite = enableBlackboard || enableAutoCover;
+
+      // Fallback: if blackboard is enabled but AI returned no impact words,
+      // build a basic set from the lesson title so the chalkboard still renders.
+      if (enableBlackboard && impactWords.length === 0 && lessonTitle) {
+        const titleWords = lessonTitle
+          .split(/\s+/)
+          .filter((w) => w.length > 3)
+          .slice(0, 6);
+        if (titleWords.length > 0) {
+          // Estimate duration from blob size as a rough proxy if needed
+          const estimatedDuration = Math.max(30, Math.min(600, audioBlob.size / 16000));
+          const slice = estimatedDuration / titleWords.length;
+          impactWords = titleWords.map((word, i) => ({
+            word,
+            timestamp: i * slice,
+            duration: Math.max(5, slice * 0.9),
+          }));
+          console.log("[VideoRecorder] Using title fallback for impact words:", impactWords);
+        }
+      }
+
+      if (shouldComposite) {
+        setProcessingStep(
+          enableBlackboard
+            ? "Processando vídeo com quadro negro..."
+            : "Adicionando capa de introdução..."
+        );
 
         const compositedBlob = await compositeVideo(videoBlob, {
           impactWords: enableBlackboard ? impactWords : [],
@@ -308,7 +334,20 @@ const VideoRecorder = ({
           className={`w-full h-full object-cover ${state !== "preview" ? "hidden" : ""}`}
           playsInline
           controls
-        />
+          crossOrigin="anonymous"
+        >
+          {state === "preview" && subtitlesVttRef.current && (
+            <track
+              kind="subtitles"
+              src={URL.createObjectURL(
+                new Blob([subtitlesVttRef.current], { type: "text/vtt" })
+              )}
+              srcLang="pt-BR"
+              label="Português"
+              default
+            />
+          )}
+        </video>
 
         {/* Processing overlay */}
         {state === "processing" && (

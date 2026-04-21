@@ -41,6 +41,8 @@ export async function compositeVideo(
     const video = document.createElement("video");
     video.src = URL.createObjectURL(videoBlob);
     video.muted = false;
+    video.crossOrigin = "anonymous";
+    video.playsInline = true;
     video.preload = "auto";
 
     video.onloadedmetadata = async () => {
@@ -54,18 +56,29 @@ export async function compositeVideo(
       canvas.height = h;
       const ctx = canvas.getContext("2d")!;
 
-      // Set up audio from original video
-      const audioCtx = new AudioContext();
+      // Set up audio from original video using Web Audio API
+      const AudioCtx =
+        (window as unknown as { AudioContext?: typeof AudioContext; webkitAudioContext?: typeof AudioContext })
+          .AudioContext ||
+        (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+      const audioCtx = new AudioCtx!();
+      try {
+        if (audioCtx.state === "suspended") await audioCtx.resume();
+      } catch (err) {
+        console.warn("AudioContext resume failed", err);
+      }
       const source = audioCtx.createMediaElementSource(video);
       const dest = audioCtx.createMediaStreamDestination();
       source.connect(dest);
-      source.connect(audioCtx.destination); // also hear it (muted below)
+      // Do NOT connect to destination to avoid feedback during processing
 
       // Combine canvas video + original audio
       const canvasStream = canvas.captureStream(30);
+      const audioTracks = dest.stream.getAudioTracks();
+      console.log("[Compositor] Audio tracks captured:", audioTracks.length);
       const combinedStream = new MediaStream([
         ...canvasStream.getVideoTracks(),
-        ...dest.stream.getAudioTracks(),
+        ...audioTracks,
       ]);
 
       const mimeType = MediaRecorder.isTypeSupported("video/webm;codecs=vp9,opus")
@@ -93,8 +106,16 @@ export async function compositeVideo(
       }
 
       // Phase 2: Play video and draw frames with blackboard overlay
-      video.muted = true; // audio goes through AudioContext
-      await video.play();
+      // IMPORTANT: do not mute the source video here — muting the element
+      // also silences the MediaElementSource, removing audio from the output.
+      video.volume = 0; // keeps it inaudible to user but audio still flows through Web Audio
+      try {
+        await video.play();
+      } catch (err) {
+        console.error("[Compositor] video.play() failed", err);
+        reject(err);
+        return;
+      }
 
       const introOffset = introTitle ? introDurationSec : 0;
 

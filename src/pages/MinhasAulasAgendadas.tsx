@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { CalendarDays, Clock, AlertTriangle, Loader2, X } from "lucide-react";
+import { CalendarDays, Clock, AlertTriangle, Loader2, X, CalendarCog } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { Navigate } from "react-router-dom";
+import { Navigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -100,7 +100,8 @@ const clearPersistentNonce = (lessonId: string) => {
 };
 
 const MinhasAulasAgendadas = () => {
-  const { user } = useAuth();
+  const { user, allRoles } = useAuth();
+  const isTeacher = allRoles.includes("teacher");
   const { toast } = useToast();
   const { data: cfgRaw } = usePlatformSettings("aula_particular_config");
   const cfg: AulaParticularConfigSettings = cfgRaw ?? DEFAULT_AULA_PARTICULAR_CONFIG;
@@ -349,11 +350,21 @@ const MinhasAulasAgendadas = () => {
       <Navbar />
       <div className="flex-1 px-6 pt-24 pb-12 md:px-16 lg:px-32">
         <div className="mx-auto max-w-5xl space-y-8">
-          <div className="flex items-center gap-3">
-            <CalendarDays className="h-8 w-8 text-primary" />
-            <h1 className="font-display text-3xl font-bold text-gradient">
-              Minhas Aulas Agendadas
-            </h1>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <CalendarDays className="h-8 w-8 text-primary" />
+              <h1 className="font-display text-3xl font-bold text-gradient">
+                Minhas Aulas Agendadas
+              </h1>
+            </div>
+            {isTeacher && (
+              <Button asChild variant="outline" className="gap-2">
+                <Link to="/dashboard/teacher?tab=agenda">
+                  <CalendarCog className="h-4 w-4" />
+                  Atualizar minha Agenda
+                </Link>
+              </Button>
+            )}
           </div>
           <p className="text-muted-foreground text-lg">
             Aulas particulares agendadas com professores. Cancelamentos com menos de{" "}

@@ -103,6 +103,8 @@ const MinhasAulasAgendadas = () => {
   const { user, allRoles } = useAuth();
   const isTeacher = allRoles.includes("teacher");
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const [navigatingToAgenda, setNavigatingToAgenda] = useState(false);
   const { data: cfgRaw } = usePlatformSettings("aula_particular_config");
   const cfg: AulaParticularConfigSettings = cfgRaw ?? DEFAULT_AULA_PARTICULAR_CONFIG;
 

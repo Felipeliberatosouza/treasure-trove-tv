@@ -53,7 +53,7 @@ const CHANNEL_LABEL: Record<ChannelOption, string> = {
  *  want to receive lesson reminders. The available windows are constrained to
  *  the ones the admin enabled platform-wide. */
 const LessonReminderPreferences = () => {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { toast } = useToast();
   const { data: cfgRaw } = usePlatformSettings("aula_particular_config");
   const cfg: AulaParticularConfigSettings =
@@ -73,6 +73,9 @@ const LessonReminderPreferences = () => {
   const [channel, setChannel] = useState<ChannelOption>("whatsapp_sms_fallback");
   const [alternatePhone, setAlternatePhone] = useState<string>("");
   const [selectedWindows, setSelectedWindows] = useState<number[]>([]);
+  const [usingProfilePhone, setUsingProfilePhone] = useState(false);
+
+  const profilePhoneDigits = String((profile as any)?.phone ?? "").replace(/\D/g, "");
 
   // Load current preferences when the modal opens.
   useEffect(() => {
@@ -91,9 +94,21 @@ const LessonReminderPreferences = () => {
       }
       if (data) {
         setChannel((data.channel as ChannelOption) ?? "whatsapp_sms_fallback");
-        setAlternatePhone(
-          data.alternate_phone ? String(data.alternate_phone).replace(/\D/g, "") : "",
-        );
+        const savedPhone = data.alternate_phone
+          ? String(data.alternate_phone).replace(/\D/g, "")
+          : "";
+        if (savedPhone) {
+          setAlternatePhone(savedPhone);
+          setUsingProfilePhone(false);
+        } else if (profilePhoneDigits) {
+          // Pre-fill with the phone from "Dados Pessoais" so the user does not
+          // have to retype it. It will only be persisted if they hit save.
+          setAlternatePhone(profilePhoneDigits);
+          setUsingProfilePhone(true);
+        } else {
+          setAlternatePhone("");
+          setUsingProfilePhone(false);
+        }
         setSelectedWindows(
           Array.isArray(data.preferred_windows_hours)
             ? (data.preferred_windows_hours as number[])
@@ -101,7 +116,8 @@ const LessonReminderPreferences = () => {
         );
       } else {
         setChannel("whatsapp_sms_fallback");
-        setAlternatePhone("");
+        setAlternatePhone(profilePhoneDigits);
+        setUsingProfilePhone(Boolean(profilePhoneDigits));
         setSelectedWindows([]);
       }
       setLoading(false);
@@ -109,7 +125,7 @@ const LessonReminderPreferences = () => {
     return () => {
       cancelled = true;
     };
-  }, [open, user]);
+  }, [open, user, profilePhoneDigits]);
 
   const phoneDigits = alternatePhone.replace(/\D/g, "");
   const phoneInvalid = phoneDigits.length > 0 && !isValidBrazilianPhone(alternatePhone);

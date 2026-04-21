@@ -149,7 +149,7 @@ const SupportTicketsTab = ({ userRole }: SupportTicketsTabProps) => {
       priority,
       subject: subject.trim().slice(0, 255),
       description: description.trim().slice(0, 5000),
-    });
+    } as any);
     setSubmitting(false);
     if (error) {
       toast.error("Erro ao abrir chamado: " + error.message);
@@ -174,7 +174,7 @@ const SupportTicketsTab = ({ userRole }: SupportTicketsTabProps) => {
       author_id: user.id,
       author_type: "user",
       message: reply.trim().slice(0, 5000),
-    });
+    } as any);
     setSending(false);
     if (error) {
       toast.error("Erro ao enviar mensagem");

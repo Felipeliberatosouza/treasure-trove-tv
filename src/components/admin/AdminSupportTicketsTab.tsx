@@ -22,6 +22,10 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import {
+  TicketAttachmentUploader,
+  TicketAttachmentsList,
+} from "@/components/dashboard/TicketAttachments";
 
 interface Ticket {
   id: string;
@@ -128,6 +132,7 @@ const AdminSupportTicketsTab = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [reply, setReply] = useState("");
   const [sending, setSending] = useState(false);
+  const [attachmentsKey, setAttachmentsKey] = useState(0);
 
   const load = async () => {
     setLoading(true);
@@ -174,6 +179,7 @@ const AdminSupportTicketsTab = () => {
   const openTicket = async (t: Ticket) => {
     setSelected(t);
     await loadMessages(t.id);
+    setAttachmentsKey((k) => k + 1);
   };
 
   const handleReply = async () => {
@@ -438,6 +444,12 @@ const AdminSupportTicketsTab = () => {
                     <p className="text-sm whitespace-pre-wrap">{m.message}</p>
                   </div>
                 ))}
+                <TicketAttachmentsList
+                  ticketId={selected.id}
+                  refreshKey={attachmentsKey}
+                  canDelete={() => true}
+                  onChanged={() => setAttachmentsKey((k) => k + 1)}
+                />
               </div>
 
               <div className="border-t pt-3 space-y-2">
@@ -448,7 +460,12 @@ const AdminSupportTicketsTab = () => {
                   rows={3}
                   maxLength={5000}
                 />
-                <div className="flex justify-end">
+                <div className="flex justify-between items-center gap-2 flex-wrap">
+                  <TicketAttachmentUploader
+                    ticketId={selected.id}
+                    uploaderType="admin"
+                    onUploaded={() => setAttachmentsKey((k) => k + 1)}
+                  />
                   <Button onClick={handleReply} disabled={sending || !reply.trim()} className="gap-2">
                     <Send className="h-4 w-4" />
                     {sending ? "Enviando..." : "Responder"}

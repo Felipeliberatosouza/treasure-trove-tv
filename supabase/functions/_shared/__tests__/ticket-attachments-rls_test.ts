@@ -202,6 +202,7 @@ Deno.test("ticket attachments RLS: owner / other user / admin access matrix", as
       assertEquals(error, null, `Admin signed URL error: ${error?.message}`);
       const res = await fetch(data!.signedUrl);
       assertEquals(res.status, 200, "Admin must download any attachment");
+      await res.body?.cancel();
     }
 
     // === 8) Other user cannot DELETE the row (RLS) ===

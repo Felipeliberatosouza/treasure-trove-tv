@@ -537,28 +537,41 @@ const TeacherAgendaTab = () => {
 
                     <div className="flex flex-col gap-1">
                       {slots.map((s) => (
-                        <div
+                        <button
+                          type="button"
                           key={s.start.toISOString()}
-                          className={`rounded px-2 py-1 text-[11px] flex items-center justify-between gap-1 ${
+                          disabled={!!s.booked}
+                          onClick={() => toggleSlotBlock(s)}
+                          className={`rounded px-2 py-1 text-[11px] flex items-center justify-between gap-1 transition-colors text-left ${
                             s.booked
-                              ? "bg-primary/15 text-primary border border-primary/30"
+                              ? "bg-primary/15 text-primary border border-primary/30 cursor-not-allowed"
+                              : s.blockedExceptionId
+                              ? "bg-destructive/15 text-destructive border border-destructive/40 hover:bg-destructive/25 line-through"
                               : s.source === "extra"
-                              ? "bg-accent/15 text-foreground border border-accent/40"
-                              : "bg-secondary text-foreground"
+                              ? "bg-accent/15 text-foreground border border-accent/40 hover:bg-accent/25"
+                              : "bg-secondary text-foreground hover:bg-secondary/70"
                           }`}
-                          title={s.booked ? `Reservada: ${s.booked.title}` : "Livre"}
+                          title={
+                            s.booked
+                              ? `Reservada: ${s.booked.title}`
+                              : s.blockedExceptionId
+                              ? "Slot bloqueado — clique para desbloquear"
+                              : "Slot livre — clique para bloquear"
+                          }
                         >
                           <span className="font-mono">
                             {format(s.start, "HH:mm")}
                           </span>
                           {s.booked ? (
                             <CheckCircle2 className="h-3 w-3" />
+                          ) : s.blockedExceptionId ? (
+                            <Ban className="h-3 w-3" />
                           ) : s.source === "extra" ? (
                             <Sparkles className="h-3 w-3" />
                           ) : (
                             <CircleSlash className="h-3 w-3 opacity-30" />
                           )}
-                        </div>
+                        </button>
                       ))}
                     </div>
                   </div>

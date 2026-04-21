@@ -26,7 +26,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import PhoneInput, { isValidBrazilianPhone } from "@/components/PhoneInput";
-import { BellRing, Loader2, Save, Smartphone } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { BellRing, Loader2, Plus, Save, Smartphone, X } from "lucide-react";
 
 type ChannelOption =
   | "whatsapp_sms_fallback"
@@ -74,6 +75,11 @@ const LessonReminderPreferences = () => {
   const [alternatePhone, setAlternatePhone] = useState<string>("");
   const [selectedWindows, setSelectedWindows] = useState<number[]>([]);
   const [usingProfilePhone, setUsingProfilePhone] = useState(false);
+  const [customHourInput, setCustomHourInput] = useState<string>("");
+  /** When true, the user has not yet customised the windows for this session,
+   *  so we keep them in sync with the admin defaults. As soon as they edit
+   *  anything (add / remove a chip) we stop overwriting. */
+  const [usingAdminDefaults, setUsingAdminDefaults] = useState(true);
 
   const profilePhoneDigits = String((profile as any)?.phone ?? "").replace(/\D/g, "");
 
@@ -109,31 +115,62 @@ const LessonReminderPreferences = () => {
           setAlternatePhone("");
           setUsingProfilePhone(false);
         }
-        setSelectedWindows(
-          Array.isArray(data.preferred_windows_hours)
-            ? (data.preferred_windows_hours as number[])
-            : [],
-        );
+        const savedWindows = Array.isArray(data.preferred_windows_hours)
+          ? (data.preferred_windows_hours as number[])
+          : [];
+        if (savedWindows.length > 0) {
+          setSelectedWindows([...savedWindows].sort((a, b) => b - a));
+          setUsingAdminDefaults(false);
+        } else {
+          // Empty saved list = "use everything the admin offers".
+          setSelectedWindows([...adminWindows]);
+          setUsingAdminDefaults(true);
+        }
       } else {
         setChannel("whatsapp_sms_fallback");
         setAlternatePhone(profilePhoneDigits);
         setUsingProfilePhone(Boolean(profilePhoneDigits));
-        setSelectedWindows([]);
+        // Brand-new users start with the admin defaults preselected.
+        setSelectedWindows([...adminWindows]);
+        setUsingAdminDefaults(true);
       }
       setLoading(false);
     })();
     return () => {
       cancelled = true;
     };
-  }, [open, user, profilePhoneDigits]);
+  }, [open, user, profilePhoneDigits, adminWindows]);
+
+  // While the user has not touched the windows, mirror admin updates live.
+  useEffect(() => {
+    if (open && usingAdminDefaults) {
+      setSelectedWindows([...adminWindows]);
+    }
+  }, [open, usingAdminDefaults, adminWindows]);
 
   const phoneDigits = alternatePhone.replace(/\D/g, "");
   const phoneInvalid = phoneDigits.length > 0 && !isValidBrazilianPhone(alternatePhone);
 
-  const toggleWindow = (h: number) => {
+  const removeWindow = (h: number) => {
+    setUsingAdminDefaults(false);
+    setSelectedWindows((prev) => prev.filter((w) => w !== h));
+  };
+
+  const addCustomHour = () => {
+    const n = Math.round(Number(customHourInput));
+    if (!Number.isFinite(n) || n <= 0 || n > 168) {
+      toast({
+        title: "Valor inválido",
+        description: "Informe um número inteiro entre 1 e 168 horas.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setUsingAdminDefaults(false);
     setSelectedWindows((prev) =>
-      prev.includes(h) ? prev.filter((w) => w !== h) : [...prev, h].sort((a, b) => b - a),
+      prev.includes(n) ? prev : [...prev, n].sort((a, b) => b - a),
     );
+    setCustomHourInput("");
   };
 
   const handleSave = async () => {
@@ -243,38 +280,66 @@ const LessonReminderPreferences = () => {
 
             <div className="space-y-2">
               <Label>Antecedência preferida</Label>
-              {adminWindows.length === 0 ? (
+              {selectedWindows.length === 0 ? (
                 <p className="text-xs text-muted-foreground">
-                  A plataforma não tem janelas de lembrete configuradas no momento.
+                  Nenhum horário definido. Adicione abaixo para receber lembretes.
                 </p>
               ) : (
-                <>
-                  <div className="flex flex-wrap gap-2">
-                    {adminWindows.map((h) => {
-                      const active = selectedWindows.includes(h);
-                      return (
-                        <button
-                          type="button"
-                          key={h}
-                          onClick={() => toggleWindow(h)}
-                          className={`rounded-full border px-3 py-1 text-xs transition-colors ${
-                            active
-                              ? "border-primary bg-primary text-primary-foreground"
-                              : "border-border bg-secondary text-muted-foreground hover:text-foreground"
-                          }`}
-                          aria-pressed={active}
-                        >
-                          {h}h antes
-                        </button>
-                      );
-                    })}
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Marque as antecedências em que quer receber. Se nenhuma for
-                    marcada, você recebe em todas ({adminWindows.map((h) => `${h}h`).join(", ")}).
-                  </p>
-                </>
+                <div className="flex flex-wrap gap-2">
+                  {selectedWindows.map((h) => (
+                    <span
+                      key={h}
+                      className="inline-flex items-center gap-1 rounded-full border border-primary bg-primary/10 px-3 py-1 text-xs text-primary"
+                    >
+                      {h}h antes
+                      <button
+                        type="button"
+                        onClick={() => removeWindow(h)}
+                        className="rounded-full p-0.5 hover:bg-primary/20"
+                        aria-label={`Remover ${h}h`}
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
               )}
+              <div className="flex items-center gap-2 pt-1">
+                <Input
+                  type="number"
+                  min={1}
+                  max={168}
+                  step={1}
+                  inputMode="numeric"
+                  placeholder="Ex.: 6"
+                  value={customHourInput}
+                  onChange={(e) => setCustomHourInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      addCustomHour();
+                    }
+                  }}
+                  className="bg-secondary"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={addCustomHour}
+                  className="gap-1 shrink-0"
+                >
+                  <Plus className="h-4 w-4" />
+                  Adicionar
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {usingAdminDefaults && adminWindows.length > 0
+                  ? `Pré-preenchido com a configuração do admin (${adminWindows
+                      .map((h) => `${h}h`)
+                      .join(", ")}). Adicione ou remova como preferir.`
+                  : "Você receberá um lembrete em cada antecedência listada (até 168h)."}
+              </p>
             </div>
           </div>
         )}

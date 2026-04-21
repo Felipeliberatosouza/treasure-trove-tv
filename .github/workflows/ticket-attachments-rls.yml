@@ -1,0 +1,69 @@
+name: Ticket Attachments RLS Test
+
+# Roda o teste de integração que valida as RLS policies do bucket
+# `support-attachments` e da tabela `support_ticket_attachments` sempre que
+# algo relacionado a anexos de tickets ou às policies for alterado.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "supabase/functions/_shared/__tests__/ticket-attachments-rls_test.ts"
+      - "src/components/dashboard/TicketAttachments.tsx"
+      - "src/components/dashboard/SupportTicketsTab.tsx"
+      - "src/components/admin/AdminSupportTicketsTab.tsx"
+      - "supabase/migrations/**"
+      - ".github/workflows/ticket-attachments-rls.yml"
+  pull_request:
+    paths:
+      - "supabase/functions/_shared/__tests__/ticket-attachments-rls_test.ts"
+      - "src/components/dashboard/TicketAttachments.tsx"
+      - "src/components/dashboard/SupportTicketsTab.tsx"
+      - "src/components/admin/AdminSupportTicketsTab.tsx"
+      - "supabase/migrations/**"
+      - ".github/workflows/ticket-attachments-rls.yml"
+  workflow_dispatch:
+
+jobs:
+  rls-integration-test:
+    name: Ticket attachments RLS (owner / other / admin)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+      SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validar secrets obrigatórios
+        run: |
+          missing=0
+          if [ -z "$SUPABASE_URL" ]; then echo "::error::SUPABASE_URL não configurado em GitHub Secrets"; missing=1; fi
+          if [ -z "$SUPABASE_SERVICE_ROLE_KEY" ]; then echo "::error::SUPABASE_SERVICE_ROLE_KEY não configurado"; missing=1; fi
+          if [ -z "$SUPABASE_ANON_KEY" ] && [ -z "$SUPABASE_PUBLISHABLE_KEY" ]; then
+            echo "::error::Defina SUPABASE_ANON_KEY ou SUPABASE_PUBLISHABLE_KEY"; missing=1;
+          fi
+          if [ "$missing" = "1" ]; then exit 1; fi
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v1
+        with:
+          deno-version: v1.x
+
+      - name: Cache Deno deps
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/deno
+          key: deno-${{ runner.os }}-${{ hashFiles('supabase/functions/**/*.ts') }}
+          restore-keys: deno-${{ runner.os }}-
+
+      - name: Rodar teste de RLS dos anexos
+        run: |
+          deno test \
+            --allow-net --allow-env \
+            --no-check \
+            supabase/functions/_shared/__tests__/ticket-attachments-rls_test.ts

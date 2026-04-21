@@ -33,7 +33,7 @@ const sections = [
   { id: "trial", label: "Teste Grátis", icon: Gift },
   { id: "products", label: "Config. de Produtos", icon: Package },
   { id: "contract", label: "Contrato do Professor", icon: FileSignature },
-  { id: "teacher_goal", label: "Meta do Professor", icon: Target },
+  { id: "teacher_goal", label: "Metas do Professor", icon: Target },
   { id: "twilio", label: "Verificação Celular", icon: Smartphone },
   { id: "retention", label: "Retenção (Cupom)", icon: Heart },
 ] as const;

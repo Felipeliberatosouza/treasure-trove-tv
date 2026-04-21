@@ -147,6 +147,19 @@ const BookLessonModal = ({
     // Realtime: refletir bloqueios/exceções e novas reservas do professor
     // imediatamente para evitar tentar reservar um slot que acabou de
     // conflitar com uma exceção sobreposta criada por ele.
+    // Debounce trailing: rajadas de updates (ex.: o professor bloqueando
+    // vários slots em sequência ou o webhook do Stripe disparando múltiplos
+    // eventos) coalescem em um único reload após 300ms de inatividade.
+    let reloadTimer: ReturnType<typeof setTimeout> | null = null;
+    const scheduleReload = () => {
+      if (cancelled) return;
+      if (reloadTimer) clearTimeout(reloadTimer);
+      reloadTimer = setTimeout(() => {
+        reloadTimer = null;
+        if (!cancelled) load();
+      }, 300);
+    };
+
     const channel = supabase
       .channel(`book-lesson-${teacherId}`)
       .on(
@@ -157,9 +170,7 @@ const BookLessonModal = ({
           table: "teacher_availability_exceptions",
           filter: `teacher_id=eq.${teacherId}`,
         },
-        () => {
-          if (!cancelled) load();
-        },
+        scheduleReload,
       )
       .on(
         "postgres_changes",
@@ -169,9 +180,7 @@ const BookLessonModal = ({
           table: "teacher_availability_recurring",
           filter: `teacher_id=eq.${teacherId}`,
         },
-        () => {
-          if (!cancelled) load();
-        },
+        scheduleReload,
       )
       .on(
         "postgres_changes",
@@ -181,14 +190,13 @@ const BookLessonModal = ({
           table: "scheduled_lessons",
           filter: `teacher_id=eq.${teacherId}`,
         },
-        () => {
-          if (!cancelled) load();
-        },
+        scheduleReload,
       )
       .subscribe();
 
     return () => {
       cancelled = true;
+      if (reloadTimer) clearTimeout(reloadTimer);
       supabase.removeChannel(channel);
     };
   }, [open, teacherId]);

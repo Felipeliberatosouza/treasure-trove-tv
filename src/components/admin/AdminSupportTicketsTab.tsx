@@ -22,6 +22,10 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import {
+  TicketAttachmentUploader,
+  TicketAttachmentsList,
+} from "@/components/dashboard/TicketAttachments";
 
 interface Ticket {
   id: string;
@@ -128,6 +132,7 @@ const AdminSupportTicketsTab = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [reply, setReply] = useState("");
   const [sending, setSending] = useState(false);
+  const [attachmentsKey, setAttachmentsKey] = useState(0);
 
   const load = async () => {
     setLoading(true);
@@ -174,6 +179,7 @@ const AdminSupportTicketsTab = () => {
   const openTicket = async (t: Ticket) => {
     setSelected(t);
     await loadMessages(t.id);
+    setAttachmentsKey((k) => k + 1);
   };
 
   const handleReply = async () => {

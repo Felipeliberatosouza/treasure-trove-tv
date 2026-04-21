@@ -401,6 +401,12 @@ const SupportTicketsTab = ({ userRole }: SupportTicketsTabProps) => {
                     </div>
                   ))
                 )}
+                <TicketAttachmentsList
+                  ticketId={selectedTicket.id}
+                  refreshKey={attachmentsKey}
+                  canDelete={(att) => att.uploader_type === "user" && att.uploader_id === user?.id}
+                  onChanged={() => setAttachmentsKey((k) => k + 1)}
+                />
               </div>
 
               {selectedTicket.status !== "closed" && selectedTicket.status !== "resolved" && (
@@ -412,7 +418,12 @@ const SupportTicketsTab = ({ userRole }: SupportTicketsTabProps) => {
                     rows={3}
                     maxLength={5000}
                   />
-                  <div className="flex justify-end">
+                  <div className="flex justify-between items-center gap-2 flex-wrap">
+                    <TicketAttachmentUploader
+                      ticketId={selectedTicket.id}
+                      uploaderType="user"
+                      onUploaded={() => setAttachmentsKey((k) => k + 1)}
+                    />
                     <Button onClick={handleReply} disabled={sending || !reply.trim()} className="gap-2">
                       <Send className="h-4 w-4" />
                       {sending ? "Enviando..." : "Enviar"}

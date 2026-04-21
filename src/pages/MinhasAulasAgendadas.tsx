@@ -23,6 +23,7 @@ import {
 } from "@/hooks/usePlatformSettings";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import LessonReadyChecklist from "@/components/LessonReadyChecklist";
 
 interface ScheduledLesson {
   id: string;

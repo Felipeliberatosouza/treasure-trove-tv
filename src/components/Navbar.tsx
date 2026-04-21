@@ -17,7 +17,13 @@ interface SearchResult {
   type: "lesson" | "exam_solution";
 }
 
-const publicMenuItems = [
+type MenuItem = {
+  label: string;
+  href?: string;
+  children?: { label: string; href: string }[];
+};
+
+const publicMenuItems: MenuItem[] = [
   { label: "Assine a Revisão Fácil", href: "#pricing" },
   { label: "Revisões", href: "/revisoes" },
   { label: "Resumos", href: "/resumos" },
@@ -27,12 +33,12 @@ const publicMenuItems = [
   { label: "Agende uma Aula Particular", href: "/contato" },
 ];
 
-const subscriberMenuItem = {
+const subscriberMenuItem: MenuItem = {
   label: "Minha Assinatura",
   href: "/dashboard/student?tab=subscription",
 };
 
-const loggedMenuItems = [
+const loggedMenuItems: MenuItem[] = [
   { label: "Minhas Revisões", href: "/minhas-revisoes" },
   { label: "Meus Resumos", href: "/meus-resumos" },
   { label: "Meus Simulados", href: "/meus-simulados" },
@@ -42,17 +48,23 @@ const loggedMenuItems = [
   { label: "Aula Particular: Agende/Acesse", href: "/minhas-aulas-agendadas" },
 ];
 
-const teacherMenuItems = [
+const teacherMenuItems: MenuItem[] = [
   { label: "Minhas Revisões: Gravar Nova Aula", href: "/dashboard/teacher?tab=lessons" },
   { label: "Responder Dúvidas de Alunos", href: "/dashboard/teacher?tab=doubts" },
-  { label: "Aula Particular: Acesse Aulas/ Atualize Agenda", href: "/minhas-aulas-agendadas" },
+  {
+    label: "Aula Particular: Acesse Aulas/ Atualize Agenda",
+    children: [
+      { label: "Acessar Aulas", href: "/minhas-aulas-agendadas" },
+      { label: "Atualizar Agenda", href: "/dashboard/teacher?tab=agenda" },
+    ],
+  },
   { label: "Meus Resumos", href: "/meus-resumos" },
   { label: "Meus Simulados", href: "/meus-simulados" },
   { label: "Minhas Top Questões de Provas", href: "/minhas-top-questoes" },
   { label: "Minhas Colinhas", href: "/minhas-colinhas" },
 ];
 
-const adminMenuItems = [
+const adminMenuItems: MenuItem[] = [
   { label: "Aprovação de Conteúdos", href: "/dashboard/admin?tab=content" },
   { label: "Aprovação de Dúvidas", href: "/dashboard/admin?tab=doubts" },
   { label: "Pagamento de Professores", href: "/dashboard/admin?tab=payments" },
@@ -163,17 +175,43 @@ const Navbar = () => {
         </Link>
 
         <div className="hidden items-center gap-5 md:flex">
-          {menuItems.map((item) =>
-            item.href.startsWith("#") ? (
-              <a key={item.label} href={item.href} className="text-sm text-muted-foreground transition-colors hover:text-foreground whitespace-nowrap">
+          {menuItems.map((item) => {
+            if (item.children && item.children.length > 0) {
+              return (
+                <div key={item.label} className="relative group">
+                  <button
+                    type="button"
+                    className="text-sm text-muted-foreground transition-colors hover:text-foreground whitespace-nowrap"
+                  >
+                    {item.label}
+                  </button>
+                  <div className="absolute left-0 top-full pt-2 hidden group-hover:block z-50">
+                    <div className="min-w-[220px] rounded-md border border-border bg-background shadow-lg py-1">
+                      {item.children.map((child) => (
+                        <Link
+                          key={child.label}
+                          to={child.href}
+                          className="block px-3 py-2 text-sm text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+                        >
+                          {child.label}
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              );
+            }
+            const href = item.href ?? "#";
+            return href.startsWith("#") ? (
+              <a key={item.label} href={href} className="text-sm text-muted-foreground transition-colors hover:text-foreground whitespace-nowrap">
                 {item.label}
               </a>
             ) : (
-              <Link key={item.label} to={item.href} className="text-sm text-muted-foreground transition-colors hover:text-foreground whitespace-nowrap">
+              <Link key={item.label} to={href} className="text-sm text-muted-foreground transition-colors hover:text-foreground whitespace-nowrap">
                 {item.label}
               </Link>
-            )
-          )}
+            );
+          })}
         </div>
 
         <div className="flex items-center gap-3">
@@ -253,17 +291,37 @@ const Navbar = () => {
           className="border-t border-border bg-background px-6 py-4 md:hidden"
         >
           <div className="flex flex-col gap-3">
-            {menuItems.map((item) =>
-              item.href.startsWith("#") ? (
-                <a key={item.label} href={item.href} className="text-sm text-muted-foreground" onClick={() => setMobileOpen(false)}>
+            {menuItems.map((item) => {
+              if (item.children && item.children.length > 0) {
+                return (
+                  <div key={item.label} className="flex flex-col gap-2">
+                    <span className="text-sm font-medium text-foreground">{item.label}</span>
+                    <div className="flex flex-col gap-2 pl-3 border-l border-border">
+                      {item.children.map((child) => (
+                        <Link
+                          key={child.label}
+                          to={child.href}
+                          className="text-sm text-muted-foreground hover:text-foreground"
+                          onClick={() => setMobileOpen(false)}
+                        >
+                          {child.label}
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                );
+              }
+              const href = item.href ?? "#";
+              return href.startsWith("#") ? (
+                <a key={item.label} href={href} className="text-sm text-muted-foreground" onClick={() => setMobileOpen(false)}>
                   {item.label}
                 </a>
               ) : (
-                <Link key={item.label} to={item.href} className="text-sm text-muted-foreground" onClick={() => setMobileOpen(false)}>
+                <Link key={item.label} to={href} className="text-sm text-muted-foreground" onClick={() => setMobileOpen(false)}>
                   {item.label}
                 </Link>
-              )
-            )}
+              );
+            })}
             {!user && (
               <Link to="/login" onClick={() => setMobileOpen(false)}>
                 <Button size="sm" className="gap-2 font-display w-full">

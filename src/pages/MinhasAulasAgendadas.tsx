@@ -172,6 +172,9 @@ const MinhasAulasAgendadas = () => {
   if (!user) return <Navigate to="/login" replace />;
 
   const closeCancelModal = () => {
+    // Limpamos o nonce persistido apenas quando o fluxo é abandonado/finalizado
+    // pelo usuário. Recargas de página NÃO chamam isto, então o nonce sobrevive.
+    if (cancelTarget) clearPersistentNonce(cancelTarget.id);
     setCancelTarget(null);
     setAcknowledgedFee(false);
     setCancelNonce(null);
@@ -180,12 +183,10 @@ const MinhasAulasAgendadas = () => {
   const openCancelModal = (lesson: ScheduledLesson) => {
     setCancelTarget(lesson);
     setAcknowledgedFee(false);
-    // Gera novo nonce a cada abertura do fluxo de cancelamento.
-    setCancelNonce(
-      typeof crypto !== "undefined" && "randomUUID" in crypto
-        ? crypto.randomUUID()
-        : `${Date.now()}-${Math.random().toString(36).slice(2)}`,
-    );
+    // Reaproveita nonce persistido para esta aula (caso o aluno tenha
+    // recarregado a página no meio de um cancelamento parcial). Se não houver,
+    // um novo é gerado e gravado em sessionStorage.
+    setCancelNonce(getOrCreatePersistentNonce(lesson.id));
   };
 
   const handleConfirmCancel = async () => {

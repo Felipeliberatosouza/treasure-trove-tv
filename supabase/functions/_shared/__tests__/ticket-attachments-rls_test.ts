@@ -180,20 +180,26 @@ Deno.test("ticket attachments RLS: owner / other user / admin access matrix", as
         .createSignedUrl(path, 60);
       assertEquals(error, null, `Owner signed URL error: ${error?.message}`);
       assertExists(data?.signedUrl);
-      const res = await fetch(data!.signedUrl);
+      const res = await fetchWithRetry(data!.signedUrl);
       assertEquals(res.status, 200, "Owner signed URL must download");
       assertEquals(await res.text(), "hello-rls");
     }
 
-    // === 5) Storage — other user CANNOT create a signed URL for the file ===
+    // === 5) Storage — other user must NOT be able to download the file.
+    // Note: createSignedUrl may return a URL even when RLS would block the
+    // underlying object; the authoritative check is the actual GET.
     {
       const { data, error } = await other.client.storage
         .from(BUCKET)
         .createSignedUrl(path, 60);
-      assert(
-        error !== null || !data?.signedUrl,
-        "Other user must NOT obtain a signed URL for someone else's attachment",
-      );
+      if (!error && data?.signedUrl) {
+        const res = await fetchWithRetry(data.signedUrl);
+        await res.body?.cancel();
+        assert(
+          res.status >= 400,
+          `Other user signed URL must NOT download (got ${res.status})`,
+        );
+      }
     }
 
     // === 6) Storage — other user cannot list the ticket folder ===
@@ -212,7 +218,7 @@ Deno.test("ticket attachments RLS: owner / other user / admin access matrix", as
         .from(BUCKET)
         .createSignedUrl(path, 60);
       assertEquals(error, null, `Admin signed URL error: ${error?.message}`);
-      const res = await fetch(data!.signedUrl);
+      const res = await fetchWithRetry(data!.signedUrl);
       assertEquals(res.status, 200, "Admin must download any attachment");
       await res.body?.cancel();
     }

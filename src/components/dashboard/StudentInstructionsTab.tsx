@@ -1,7 +1,22 @@
 import { BookOpen, Video, FileText, HelpCircle, Calendar, CreditCard, Star, Download } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import {
+  usePlatformSettings,
+  DEFAULT_AULA_PARTICULAR_CONFIG,
+  type AulaParticularConfigSettings,
+} from "@/hooks/usePlatformSettings";
 
 const StudentInstructionsTab = () => {
+  const { data } = usePlatformSettings("aula_particular_config");
+  const cfg: AulaParticularConfigSettings = {
+    ...DEFAULT_AULA_PARTICULAR_CONFIG,
+    ...((data as AulaParticularConfigSettings) || {}),
+  };
+  const feeText =
+    cfg.late_cancel_fee_type === "percentage"
+      ? `${cfg.late_cancel_fee_value}% do valor da aula`
+      : `R$ ${cfg.late_cancel_fee_value.toFixed(2)} (valor fixo)`;
+
   return (
     <div>
       <h2 className="font-display text-lg font-semibold mb-2 flex items-center gap-2">

@@ -1232,6 +1232,69 @@ export type Database = {
           },
         ]
       }
+      scheduled_lessons: {
+        Row: {
+          cancellation_reason: string | null
+          cancelled_at: string | null
+          completed_at: string | null
+          created_at: string
+          description: string | null
+          duration_minutes: number
+          id: string
+          meeting_url: string | null
+          modality: string
+          notes: string | null
+          scheduled_at: string
+          status: string
+          student_email: string | null
+          student_id: string | null
+          student_name: string | null
+          teacher_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number
+          id?: string
+          meeting_url?: string | null
+          modality?: string
+          notes?: string | null
+          scheduled_at: string
+          status?: string
+          student_email?: string | null
+          student_id?: string | null
+          student_name?: string | null
+          teacher_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number
+          id?: string
+          meeting_url?: string | null
+          modality?: string
+          notes?: string | null
+          scheduled_at?: string
+          status?: string
+          student_email?: string | null
+          student_id?: string | null
+          student_name?: string | null
+          teacher_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       security_notifications: {
         Row: {
           created_at: string
@@ -1522,6 +1585,42 @@ export type Database = {
         }
         Relationships: []
       }
+      teacher_monthly_goal_snapshots: {
+        Row: {
+          created_at: string
+          goals: Json
+          id: string
+          met_all_goals: boolean
+          metrics: Json
+          notified_at: string | null
+          period_end: string
+          period_start: string
+          teacher_id: string
+        }
+        Insert: {
+          created_at?: string
+          goals?: Json
+          id?: string
+          met_all_goals?: boolean
+          metrics?: Json
+          notified_at?: string | null
+          period_end: string
+          period_start: string
+          teacher_id: string
+        }
+        Update: {
+          created_at?: string
+          goals?: Json
+          id?: string
+          met_all_goals?: boolean
+          metrics?: Json
+          notified_at?: string | null
+          period_end?: string
+          period_start?: string
+          teacher_id?: string
+        }
+        Relationships: []
+      }
       teacher_payments: {
         Row: {
           avg_rating: number | null
@@ -1609,6 +1708,39 @@ export type Database = {
           thumbnail_path?: string | null
           thumbnail_url?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      teacher_weekly_declarations: {
+        Row: {
+          agenda_updated: boolean
+          created_at: string
+          declared_at: string
+          id: string
+          notes: string | null
+          teacher_id: string
+          updated_at: string
+          week_start: string
+        }
+        Insert: {
+          agenda_updated?: boolean
+          created_at?: string
+          declared_at?: string
+          id?: string
+          notes?: string | null
+          teacher_id: string
+          updated_at?: string
+          week_start: string
+        }
+        Update: {
+          agenda_updated?: boolean
+          created_at?: string
+          declared_at?: string
+          id?: string
+          notes?: string | null
+          teacher_id?: string
+          updated_at?: string
+          week_start?: string
         }
         Relationships: []
       }

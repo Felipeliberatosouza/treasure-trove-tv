@@ -1237,6 +1237,8 @@ export type Database = {
           cancellation_reason: string | null
           cancelled_at: string | null
           completed_at: string | null
+          content_id: string | null
+          content_type: string | null
           created_at: string
           description: string | null
           duration_minutes: number
@@ -1244,6 +1246,8 @@ export type Database = {
           meeting_url: string | null
           modality: string
           notes: string | null
+          payment_type: string | null
+          price: number
           scheduled_at: string
           status: string
           student_email: string | null
@@ -1257,6 +1261,8 @@ export type Database = {
           cancellation_reason?: string | null
           cancelled_at?: string | null
           completed_at?: string | null
+          content_id?: string | null
+          content_type?: string | null
           created_at?: string
           description?: string | null
           duration_minutes?: number
@@ -1264,6 +1270,8 @@ export type Database = {
           meeting_url?: string | null
           modality?: string
           notes?: string | null
+          payment_type?: string | null
+          price?: number
           scheduled_at: string
           status?: string
           student_email?: string | null
@@ -1277,6 +1285,8 @@ export type Database = {
           cancellation_reason?: string | null
           cancelled_at?: string | null
           completed_at?: string | null
+          content_id?: string | null
+          content_type?: string | null
           created_at?: string
           description?: string | null
           duration_minutes?: number
@@ -1284,6 +1294,8 @@ export type Database = {
           meeting_url?: string | null
           modality?: string
           notes?: string | null
+          payment_type?: string | null
+          price?: number
           scheduled_at?: string
           status?: string
           student_email?: string | null
@@ -1537,6 +1549,75 @@ export type Database = {
           id?: string
           metadata?: Json | null
           reason?: string
+        }
+        Relationships: []
+      }
+      teacher_availability_exceptions: {
+        Row: {
+          created_at: string
+          end_time: string | null
+          exception_date: string
+          exception_type: string
+          id: string
+          notes: string | null
+          start_time: string | null
+          teacher_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          end_time?: string | null
+          exception_date: string
+          exception_type: string
+          id?: string
+          notes?: string | null
+          start_time?: string | null
+          teacher_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          end_time?: string | null
+          exception_date?: string
+          exception_type?: string
+          id?: string
+          notes?: string | null
+          start_time?: string | null
+          teacher_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      teacher_availability_recurring: {
+        Row: {
+          active: boolean
+          created_at: string
+          day_of_week: number
+          end_time: string
+          id: string
+          start_time: string
+          teacher_id: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          day_of_week: number
+          end_time: string
+          id?: string
+          start_time: string
+          teacher_id: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          day_of_week?: number
+          end_time?: string
+          id?: string
+          start_time?: string
+          teacher_id?: string
+          updated_at?: string
         }
         Relationships: []
       }

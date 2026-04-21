@@ -109,9 +109,13 @@ export const TicketAttachmentUploader = ({
         );
         continue;
       }
-      // 2) Tamanho
+      // 2) Tamanho — verificado ANTES de ler o arquivo (magic number)
+      //    para evitar carregar bytes de arquivos grandes desnecessariamente.
       if (file.size > MAX_SIZE) {
-        toast.error(`"${file.name}" excede o limite de 10 MB.`);
+        toast.error(
+          `"${file.name}" tem ${formatSize(file.size)} e excede o limite de 10 MB. Reduza o arquivo e tente novamente.`,
+          { duration: 6000 }
+        );
         continue;
       }
       // 3) Extensão precisa bater com o MIME declarado

@@ -4,13 +4,15 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-type MaterialKind = "simulado" | "top_questoes" | "colinha";
+type MaterialKind = "simulado" | "top_questoes" | "colinha" | "description";
 
 interface RequestBody {
   kind: MaterialKind;
   title: string;
-  description: string;
+  description?: string;
   area?: string;
+  transcript?: string;
+  maxChars?: number;
 }
 
 const TOOL_BY_KIND: Record<MaterialKind, any> = {
@@ -96,6 +98,24 @@ const TOOL_BY_KIND: Record<MaterialKind, any> = {
       },
     },
   },
+  description: {
+    type: "function",
+    function: {
+      name: "generate_description",
+      description: "Gera um resumo descritivo da aula a partir da transcrição.",
+      parameters: {
+        type: "object",
+        properties: {
+          description: {
+            type: "string",
+            description: "Resumo claro e objetivo da aula em português brasileiro, respeitando o limite de caracteres informado.",
+          },
+        },
+        required: ["description"],
+        additionalProperties: false,
+      },
+    },
+  },
 };
 
 const SYSTEM_PROMPTS: Record<MaterialKind, string> = {
@@ -105,6 +125,8 @@ const SYSTEM_PROMPTS: Record<MaterialKind, string> = {
     "Você é um professor brasileiro especialista. Gere 5 perguntas abertas mais cobradas em provas sobre o tema, com respostas textuais objetivas (máx. 300 caracteres cada).",
   colinha:
     "Você é um professor brasileiro especialista. Gere exatamente 10 bullets curtos (máx. 100 caracteres cada) que ajudem o aluno a relembrar rapidamente os pontos-chave da aula.",
+  description:
+    "Você é um redator pedagógico brasileiro. Resuma a fala do professor em uma descrição clara, objetiva e atrativa para alunos, em português brasileiro. Use no máximo o limite de caracteres informado, sem ultrapassá-lo, sem usar markdown ou listas.",
 };
 
 Deno.serve(async (req) => {
@@ -127,7 +149,9 @@ Deno.serve(async (req) => {
     const apiKey = Deno.env.get("LOVABLE_API_KEY");
     if (!apiKey) throw new Error("LOVABLE_API_KEY não configurada");
 
-    const userPrompt = `Aula: "${body.title}"${body.area ? ` (área: ${body.area})` : ""}\n\nDescrição: ${body.description || "(não informada)"}\n\nGere o material no formato solicitado.`;
+    const userPrompt = body.kind === "description"
+      ? `Aula: "${body.title}"${body.area ? ` (área: ${body.area})` : ""}\n\nLimite máximo: ${body.maxChars ?? 500} caracteres (NÃO ultrapasse).\n\nTranscrição da fala do professor:\n${body.transcript || "(transcrição vazia)"}\n\nGere uma descrição resumida da aula respeitando o limite.`
+      : `Aula: "${body.title}"${body.area ? ` (área: ${body.area})` : ""}\n\nDescrição: ${body.description || "(não informada)"}\n\nGere o material no formato solicitado.`;
 
     const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",

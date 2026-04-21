@@ -27,6 +27,49 @@ const ALLOWED_MIME = [
 ];
 const MAX_SIZE = 10 * 1024 * 1024; // 10MB
 
+// Map MIME → extensões aceitas
+const MIME_EXTENSIONS: Record<string, string[]> = {
+  "image/png": ["png"],
+  "image/jpeg": ["jpg", "jpeg"],
+  "image/jpg": ["jpg", "jpeg"],
+  "image/webp": ["webp"],
+  "image/gif": ["gif"],
+  "application/pdf": ["pdf"],
+};
+
+// Rótulos amigáveis para mensagens
+const MIME_LABEL: Record<string, string> = {
+  "image/png": "PNG",
+  "image/jpeg": "JPEG",
+  "image/jpg": "JPEG",
+  "image/webp": "WEBP",
+  "image/gif": "GIF",
+  "application/pdf": "PDF",
+};
+
+// Detecta o tipo real lendo os primeiros bytes (magic numbers)
+const detectRealMime = async (file: File): Promise<string | null> => {
+  const head = new Uint8Array(await file.slice(0, 12).arrayBuffer());
+  const hex = Array.from(head)
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+  // PDF: %PDF
+  if (hex.startsWith("25504446")) return "application/pdf";
+  // PNG
+  if (hex.startsWith("89504e470d0a1a0a")) return "image/png";
+  // JPEG
+  if (hex.startsWith("ffd8ff")) return "image/jpeg";
+  // GIF87a / GIF89a
+  if (hex.startsWith("474946383761") || hex.startsWith("474946383961"))
+    return "image/gif";
+  // WEBP: "RIFF"...."WEBP"
+  if (hex.startsWith("52494646") && hex.substring(16, 24) === "57454250")
+    return "image/webp";
+  return null;
+};
+
+const normalizeMime = (m: string) => (m === "image/jpg" ? "image/jpeg" : m);
+
 const formatSize = (bytes: number) => {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;

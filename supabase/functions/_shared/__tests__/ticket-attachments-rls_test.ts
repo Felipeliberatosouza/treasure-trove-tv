@@ -24,6 +24,18 @@ const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
 const BUCKET = "support-attachments";
 
+async function fetchWithRetry(url: string, attempts = 4): Promise<Response> {
+  let last: Response | null = null;
+  for (let i = 0; i < attempts; i++) {
+    const res = await fetch(url);
+    if (res.status < 500) return res;
+    await res.body?.cancel();
+    last = res;
+    await new Promise((r) => setTimeout(r, 400 * (i + 1)));
+  }
+  return last as Response;
+}
+
 const admin = createClient(SUPABASE_URL, SERVICE_KEY, {
   auth: { persistSession: false, autoRefreshToken: false },
 });

@@ -490,6 +490,11 @@ const TeacherAgendaTab = () => {
                 </Button>
               </div>
             </div>
+            <p className="text-xs text-muted-foreground">
+              Clique em um horário livre para <strong>bloquear</strong> o slot, ou em um
+              slot bloqueado para <strong>desbloqueá-lo</strong>. Slots bloqueados ficam
+              indisponíveis no agendamento dos alunos automaticamente.
+            </p>
 
             <div className="grid grid-cols-1 md:grid-cols-7 gap-2">
               {weekDays.map((d) => {

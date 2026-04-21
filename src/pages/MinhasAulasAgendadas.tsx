@@ -295,7 +295,7 @@ const MinhasAulasAgendadas = () => {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setCancelTarget(lesson)}
+              onClick={() => openCancelModal(lesson)}
               className="gap-2"
             >
               <X className="h-4 w-4" />

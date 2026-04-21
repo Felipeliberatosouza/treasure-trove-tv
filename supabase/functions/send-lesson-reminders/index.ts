@@ -141,13 +141,32 @@ Deno.serve(async (req) => {
       .eq("key", "aula_particular_config")
       .maybeSingle();
     const cfg = (cfgRow?.value as Record<string, unknown> | null) ?? {};
-    const rawWindows = Array.isArray(cfg.reminder_windows_hours)
+    const rawAdminWindows = Array.isArray(cfg.reminder_windows_hours)
       ? (cfg.reminder_windows_hours as unknown[])
       : [24, 2];
-    const windows = rawWindows
+    const adminWindows = rawAdminWindows
       .map((v) => Number(v))
       .filter((n) => Number.isFinite(n) && n > 0 && n <= 168)
       .map((n) => Math.round(n));
+
+    // Pull every custom window any user has opted into, so we also evaluate
+    // lessons against those user-defined hours (e.g. someone wants 6h notice
+    // even if the admin only configured 24h/2h).
+    const { data: prefWindowsRows } = await supabase
+      .from("lesson_reminder_preferences")
+      .select("preferred_windows_hours")
+      .neq("channel", "disabled");
+    const userWindows = (prefWindowsRows ?? [])
+      .flatMap((r) =>
+        Array.isArray(r.preferred_windows_hours)
+          ? (r.preferred_windows_hours as unknown[])
+          : [],
+      )
+      .map((v) => Number(v))
+      .filter((n) => Number.isFinite(n) && n > 0 && n <= 168)
+      .map((n) => Math.round(n));
+
+    const windows = Array.from(new Set([...adminWindows, ...userWindows]));
     if (windows.length === 0) {
       return new Response(
         JSON.stringify({ ok: true, skipped: "no_windows_configured" }),
@@ -274,14 +293,14 @@ Deno.serve(async (req) => {
         const pref = prefMap.get(userId);
         // Skip when user disabled reminders entirely.
         if (pref?.channel === "disabled") continue;
-        // Skip when user opted out of this specific window.
-        if (
-          pref &&
-          pref.preferred_windows_hours.length > 0 &&
-          !pref.preferred_windows_hours.includes(reminderHours)
-        ) {
-          continue;
-        }
+        // Resolve which windows this user actually wants. If they have a
+        // preference, honour it strictly (could be custom hours not in the
+        // admin list). If not, fall back to the admin defaults.
+        const userWanted =
+          pref && pref.preferred_windows_hours.length > 0
+            ? pref.preferred_windows_hours
+            : adminWindows;
+        if (!userWanted.includes(reminderHours)) continue;
         // Prefer alternate phone if provided, fallback to profile phone.
         const phone =
           toE164BR(pref?.alternate_phone) ?? toE164BR(prof.phone);

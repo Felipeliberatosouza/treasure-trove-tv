@@ -16,12 +16,16 @@ que valida em ambiente real:
   - O próprio teste
   - O componente `TicketAttachments.tsx`
   - As abas de tickets (aluno e admin)
-  - Qualquer arquivo em `supabase/migrations/**` (que pode mexer em RLS)
-  - Qualquer `*.sql` em `supabase/**` ou arquivos com `rls`/`polic` no nome
-    (ex.: `supabase/migrations/20250101_rls_support.sql`, `supabase/policies/**`)
-  - Qualquer arquivo em `supabase/functions/_shared/__tests__/**`
+  - Migrations SQL relacionadas a attachments, support tickets, RLS ou policies
+    (ex.: `*attachment*.sql`, `*support_ticket*.sql`, `*rls*.sql`, `*polic*.sql`)
+  - Arquivos em `supabase/policies/**` que contenham `attachment`,
+    `support_ticket` ou `rls` no nome
   - O próprio workflow
 - Manualmente via **Run workflow** (workflow_dispatch).
+
+> 💡 Outras migrations SQL **não** disparam o workflow — rode manualmente via
+> **Run workflow** se precisar validar uma mudança que não casa com os
+> padrões acima.
 
 ### Secrets obrigatórios (Settings → Secrets and variables → Actions)
 

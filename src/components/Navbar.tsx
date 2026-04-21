@@ -17,7 +17,13 @@ interface SearchResult {
   type: "lesson" | "exam_solution";
 }
 
-const publicMenuItems = [
+type MenuItem = {
+  label: string;
+  href?: string;
+  children?: { label: string; href: string }[];
+};
+
+const publicMenuItems: MenuItem[] = [
   { label: "Assine a Revisão Fácil", href: "#pricing" },
   { label: "Revisões", href: "/revisoes" },
   { label: "Resumos", href: "/resumos" },
@@ -27,12 +33,12 @@ const publicMenuItems = [
   { label: "Agende uma Aula Particular", href: "/contato" },
 ];
 
-const subscriberMenuItem = {
+const subscriberMenuItem: MenuItem = {
   label: "Minha Assinatura",
   href: "/dashboard/student?tab=subscription",
 };
 
-const loggedMenuItems = [
+const loggedMenuItems: MenuItem[] = [
   { label: "Minhas Revisões", href: "/minhas-revisoes" },
   { label: "Meus Resumos", href: "/meus-resumos" },
   { label: "Meus Simulados", href: "/meus-simulados" },
@@ -41,12 +47,6 @@ const loggedMenuItems = [
   { label: "Minhas Dúvidas", href: "/minhas-duvidas" },
   { label: "Aula Particular: Agende/Acesse", href: "/minhas-aulas-agendadas" },
 ];
-
-type MenuItem = {
-  label: string;
-  href?: string;
-  children?: { label: string; href: string }[];
-};
 
 const teacherMenuItems: MenuItem[] = [
   { label: "Minhas Revisões: Gravar Nova Aula", href: "/dashboard/teacher?tab=lessons" },
@@ -64,7 +64,7 @@ const teacherMenuItems: MenuItem[] = [
   { label: "Minhas Colinhas", href: "/minhas-colinhas" },
 ];
 
-const adminMenuItems = [
+const adminMenuItems: MenuItem[] = [
   { label: "Aprovação de Conteúdos", href: "/dashboard/admin?tab=content" },
   { label: "Aprovação de Dúvidas", href: "/dashboard/admin?tab=doubts" },
   { label: "Pagamento de Professores", href: "/dashboard/admin?tab=payments" },

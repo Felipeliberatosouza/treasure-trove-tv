@@ -12,6 +12,7 @@ import AreaSelector from "@/components/AreaSelector";
 import VideoRecorder from "./VideoRecorder";
 import { usePlatformSettings, DEFAULT_PRODUCT_CONFIG } from "@/hooks/usePlatformSettings";
 import { compositeVideo, type ImpactWord } from "@/utils/videoCompositor";
+import { shiftVtt } from "@/utils/vttSync";
 import { generateDefaultCover } from "@/utils/coverGenerator";
 import {
   ResumoMaterial,

@@ -5,12 +5,17 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:clean": "rm -rf node_modules/.vite node_modules/.cache dist && vite",
+    "restart": "bash -c 'pkill -f vite 2>/dev/null; sleep 1; rm -rf node_modules/.vite node_modules/.cache dist .temp .tmp 2>/dev/null; echo \"Cache cleared. Starting dev server...\"; vite'",
+    "restart:full": "bash -c 'pkill -f vite 2>/dev/null; sleep 1; rm -rf node_modules/.vite node_modules/.cache dist .temp .tmp 2>/dev/null; echo \"Cache cleared. Starting dev server with TypeScript pre-check...\"; npx tsc --noEmit 2>/dev/null || true; vite'",
+    "cache:clear": "rm -rf node_modules/.vite node_modules/.cache dist .temp .tmp",
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

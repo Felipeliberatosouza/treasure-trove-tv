@@ -124,8 +124,61 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
   const [processingStep, setProcessingStep] = useState("");
   const [resourcePrices, setResourcePrices] = useState<ResourcePriceInfo[]>([]);
   const [aiGenerating, setAiGenerating] = useState<null | "simulado" | "top_questoes" | "colinha">(null);
+  const [regeneratingDescription, setRegeneratingDescription] = useState(false);
 
   const canGenerateAi = title.trim().length > 0 && description.trim().length > 0;
+
+  // Generate (or regenerate) the lesson description from the recorded transcript.
+  const generateDescriptionFromTranscript = useCallback(
+    async (vtt: string, opts: { silentIfEmpty?: boolean } = {}): Promise<boolean> => {
+      const transcript = vttToPlainText(vtt);
+      if (!transcript.trim()) {
+        if (!opts.silentIfEmpty) {
+          toast.error("Não há transcrição disponível para gerar o resumo.");
+        }
+        return false;
+      }
+      const toastId = toast.loading("Gerando resumo da aula com IA...");
+      try {
+        const { data, error } = await supabase.functions.invoke(
+          "generate-lesson-material",
+          {
+            body: {
+              kind: "description",
+              title: title || "Aula",
+              area: selectedAreas[0] || "",
+              transcript,
+              maxChars: DESCRIPTION_MAX,
+            },
+          },
+        );
+        if (error) throw error;
+        const generated = (data?.description || "").trim().slice(0, DESCRIPTION_MAX);
+        if (generated) {
+          setDescription(generated);
+          toast.success("Resumo gerado com IA!", { id: toastId });
+          return true;
+        }
+        toast.error("A IA não retornou um resumo. Tente novamente.", { id: toastId });
+        return false;
+      } catch (err) {
+        console.error("Failed to generate description from transcript", err);
+        toast.error("Não foi possível gerar o resumo automaticamente.", { id: toastId });
+        return false;
+      }
+    },
+    [title, selectedAreas, DESCRIPTION_MAX],
+  );
+
+  const handleRegenerateDescription = async () => {
+    if (!subtitlesVtt) return;
+    setRegeneratingDescription(true);
+    try {
+      await generateDescriptionFromTranscript(subtitlesVtt);
+    } finally {
+      setRegeneratingDescription(false);
+    }
+  };
 
   const generateMaterialWithAi = async (kind: "simulado" | "top_questoes" | "colinha") => {
     if (!canGenerateAi) {

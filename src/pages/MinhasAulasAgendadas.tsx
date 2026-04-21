@@ -382,6 +382,29 @@ const MinhasAulasAgendadas = () => {
           </div>
         )}
 
+        {allowCancel && (
+          lesson.meeting_url ? (
+            <a
+              href={lesson.meeting_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 rounded-md border border-primary/40 bg-primary/10 p-3 text-xs text-primary hover:bg-primary/15 transition-colors"
+            >
+              <Video className="h-4 w-4 shrink-0" />
+              <span className="font-medium">Link da reunião disponível</span>
+              <LinkIcon className="h-3 w-3 ml-auto" />
+            </a>
+          ) : (
+            <div className="flex items-start gap-2 rounded-md border border-amber-500/40 bg-amber-500/10 p-3 text-xs text-amber-700 dark:text-amber-400">
+              <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+              <span>
+                O <strong>link da reunião</strong> ainda não foi disponibilizado pelo professor.
+                Você será avisado assim que ele aparecer aqui.
+              </span>
+            </div>
+          )
+        )}
+
         {lesson.cancellation_reason && (
           <p className="text-xs text-muted-foreground italic">{lesson.cancellation_reason}</p>
         )}

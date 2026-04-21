@@ -54,6 +54,24 @@ const emptyQuiz = (): QuizQuestion[] =>
 const emptyTop = (): TopQuestion[] => Array.from({ length: 5 }, () => ({ question: "", answer: "" }));
 const emptyBullets = (): string[] => Array.from({ length: 10 }, () => "");
 
+// Strip WebVTT formatting and return concatenated plain text of all cues.
+const vttToPlainText = (vtt: string): string => {
+  return vtt
+    .split(/\r?\n/)
+    .filter((line) => {
+      const t = line.trim();
+      if (!t) return false;
+      if (t === "WEBVTT") return false;
+      if (/^\d+$/.test(t)) return false; // cue index
+      if (/-->/i.test(t)) return false; // timestamp line
+      if (/^NOTE\b/i.test(t)) return false;
+      return true;
+    })
+    .join(" ")
+    .replace(/\s+/g, " ")
+    .trim();
+};
+
 const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) => {
   const { user } = useAuth();
   const { data: productConfig } = usePlatformSettings("product_config");

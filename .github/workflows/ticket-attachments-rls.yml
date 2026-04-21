@@ -12,6 +12,12 @@ on:
       - "src/components/dashboard/SupportTicketsTab.tsx"
       - "src/components/admin/AdminSupportTicketsTab.tsx"
       - "supabase/migrations/**"
+      - "supabase/migrations/**/*.sql"
+      - "supabase/migrations/**/*rls*"
+      - "supabase/migrations/**/*polic*"
+      - "supabase/**/*.sql"
+      - "supabase/policies/**"
+      - "supabase/functions/_shared/__tests__/**"
       - ".github/workflows/ticket-attachments-rls.yml"
   pull_request:
     paths:
@@ -20,6 +26,12 @@ on:
       - "src/components/dashboard/SupportTicketsTab.tsx"
       - "src/components/admin/AdminSupportTicketsTab.tsx"
       - "supabase/migrations/**"
+      - "supabase/migrations/**/*.sql"
+      - "supabase/migrations/**/*rls*"
+      - "supabase/migrations/**/*polic*"
+      - "supabase/**/*.sql"
+      - "supabase/policies/**"
+      - "supabase/functions/_shared/__tests__/**"
       - ".github/workflows/ticket-attachments-rls.yml"
   workflow_dispatch:
 

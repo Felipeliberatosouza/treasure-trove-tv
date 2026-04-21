@@ -84,6 +84,9 @@ const LessonReminderPreferences = () => {
    *  so we keep them in sync with the admin defaults. As soon as they edit
    *  anything (add / remove a chip) we stop overwriting. */
   const [usingAdminDefaults, setUsingAdminDefaults] = useState(true);
+  /** Set to true on any user edit (channel, phone, windows). Used by the
+   *  auto-save-on-close handler so we don't persist when nothing changed. */
+  const [isDirty, setIsDirty] = useState(false);
   /** Diagnostic info shown in the modal so the user (and us in console) can
    *  quickly tell where the pre-filled windows came from. */
   const [diagnostic, setDiagnostic] = useState<{

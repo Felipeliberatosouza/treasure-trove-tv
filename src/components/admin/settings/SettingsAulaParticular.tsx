@@ -15,7 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Save, Clock, Percent, Users, GraduationCap } from "lucide-react";
+import { Save, Clock, Percent, Users, GraduationCap, BellRing, X } from "lucide-react";
 import { toast } from "sonner";
 
 const SettingsAulaParticular = () => {
@@ -24,6 +24,7 @@ const SettingsAulaParticular = () => {
     DEFAULT_AULA_PARTICULAR_CONFIG
   );
   const [saving, setSaving] = useState(false);
+  const [newReminder, setNewReminder] = useState<string>("");
 
   useEffect(() => {
     if (data) {
@@ -51,9 +52,37 @@ const SettingsAulaParticular = () => {
       toast.error(`A soma da divisão deve ser 100% (atual: ${splitTotal}%).`);
       return;
     }
+    if (form.reminder_windows_hours.some((h) => h <= 0 || h > 168)) {
+      toast.error("As janelas de lembrete devem estar entre 1h e 168h (7 dias).");
+      return;
+    }
     setSaving(true);
     await update(form);
     setSaving(false);
+  };
+
+  const addReminder = () => {
+    const n = parseInt(newReminder, 10);
+    if (!Number.isFinite(n) || n <= 0 || n > 168) {
+      toast.error("Informe um valor entre 1 e 168 horas.");
+      return;
+    }
+    if (form.reminder_windows_hours.includes(n)) {
+      toast.error("Essa janela já foi adicionada.");
+      return;
+    }
+    setForm({
+      ...form,
+      reminder_windows_hours: [...form.reminder_windows_hours, n].sort((a, b) => b - a),
+    });
+    setNewReminder("");
+  };
+
+  const removeReminder = (h: number) => {
+    setForm({
+      ...form,
+      reminder_windows_hours: form.reminder_windows_hours.filter((x) => x !== h),
+    });
   };
 
   const upd = <K extends keyof AulaParticularConfigSettings>(

@@ -27,6 +27,7 @@ import SimuladoModal from "@/components/SimuladoModal";
 import MaterialViewerModal, { type MaterialKind } from "@/components/MaterialViewerModal";
 import AdminVideoModerationPanel from "@/components/admin/AdminVideoModerationPanel";
 import { useLessonMaterials } from "@/hooks/useLessonMaterials";
+import BookLessonModal from "@/components/BookLessonModal";
 
 const DEMO_VIDEO_URL = "/demo-course.mp4";
 
@@ -69,6 +70,7 @@ const VideoPage = () => {
   const [votingProva, setVotingProva] = useState(false);
   const [isDoubtsOpen, setIsDoubtsOpen] = useState(false);
   const [isSimuladoOpen, setIsSimuladoOpen] = useState(false);
+  const [isBookLessonOpen, setIsBookLessonOpen] = useState(false);
   const [materialModal, setMaterialModal] = useState<MaterialKind | null>(null);
   const { availability: materials } = useLessonMaterials(id || null);
 
@@ -723,7 +725,17 @@ const VideoPage = () => {
                 { icon: Trophy, label: "Top Questões", show: materials.top_questoes, action: () => setMaterialModal("top_questoes") },
                 { icon: StickyNote, label: "Colinha", show: materials.colinhas, action: () => setMaterialModal("colinhas") },
                 { icon: HelpCircle, label: "Dúvidas", show: true, action: handleOpenDoubts },
-                { icon: CalendarCheck, label: "Aula Particular", show: true },
+                { icon: CalendarCheck, label: "Aula Particular", show: true, action: () => {
+                  if (!user) {
+                    toast.info("Faça login para agendar uma aula particular.");
+                    return;
+                  }
+                  if (!teacherId) {
+                    toast.info("Este vídeo demonstrativo não permite agendar aulas.");
+                    return;
+                  }
+                  setIsBookLessonOpen(true);
+                } },
               ].filter((i) => i.show);
               if (items.length === 0) return null;
               return (

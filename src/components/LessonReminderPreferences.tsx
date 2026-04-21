@@ -306,7 +306,7 @@ const LessonReminderPreferences = () => {
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button variant="outline" size="sm" className="gap-2">
           <BellRing className="h-4 w-4" />
@@ -359,7 +359,10 @@ const LessonReminderPreferences = () => {
               <Label>Método de envio</Label>
               <Select
                 value={channel}
-                onValueChange={(v) => setChannel(v as ChannelOption)}
+                onValueChange={(v) => {
+                  setChannel(v as ChannelOption);
+                  setIsDirty(true);
+                }}
               >
                 <SelectTrigger className="bg-secondary">
                   <SelectValue />
@@ -385,6 +388,7 @@ const LessonReminderPreferences = () => {
                 onChange={(v) => {
                   setAlternatePhone(v);
                   setUsingProfilePhone(false);
+                  setIsDirty(true);
                 }}
                 placeholder="(00) 00000-0000"
               />

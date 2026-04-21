@@ -102,12 +102,39 @@ export const TicketAttachmentUploader = ({
     setUploading(true);
     let success = 0;
     for (const file of Array.from(files)) {
+      // 1) Tipo declarado pelo navegador deve estar na allowlist
       if (!ALLOWED_MIME.includes(file.type)) {
-        toast.error(`Tipo de arquivo não permitido: ${file.name}`);
+        toast.error(
+          `"${file.name}": tipo de arquivo não permitido. Envie apenas PNG, JPEG, WEBP, GIF ou PDF.`
+        );
         continue;
       }
+      // 2) Tamanho
       if (file.size > MAX_SIZE) {
-        toast.error(`${file.name} excede 10 MB`);
+        toast.error(`"${file.name}" excede o limite de 10 MB.`);
+        continue;
+      }
+      // 3) Extensão precisa bater com o MIME declarado
+      const ext = (file.name.split(".").pop() || "").toLowerCase();
+      const expectedExts = MIME_EXTENSIONS[file.type] || [];
+      if (!ext || !expectedExts.includes(ext)) {
+        toast.error(
+          `"${file.name}": a extensão .${ext || "(nenhuma)"} não corresponde ao tipo ${MIME_LABEL[file.type] || file.type}. Renomeie o arquivo para .${expectedExts[0]} ou envie um arquivo válido.`
+        );
+        continue;
+      }
+      // 4) Magic number precisa bater com o MIME declarado (impede renomear .exe → .pdf)
+      const realMime = await detectRealMime(file);
+      if (!realMime) {
+        toast.error(
+          `"${file.name}": não foi possível identificar o conteúdo do arquivo. Envie um PNG, JPEG, WEBP, GIF ou PDF válido.`
+        );
+        continue;
+      }
+      if (normalizeMime(realMime) !== normalizeMime(file.type)) {
+        toast.error(
+          `"${file.name}": o conteúdo real do arquivo (${MIME_LABEL[realMime] || realMime}) não confere com a extensão .${ext}. Envie um arquivo legítimo.`
+        );
         continue;
       }
       const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_").slice(0, 80);
@@ -115,7 +142,7 @@ export const TicketAttachmentUploader = ({
       const { error: upErr } = await supabase.storage
         .from("support-attachments")
         .upload(path, file, {
-          contentType: file.type,
+          contentType: normalizeMime(file.type),
           upsert: false,
         });
       if (upErr) {
@@ -130,7 +157,7 @@ export const TicketAttachmentUploader = ({
           uploader_type: uploaderType,
           storage_path: path,
           file_name: file.name.slice(0, 200),
-          mime_type: file.type,
+          mime_type: normalizeMime(file.type),
           size_bytes: file.size,
         });
       if (dbErr) {

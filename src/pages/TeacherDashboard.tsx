@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, User, Lock, Video, DollarSign, HelpCircle, BookOpen, FileSignature, GraduationCap, Megaphone, Sparkles, CalendarClock, CalendarDays } from "lucide-react";
+import { ArrowLeft, User, Lock, Video, DollarSign, HelpCircle, BookOpen, FileSignature, GraduationCap, Megaphone, Sparkles, CalendarClock, CalendarDays, LifeBuoy } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
@@ -16,6 +16,7 @@ import SalesBoostTab from "@/components/teacher/SalesBoostTab";
 import TeacherStatementTab from "@/components/dashboard/TeacherStatementTab";
 import TeacherAulaParticularRulesTab from "@/components/dashboard/TeacherAulaParticularRulesTab";
 import TeacherAgendaTab from "@/components/dashboard/TeacherAgendaTab";
+import SupportTicketsTab from "@/components/dashboard/SupportTicketsTab";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
@@ -29,6 +30,7 @@ const teacherTabs = [
   { id: "contract", label: "Meu Contrato", icon: FileSignature },
   { id: "aula-particular", label: "Aula Particular", icon: CalendarClock },
   { id: "agenda", label: "Minha Agenda", icon: CalendarDays },
+  { id: "support", label: "Atendimento", icon: LifeBuoy },
   // Hidden tabs (acessadas via menu hambúrguer / deep-link, não exibidas no menu lateral)
   { id: "lessons", label: "Minhas Aulas", icon: Video, hidden: true },
   { id: "doubts", label: "Dúvidas de Alunos", icon: HelpCircle, hidden: true },
@@ -155,6 +157,7 @@ const TeacherDashboard = () => {
               {activeTab === "sales" && <TeacherStatementTab />}
               {activeTab === "aula-particular" && <TeacherAulaParticularRulesTab />}
               {activeTab === "agenda" && <TeacherAgendaTab />}
+              {activeTab === "support" && <SupportTicketsTab userRole="teacher" />}
             </motion.div>
           </div>
         )}

@@ -78,6 +78,15 @@ async function cleanup(userIds: string[], ticketIds: string[], paths: string[]) 
 }
 
 Deno.test("ticket attachments RLS: owner / other user / admin access matrix", async () => {
+  // Best-effort: remove orphaned test users from previous failed runs.
+  const { data: stale } = await admin
+    .from("profiles")
+    .select("user_id")
+    .like("email", "rls-test-%@example.com");
+  for (const row of stale ?? []) {
+    await admin.auth.admin.deleteUser(row.user_id as string).catch(() => {});
+  }
+
   const owner = await createUser("student");
   const other = await createUser("student");
   const adminUser = await createUser("admin");

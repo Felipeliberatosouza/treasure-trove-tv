@@ -220,15 +220,20 @@ const LessonReminderPreferences = () => {
     setIsDirty(true);
   };
 
-  const handleSave = async () => {
-    if (!user) return;
+  /** Persists current state. Returns true on success. When `silent` is true,
+   *  no success toast is shown (used by the explicit-button flow that already
+   *  surfaces feedback differently). */
+  const persistPreferences = async (
+    options: { silent?: boolean } = {},
+  ): Promise<boolean> => {
+    if (!user) return false;
     if (phoneInvalid) {
       toast({
         title: "Número inválido",
         description: "Confira o telefone alternativo (DDD + 9 dígitos).",
         variant: "destructive",
       });
-      return;
+      return false;
     }
     setSaving(true);
     const payload = {
@@ -242,20 +247,61 @@ const LessonReminderPreferences = () => {
       .upsert(payload, { onConflict: "user_id" });
     setSaving(false);
     if (error) {
+      console.error("[LessonReminderPrefs] Save failed", error);
       toast({
-        title: "Erro",
-        description: "Falha ao salvar preferências.",
+        title: "Erro ao salvar",
+        description:
+          "Não conseguimos salvar suas preferências de lembrete. Tente novamente.",
         variant: "destructive",
       });
+      return false;
+    }
+    setIsDirty(false);
+    if (!options.silent) {
+      toast({
+        title: "Preferências salvas",
+        description:
+          channel === "disabled"
+            ? "Lembretes desativados."
+            : "Você receberá lembretes de acordo com a sua preferência.",
+      });
+    }
+    return true;
+  };
+
+  const handleSave = async () => {
+    const ok = await persistPreferences();
+    if (ok) setOpen(false);
+  };
+
+  /** Wraps Dialog's onOpenChange so that closing the modal with pending edits
+   *  triggers an automatic save (with toast feedback). If validation fails we
+   *  keep the modal open so the user can fix the issue. */
+  const handleOpenChange = async (next: boolean) => {
+    if (next) {
+      setOpen(true);
       return;
     }
-    toast({
-      title: "Preferências salvas",
-      description:
-        channel === "disabled"
-          ? "Lembretes desativados."
-          : "Você receberá lembretes de acordo com a sua preferência.",
-    });
+    if (saving) return; // ignore close while a save is in flight
+    if (isDirty && !loading) {
+      if (phoneInvalid) {
+        // Don't silently drop edits with an invalid phone — keep the modal
+        // open and let the user fix it.
+        toast({
+          title: "Número inválido",
+          description:
+            "Corrija o telefone antes de fechar para salvarmos suas alterações.",
+          variant: "destructive",
+        });
+        return;
+      }
+      const ok = await persistPreferences({ silent: true });
+      if (!ok) return; // toast already shown by persistPreferences; keep open
+      toast({
+        title: "Alterações salvas",
+        description: "Suas preferências de lembrete foram atualizadas.",
+      });
+    }
     setOpen(false);
   };
 

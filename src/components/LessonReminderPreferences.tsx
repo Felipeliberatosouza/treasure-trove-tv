@@ -280,6 +280,30 @@ const LessonReminderPreferences = () => {
           </div>
         ) : (
           <div className="space-y-5">
+            {diagnostic && (
+              <div
+                className={`rounded-md border px-3 py-2 text-xs ${
+                  diagnostic.source === "saved"
+                    ? "border-primary/40 bg-primary/5 text-primary"
+                    : diagnostic.source === "admin"
+                      ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+                      : diagnostic.source === "fallback-defaults"
+                        ? "border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-300"
+                        : "border-destructive/40 bg-destructive/10 text-destructive"
+                }`}
+                role="status"
+              >
+                <strong className="block mb-0.5">Diagnóstico:</strong>
+                {diagnostic.source === "saved" &&
+                  "Carregamos as suas preferências salvas anteriormente."}
+                {diagnostic.source === "admin" &&
+                  `Sem preferências salvas — pré-preenchemos com a configuração do administrador (${diagnostic.adminCount} ${diagnostic.adminCount === 1 ? "horário" : "horários"}).`}
+                {diagnostic.source === "fallback-defaults" &&
+                  "Sem preferências salvas e o administrador não definiu horários — usando os valores padrão do sistema."}
+                {diagnostic.source === "empty" &&
+                  "Suas preferências estavam vazias e o administrador não definiu horários. Adicione manualmente abaixo."}
+              </div>
+            )}
             <div className="space-y-2">
               <Label>Método de envio</Label>
               <Select

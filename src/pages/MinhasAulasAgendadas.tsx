@@ -33,6 +33,7 @@ import {
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import LessonReadyChecklist from "@/components/LessonReadyChecklist";
+import LessonReminderPreferences from "@/components/LessonReminderPreferences";
 
 interface ScheduledLesson {
   id: string;
@@ -485,6 +486,10 @@ const MinhasAulasAgendadas = () => {
             Aulas particulares agendadas com professores. Cancelamentos com menos de{" "}
             <strong>{cfg.free_cancel_window_hours}h</strong> de antecedência geram cobrança.
           </p>
+
+          <div className="flex justify-end">
+            <LessonReminderPreferences />
+          </div>
 
           {loading ? (
             <div className="flex items-center justify-center py-16">

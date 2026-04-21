@@ -24,6 +24,7 @@ type Recipient = {
   name: string;
   phone: string | null;
   reminderHours: number;
+  channelPref: "whatsapp_sms_fallback" | "whatsapp_only" | "sms_only" | "disabled";
 };
 
 const BR_PHONE_RE = /^\+?55?\s*\D*(\d{10,11})$/;
@@ -73,6 +74,7 @@ const sendWithFallback = async (
   whatsappFrom: string | null,
   lovableKey: string,
   twilioKey: string,
+  channelPref: Recipient["channelPref"] = "whatsapp_sms_fallback",
 ): Promise<SendOutcome> => {
   const tryChannel = async (channel: "whatsapp" | "sms"): Promise<SendOutcome> => {
     const from = channel === "whatsapp" ? whatsappFrom : smsFrom;
@@ -100,12 +102,15 @@ const sendWithFallback = async (
   };
 
   // WhatsApp first
+  if (channelPref === "sms_only") {
+    return await tryChannel("sms");
+  }
   const wa = await tryChannel("whatsapp");
   if (wa.ok) return wa;
-  // Fallback to SMS
+  if (channelPref === "whatsapp_only") return wa;
+  // Fallback to SMS (default behaviour)
   const sms = await tryChannel("sms");
   if (sms.ok) return sms;
-  // Both failed: surface SMS error (more likely to be the actionable one)
   return { ok: false, channel: "sms", error: `wa=${wa.error} | sms=${sms.error}` };
 };
 
@@ -236,6 +241,26 @@ Deno.serve(async (req) => {
       (profiles ?? []).map((p) => [p.user_id, p]),
     );
 
+    // 5b) Per-user reminder preferences (channel, alternate phone, allowed windows).
+    //     Missing rows mean "use defaults": WhatsApp+SMS fallback, profile phone,
+    //     all admin-configured windows enabled.
+    const { data: prefRows } = await supabase
+      .from("lesson_reminder_preferences")
+      .select("user_id, channel, alternate_phone, preferred_windows_hours")
+      .in("user_id", userIds);
+    const prefMap = new Map(
+      (prefRows ?? []).map((p) => [
+        p.user_id as string,
+        {
+          channel: (p.channel as string) ?? "whatsapp_sms_fallback",
+          alternate_phone: (p.alternate_phone as string | null) ?? null,
+          preferred_windows_hours: Array.isArray(p.preferred_windows_hours)
+            ? (p.preferred_windows_hours as number[])
+            : [],
+        },
+      ]),
+    );
+
     // 6) Build recipient list
     const recipients: Recipient[] = [];
     for (const { lesson, reminderHours } of candidates) {
@@ -246,7 +271,20 @@ Deno.serve(async (req) => {
         if (sentKey.has(key)) continue;
         const prof = profileMap.get(userId);
         if (!prof) continue;
-        const phone = toE164BR(prof.phone);
+        const pref = prefMap.get(userId);
+        // Skip when user disabled reminders entirely.
+        if (pref?.channel === "disabled") continue;
+        // Skip when user opted out of this specific window.
+        if (
+          pref &&
+          pref.preferred_windows_hours.length > 0 &&
+          !pref.preferred_windows_hours.includes(reminderHours)
+        ) {
+          continue;
+        }
+        // Prefer alternate phone if provided, fallback to profile phone.
+        const phone =
+          toE164BR(pref?.alternate_phone) ?? toE164BR(prof.phone);
         recipients.push({
           lessonId: lesson.id,
           lessonTitle: lesson.title,
@@ -256,6 +294,7 @@ Deno.serve(async (req) => {
           name: prof.name || "usuário",
           phone,
           reminderHours,
+          channelPref: (pref?.channel as Recipient["channelPref"]) ?? "whatsapp_sms_fallback",
         });
       }
     }
@@ -285,6 +324,7 @@ Deno.serve(async (req) => {
         whatsappFrom,
         LOVABLE_API_KEY,
         TWILIO_API_KEY,
+        r.channelPref,
       );
       const { error: logErr } = await supabase.from("scheduled_lesson_reminders").insert({
         lesson_id: r.lessonId,

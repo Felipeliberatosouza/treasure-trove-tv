@@ -225,15 +225,19 @@ const LessonReminderPreferences = () => {
             </div>
 
             <div className="space-y-2">
-              <Label>Telefone alternativo (opcional)</Label>
+              <Label>Telefone para lembretes</Label>
               <PhoneInput
                 value={alternatePhone}
-                onChange={setAlternatePhone}
+                onChange={(v) => {
+                  setAlternatePhone(v);
+                  setUsingProfilePhone(false);
+                }}
                 placeholder="(00) 00000-0000"
               />
               <p className="text-xs text-muted-foreground">
-                Se preenchido, os lembretes serão enviados para este número em vez
-                do telefone do seu cadastro.
+                {usingProfilePhone
+                  ? "Preenchido automaticamente com o telefone dos seus Dados Pessoais. Edite aqui se quiser receber em outro número."
+                  : "Os lembretes serão enviados para este número."}
               </p>
             </div>
 

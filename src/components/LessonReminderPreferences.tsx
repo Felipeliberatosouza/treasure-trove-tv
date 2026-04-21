@@ -467,8 +467,16 @@ const LessonReminderPreferences = () => {
         )}
 
         <DialogFooter>
-          <Button variant="ghost" onClick={() => setOpen(false)} disabled={saving}>
-            Cancelar
+          <Button
+            variant="ghost"
+            onClick={() => {
+              // Explicit "discard": skip autosave and close immediately.
+              setIsDirty(false);
+              setOpen(false);
+            }}
+            disabled={saving}
+          >
+            Descartar
           </Button>
           <Button
             onClick={handleSave}

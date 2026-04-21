@@ -291,17 +291,37 @@ const Navbar = () => {
           className="border-t border-border bg-background px-6 py-4 md:hidden"
         >
           <div className="flex flex-col gap-3">
-            {menuItems.map((item) =>
-              item.href.startsWith("#") ? (
-                <a key={item.label} href={item.href} className="text-sm text-muted-foreground" onClick={() => setMobileOpen(false)}>
+            {menuItems.map((item) => {
+              if (item.children && item.children.length > 0) {
+                return (
+                  <div key={item.label} className="flex flex-col gap-2">
+                    <span className="text-sm font-medium text-foreground">{item.label}</span>
+                    <div className="flex flex-col gap-2 pl-3 border-l border-border">
+                      {item.children.map((child) => (
+                        <Link
+                          key={child.label}
+                          to={child.href}
+                          className="text-sm text-muted-foreground hover:text-foreground"
+                          onClick={() => setMobileOpen(false)}
+                        >
+                          {child.label}
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                );
+              }
+              const href = item.href ?? "#";
+              return href.startsWith("#") ? (
+                <a key={item.label} href={href} className="text-sm text-muted-foreground" onClick={() => setMobileOpen(false)}>
                   {item.label}
                 </a>
               ) : (
-                <Link key={item.label} to={item.href} className="text-sm text-muted-foreground" onClick={() => setMobileOpen(false)}>
+                <Link key={item.label} to={href} className="text-sm text-muted-foreground" onClick={() => setMobileOpen(false)}>
                   {item.label}
                 </Link>
-              )
-            )}
+              );
+            })}
             {!user && (
               <Link to="/login" onClick={() => setMobileOpen(false)}>
                 <Button size="sm" className="gap-2 font-display w-full">

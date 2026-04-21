@@ -360,11 +360,34 @@ const MinhasAulasAgendadas = () => {
               </h1>
             </div>
             {isTeacher && (
-              <Button asChild variant="outline" className="gap-2">
-                <Link to="/dashboard/teacher?tab=agenda">
-                  <CalendarCog className="h-4 w-4" />
-                  Atualizar minha Agenda
-                </Link>
+              <Button
+                variant="outline"
+                className="gap-2"
+                disabled={navigatingToAgenda}
+                onClick={() => {
+                  if (navigatingToAgenda) return;
+                  setNavigatingToAgenda(true);
+                  toast({
+                    title: "Abrindo sua agenda…",
+                    description: "Carregando os horários de aula particular.",
+                  });
+                  // Pequeno delay para o usuário ver o feedback antes da troca de rota
+                  setTimeout(() => {
+                    navigate("/dashboard/teacher?tab=agenda");
+                  }, 250);
+                }}
+              >
+                {navigatingToAgenda ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Abrindo agenda…
+                  </>
+                ) : (
+                  <>
+                    <CalendarCog className="h-4 w-4" />
+                    Atualizar minha Agenda
+                  </>
+                )}
               </Button>
             )}
           </div>

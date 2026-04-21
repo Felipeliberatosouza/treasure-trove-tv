@@ -1,12 +1,242 @@
+import { useEffect, useMemo, useState } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { CalendarDays } from "lucide-react";
+import { CalendarDays, Clock, AlertTriangle, Loader2, X } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  usePlatformSettings,
+  DEFAULT_AULA_PARTICULAR_CONFIG,
+  type AulaParticularConfigSettings,
+} from "@/hooks/usePlatformSettings";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+
+interface ScheduledLesson {
+  id: string;
+  title: string;
+  description: string | null;
+  scheduled_at: string;
+  duration_minutes: number;
+  status: string;
+  price: number;
+  payment_type: string | null;
+  meeting_url: string | null;
+  teacher_id: string;
+  cancellation_reason: string | null;
+}
+
+interface TeacherInfo {
+  user_id: string;
+  name: string;
+  avatar_url: string | null;
+}
+
+const STATUS_LABEL: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
+  pending: { label: "Pendente", variant: "secondary" },
+  confirmed: { label: "Confirmada", variant: "default" },
+  completed: { label: "Realizada", variant: "outline" },
+  cancelled: { label: "Cancelada", variant: "destructive" },
+  cancelled_late: { label: "Cancelada com taxa", variant: "destructive" },
+  no_show: { label: "Não compareceu", variant: "destructive" },
+};
+
+const formatBRL = (n: number) =>
+  n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
+const computeLateFee = (price: number, cfg: AulaParticularConfigSettings) => {
+  if (cfg.late_cancel_fee_type === "fixed") {
+    return Math.min(cfg.late_cancel_fee_value, price);
+  }
+  return Number(((price * cfg.late_cancel_fee_value) / 100).toFixed(2));
+};
 
 const MinhasAulasAgendadas = () => {
   const { user } = useAuth();
+  const { toast } = useToast();
+  const { data: cfgRaw } = usePlatformSettings("aula_particular_config");
+  const cfg: AulaParticularConfigSettings = cfgRaw ?? DEFAULT_AULA_PARTICULAR_CONFIG;
+
+  const [lessons, setLessons] = useState<ScheduledLesson[]>([]);
+  const [teachers, setTeachers] = useState<Record<string, TeacherInfo>>({});
+  const [loading, setLoading] = useState(true);
+  const [cancelTarget, setCancelTarget] = useState<ScheduledLesson | null>(null);
+  const [cancelling, setCancelling] = useState(false);
+
+  const fetchLessons = async () => {
+    if (!user) return;
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("scheduled_lessons")
+      .select(
+        "id, title, description, scheduled_at, duration_minutes, status, price, payment_type, meeting_url, teacher_id, cancellation_reason"
+      )
+      .eq("student_id", user.id)
+      .order("scheduled_at", { ascending: true });
+
+    if (error) {
+      toast({ title: "Erro", description: "Falha ao carregar aulas.", variant: "destructive" });
+      setLoading(false);
+      return;
+    }
+    const list = (data ?? []) as ScheduledLesson[];
+    setLessons(list);
+
+    const teacherIds = Array.from(new Set(list.map((l) => l.teacher_id)));
+    if (teacherIds.length > 0) {
+      const { data: profs } = await supabase
+        .from("profiles")
+        .select("user_id, name, avatar_url")
+        .in("user_id", teacherIds);
+      const map: Record<string, TeacherInfo> = {};
+      (profs ?? []).forEach((p) => {
+        map[p.user_id] = p as TeacherInfo;
+      });
+      setTeachers(map);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchLessons();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
+
+  const cancelInfo = useMemo(() => {
+    if (!cancelTarget) return null;
+    const scheduledMs = new Date(cancelTarget.scheduled_at).getTime();
+    const hoursUntil = (scheduledMs - Date.now()) / (1000 * 60 * 60);
+    const isLate = hoursUntil < cfg.free_cancel_window_hours;
+    const fee = isLate ? computeLateFee(cancelTarget.price, cfg) : 0;
+    const platformShare = Number(((fee * cfg.fee_split_platform_pct) / 100).toFixed(2));
+    const teacherShare = Number(((fee * cfg.fee_split_teacher_pct) / 100).toFixed(2));
+    return { hoursUntil, isLate, fee, platformShare, teacherShare };
+  }, [cancelTarget, cfg]);
+
   if (!user) return <Navigate to="/login" replace />;
+
+  const handleConfirmCancel = async () => {
+    if (!cancelTarget || !cancelInfo) return;
+    setCancelling(true);
+
+    const newStatus = cancelInfo.isLate ? "cancelled_late" : "cancelled";
+    const reason = cancelInfo.isLate
+      ? `Cancelado pelo aluno fora da janela de ${cfg.free_cancel_window_hours}h. Taxa: ${formatBRL(cancelInfo.fee)} (plataforma ${formatBRL(cancelInfo.platformShare)} / professor ${formatBRL(cancelInfo.teacherShare)}).`
+      : `Cancelado pelo aluno dentro da janela gratuita de ${cfg.free_cancel_window_hours}h.`;
+
+    const { error } = await supabase
+      .from("scheduled_lessons")
+      .update({
+        status: newStatus,
+        cancelled_at: new Date().toISOString(),
+        cancellation_reason: reason,
+      })
+      .eq("id", cancelTarget.id);
+
+    setCancelling(false);
+
+    if (error) {
+      toast({ title: "Erro", description: "Falha ao cancelar aula.", variant: "destructive" });
+      return;
+    }
+
+    toast({
+      title: cancelInfo.isLate ? "Aula cancelada com taxa" : "Aula cancelada",
+      description: cancelInfo.isLate
+        ? `Foi aplicada a taxa de ${formatBRL(cancelInfo.fee)} pelo cancelamento tardio.`
+        : "Cancelamento realizado sem custo.",
+    });
+
+    setCancelTarget(null);
+    fetchLessons();
+  };
+
+  const upcoming = lessons.filter((l) => ["pending", "confirmed"].includes(l.status));
+  const past = lessons.filter((l) => !["pending", "confirmed"].includes(l.status));
+
+  const renderLessonCard = (lesson: ScheduledLesson, allowCancel: boolean) => {
+    const teacher = teachers[lesson.teacher_id];
+    const scheduledMs = new Date(lesson.scheduled_at).getTime();
+    const hoursUntil = (scheduledMs - Date.now()) / (1000 * 60 * 60);
+    const willIncurFee = hoursUntil >= 0 && hoursUntil < cfg.free_cancel_window_hours;
+    const status = STATUS_LABEL[lesson.status] ?? { label: lesson.status, variant: "outline" as const };
+
+    return (
+      <div key={lesson.id} className="rounded-xl border border-border bg-card p-5 space-y-4">
+        <div className="flex items-start justify-between gap-3 flex-wrap">
+          <div className="space-y-1 min-w-0">
+            <h3 className="font-semibold text-foreground truncate">{lesson.title}</h3>
+            <p className="text-sm text-muted-foreground">
+              com {teacher?.name ?? "Professor"}
+            </p>
+          </div>
+          <Badge variant={status.variant}>{status.label}</Badge>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <CalendarDays className="h-4 w-4 shrink-0" />
+            <span>{format(new Date(lesson.scheduled_at), "dd/MM/yyyy", { locale: ptBR })}</span>
+          </div>
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <Clock className="h-4 w-4 shrink-0" />
+            <span>
+              {format(new Date(lesson.scheduled_at), "HH:mm", { locale: ptBR })} ·{" "}
+              {lesson.duration_minutes} min
+            </span>
+          </div>
+          <div className="text-muted-foreground">
+            <span className="font-medium text-foreground">{formatBRL(lesson.price)}</span>{" "}
+            {lesson.payment_type === "subscription_quota" ? "(cota)" : "(avulso)"}
+          </div>
+        </div>
+
+        {lesson.description && (
+          <p className="text-sm text-muted-foreground line-clamp-3">{lesson.description}</p>
+        )}
+
+        {allowCancel && willIncurFee && (
+          <div className="flex items-start gap-2 rounded-md border border-destructive/40 bg-destructive/10 p-3 text-xs text-destructive">
+            <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+            <span>
+              Faltam menos de {cfg.free_cancel_window_hours}h para a aula. Cancelar agora resultará
+              em cobrança da taxa de cancelamento.
+            </span>
+          </div>
+        )}
+
+        {lesson.cancellation_reason && (
+          <p className="text-xs text-muted-foreground italic">{lesson.cancellation_reason}</p>
+        )}
+
+        {allowCancel && (
+          <div className="flex justify-end">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCancelTarget(lesson)}
+              className="gap-2"
+            >
+              <X className="h-4 w-4" />
+              Cancelar aula
+            </Button>
+          </div>
+        )}
+      </div>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
@@ -15,16 +245,145 @@ const MinhasAulasAgendadas = () => {
         <div className="mx-auto max-w-5xl space-y-8">
           <div className="flex items-center gap-3">
             <CalendarDays className="h-8 w-8 text-primary" />
-            <h1 className="font-display text-3xl font-bold text-gradient">Minhas Aulas Agendadas</h1>
+            <h1 className="font-display text-3xl font-bold text-gradient">
+              Minhas Aulas Agendadas
+            </h1>
           </div>
-          <p className="text-muted-foreground text-lg">Aulas particulares agendadas com professores.</p>
-          <div className="rounded-xl border border-border bg-card p-12 text-center">
-            <CalendarDays className="mx-auto h-12 w-12 text-muted-foreground/40 mb-4" />
-            <p className="text-muted-foreground">Você não possui aulas agendadas.</p>
-          </div>
+          <p className="text-muted-foreground text-lg">
+            Aulas particulares agendadas com professores. Cancelamentos com menos de{" "}
+            <strong>{cfg.free_cancel_window_hours}h</strong> de antecedência geram cobrança.
+          </p>
+
+          {loading ? (
+            <div className="flex items-center justify-center py-16">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : lessons.length === 0 ? (
+            <div className="rounded-xl border border-border bg-card p-12 text-center">
+              <CalendarDays className="mx-auto h-12 w-12 text-muted-foreground/40 mb-4" />
+              <p className="text-muted-foreground">Você não possui aulas agendadas.</p>
+            </div>
+          ) : (
+            <div className="space-y-8">
+              <section className="space-y-4">
+                <h2 className="font-display text-xl font-semibold">Próximas aulas</h2>
+                {upcoming.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">Nenhuma aula futura.</p>
+                ) : (
+                  <div className="space-y-4">
+                    {upcoming.map((l) => renderLessonCard(l, true))}
+                  </div>
+                )}
+              </section>
+
+              {past.length > 0 && (
+                <section className="space-y-4">
+                  <h2 className="font-display text-xl font-semibold">Histórico</h2>
+                  <div className="space-y-4">
+                    {past.map((l) => renderLessonCard(l, false))}
+                  </div>
+                </section>
+              )}
+            </div>
+          )}
         </div>
       </div>
       <Footer />
+
+      <Dialog open={!!cancelTarget} onOpenChange={(o) => !o && setCancelTarget(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Cancelar aula particular</DialogTitle>
+            <DialogDescription>
+              {cancelTarget && (
+                <>
+                  Aula com {teachers[cancelTarget.teacher_id]?.name ?? "professor"} em{" "}
+                  {format(new Date(cancelTarget.scheduled_at), "dd/MM/yyyy 'às' HH:mm", {
+                    locale: ptBR,
+                  })}
+                  .
+                </>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+
+          {cancelInfo && cancelTarget && (
+            <div className="space-y-4">
+              {cancelInfo.isLate ? (
+                <div className="rounded-md border border-destructive/40 bg-destructive/10 p-4 space-y-2 text-sm">
+                  <div className="flex items-center gap-2 font-medium text-destructive">
+                    <AlertTriangle className="h-4 w-4" />
+                    Cancelamento tardio
+                  </div>
+                  <p className="text-muted-foreground">
+                    Faltam{" "}
+                    <strong>
+                      {cancelInfo.hoursUntil > 0
+                        ? `${cancelInfo.hoursUntil.toFixed(1)}h`
+                        : "0h"}
+                    </strong>{" "}
+                    para a aula — abaixo da janela gratuita de{" "}
+                    <strong>{cfg.free_cancel_window_hours}h</strong>.
+                  </p>
+                  <div className="border-t border-destructive/20 pt-2 space-y-1">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Valor da aula</span>
+                      <span>{formatBRL(cancelTarget.price)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">
+                        Taxa (
+                        {cfg.late_cancel_fee_type === "percentage"
+                          ? `${cfg.late_cancel_fee_value}%`
+                          : "valor fixo"}
+                        )
+                      </span>
+                      <span className="font-semibold text-destructive">
+                        {formatBRL(cancelInfo.fee)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-xs text-muted-foreground pt-1">
+                      <span>→ Plataforma ({cfg.fee_split_platform_pct}%)</span>
+                      <span>{formatBRL(cancelInfo.platformShare)}</span>
+                    </div>
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>→ Professor ({cfg.fee_split_teacher_pct}%)</span>
+                      <span>{formatBRL(cancelInfo.teacherShare)}</span>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="rounded-md border border-border bg-secondary/30 p-4 text-sm space-y-2">
+                  <p>
+                    Sua aula está dentro da janela gratuita de{" "}
+                    <strong>{cfg.free_cancel_window_hours}h</strong>. O cancelamento será{" "}
+                    <strong>sem custo</strong>.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button
+              variant="ghost"
+              onClick={() => setCancelTarget(null)}
+              disabled={cancelling}
+            >
+              Voltar
+            </Button>
+            <Button
+              variant={cancelInfo?.isLate ? "destructive" : "default"}
+              onClick={handleConfirmCancel}
+              disabled={cancelling}
+              className="gap-2"
+            >
+              {cancelling && <Loader2 className="h-4 w-4 animate-spin" />}
+              {cancelInfo?.isLate ? "Cancelar e pagar taxa" : "Confirmar cancelamento"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

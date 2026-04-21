@@ -78,6 +78,10 @@ const MinhasAulasAgendadas = () => {
    *  blocked. They must explicitly opt in to "request cancellation with fee"
    *  before the destructive action becomes available. */
   const [acknowledgedFee, setAcknowledgedFee] = useState(false);
+  /** Nonce de cancelamento: gerado quando o modal abre e mantido enquanto
+   *  ele estiver aberto. Reenviado em retries para acionar a chave de
+   *  idempotência do Stripe (lesson_id + nonce) e impedir cobrança duplicada. */
+  const [cancelNonce, setCancelNonce] = useState<string | null>(null);
 
   const fetchLessons = async () => {
     if (!user) return;
@@ -134,6 +138,18 @@ const MinhasAulasAgendadas = () => {
   const closeCancelModal = () => {
     setCancelTarget(null);
     setAcknowledgedFee(false);
+    setCancelNonce(null);
+  };
+
+  const openCancelModal = (lesson: ScheduledLesson) => {
+    setCancelTarget(lesson);
+    setAcknowledgedFee(false);
+    // Gera novo nonce a cada abertura do fluxo de cancelamento.
+    setCancelNonce(
+      typeof crypto !== "undefined" && "randomUUID" in crypto
+        ? crypto.randomUUID()
+        : `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    );
   };
 
   const handleConfirmCancel = async () => {
@@ -149,7 +165,12 @@ const MinhasAulasAgendadas = () => {
       }
       const { data, error } = await supabase.functions.invoke(
         "charge-late-cancellation-fee",
-        { body: { lesson_id: cancelTarget.id } },
+        {
+          body: {
+            lesson_id: cancelTarget.id,
+            cancel_nonce: cancelNonce,
+          },
+        },
       );
       setCancelling(false);
 

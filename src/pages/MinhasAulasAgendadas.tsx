@@ -332,6 +332,15 @@ const MinhasAulasAgendadas = () => {
         )}
 
         {allowCancel && (
+          <LessonReadyChecklist
+            lessonId={lesson.id}
+            durationMinutes={lesson.duration_minutes}
+            cancelHours={cfg.free_cancel_window_hours}
+            meetingUrl={lesson.meeting_url}
+          />
+        )}
+
+        {allowCancel && (
           <div className="flex justify-end">
             <Button
               variant="outline"

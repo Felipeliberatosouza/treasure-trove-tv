@@ -971,35 +971,7 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
 
               // Auto-generate description from VTT transcript using AI
               if (vtt && (!description || description.trim().length === 0)) {
-                const transcript = vttToPlainText(vtt);
-                if (transcript.trim().length > 0) {
-                  const toastId = toast.loading("Gerando resumo da aula com IA...");
-                  try {
-                    const { data, error } = await supabase.functions.invoke(
-                      "generate-lesson-material",
-                      {
-                        body: {
-                          kind: "description",
-                          title: title || "Aula",
-                          area: selectedAreas[0] || "",
-                          transcript,
-                          maxChars: DESCRIPTION_MAX,
-                        },
-                      },
-                    );
-                    if (error) throw error;
-                    const generated = (data?.description || "").trim().slice(0, DESCRIPTION_MAX);
-                    if (generated) {
-                      setDescription(generated);
-                      toast.success("Resumo da aula preenchido automaticamente!", { id: toastId });
-                    } else {
-                      toast.dismiss(toastId);
-                    }
-                  } catch (err) {
-                    console.error("Failed to generate description from transcript", err);
-                    toast.error("Não foi possível gerar o resumo automaticamente.", { id: toastId });
-                  }
-                }
+                await generateDescriptionFromTranscript(vtt, { silentIfEmpty: true });
               }
 
               // Inform teacher about next steps with AI assistance

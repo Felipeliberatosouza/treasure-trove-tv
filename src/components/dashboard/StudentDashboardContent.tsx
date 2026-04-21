@@ -1,19 +1,21 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { User, CreditCard, Lock, BookOpen, Info } from "lucide-react";
+import { User, CreditCard, Lock, BookOpen, Info, LifeBuoy } from "lucide-react";
 import PersonalDataTab from "@/components/dashboard/PersonalDataTab";
 import LoginDataTab from "@/components/dashboard/LoginDataTab";
 import StudentSubscriptionTab from "@/components/dashboard/StudentSubscriptionTab";
 import StudentInstructionsTab from "@/components/dashboard/StudentInstructionsTab";
 import InterestAreasTab from "@/components/dashboard/InterestAreasTab";
 import PastDueBillingAlert from "@/components/dashboard/PastDueBillingAlert";
+import SupportTicketsTab from "@/components/dashboard/SupportTicketsTab";
 
 const tabs = [
   { id: "personal", label: "Dados Pessoais", icon: User },
   { id: "login", label: "Dados de Login", icon: Lock },
   { id: "subscription", label: "Assinatura e Compras", icon: CreditCard },
   { id: "interests", label: "Áreas de Interesse", icon: BookOpen },
+  { id: "support", label: "Atendimento", icon: LifeBuoy },
   { id: "instructions", label: "Como Usar", icon: Info },
 ] as const;
 
@@ -72,6 +74,7 @@ const StudentDashboardContent = () => {
         {activeTab === "login" && <LoginDataTab />}
         {activeTab === "subscription" && <StudentSubscriptionTab />}
         {activeTab === "interests" && <InterestAreasTab />}
+        {activeTab === "support" && <SupportTicketsTab userRole="student" />}
         {activeTab === "instructions" && <StudentInstructionsTab />}
       </motion.div>
     </div>

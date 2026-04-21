@@ -39,19 +39,56 @@ const Contact = () => {
     }
 
     setLoading(true);
-    const { error } = await supabase.from("contact_messages").insert({
+    const trimmed = {
       name: form.name.trim(),
       email: form.email.trim(),
       subject: form.subject.trim(),
       message: form.message.trim(),
-    });
-    setLoading(false);
+    };
+
+    const { error } = await supabase.from("contact_messages").insert(trimmed);
 
     if (error) {
+      setLoading(false);
       toast.error("Erro ao enviar mensagem. Tente novamente.");
       return;
     }
 
+    // Encaminha a mensagem para o e-mail configurado em Dados e Contatos
+    // (Painel do administrador → Configurações). Caso o envio do e-mail
+    // falhe, ainda assim a mensagem foi gravada no banco — informamos o
+    // usuário com sucesso e logamos o erro silenciosamente.
+    const inboxEmail = (contact?.email || "").trim();
+    if (inboxEmail) {
+      const { error: emailError } = await supabase.functions.invoke(
+        "send-transactional-email",
+        {
+          body: {
+            templateName: "contact-message",
+            recipientEmail: inboxEmail,
+            templateData: {
+              senderName: trimmed.name,
+              senderEmail: trimmed.email,
+              subject: trimmed.subject,
+              message: trimmed.message,
+              receivedAt: new Date().toLocaleString("pt-BR", {
+                dateStyle: "short",
+                timeStyle: "short",
+              }),
+            },
+          },
+        },
+      );
+      if (emailError) {
+        console.error("Falha ao notificar caixa de contato:", emailError);
+      }
+    } else {
+      console.warn(
+        "[Contato] E-mail de destino não configurado em Dados e Contatos.",
+      );
+    }
+
+    setLoading(false);
     toast.success("Mensagem enviada com sucesso! Responderemos em breve.");
     setForm({ name: "", email: "", subject: "", message: "" });
   };

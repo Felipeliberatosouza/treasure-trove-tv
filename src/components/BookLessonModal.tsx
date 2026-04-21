@@ -104,7 +104,7 @@ const BookLessonModal = ({
   useEffect(() => {
     if (!open || !teacherId) return;
     let cancelled = false;
-    (async () => {
+    const load = async () => {
       setLoadingAvail(true);
       const today = new Date();
       const horizon = new Date();
@@ -141,9 +141,55 @@ const BookLessonModal = ({
       setBookings((bookRes.data as ScheduledRow[]) || []);
       setResourcePrice(priceRes.data?.price ? Number(priceRes.data.price) : null);
       setLoadingAvail(false);
-    })();
+    };
+    load();
+
+    // Realtime: refletir bloqueios/exceções e novas reservas do professor
+    // imediatamente para evitar tentar reservar um slot que acabou de
+    // conflitar com uma exceção sobreposta criada por ele.
+    const channel = supabase
+      .channel(`book-lesson-${teacherId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "teacher_availability_exceptions",
+          filter: `teacher_id=eq.${teacherId}`,
+        },
+        () => {
+          if (!cancelled) load();
+        },
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "teacher_availability_recurring",
+          filter: `teacher_id=eq.${teacherId}`,
+        },
+        () => {
+          if (!cancelled) load();
+        },
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "scheduled_lessons",
+          filter: `teacher_id=eq.${teacherId}`,
+        },
+        () => {
+          if (!cancelled) load();
+        },
+      )
+      .subscribe();
+
     return () => {
       cancelled = true;
+      supabase.removeChannel(channel);
     };
   }, [open, teacherId]);
 
@@ -261,12 +307,41 @@ const BookLessonModal = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [date, recurring, exceptions, bookings, cfg.lesson_duration_minutes]);
 
+  // Se o slot selecionado deixou de existir (foi bloqueado/ocupado por
+  // atualização realtime), limpar a seleção e avisar.
+  useEffect(() => {
+    if (!selectedSlot) return;
+    const stillValid = slots.some(
+      (s) => !s.disabled && s.time.getTime() === selectedSlot.getTime(),
+    );
+    if (!stillValid) {
+      setSelectedSlot(null);
+      toast.warning(
+        "O horário selecionado acabou de ficar indisponível. Escolha outro.",
+      );
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [slots]);
+
   const handleConfirm = async () => {
     if (!user) {
       toast.error("Faça login para agendar.");
       return;
     }
     if (!selectedSlot) return;
+
+    // Revalidação final no clique: o estado pode ter mudado entre render e clique.
+    const stillAvailable = slots.some(
+      (s) => !s.disabled && s.time.getTime() === selectedSlot.getTime(),
+    );
+    if (!stillAvailable) {
+      setSelectedSlot(null);
+      toast.error(
+        "Este horário não está mais disponível. A agenda foi atualizada.",
+      );
+      return;
+    }
+
     setConfirming(true);
 
     const { error } = await supabase.from("scheduled_lessons").insert({

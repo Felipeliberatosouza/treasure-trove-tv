@@ -350,11 +350,21 @@ const MinhasAulasAgendadas = () => {
       <Navbar />
       <div className="flex-1 px-6 pt-24 pb-12 md:px-16 lg:px-32">
         <div className="mx-auto max-w-5xl space-y-8">
-          <div className="flex items-center gap-3">
-            <CalendarDays className="h-8 w-8 text-primary" />
-            <h1 className="font-display text-3xl font-bold text-gradient">
-              Minhas Aulas Agendadas
-            </h1>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <CalendarDays className="h-8 w-8 text-primary" />
+              <h1 className="font-display text-3xl font-bold text-gradient">
+                Minhas Aulas Agendadas
+              </h1>
+            </div>
+            {isTeacher && (
+              <Button asChild variant="outline" className="gap-2">
+                <Link to="/dashboard/teacher?tab=agenda">
+                  <CalendarCog className="h-4 w-4" />
+                  Atualizar minha Agenda
+                </Link>
+              </Button>
+            )}
           </div>
           <p className="text-muted-foreground text-lg">
             Aulas particulares agendadas com professores. Cancelamentos com menos de{" "}

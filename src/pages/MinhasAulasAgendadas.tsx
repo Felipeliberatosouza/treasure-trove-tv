@@ -1,7 +1,16 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { CalendarDays, Clock, AlertTriangle, Loader2, X, CalendarCog } from "lucide-react";
+import {
+  CalendarDays,
+  Clock,
+  AlertTriangle,
+  Loader2,
+  X,
+  CalendarCog,
+  Video,
+  LinkIcon,
+} from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";

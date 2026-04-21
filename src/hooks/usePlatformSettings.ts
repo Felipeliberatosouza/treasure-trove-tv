@@ -234,6 +234,7 @@ type SettingsMap = {
   product_config: ProductConfigSettings;
   twilio_config: TwilioConfigSettings;
   retention_coupon: RetentionCouponSettings;
+  aula_particular_config: AulaParticularConfigSettings;
 };
 
 export interface TwilioConfigSettings {
@@ -253,6 +254,34 @@ export interface RetentionCouponSettings {
    *  eligible for a new retention offer. 0 = block forever (one-shot). */
   cooldown_months: number;
 }
+
+export type LateCancelFeeType = "percentage" | "fixed";
+
+export interface AulaParticularConfigSettings {
+  /** Duração padrão de cada aula particular em minutos. */
+  lesson_duration_minutes: number;
+  /** Janela em horas durante a qual o aluno pode cancelar sem custo
+   *  (medida a partir do horário marcado da aula). */
+  free_cancel_window_hours: number;
+  /** Como a taxa de cancelamento tardio é calculada. */
+  late_cancel_fee_type: LateCancelFeeType;
+  /** Valor da taxa: percentual (0-100) quando type='percentage' ou
+   *  valor em reais quando type='fixed'. */
+  late_cancel_fee_value: number;
+  /** Percentual da taxa que fica com a plataforma. */
+  fee_split_platform_pct: number;
+  /** Percentual da taxa que vai para o professor. */
+  fee_split_teacher_pct: number;
+}
+
+export const DEFAULT_AULA_PARTICULAR_CONFIG: AulaParticularConfigSettings = {
+  lesson_duration_minutes: 50,
+  free_cancel_window_hours: 3,
+  late_cancel_fee_type: "percentage",
+  late_cancel_fee_value: 50,
+  fee_split_platform_pct: 30,
+  fee_split_teacher_pct: 70,
+};
 
 export interface ProductConfigSettings {
   revisoes: {

@@ -153,10 +153,33 @@ const MinhasAulasAgendadas = () => {
       );
       setCancelling(false);
 
-      if (error || (data && (data as { error?: string }).error)) {
+      const result = data as
+        | {
+            success?: boolean;
+            partial?: boolean;
+            charged?: boolean;
+            error?: string;
+            payment_intent_id?: string;
+          }
+        | null;
+
+      // Caso parcial: cobrança OK mas update da aula falhou no servidor.
+      if (result?.partial && result?.charged) {
+        toast({
+          title: "Cobrança realizada — atualização pendente",
+          description:
+            result.error ??
+            `Taxa cobrada (cód. ${result.payment_intent_id ?? "—"}). Nossa equipe regularizará o status.`,
+          variant: "destructive",
+        });
+        closeCancelModal();
+        fetchLessons();
+        return;
+      }
+
+      if (error || result?.error || result?.success === false) {
         const msg =
-          (data as { error?: string })?.error ??
-          (error?.message ?? "Falha ao cobrar a taxa de cancelamento.");
+          result?.error ?? error?.message ?? "Falha ao cobrar a taxa de cancelamento.";
         toast({ title: "Não foi possível cancelar", description: msg, variant: "destructive" });
         return;
       }

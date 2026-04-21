@@ -74,6 +74,10 @@ const MinhasAulasAgendadas = () => {
   const [loading, setLoading] = useState(true);
   const [cancelTarget, setCancelTarget] = useState<ScheduledLesson | null>(null);
   const [cancelling, setCancelling] = useState(false);
+  /** When the student is inside the late-cancel window, the primary button is
+   *  blocked. They must explicitly opt in to "request cancellation with fee"
+   *  before the destructive action becomes available. */
+  const [acknowledgedFee, setAcknowledgedFee] = useState(false);
 
   const fetchLessons = async () => {
     if (!user) return;
@@ -127,39 +131,60 @@ const MinhasAulasAgendadas = () => {
 
   if (!user) return <Navigate to="/login" replace />;
 
+  const closeCancelModal = () => {
+    setCancelTarget(null);
+    setAcknowledgedFee(false);
+  };
+
   const handleConfirmCancel = async () => {
     if (!cancelTarget || !cancelInfo) return;
     setCancelling(true);
 
-    const newStatus = cancelInfo.isLate ? "cancelled_late" : "cancelled";
-    const reason = cancelInfo.isLate
-      ? `Cancelado pelo aluno fora da janela de ${cfg.free_cancel_window_hours}h. Taxa: ${formatBRL(cancelInfo.fee)} (plataforma ${formatBRL(cancelInfo.platformShare)} / professor ${formatBRL(cancelInfo.teacherShare)}).`
-      : `Cancelado pelo aluno dentro da janela gratuita de ${cfg.free_cancel_window_hours}h.`;
+    if (cancelInfo.isLate) {
+      // Late cancellation: server validates window, charges via Stripe with the
+      // configured split, and only then flips the booking to cancelled_late.
+      if (!acknowledgedFee) {
+        setCancelling(false);
+        return;
+      }
+      const { data, error } = await supabase.functions.invoke(
+        "charge-late-cancellation-fee",
+        { body: { lesson_id: cancelTarget.id } },
+      );
+      setCancelling(false);
 
-    const { error } = await supabase
-      .from("scheduled_lessons")
-      .update({
-        status: newStatus,
-        cancelled_at: new Date().toISOString(),
-        cancellation_reason: reason,
-      })
-      .eq("id", cancelTarget.id);
+      if (error || (data && (data as { error?: string }).error)) {
+        const msg =
+          (data as { error?: string })?.error ??
+          (error?.message ?? "Falha ao cobrar a taxa de cancelamento.");
+        toast({ title: "Não foi possível cancelar", description: msg, variant: "destructive" });
+        return;
+      }
 
-    setCancelling(false);
+      toast({
+        title: "Aula cancelada com taxa",
+        description: `Taxa de ${formatBRL(cancelInfo.fee)} cobrada no seu cartão.`,
+      });
+    } else {
+      // Free cancellation inside the window: simple update.
+      const { error } = await supabase
+        .from("scheduled_lessons")
+        .update({
+          status: "cancelled",
+          cancelled_at: new Date().toISOString(),
+          cancellation_reason: `Cancelado pelo aluno dentro da janela gratuita de ${cfg.free_cancel_window_hours}h.`,
+        })
+        .eq("id", cancelTarget.id);
+      setCancelling(false);
 
-    if (error) {
-      toast({ title: "Erro", description: "Falha ao cancelar aula.", variant: "destructive" });
-      return;
+      if (error) {
+        toast({ title: "Erro", description: "Falha ao cancelar aula.", variant: "destructive" });
+        return;
+      }
+      toast({ title: "Aula cancelada", description: "Cancelamento realizado sem custo." });
     }
 
-    toast({
-      title: cancelInfo.isLate ? "Aula cancelada com taxa" : "Aula cancelada",
-      description: cancelInfo.isLate
-        ? `Foi aplicada a taxa de ${formatBRL(cancelInfo.fee)} pelo cancelamento tardio.`
-        : "Cancelamento realizado sem custo.",
-    });
-
-    setCancelTarget(null);
+    closeCancelModal();
     fetchLessons();
   };
 
@@ -290,7 +315,7 @@ const MinhasAulasAgendadas = () => {
       </div>
       <Footer />
 
-      <Dialog open={!!cancelTarget} onOpenChange={(o) => !o && setCancelTarget(null)}>
+      <Dialog open={!!cancelTarget} onOpenChange={(o) => !o && closeCancelModal()}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Cancelar aula particular</DialogTitle>
@@ -310,10 +335,11 @@ const MinhasAulasAgendadas = () => {
           {cancelInfo && cancelTarget && (
             <div className="space-y-4">
               {cancelInfo.isLate ? (
+                <>
                 <div className="rounded-md border border-destructive/40 bg-destructive/10 p-4 space-y-2 text-sm">
                   <div className="flex items-center gap-2 font-medium text-destructive">
                     <AlertTriangle className="h-4 w-4" />
-                    Cancelamento tardio
+                    Cancelamento bloqueado — fora da janela gratuita
                   </div>
                   <p className="text-muted-foreground">
                     Faltam{" "}
@@ -324,6 +350,9 @@ const MinhasAulasAgendadas = () => {
                     </strong>{" "}
                     para a aula — abaixo da janela gratuita de{" "}
                     <strong>{cfg.free_cancel_window_hours}h</strong>.
+                    O cancelamento gratuito não está mais disponível. Para
+                    prosseguir, você precisa aceitar a cobrança da taxa abaixo
+                    no seu cartão cadastrado.
                   </p>
                   <div className="border-t border-destructive/20 pt-2 space-y-1">
                     <div className="flex justify-between">
@@ -352,6 +381,22 @@ const MinhasAulasAgendadas = () => {
                     </div>
                   </div>
                 </div>
+                {!acknowledgedFee ? (
+                  <button
+                    type="button"
+                    onClick={() => setAcknowledgedFee(true)}
+                    className="w-full rounded-md border border-destructive/40 px-3 py-2 text-sm font-medium text-destructive hover:bg-destructive/10 transition"
+                  >
+                    Solicitar cancelamento e aceitar a cobrança da taxa
+                  </button>
+                ) : (
+                  <div className="rounded-md border border-border bg-secondary/30 p-3 text-xs text-muted-foreground">
+                    Você confirmou a cobrança da taxa. Clique em{" "}
+                    <strong>Confirmar e pagar</strong> para finalizar — a cobrança
+                    será efetuada imediatamente.
+                  </div>
+                )}
+                </>
               ) : (
                 <div className="rounded-md border border-border bg-secondary/30 p-4 text-sm space-y-2">
                   <p>
@@ -367,7 +412,7 @@ const MinhasAulasAgendadas = () => {
           <DialogFooter>
             <Button
               variant="ghost"
-              onClick={() => setCancelTarget(null)}
+              onClick={closeCancelModal}
               disabled={cancelling}
             >
               Voltar
@@ -375,11 +420,11 @@ const MinhasAulasAgendadas = () => {
             <Button
               variant={cancelInfo?.isLate ? "destructive" : "default"}
               onClick={handleConfirmCancel}
-              disabled={cancelling}
+              disabled={cancelling || (cancelInfo?.isLate === true && !acknowledgedFee)}
               className="gap-2"
             >
               {cancelling && <Loader2 className="h-4 w-4 animate-spin" />}
-              {cancelInfo?.isLate ? "Cancelar e pagar taxa" : "Confirmar cancelamento"}
+              {cancelInfo?.isLate ? "Confirmar e pagar" : "Confirmar cancelamento"}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -671,6 +671,36 @@ export type Database = {
           },
         ]
       }
+      lesson_reminder_preferences: {
+        Row: {
+          alternate_phone: string | null
+          channel: string
+          created_at: string
+          id: string
+          preferred_windows_hours: number[]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          alternate_phone?: string | null
+          channel?: string
+          created_at?: string
+          id?: string
+          preferred_windows_hours?: number[]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          alternate_phone?: string | null
+          channel?: string
+          created_at?: string
+          id?: string
+          preferred_windows_hours?: number[]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       lesson_summaries: {
         Row: {
           content: string

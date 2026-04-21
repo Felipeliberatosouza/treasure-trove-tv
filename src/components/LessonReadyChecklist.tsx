@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
-import { CheckCircle2, ClipboardCheck, ExternalLink, Lock } from "lucide-react";
+import { CheckCircle2, ClipboardCheck, ExternalLink, Lock, BellRing } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 
 interface ChecklistItem {
   id: string;
@@ -63,9 +64,13 @@ interface LessonReadyChecklistProps {
   cancelHours: number;
   meetingUrl: string | null;
   scheduledAt: string | Date;
+  /** Minutos antes do início para acionar o lembrete "Quase lá". Padrão: 15. */
+  reminderMinutes?: number;
+  lessonTitle?: string;
 }
 
 const storageKey = (lessonId: string) => `lesson-ready-checklist:${lessonId}`;
+const reminderFiredKey = (lessonId: string) => `lesson-reminder-fired:${lessonId}`;
 
 const LessonReadyChecklist = ({
   lessonId,
@@ -73,13 +78,21 @@ const LessonReadyChecklist = ({
   cancelHours,
   meetingUrl,
   scheduledAt,
+  reminderMinutes = 15,
+  lessonTitle,
 }: LessonReadyChecklistProps) => {
   const [checked, setChecked] = useState<Record<string, boolean>>({});
   const [now, setNow] = useState<number>(() => Date.now());
+  const { toast } = useToast();
 
   const startMs =
     typeof scheduledAt === "string" ? new Date(scheduledAt).getTime() : scheduledAt.getTime();
   const hasStarted = Number.isFinite(startMs) && now >= startMs;
+  const minutesUntil = Number.isFinite(startMs)
+    ? Math.round((startMs - now) / 60_000)
+    : Number.POSITIVE_INFINITY;
+  const isAlmostThere =
+    !hasStarted && minutesUntil >= 0 && minutesUntil <= reminderMinutes;
 
   useEffect(() => {
     try {
@@ -98,6 +111,27 @@ const LessonReadyChecklist = ({
     const id = window.setInterval(update, 30_000);
     return () => window.clearInterval(id);
   }, [startMs]);
+
+  /** Dispara o toast de lembrete uma única vez quando entramos na janela
+   *  "Quase lá". Persistimos a flag em sessionStorage por lesson_id para
+   *  evitar duplicatas em re-renders / navegação interna. */
+  useEffect(() => {
+    if (!isAlmostThere) return;
+    if (typeof window === "undefined" || !window.sessionStorage) return;
+    const key = reminderFiredKey(lessonId);
+    if (window.sessionStorage.getItem(key)) return;
+    try {
+      window.sessionStorage.setItem(key, "1");
+    } catch {
+      /* storage cheio: ainda assim mostra o toast */
+    }
+    toast({
+      title: "Quase lá! Sua aula começa em breve",
+      description: lessonTitle
+        ? `"${lessonTitle}" começa em ${minutesUntil <= 0 ? "menos de 1" : minutesUntil} min. Prepare-se.`
+        : `Faltam ${minutesUntil <= 0 ? "menos de 1" : minutesUntil} min para começar.`,
+    });
+  }, [isAlmostThere, lessonId, lessonTitle, minutesUntil, toast]);
 
   const toggle = (id: string, value: boolean) => {
     if (hasStarted) return;
@@ -119,17 +153,29 @@ const LessonReadyChecklist = ({
     <div
       className={cn(
         "rounded-md border p-3 space-y-3",
-        allChecked ? "border-primary/40 bg-primary/5" : "border-border bg-secondary/30",
+        hasStarted
+          ? "border-primary/40 bg-primary/5"
+          : isAlmostThere
+          ? "border-warning/50 bg-warning/10 ring-1 ring-warning/30"
+          : allChecked
+          ? "border-primary/40 bg-primary/5"
+          : "border-border bg-secondary/30",
       )}
     >
       <div className="flex items-center justify-between gap-2">
         <p className="text-xs font-semibold text-foreground flex items-center gap-2">
-          {allChecked ? (
+          {isAlmostThere ? (
+            <BellRing className="h-4 w-4 text-warning animate-pulse" />
+          ) : allChecked ? (
             <CheckCircle2 className="h-4 w-4 text-primary" />
           ) : (
             <ClipboardCheck className="h-4 w-4 text-primary" />
           )}
-          {hasStarted ? "Aula em andamento — pronto!" : "Preparado para a aula?"}
+          {hasStarted
+            ? "Aula em andamento — pronto!"
+            : isAlmostThere
+            ? `Quase lá — começa em ${minutesUntil <= 0 ? "menos de 1" : minutesUntil} min`
+            : "Preparado para a aula?"}
         </p>
         <span className="text-[11px] text-muted-foreground inline-flex items-center gap-1">
           {hasStarted && <Lock className="h-3 w-3" />}

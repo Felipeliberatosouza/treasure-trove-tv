@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import MandatoryMfaGuard from "@/components/MandatoryMfaGuard";
 import { motion } from "framer-motion";
-import { ArrowLeft, Video, DollarSign, Shield, LayoutDashboard, Settings, HelpCircle, Mail, CalendarClock, Megaphone, Users, CreditCard, FileText, ScrollText, Activity, RefreshCcw, Receipt, XCircle } from "lucide-react";
+import { ArrowLeft, Video, DollarSign, Shield, LayoutDashboard, Settings, HelpCircle, Mail, CalendarClock, Megaphone, Users, CreditCard, FileText, ScrollText, Activity, RefreshCcw, Receipt, XCircle, LifeBuoy } from "lucide-react";
 import { Link, Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
@@ -24,11 +24,13 @@ import AdminCancellationReceiptsTab from "@/components/admin/AdminCancellationRe
 import AdminCommitmentRefundsTab from "@/components/admin/AdminCommitmentRefundsTab";
 import AdminCancellationsTab from "@/components/admin/AdminCancellationsTab";
 import AdminUsageHistoryTab from "@/components/admin/AdminUsageHistoryTab";
+import AdminSupportTicketsTab from "@/components/admin/AdminSupportTicketsTab";
 
 const tabs = [
   { id: "overview", label: "Visão Geral", icon: LayoutDashboard },
   { id: "users", label: "Usuários", icon: Users },
   { id: "plans", label: "Planos", icon: CreditCard },
+  { id: "support-tickets", label: "Tickets de Atendimento", icon: LifeBuoy },
   { id: "usage-history", label: "Histórico de Uso", icon: Activity, hidden: true },
   { id: "cancellations", label: "Cancelamentos", icon: XCircle },
   { id: "security", label: "Segurança", icon: Shield },
@@ -122,6 +124,7 @@ const AdminDashboard = () => {
             {activeTab === "security" && <AdminSecurityTab />}
             {activeTab === "audit" && <AdminAuditLogsTab />}
             {activeTab === "login-attempts" && <AdminLoginAttemptsTab />}
+            {activeTab === "support-tickets" && <AdminSupportTicketsTab />}
             {activeTab === "settings" && <AdminSettingsTab />}
           </motion.div>
         </div>

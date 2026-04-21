@@ -334,7 +334,20 @@ const VideoRecorder = ({
           className={`w-full h-full object-cover ${state !== "preview" ? "hidden" : ""}`}
           playsInline
           controls
-        />
+          crossOrigin="anonymous"
+        >
+          {state === "preview" && subtitlesVttRef.current && (
+            <track
+              kind="subtitles"
+              src={URL.createObjectURL(
+                new Blob([subtitlesVttRef.current], { type: "text/vtt" })
+              )}
+              srcLang="pt-BR"
+              label="Português"
+              default
+            />
+          )}
+        </video>
 
         {/* Processing overlay */}
         {state === "processing" && (

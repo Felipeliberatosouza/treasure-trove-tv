@@ -17,6 +17,9 @@ que valida em ambiente real:
   - O componente `TicketAttachments.tsx`
   - As abas de tickets (aluno e admin)
   - Qualquer arquivo em `supabase/migrations/**` (que pode mexer em RLS)
+  - Qualquer `*.sql` em `supabase/**` ou arquivos com `rls`/`polic` no nome
+    (ex.: `supabase/migrations/20250101_rls_support.sql`, `supabase/policies/**`)
+  - Qualquer arquivo em `supabase/functions/_shared/__tests__/**`
   - O próprio workflow
 - Manualmente via **Run workflow** (workflow_dispatch).
 

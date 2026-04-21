@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
-import { Upload, X, Image as ImageIcon, Video, Camera, DollarSign, CheckCircle2, AlertCircle } from "lucide-react";
+import { Upload, X, Image as ImageIcon, Video, Camera, DollarSign, CheckCircle2, AlertCircle, Sparkles, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -124,8 +124,61 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
   const [processingStep, setProcessingStep] = useState("");
   const [resourcePrices, setResourcePrices] = useState<ResourcePriceInfo[]>([]);
   const [aiGenerating, setAiGenerating] = useState<null | "simulado" | "top_questoes" | "colinha">(null);
+  const [regeneratingDescription, setRegeneratingDescription] = useState(false);
 
   const canGenerateAi = title.trim().length > 0 && description.trim().length > 0;
+
+  // Generate (or regenerate) the lesson description from the recorded transcript.
+  const generateDescriptionFromTranscript = useCallback(
+    async (vtt: string, opts: { silentIfEmpty?: boolean } = {}): Promise<boolean> => {
+      const transcript = vttToPlainText(vtt);
+      if (!transcript.trim()) {
+        if (!opts.silentIfEmpty) {
+          toast.error("Não há transcrição disponível para gerar o resumo.");
+        }
+        return false;
+      }
+      const toastId = toast.loading("Gerando resumo da aula com IA...");
+      try {
+        const { data, error } = await supabase.functions.invoke(
+          "generate-lesson-material",
+          {
+            body: {
+              kind: "description",
+              title: title || "Aula",
+              area: selectedAreas[0] || "",
+              transcript,
+              maxChars: DESCRIPTION_MAX,
+            },
+          },
+        );
+        if (error) throw error;
+        const generated = (data?.description || "").trim().slice(0, DESCRIPTION_MAX);
+        if (generated) {
+          setDescription(generated);
+          toast.success("Resumo gerado com IA!", { id: toastId });
+          return true;
+        }
+        toast.error("A IA não retornou um resumo. Tente novamente.", { id: toastId });
+        return false;
+      } catch (err) {
+        console.error("Failed to generate description from transcript", err);
+        toast.error("Não foi possível gerar o resumo automaticamente.", { id: toastId });
+        return false;
+      }
+    },
+    [title, selectedAreas, DESCRIPTION_MAX],
+  );
+
+  const handleRegenerateDescription = async () => {
+    if (!subtitlesVtt) return;
+    setRegeneratingDescription(true);
+    try {
+      await generateDescriptionFromTranscript(subtitlesVtt);
+    } finally {
+      setRegeneratingDescription(false);
+    }
+  };
 
   const generateMaterialWithAi = async (kind: "simulado" | "top_questoes" | "colinha") => {
     if (!canGenerateAi) {
@@ -821,7 +874,26 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
 
       {/* Description */}
       <div>
-        <label className="text-sm text-muted-foreground mb-1 block">Descrição da aula *</label>
+        <div className="flex items-center justify-between gap-2 mb-1">
+          <label className="text-sm text-muted-foreground">Descrição da aula *</label>
+          {subtitlesVtt && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleRegenerateDescription}
+              disabled={regeneratingDescription}
+              className="h-7 text-[11px] gap-1"
+            >
+              {regeneratingDescription ? (
+                <Loader2 className="h-3 w-3 animate-spin" />
+              ) : (
+                <Sparkles className="h-3 w-3" />
+              )}
+              {regeneratingDescription ? "Gerando..." : "Regerar resumo com IA"}
+            </Button>
+          )}
+        </div>
         <Textarea
           value={description}
           maxLength={DESCRIPTION_MAX}
@@ -899,35 +971,7 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
 
               // Auto-generate description from VTT transcript using AI
               if (vtt && (!description || description.trim().length === 0)) {
-                const transcript = vttToPlainText(vtt);
-                if (transcript.trim().length > 0) {
-                  const toastId = toast.loading("Gerando resumo da aula com IA...");
-                  try {
-                    const { data, error } = await supabase.functions.invoke(
-                      "generate-lesson-material",
-                      {
-                        body: {
-                          kind: "description",
-                          title: title || "Aula",
-                          area: selectedAreas[0] || "",
-                          transcript,
-                          maxChars: DESCRIPTION_MAX,
-                        },
-                      },
-                    );
-                    if (error) throw error;
-                    const generated = (data?.description || "").trim().slice(0, DESCRIPTION_MAX);
-                    if (generated) {
-                      setDescription(generated);
-                      toast.success("Resumo da aula preenchido automaticamente!", { id: toastId });
-                    } else {
-                      toast.dismiss(toastId);
-                    }
-                  } catch (err) {
-                    console.error("Failed to generate description from transcript", err);
-                    toast.error("Não foi possível gerar o resumo automaticamente.", { id: toastId });
-                  }
-                }
+                await generateDescriptionFromTranscript(vtt, { silentIfEmpty: true });
               }
 
               // Inform teacher about next steps with AI assistance

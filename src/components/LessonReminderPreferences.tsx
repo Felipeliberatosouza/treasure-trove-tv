@@ -84,6 +84,13 @@ const LessonReminderPreferences = () => {
    *  so we keep them in sync with the admin defaults. As soon as they edit
    *  anything (add / remove a chip) we stop overwriting. */
   const [usingAdminDefaults, setUsingAdminDefaults] = useState(true);
+  /** Diagnostic info shown in the modal so the user (and us in console) can
+   *  quickly tell where the pre-filled windows came from. */
+  const [diagnostic, setDiagnostic] = useState<{
+    source: "saved" | "admin" | "fallback-defaults" | "empty";
+    hasPrefsRow: boolean;
+    adminCount: number;
+  } | null>(null);
 
   const profilePhoneDigits = String((profile as any)?.phone ?? "").replace(/\D/g, "");
 
@@ -93,6 +100,12 @@ const LessonReminderPreferences = () => {
     let cancelled = false;
     (async () => {
       setLoading(true);
+      console.log("[LessonReminderPrefs] Opening modal", {
+        userId: user.id,
+        adminWindows,
+        cfgLoaded: cfgRaw !== null,
+        profilePhoneDigits,
+      });
       const { data, error } = await supabase
         .from("lesson_reminder_preferences")
         .select("channel, alternate_phone, preferred_windows_hours")
@@ -102,6 +115,7 @@ const LessonReminderPreferences = () => {
       if (error) {
         console.error("Failed to load reminder prefs", error);
       }
+      console.log("[LessonReminderPrefs] Loaded prefs row:", data);
       if (data) {
         setChannel((data.channel as ChannelOption) ?? "whatsapp_sms_fallback");
         const savedPhone = data.alternate_phone
@@ -125,10 +139,25 @@ const LessonReminderPreferences = () => {
         if (savedWindows.length > 0) {
           setSelectedWindows([...savedWindows].sort((a, b) => b - a));
           setUsingAdminDefaults(false);
+          setDiagnostic({
+            source: "saved",
+            hasPrefsRow: true,
+            adminCount: adminWindows.length,
+          });
+          console.log("[LessonReminderPrefs] Using SAVED windows", savedWindows);
         } else {
           // Empty saved list = "use everything the admin offers".
           setSelectedWindows([...adminWindows]);
           setUsingAdminDefaults(true);
+          setDiagnostic({
+            source: adminWindows.length > 0 ? "admin" : "empty",
+            hasPrefsRow: true,
+            adminCount: adminWindows.length,
+          });
+          console.log(
+            "[LessonReminderPrefs] Saved row had empty windows; using ADMIN defaults",
+            adminWindows,
+          );
         }
       } else {
         setChannel("whatsapp_sms_fallback");
@@ -137,13 +166,22 @@ const LessonReminderPreferences = () => {
         // Brand-new users start with the admin defaults preselected.
         setSelectedWindows([...adminWindows]);
         setUsingAdminDefaults(true);
+        setDiagnostic({
+          source: adminWindows.length > 0 ? "admin" : "fallback-defaults",
+          hasPrefsRow: false,
+          adminCount: adminWindows.length,
+        });
+        console.log(
+          "[LessonReminderPrefs] No prefs row; pre-filling with ADMIN windows",
+          adminWindows,
+        );
       }
       setLoading(false);
     })();
     return () => {
       cancelled = true;
     };
-  }, [open, user, profilePhoneDigits, adminWindows]);
+  }, [open, user, profilePhoneDigits, adminWindows, cfgRaw]);
 
   // While the user has not touched the windows, mirror admin updates live.
   useEffect(() => {
@@ -242,6 +280,30 @@ const LessonReminderPreferences = () => {
           </div>
         ) : (
           <div className="space-y-5">
+            {diagnostic && (
+              <div
+                className={`rounded-md border px-3 py-2 text-xs ${
+                  diagnostic.source === "saved"
+                    ? "border-primary/40 bg-primary/5 text-primary"
+                    : diagnostic.source === "admin"
+                      ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+                      : diagnostic.source === "fallback-defaults"
+                        ? "border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-300"
+                        : "border-destructive/40 bg-destructive/10 text-destructive"
+                }`}
+                role="status"
+              >
+                <strong className="block mb-0.5">Diagnóstico:</strong>
+                {diagnostic.source === "saved" &&
+                  "Carregamos as suas preferências salvas anteriormente."}
+                {diagnostic.source === "admin" &&
+                  `Sem preferências salvas — pré-preenchemos com a configuração do administrador (${diagnostic.adminCount} ${diagnostic.adminCount === 1 ? "horário" : "horários"}).`}
+                {diagnostic.source === "fallback-defaults" &&
+                  "Sem preferências salvas e o administrador não definiu horários — usando os valores padrão do sistema."}
+                {diagnostic.source === "empty" &&
+                  "Suas preferências estavam vazias e o administrador não definiu horários. Adicione manualmente abaixo."}
+              </div>
+            )}
             <div className="space-y-2">
               <Label>Método de envio</Label>
               <Select

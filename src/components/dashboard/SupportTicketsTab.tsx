@@ -26,6 +26,10 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import {
+  TicketAttachmentUploader,
+  TicketAttachmentsList,
+} from "@/components/dashboard/TicketAttachments";
 
 interface Ticket {
   id: string;
@@ -86,6 +90,7 @@ const SupportTicketsTab = ({ userRole }: SupportTicketsTabProps) => {
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [reply, setReply] = useState("");
   const [sending, setSending] = useState(false);
+  const [attachmentsKey, setAttachmentsKey] = useState(0);
 
   // Create form
   const [category, setCategory] = useState<string>("duvida");
@@ -133,6 +138,7 @@ const SupportTicketsTab = ({ userRole }: SupportTicketsTabProps) => {
   const openTicket = async (ticket: Ticket) => {
     setSelectedTicket(ticket);
     await loadMessages(ticket.id);
+    setAttachmentsKey((k) => k + 1);
   };
 
   const handleCreate = async () => {

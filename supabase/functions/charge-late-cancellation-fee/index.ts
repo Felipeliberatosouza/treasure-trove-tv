@@ -176,7 +176,60 @@ serve(async (req) => {
         cancellation_reason: reason,
       })
       .eq("id", lesson.id);
-    if (upErr) log("Failed to update lesson", { upErr });
+
+    if (upErr) {
+      // CRITICAL: charge succeeded but DB update failed.
+      // Persist an audit log so admins can reconcile manually (refund or
+      // force-cancel the lesson). We do NOT auto-refund to avoid double-handling
+      // when the DB recovers — admin decides.
+      log("CRITICAL: charge succeeded but lesson update failed", {
+        upErr: upErr.message,
+        payment_intent_id: charge.id,
+        lesson_id: lesson.id,
+      });
+
+      try {
+        await sb.from("audit_logs").insert({
+          user_id: user.id,
+          action: "late_cancel_charge_orphaned",
+          target_table: "scheduled_lessons",
+          target_id: lesson.id,
+          metadata: {
+            payment_intent_id: charge.id,
+            amount: fee,
+            platform_share: platformShare,
+            teacher_share: teacherShare,
+            teacher_id: lesson.teacher_id,
+            db_error: upErr.message,
+            reason,
+            charged_at: new Date().toISOString(),
+          },
+        });
+      } catch (auditErr) {
+        const am = auditErr instanceof Error ? auditErr.message : String(auditErr);
+        log("Failed to write audit log for orphaned charge", { am });
+      }
+
+      return new Response(
+        JSON.stringify({
+          success: false,
+          partial: true,
+          charged: true,
+          fee,
+          platform_share: platformShare,
+          teacher_share: teacherShare,
+          payment_intent_id: charge.id,
+          error:
+            "A taxa foi cobrada com sucesso, mas houve uma falha ao atualizar o status da aula. " +
+            "Nossa equipe foi notificada e fará a regularização. Guarde o código de pagamento: " +
+            charge.id,
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 207, // Multi-Status: parcial
+        },
+      );
+    }
 
     return new Response(
       JSON.stringify({

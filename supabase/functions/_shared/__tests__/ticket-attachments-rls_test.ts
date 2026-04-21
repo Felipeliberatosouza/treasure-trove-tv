@@ -97,7 +97,7 @@ Deno.test("ticket attachments RLS: owner / other user / admin access matrix", as
     .insert({
       user_id: owner.userId,
       user_role: "student",
-      category: "other",
+      category: "duvida",
       subject: "RLS test ticket",
       description: "rls",
       response_due_at: new Date(Date.now() + 86_400_000).toISOString(),

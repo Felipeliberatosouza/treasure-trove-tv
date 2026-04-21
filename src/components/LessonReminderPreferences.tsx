@@ -199,6 +199,7 @@ const LessonReminderPreferences = () => {
   const removeWindow = (h: number) => {
     setUsingAdminDefaults(false);
     setSelectedWindows((prev) => prev.filter((w) => w !== h));
+    setIsDirty(true);
   };
 
   const addCustomHour = () => {
@@ -216,6 +217,7 @@ const LessonReminderPreferences = () => {
       prev.includes(n) ? prev : [...prev, n].sort((a, b) => b - a),
     );
     setCustomHourInput("");
+    setIsDirty(true);
   };
 
   const handleSave = async () => {

@@ -1,7 +1,22 @@
 import { BookOpen, Video, FileText, HelpCircle, Calendar, CreditCard, Star, Download } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import {
+  usePlatformSettings,
+  DEFAULT_AULA_PARTICULAR_CONFIG,
+  type AulaParticularConfigSettings,
+} from "@/hooks/usePlatformSettings";
 
 const StudentInstructionsTab = () => {
+  const { data } = usePlatformSettings("aula_particular_config");
+  const cfg: AulaParticularConfigSettings = {
+    ...DEFAULT_AULA_PARTICULAR_CONFIG,
+    ...((data as AulaParticularConfigSettings) || {}),
+  };
+  const feeText =
+    cfg.late_cancel_fee_type === "percentage"
+      ? `${cfg.late_cancel_fee_value}% do valor da aula`
+      : `R$ ${cfg.late_cancel_fee_value.toFixed(2)} (valor fixo)`;
+
   return (
     <div>
       <h2 className="font-display text-lg font-semibold mb-2 flex items-center gap-2">
@@ -133,12 +148,59 @@ const StudentInstructionsTab = () => {
               Aulas particulares
             </span>
           </AccordionTrigger>
-          <AccordionContent className="text-sm text-muted-foreground space-y-2">
+          <AccordionContent className="text-sm text-muted-foreground space-y-4">
             <p>
-              Alguns professores disponibilizam a opção de <strong className="text-foreground">aula particular</strong>.
+              Alguns professores disponibilizam a opção de{" "}
+              <strong className="text-foreground">aula particular</strong>. Quando disponível, você
+              pode agendar pelo perfil do professor ou pela página do conteúdo. Acompanhe todas as
+              suas aulas em{" "}
+              <strong className="text-foreground">"Aula Particular: Acesse Aulas/ Atualize Agenda"</strong>{" "}
+              no menu.
             </p>
-            <p>
-              Quando disponível, você verá o link de agendamento na barra de navegação ao acessar o conteúdo do professor. Basta clicar para agendar diretamente.
+
+            <div>
+              <p className="font-semibold text-foreground mb-1">Como funciona o agendamento</p>
+              <ol className="list-decimal pl-5 space-y-1">
+                <li>Escolha um professor que ofereça aulas particulares e selecione um horário disponível na agenda dele.</li>
+                <li>Confirme o pagamento da aula. O acesso ao link da aula fica disponível na sua área de aulas agendadas.</li>
+                <li>No horário marcado, entre pelo link da reunião que aparece no card da aula.</li>
+              </ol>
+            </div>
+
+            <div>
+              <p className="font-semibold text-foreground mb-1">Regras importantes</p>
+              <ul className="list-disc pl-5 space-y-1">
+                <li>
+                  Cada aula tem duração de{" "}
+                  <strong className="text-foreground">{cfg.lesson_duration_minutes} minutos</strong>.
+                </li>
+                <li>
+                  Você pode cancelar <strong className="text-foreground">sem custo</strong> até{" "}
+                  <strong className="text-foreground">{cfg.free_cancel_window_hours}h</strong> antes
+                  do horário marcado.
+                </li>
+                <li>
+                  Cancelamentos com menos de{" "}
+                  <strong className="text-foreground">{cfg.free_cancel_window_hours}h</strong> de
+                  antecedência geram uma{" "}
+                  <strong className="text-foreground">taxa de cancelamento tardio</strong> de{" "}
+                  <strong className="text-foreground">{feeText}</strong>, cobrada automaticamente no
+                  seu método de pagamento.
+                </li>
+                <li>
+                  Não comparecer à aula sem cancelar é tratado como cancelamento tardio e também
+                  gera a taxa.
+                </li>
+                <li>
+                  Reagendamentos dependem da disponibilidade do professor — abra a agenda dele para
+                  escolher um novo horário.
+                </li>
+              </ul>
+            </div>
+
+            <p className="text-xs">
+              💡 Dica: confirme com antecedência se você terá disponibilidade no horário escolhido
+              para evitar a taxa de cancelamento tardio.
             </p>
           </AccordionContent>
         </AccordionItem>

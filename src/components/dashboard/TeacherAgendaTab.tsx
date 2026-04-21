@@ -333,12 +333,21 @@ const TeacherAgendaTab = () => {
     end: Date;
     booked: BookingRow | null;
     source: "recurring" | "extra";
+    blockedExceptionId: string | null;
   };
 
   const slotsForDate = (date: Date): DaySlot[] => {
     const wins = windowsForDate(date);
     const dur = cfg.lesson_duration_minutes;
     const slots: DaySlot[] = [];
+    const dayIso = format(date, "yyyy-MM-dd");
+    const partialBlocks = exceptions.filter(
+      (e) =>
+        e.exception_date === dayIso &&
+        e.exception_type === "unavailable" &&
+        e.start_time &&
+        e.end_time
+    );
 
     for (const w of wins) {
       let cursor = new Date(w.start);
@@ -359,11 +368,20 @@ const TeacherAgendaTab = () => {
             );
           }) ?? null;
 
+        const blockMatch =
+          partialBlocks.find((e) => {
+            const eStart = parseISO(`${dayIso}T${e.start_time}`);
+            const eEnd = parseISO(`${dayIso}T${e.end_time}`);
+            // Slot is fully covered by this block range
+            return eStart <= slotStart && eEnd >= slotEnd;
+          }) ?? null;
+
         slots.push({
           start: slotStart,
           end: slotEnd,
           booked: bookedHit,
           source: w.source,
+          blockedExceptionId: blockMatch?.id ?? null,
         });
         cursor = addMinutes(cursor, dur);
       }

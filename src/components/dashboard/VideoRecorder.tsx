@@ -5,6 +5,7 @@ import { Video, Square, RotateCcw, Check, X, Camera, Loader2 } from "lucide-reac
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { compositeVideo, ImpactWord } from "@/utils/videoCompositor";
+import { shiftVtt } from "@/utils/vttSync";
 
 interface VideoRecorderProps {
   maxMinutes: number;
@@ -251,6 +252,24 @@ const VideoRecorder = ({
             setProcessingProgress(40 + Math.round(p * 0.55));
           },
         });
+
+        // If an intro cover was prepended, shift VTT timestamps so that
+        // subtitles stay aligned with the (delayed) audio track.
+        if (enableAutoCover && subtitlesVtt) {
+          const INTRO_SEC = 4; // matches compositeVideo default introDurationSec
+          const result = shiftVtt(subtitlesVtt, INTRO_SEC);
+          console.log("[VideoRecorder] VTT shifted for intro:", {
+            cueCount: result.cueCount,
+            offsetSec: result.offsetSec,
+            samples: result.samples,
+            valid: result.valid,
+          });
+          if (!result.valid) {
+            console.warn("[VideoRecorder] VTT shift validation failed", result.samples);
+          }
+          subtitlesVtt = result.vtt;
+          subtitlesVttRef.current = result.vtt;
+        }
 
         setRecordedBlob(compositedBlob);
         if (previewRef.current) {

@@ -12,6 +12,7 @@ import AreaSelector from "@/components/AreaSelector";
 import VideoRecorder from "./VideoRecorder";
 import { usePlatformSettings, DEFAULT_PRODUCT_CONFIG } from "@/hooks/usePlatformSettings";
 import { compositeVideo, type ImpactWord } from "@/utils/videoCompositor";
+import { shiftVtt } from "@/utils/vttSync";
 import { generateDefaultCover } from "@/utils/coverGenerator";
 import {
   ResumoMaterial,
@@ -484,6 +485,22 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
             onProgress: () => {},
           });
           const processedFile = new File([compositedBlob], `processado-${Date.now()}.webm`, { type: compositedBlob.type });
+          // Shift VTT timestamps to account for the prepended intro cover
+          // so the subtitle track stays aligned with the post-composition audio.
+          if (enableAutoCover && vtt) {
+            const INTRO_SEC = 4; // matches compositeVideo default introDurationSec
+            const result = shiftVtt(vtt, INTRO_SEC);
+            console.log("[ContentForm] VTT shifted for intro:", {
+              cueCount: result.cueCount,
+              offsetSec: result.offsetSec,
+              samples: result.samples,
+              valid: result.valid,
+            });
+            if (!result.valid) {
+              console.warn("[ContentForm] VTT shift validation failed", result.samples);
+            }
+            vtt = result.vtt;
+          }
           return { processedFile, vtt };
         }
         return { processedFile: file, vtt };

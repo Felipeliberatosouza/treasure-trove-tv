@@ -724,7 +724,7 @@ const VideoPage = () => {
                 { icon: ClipboardList, label: "Simulado", show: materials.simulado, action: () => setIsSimuladoOpen(true) },
                 { icon: Trophy, label: "Top Questões", show: materials.top_questoes, action: () => setMaterialModal("top_questoes") },
                 { icon: StickyNote, label: "Colinha", show: materials.colinhas, action: () => setMaterialModal("colinhas") },
-                { icon: HelpCircle, label: "Dúvidas", show: true, action: handleOpenDoubts },
+                { icon: HelpCircle, label: "Tire suas Dúvidas", show: true, action: handleOpenDoubts },
                 { icon: CalendarCheck, label: "Aula Particular", show: true, action: () => {
                   if (!user) {
                     toast.info("Faça login para agendar uma aula particular.");

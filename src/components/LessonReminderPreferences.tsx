@@ -57,8 +57,12 @@ const LessonReminderPreferences = () => {
   const { user, profile } = useAuth();
   const { toast } = useToast();
   const { data: cfgRaw } = usePlatformSettings("aula_particular_config");
-  const cfg: AulaParticularConfigSettings =
-    cfgRaw ?? DEFAULT_AULA_PARTICULAR_CONFIG;
+  // Merge with defaults so partial admin configs (older rows missing the
+  // reminder_windows_hours field) still surface the platform defaults.
+  const cfg: AulaParticularConfigSettings = {
+    ...DEFAULT_AULA_PARTICULAR_CONFIG,
+    ...(cfgRaw ?? {}),
+  };
 
   const adminWindows = useMemo(
     () =>

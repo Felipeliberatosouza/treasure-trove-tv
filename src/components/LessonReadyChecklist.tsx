@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
-import { CheckCircle2, ClipboardCheck, ExternalLink } from "lucide-react";
+import { CheckCircle2, ClipboardCheck, ExternalLink, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ChecklistItem {
@@ -62,6 +62,7 @@ interface LessonReadyChecklistProps {
   durationMinutes: number;
   cancelHours: number;
   meetingUrl: string | null;
+  scheduledAt: string | Date;
 }
 
 const storageKey = (lessonId: string) => `lesson-ready-checklist:${lessonId}`;
@@ -71,8 +72,14 @@ const LessonReadyChecklist = ({
   durationMinutes,
   cancelHours,
   meetingUrl,
+  scheduledAt,
 }: LessonReadyChecklistProps) => {
   const [checked, setChecked] = useState<Record<string, boolean>>({});
+  const [now, setNow] = useState<number>(() => Date.now());
+
+  const startMs =
+    typeof scheduledAt === "string" ? new Date(scheduledAt).getTime() : scheduledAt.getTime();
+  const hasStarted = Number.isFinite(startMs) && now >= startMs;
 
   useEffect(() => {
     try {
@@ -83,7 +90,17 @@ const LessonReadyChecklist = ({
     }
   }, [lessonId]);
 
+  useEffect(() => {
+    if (!Number.isFinite(startMs)) return;
+    const update = () => setNow(Date.now());
+    update();
+    // Re-check every 30s; cheap and avoids drift.
+    const id = window.setInterval(update, 30_000);
+    return () => window.clearInterval(id);
+  }, [startMs]);
+
   const toggle = (id: string, value: boolean) => {
+    if (hasStarted) return;
     const next = { ...checked, [id]: value };
     setChecked(next);
     try {
@@ -93,7 +110,9 @@ const LessonReadyChecklist = ({
     }
   };
 
-  const totalChecked = ITEMS.filter((i) => checked[i.id]).length;
+  const totalChecked = hasStarted
+    ? ITEMS.length
+    : ITEMS.filter((i) => checked[i.id]).length;
   const allChecked = totalChecked === ITEMS.length;
 
   return (
@@ -110,27 +129,30 @@ const LessonReadyChecklist = ({
           ) : (
             <ClipboardCheck className="h-4 w-4 text-primary" />
           )}
-          Preparado para a aula?
+          {hasStarted ? "Aula em andamento — pronto!" : "Preparado para a aula?"}
         </p>
-        <span className="text-[11px] text-muted-foreground">
+        <span className="text-[11px] text-muted-foreground inline-flex items-center gap-1">
+          {hasStarted && <Lock className="h-3 w-3" />}
           {totalChecked}/{ITEMS.length}
         </span>
       </div>
       <ul className="space-y-2">
         {ITEMS.map((item) => {
-          const isChecked = !!checked[item.id];
+          const isChecked = hasStarted ? true : !!checked[item.id];
           return (
             <li key={item.id} className="flex items-start gap-2">
               <Checkbox
                 id={`${lessonId}-${item.id}`}
                 checked={isChecked}
                 onCheckedChange={(v) => toggle(item.id, v === true)}
+                disabled={hasStarted}
                 className="mt-0.5"
               />
               <label
                 htmlFor={`${lessonId}-${item.id}`}
                 className={cn(
-                  "text-xs leading-relaxed cursor-pointer text-muted-foreground",
+                  "text-xs leading-relaxed text-muted-foreground",
+                  hasStarted ? "cursor-not-allowed" : "cursor-pointer",
                   isChecked && "line-through",
                 )}
               >
@@ -140,6 +162,11 @@ const LessonReadyChecklist = ({
           );
         })}
       </ul>
+      {hasStarted && (
+        <p className="text-[11px] text-muted-foreground italic">
+          A aula já começou — checklist concluído automaticamente e bloqueado para edição.
+        </p>
+      )}
     </div>
   );
 };

@@ -126,14 +126,34 @@ serve(async (req) => {
       // Resolve the price's recurring amount to compute cap
       const price = await stripe.prices.retrieve(priceId);
       const cartAmount = (price.unit_amount ?? 0) / 100;
-      const { data: previewData } = await sb.rpc("preview_cashback_usage", {
+      const { data: previewData, error: previewErr } = await sb.rpc("preview_cashback_usage", {
         _user_id: user.id,
         _cart_amount: cartAmount,
       });
+      if (previewErr) {
+        log("Cashback preview error", { err: previewErr.message });
+        return json(
+          { ok: false, error: "Não foi possível validar seu saldo de cashback. Tente novamente." },
+          200,
+        );
+      }
       const maxUsable = Number(
         (previewData as Record<string, number> | null)?.max_usable ?? 0,
       );
-      cashbackApplied = Math.min(requestedCashback, maxUsable);
+      // Strict validation: reject if user tries to apply more than allowed.
+      if (requestedCashback - maxUsable > 0.01) {
+        log("Cashback request exceeds cap", { requestedCashback, maxUsable });
+        return json(
+          {
+            ok: false,
+            error: `Saldo de cashback insuficiente. Máximo aplicável: R$ ${maxUsable
+              .toFixed(2)
+              .replace(".", ",")}.`,
+          },
+          200,
+        );
+      }
+      cashbackApplied = Math.max(Math.min(requestedCashback, maxUsable), 0);
       if (cashbackApplied > 0) {
         const coupon = await stripe.coupons.create({
           amount_off: Math.round(cashbackApplied * 100),

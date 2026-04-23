@@ -106,12 +106,31 @@ serve(async (req) => {
         "preview_cashback_usage",
         { _user_id: user.id, _cart_amount: finalPrice },
       );
-      if (previewErr) log("Cashback preview error", { err: previewErr.message });
+      if (previewErr) {
+        log("Cashback preview error", { err: previewErr.message });
+        return json(
+          { ok: false, error: "Não foi possível validar seu saldo de cashback. Tente novamente." },
+          200,
+        );
+      }
       const maxUsable = Number(
         (previewData as Record<string, number> | null)?.max_usable ?? 0,
       );
-      cashbackApplied = Math.min(requestedCashback, maxUsable);
-      if (cashbackApplied < 0) cashbackApplied = 0;
+      // Strict validation: reject if user tries to apply more than allowed.
+      // Tolerance of 1 cent guards against floating-point rounding only.
+      if (requestedCashback - maxUsable > 0.01) {
+        log("Cashback request exceeds cap", { requestedCashback, maxUsable });
+        return json(
+          {
+            ok: false,
+            error: `Saldo de cashback insuficiente. Máximo aplicável: R$ ${maxUsable
+              .toFixed(2)
+              .replace(".", ",")}.`,
+          },
+          200,
+        );
+      }
+      cashbackApplied = Math.max(Math.min(requestedCashback, maxUsable), 0);
     }
     const chargeAmount = Math.max(finalPrice - cashbackApplied, 0);
 

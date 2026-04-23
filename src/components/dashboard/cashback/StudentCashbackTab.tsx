@@ -1,8 +1,8 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Sparkles, Copy, TrendingUp, Wallet, Users, Clock, ArrowUpRight, ArrowDownRight, Crown } from "lucide-react";
+import { Sparkles, Copy, TrendingUp, Wallet, Users, Clock, ArrowUpRight, ArrowDownRight, Crown, Mail, Loader2 } from "lucide-react";
 import {
   useCashbackAccount,
   useCashbackTransactions,
@@ -10,6 +10,8 @@ import {
   useCashbackConfig,
 } from "@/hooks/useCashback";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 const fmt = (n: number) =>
   n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -42,10 +44,12 @@ const statusVariant = (s: string): "default" | "secondary" | "destructive" | "ou
 };
 
 const StudentCashbackTab = () => {
+  const { user, profile } = useAuth();
   const { account, loading: loadingAcc } = useCashbackAccount();
   const { transactions, loading: loadingTx } = useCashbackTransactions();
   const { referrals, loading: loadingRef } = useCashbackReferrals();
   const { config, loading: loadingCfg } = useCashbackConfig();
+  const [sendingEmail, setSendingEmail] = useState(false);
 
   const currentTier = useMemo(() => {
     if (!account) return null;
@@ -72,6 +76,42 @@ const StudentCashbackTab = () => {
   const copyLink = () => {
     navigator.clipboard.writeText(referralLink);
     toast.success("Link copiado!");
+  };
+
+  const shareText = useMemo(() => {
+    if (!referralLink) return "";
+    return `Estou estudando na Revisão Fácil e curtindo demais! Use meu link e ganhe acesso aos conteúdos: ${referralLink}`;
+  }, [referralLink]);
+
+  const sendByEmail = async () => {
+    if (!user?.email || !account?.referral_code) {
+      toast.error("Não foi possível identificar seu e-mail.");
+      return;
+    }
+    setSendingEmail(true);
+    try {
+      const { error } = await supabase.functions.invoke("send-transactional-email", {
+        body: {
+          templateName: "cashback-referral-share",
+          recipientEmail: user.email,
+          idempotencyKey: `cashback-referral-share-${user.id}-${Date.now()}`,
+          templateData: {
+            name: (profile as { name?: string } | null)?.name ?? "",
+            referralCode: account.referral_code,
+            referralLink,
+            shareText,
+            referralPercent: config.referral_percent,
+          },
+        },
+      });
+      if (error) throw error;
+      toast.success("Enviamos o link de indicação para o seu e-mail!");
+    } catch (e) {
+      console.error("send referral email failed", e);
+      toast.error("Não foi possível enviar agora. Tente novamente em instantes.");
+    } finally {
+      setSendingEmail(false);
+    }
   };
 
   if (loadingAcc || loadingCfg) {
@@ -183,6 +223,30 @@ const StudentCashbackTab = () => {
               </Button>
             </div>
           </div>
+        </div>
+
+        <div className="mt-4">
+          <Button
+            variant="secondary"
+            onClick={sendByEmail}
+            disabled={sendingEmail || !account?.referral_code}
+            className="w-full md:w-auto"
+          >
+            {sendingEmail ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Enviando…
+              </>
+            ) : (
+              <>
+                <Mail className="h-4 w-4 mr-2" />
+                Receber por e-mail
+              </>
+            )}
+          </Button>
+          <p className="text-xs text-muted-foreground mt-2">
+            Enviamos seu código, link e um texto pronto para compartilhar com amigos.
+          </p>
         </div>
 
         {referrals.length > 0 && (

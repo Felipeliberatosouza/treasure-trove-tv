@@ -1,4 +1,5 @@
 import { Textarea } from "@/components/ui/textarea";
+import { SpellCheckedInput, SpellCheckedTextarea } from "@/components/ui/spellchecked-input";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -113,7 +114,7 @@ export const ResumoMaterial = ({ offered, setOffered, price, setPrice, text, set
         <label className="text-xs text-muted-foreground mb-1 block">
           Texto do resumo (auto-preenchido com a descrição da aula — pode editar livremente)
         </label>
-        <Textarea
+        <SpellCheckedTextarea
           value={text}
           maxLength={textMax}
           onChange={(e) => setText(e.target.value)}
@@ -203,7 +204,7 @@ export const SimuladoMaterial = ({ offered, setOffered, price, setPrice, questio
               <div className="flex items-start gap-2">
                 <span className="text-xs font-semibold text-primary shrink-0 mt-1">Q{qi + 1}</span>
                 <div className="flex-1">
-                  <Textarea
+                  <SpellCheckedTextarea
                     value={q.question}
                     maxLength={questionMax}
                     onChange={(e) => updateQuestion(qi, { question: e.target.value })}
@@ -230,7 +231,7 @@ export const SimuladoMaterial = ({ offered, setOffered, price, setPrice, questio
                       className="accent-primary shrink-0"
                       title="Marcar como gabarito"
                     />
-                    <Input
+                    <SpellCheckedInput
                       value={opt}
                       maxLength={optionMax}
                       onChange={(e) => updateOption(qi, oi, e.target.value)}
@@ -311,7 +312,7 @@ export const TopQuestionsMaterial = ({ offered, setOffered, price, setPrice, que
                 <span className="text-xs font-semibold text-primary shrink-0 mt-1">Q{qi + 1}</span>
                 <div className="flex-1 space-y-1.5">
                   <div>
-                    <Textarea
+                    <SpellCheckedTextarea
                       value={q.question}
                       maxLength={questionMax}
                       onChange={(e) => update(qi, { question: e.target.value })}
@@ -322,7 +323,7 @@ export const TopQuestionsMaterial = ({ offered, setOffered, price, setPrice, que
                     <p className="text-[10px] text-muted-foreground text-right">{q.question.length}/{questionMax}</p>
                   </div>
                   <div>
-                    <Textarea
+                    <SpellCheckedTextarea
                       value={q.answer}
                       maxLength={answerMax}
                       onChange={(e) => update(qi, { answer: e.target.value })}
@@ -404,7 +405,7 @@ export const ColinhaMaterial = ({ offered, setOffered, price, setPrice, bullets,
           {bullets.map((b, i) => (
             <div key={i} className="flex items-center gap-2">
               <span className="text-xs text-muted-foreground shrink-0 w-6">{i + 1}.</span>
-              <Input
+              <SpellCheckedInput
                 value={b}
                 maxLength={bulletMax}
                 onChange={(e) => update(i, e.target.value)}

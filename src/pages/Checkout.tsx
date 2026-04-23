@@ -24,6 +24,10 @@ import {
   useCashbackConfig,
   maxCashbackForCheckout,
 } from "@/hooks/useCashback";
+import {
+  classifyCheckoutResponse,
+  classifyStripeConfirm,
+} from "@/lib/checkoutRetry";
 
 type CheckoutStep = "billing" | "card" | "confirm";
 

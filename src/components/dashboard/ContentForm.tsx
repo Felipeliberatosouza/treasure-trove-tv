@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { SpellCheckedInput, SpellCheckedTextarea } from "@/components/ui/spellchecked-input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
 import { Upload, X, Image as ImageIcon, Video, Camera, DollarSign, CheckCircle2, AlertCircle, Sparkles, Loader2 } from "lucide-react";

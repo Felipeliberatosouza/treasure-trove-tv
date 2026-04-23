@@ -44,6 +44,12 @@ import InactivityGuard from "./components/InactivityGuard.tsx";
 import GlobalRedirectOverlay from "./components/GlobalRedirectOverlay.tsx";
 import OnboardingGuard from "./components/OnboardingGuard.tsx";
 import ScrollToTop from "./components/ScrollToTop.tsx";
+// Test-only harness route. Lazy import keeps it out of prod chunks unless
+// a test/dev session navigates to /__test/checkout-retry.
+import { lazy, Suspense } from "react";
+const CheckoutRetryHarness = lazy(
+  () => import("./pages/__test__/CheckoutRetryHarness.tsx"),
+);
 
 const queryClient = new QueryClient();
 
@@ -88,6 +94,16 @@ const App = () => (
             <Route path="/unsubscribe" element={<Unsubscribe />} />
             <Route path="/email-seguranca" element={<EmailSecurityNotification />} />
             <Route path="/preview/plan-change" element={<PreviewPlanChange />} />
+            {!import.meta.env.PROD && (
+              <Route
+                path="/__test/checkout-retry"
+                element={
+                  <Suspense fallback={<div>Loading harness…</div>}>
+                    <CheckoutRetryHarness />
+                  </Suspense>
+                }
+              />
+            )}
             <Route path="/:slug" element={<TeacherProfile />} />
             <Route path="*" element={<NotFound />} />
           </Routes>

@@ -92,6 +92,161 @@ export type Database = {
         }
         Relationships: []
       }
+      cashback_accounts: {
+        Row: {
+          balance_available: number
+          balance_pending: number
+          created_at: string
+          current_tier: string
+          id: string
+          referral_code: string | null
+          total_earned: number
+          total_expired: number
+          total_spent: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          balance_available?: number
+          balance_pending?: number
+          created_at?: string
+          current_tier?: string
+          id?: string
+          referral_code?: string | null
+          total_earned?: number
+          total_expired?: number
+          total_spent?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          balance_available?: number
+          balance_pending?: number
+          created_at?: string
+          current_tier?: string
+          id?: string
+          referral_code?: string | null
+          total_earned?: number
+          total_expired?: number
+          total_spent?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      cashback_referrals: {
+        Row: {
+          created_at: string
+          first_purchase_amount: number | null
+          first_purchase_at: string | null
+          id: string
+          referral_code_used: string
+          referred_user_id: string
+          referrer_user_id: string
+          reward_amount: number
+          rewarded_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          first_purchase_amount?: number | null
+          first_purchase_at?: string | null
+          id?: string
+          referral_code_used: string
+          referred_user_id: string
+          referrer_user_id: string
+          reward_amount?: number
+          rewarded_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          first_purchase_amount?: number | null
+          first_purchase_at?: string | null
+          id?: string
+          referral_code_used?: string
+          referred_user_id?: string
+          referrer_user_id?: string
+          reward_amount?: number
+          rewarded_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      cashback_transactions: {
+        Row: {
+          account_id: string
+          admin_id: string | null
+          amount: number
+          available_at: string | null
+          consumed_at: string | null
+          created_at: string
+          expires_at: string | null
+          id: string
+          kind: string
+          metadata: Json
+          notes: string | null
+          referred_user_id: string | null
+          source_purchase_amount: number | null
+          source_reference: string | null
+          source_type: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_id: string
+          admin_id?: string | null
+          amount: number
+          available_at?: string | null
+          consumed_at?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          kind: string
+          metadata?: Json
+          notes?: string | null
+          referred_user_id?: string | null
+          source_purchase_amount?: number | null
+          source_reference?: string | null
+          source_type?: string | null
+          status: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_id?: string
+          admin_id?: string | null
+          amount?: number
+          available_at?: string | null
+          consumed_at?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          kind?: string
+          metadata?: Json
+          notes?: string | null
+          referred_user_id?: string | null
+          source_purchase_amount?: number | null
+          source_reference?: string | null
+          source_type?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cashback_transactions_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "cashback_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       commitment_penalty_refunds: {
         Row: {
           admin_id: string
@@ -2175,6 +2330,31 @@ export type Database = {
         Returns: string
       }
       add_student_role_to_self: { Args: never; Returns: boolean }
+      consume_cashback: {
+        Args: {
+          _requested_amount: number
+          _source_reference: string
+          _user_id: string
+        }
+        Returns: number
+      }
+      credit_cashback_purchase: {
+        Args: {
+          _purchase_amount: number
+          _source_reference: string
+          _source_type: string
+          _user_id: string
+        }
+        Returns: string
+      }
+      credit_cashback_referral: {
+        Args: {
+          _purchase_amount: number
+          _referred_user_id: string
+          _source_reference: string
+        }
+        Returns: string
+      }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
@@ -2183,6 +2363,11 @@ export type Database = {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
+      ensure_cashback_account: { Args: { _user_id: string }; Returns: string }
+      expire_old_cashback: { Args: never; Returns: number }
+      generate_cashback_referral_code: { Args: never; Returns: string }
+      get_cashback_config: { Args: never; Returns: Json }
+      get_user_cashback_tier: { Args: { _user_id: string }; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -2217,6 +2402,11 @@ export type Database = {
           read_ct: number
         }[]
       }
+      register_cashback_referral: {
+        Args: { _referral_code: string; _referred_user_id: string }
+        Returns: string
+      }
+      release_pending_cashback: { Args: never; Returns: number }
     }
     Enums: {
       app_role: "student" | "teacher" | "admin"

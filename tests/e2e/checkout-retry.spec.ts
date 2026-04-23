@@ -296,4 +296,57 @@ test.describe("Checkout retry & double-click safety", () => {
     await expect(page.getByTestId("last-toast")).toHaveText("Pagamento aprovado!");
     await expect(page.getByTestId("last-navigate")).toHaveText("/payment-success");
   });
+
+  test("after a successful click, duplicate Stripe callbacks and re-renders never trigger a second navigation", async ({
+    page,
+  }) => {
+    // After the first successful click commits a navigation, the
+    // production CheckoutForm uses a sticky `navigatedRef` flag so
+    // that any subsequent navigate(...) — whether from a late Stripe
+    // callback firing twice, or from a parent re-render replaying
+    // effects — is silently dropped. The harness mirrors that flag
+    // and exposes a `navigate-count` testid so we can prove the count
+    // never goes above 1.
+    await page.evaluate(() => {
+      window.__checkoutHarnessMode = "unit";
+      window.__mockCheckoutResponses = [
+        {
+          data: {
+            ok: true,
+            clientSecret: "pi_test_secret",
+            cashbackApplied: 9,
+          },
+          stripe: { paymentIntentStatus: "succeeded" },
+        },
+      ];
+    });
+
+    await page.getByTestId("pay-button").click();
+
+    // First click commits exactly one navigation.
+    await expect(page.getByTestId("invoke-count")).toHaveText("1");
+    await expect(page.getByTestId("navigate-count")).toHaveText("1");
+    await expect(page.getByTestId("last-navigate")).toHaveText("/payment-success");
+    await expect(page.getByTestId("cashback-total-applied")).toHaveText("9.00");
+
+    // Simulate Stripe firing a duplicate "succeeded" callback after
+    // we'd already redirected, then force a React re-render.
+    // Production-equivalent of: a late confirmCardPayment promise
+    // resolution + StrictMode double-effect invocation.
+    await page.evaluate(() => {
+      window.__simulateDuplicateStripeCallback?.();
+      window.__simulateDuplicateStripeCallback?.();
+      window.__forceRerender?.();
+      window.__simulateDuplicateStripeCallback?.();
+    });
+
+    // navigate-count must STILL be 1 — the sticky guard absorbed
+    // every duplicate attempt.
+    await expect(page.getByTestId("navigate-count")).toHaveText("1");
+    await expect(page.getByTestId("last-navigate")).toHaveText("/payment-success");
+    // No new server invocation, no cashback movement.
+    await expect(page.getByTestId("invoke-count")).toHaveText("1");
+    await expect(page.getByTestId("cashback-total-applied")).toHaveText("9.00");
+    await expect(page.getByTestId("last-error")).toHaveText("");
+  });
 });

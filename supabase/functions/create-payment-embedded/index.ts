@@ -143,7 +143,21 @@ serve(async (req) => {
       .eq("payment_status", "completed")
       .limit(1);
     if (existing && existing.length > 0) {
-      return json({ ok: false, error: "Você já comprou esta aula" }, 200);
+      // Idempotent retry: don't reapply cashback, signal already-purchased.
+      log("Duplicate purchase detected — returning already_completed", {
+        userId: user.id,
+        contentId,
+      });
+      return json(
+        {
+          ok: true,
+          alreadyCompleted: true,
+          status: "succeeded",
+          cashbackApplied: 0,
+          message: "Esta aula já foi comprada anteriormente. Acesse pelo seu painel.",
+        },
+        200,
+      );
     }
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });

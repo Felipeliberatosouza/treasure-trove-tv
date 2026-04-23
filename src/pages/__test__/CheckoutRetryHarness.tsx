@@ -17,12 +17,24 @@
  *        - data-testid="last-toast": last toast message shown
  *        - data-testid="last-navigate": last navigate(...) target
  *        - data-testid="last-error": last inline error
+ *        - data-testid="navigate-count": how many times safeNavigate
+ *          ACTUALLY navigated (proves the sticky guard works under
+ *          re-render and duplicate Stripe callbacks)
  *
  * The point of this harness is to verify behaviour in a real browser
  * (Playwright) without requiring Stripe Elements, Supabase auth, or a
  * real network — it's a true E2E of the *decision pipeline*.
+ *
+ * To exercise the post-success guards from a Playwright spec, the
+ * harness exposes two hooks on window:
+ *   - window.__simulateDuplicateStripeCallback() — replays the
+ *     "alreadySucceededOnRetry" branch as if Stripe fired a late
+ *     duplicate callback after we'd already redirected.
+ *   - window.__forceRerender() — bumps a state counter to force a
+ *     React re-render of the harness, simulating StrictMode or
+ *     parent-driven re-renders.
  */
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
   classifyCheckoutResponse,
@@ -47,6 +59,8 @@ declare global {
   interface Window {
     __mockCheckoutResponses?: MockServerResponse[];
     __checkoutHarnessMode?: CheckoutMode;
+    __simulateDuplicateStripeCallback?: () => void;
+    __forceRerender?: () => void;
   }
 }
 
@@ -56,7 +70,43 @@ export default function CheckoutRetryHarness() {
   const [lastToast, setLastToast] = useState<string>("");
   const [lastNavigate, setLastNavigate] = useState<string>("");
   const [lastError, setLastError] = useState<string>("");
+  const [navigateCount, setNavigateCount] = useState(0);
+  // Forces a re-render so tests can prove `navigatedRef`'s sticky
+  // behaviour survives a React re-render.
+  const [, setRerenderTick] = useState(0);
   const submittingRef = useRef(false);
+  // Mirrors production CheckoutForm.navigatedRef — once we've decided
+  // to leave the page, every subsequent attempted navigation is a
+  // no-op. The harness exposes `navigate-count` to prove this.
+  const navigatedRef = useRef(false);
+
+  const safeNavigate = (target: string) => {
+    if (navigatedRef.current) return;
+    navigatedRef.current = true;
+    setLastNavigate(target);
+    setNavigateCount((n) => n + 1);
+  };
+
+  // Expose the two test hooks. They're attached on every render so
+  // they always close over the current safeNavigate.
+  useEffect(() => {
+    window.__simulateDuplicateStripeCallback = () => {
+      const mode: CheckoutMode = window.__checkoutHarnessMode ?? "unit";
+      // Simulates Stripe firing a late callback that classifies as
+      // alreadySucceededOnRetry. Production code would call
+      // safeNavigate(...) here; we want to prove that's a no-op.
+      safeNavigate(
+        mode === "subscription"
+          ? "/dashboard?tab=subscription"
+          : "/aula/test-id",
+      );
+    };
+    window.__forceRerender = () => setRerenderTick((t) => t + 1);
+    return () => {
+      delete window.__simulateDuplicateStripeCallback;
+      delete window.__forceRerender;
+    };
+  });
 
   const handleSubmit = async () => {
     // Re-entrancy guard: matches the real CheckoutForm's `submitting`
@@ -100,7 +150,7 @@ export default function CheckoutRetryHarness() {
           mode === "subscription"
             ? "/dashboard?tab=subscription"
             : `/aula/${(next.data as { contentId?: string }).contentId ?? "test-id"}`;
-        setLastNavigate(target);
+        safeNavigate(target);
         return;
       }
 
@@ -120,7 +170,7 @@ export default function CheckoutRetryHarness() {
               : "Pagamento já confirmado.";
           toast.success(msg);
           setLastToast(msg);
-          setLastNavigate(
+          safeNavigate(
             mode === "subscription"
               ? "/dashboard?tab=subscription"
               : "/aula/test-id",
@@ -132,7 +182,7 @@ export default function CheckoutRetryHarness() {
       // Happy path
       toast.success("Pagamento aprovado!");
       setLastToast("Pagamento aprovado!");
-      setLastNavigate("/payment-success");
+      safeNavigate("/payment-success");
     } finally {
       submittingRef.current = false;
     }

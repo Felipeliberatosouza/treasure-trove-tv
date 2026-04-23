@@ -144,6 +144,7 @@ const deriveStatus = (
 const ReferralStatusPanel = () => {
   const { referrals, loading: loadingRef } = useCashbackReferrals();
   const { transactions, loading: loadingTx } = useCashbackTransactions();
+  const [selected, setSelected] = useState<DerivedReferral | null>(null);
 
   const derived: DerivedReferral[] = useMemo(() => {
     // Build a map of referral txs keyed by referred_user_id.
@@ -242,10 +243,19 @@ const ReferralStatusPanel = () => {
       ) : (
         <ul className="space-y-3">
           {derived.map((d) => (
-            <ReferralRow key={d.referral.id} derived={d} />
+            <ReferralRow
+              key={d.referral.id}
+              derived={d}
+              onShowDetails={() => setSelected(d)}
+            />
           ))}
         </ul>
       )}
+
+      <ReferralDetailsDialog
+        derived={selected}
+        onClose={() => setSelected(null)}
+      />
     </Card>
   );
 };

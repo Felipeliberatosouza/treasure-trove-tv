@@ -895,7 +895,7 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
             </Button>
           )}
         </div>
-        <Textarea
+        <SpellCheckedTextarea
           value={description}
           maxLength={DESCRIPTION_MAX}
           onChange={(e) => setDescription(e.target.value)}

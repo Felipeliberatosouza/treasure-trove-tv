@@ -294,6 +294,7 @@ export interface ProductConfigSettings {
     enable_subtitles: boolean;
     enable_blackboard: boolean;
     enable_auto_cover: boolean;
+    enable_libras: boolean;
     title_max: number;
     description_max: number;
   };
@@ -324,6 +325,7 @@ export const DEFAULT_PRODUCT_CONFIG: ProductConfigSettings = {
     enable_subtitles: false,
     enable_blackboard: false,
     enable_auto_cover: false,
+    enable_libras: false,
     title_max: 100,
     description_max: 200,
   },

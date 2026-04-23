@@ -6,7 +6,7 @@ import { Star, Play, ShoppingCart, Zap, Clock, BookOpen, Gift, AlertTriangle, Lo
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFreeTrial } from "@/hooks/useFreeTrial";
-import { usePlatformSettings, type VideoPricingSettings } from "@/hooks/usePlatformSettings";
+import { usePlatformSettings, type VideoPricingSettings, DEFAULT_PRODUCT_CONFIG } from "@/hooks/usePlatformSettings";
 import { useResourceLimit, type ResourceType } from "@/hooks/useResourceLimit";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
@@ -39,6 +39,7 @@ const VideoPage = () => {
   const trial = useFreeTrial();
   const { data: branding } = usePlatformSettings("branding");
   const { data: videoPricing } = usePlatformSettings("video_pricing");
+  const { data: productConfig } = usePlatformSettings("product_config");
   const resourceLimit = useResourceLimit();
   const { requireCpf, showCpfModal, setShowCpfModal, onCpfComplete } = useCpfGuard();
   const [showLimitModal, setShowLimitModal] = useState(false);
@@ -501,7 +502,12 @@ const VideoPage = () => {
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
-      <VLibrasWidget />
+      <VLibrasWidget
+        enabled={
+          productConfig?.revisoes?.enable_libras ??
+          DEFAULT_PRODUCT_CONFIG.revisoes.enable_libras
+        }
+      />
       <Navbar />
 
       <CpfRequiredModal open={showCpfModal} onClose={() => setShowCpfModal(false)} onComplete={onCpfComplete} />

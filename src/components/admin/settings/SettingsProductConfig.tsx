@@ -21,6 +21,7 @@ import {
   Settings as SettingsIcon,
   Type,
   ListChecks,
+  Hand,
 } from "lucide-react";
 import AdminResourcePricingTab from "@/components/admin/AdminResourcePricingTab";
 
@@ -143,6 +144,19 @@ const SettingsProductConfig = () => {
                   <PenTool className="h-3.5 w-3.5 text-primary" /> Quadro negro com palavras de impacto
                 </Label>
               </div>
+
+              <div className="flex items-center gap-2">
+                <Switch
+                  checked={form.revisoes.enable_libras}
+                  onCheckedChange={(v) => updRev("enable_libras", v)}
+                />
+                <Label className="cursor-pointer flex items-center gap-1.5">
+                  <Hand className="h-3.5 w-3.5 text-primary" /> Linguagem de Sinais — Libras
+                </Label>
+              </div>
+              <p className="text-xs text-muted-foreground -mt-1 pl-8">
+                Quando ativado, exibe um botão de acessibilidade em Libras na página dos vídeos. O aluno pode ativá-lo e fechá-lo a qualquer momento.
+              </p>
             </div>
           </div>
 

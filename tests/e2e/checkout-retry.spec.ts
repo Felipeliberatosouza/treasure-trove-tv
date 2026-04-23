@@ -239,4 +239,61 @@ test.describe("Checkout retry & double-click safety", () => {
     await expect(page.getByTestId("last-toast")).toHaveText("Pagamento aprovado!");
     await expect(page.getByTestId("last-navigate")).toHaveText("/payment-success");
   });
+
+  test("three sequential clicks: cashback applied once, follow-ups error without reapplying", async ({
+    page,
+  }) => {
+    // Stress-test the full guarantee in one flow:
+    //   click #1 → drains the only seeded response, applies R$ 6,75 of
+    //              cashback, toasts success, navigates.
+    //   click #2 → queue empty → inline "No mock response queued"
+    //              error, NO new cashback, NO new toast/navigate.
+    //   click #3 → queue still empty → same error surfaces again,
+    //              cashback total STILL 6,75 (no reapplication ever).
+    // This proves the pipeline never re-credits cashback on repeated
+    // clicks once the underlying server response has been consumed.
+    await page.evaluate(() => {
+      window.__checkoutHarnessMode = "unit";
+      window.__mockCheckoutResponses = [
+        {
+          data: {
+            ok: true,
+            clientSecret: "pi_test_secret",
+            cashbackApplied: 6.75,
+          },
+          stripe: { paymentIntentStatus: "succeeded" },
+        },
+      ];
+    });
+
+    const btn = page.getByTestId("pay-button");
+
+    // Click #1 — the only successful one.
+    await btn.click();
+    await expect(page.getByTestId("invoke-count")).toHaveText("1");
+    await expect(page.getByTestId("cashback-total-applied")).toHaveText("6.75");
+    await expect(page.getByTestId("last-toast")).toHaveText("Pagamento aprovado!");
+    await expect(page.getByTestId("last-navigate")).toHaveText("/payment-success");
+    await expect(page.getByTestId("last-error")).toHaveText("");
+
+    // Click #2 — queue is empty; expect the queue-empty error and
+    // strict preservation of every prior side-effect.
+    await btn.click();
+    await expect(page.getByTestId("last-error")).toHaveText(
+      "No mock response queued",
+    );
+    await expect(page.getByTestId("cashback-total-applied")).toHaveText("6.75");
+    await expect(page.getByTestId("last-toast")).toHaveText("Pagamento aprovado!");
+    await expect(page.getByTestId("last-navigate")).toHaveText("/payment-success");
+
+    // Click #3 — same story. The error must reappear (proving the
+    // handler ran) but no cashback or navigation side-effect changes.
+    await btn.click();
+    await expect(page.getByTestId("last-error")).toHaveText(
+      "No mock response queued",
+    );
+    await expect(page.getByTestId("cashback-total-applied")).toHaveText("6.75");
+    await expect(page.getByTestId("last-toast")).toHaveText("Pagamento aprovado!");
+    await expect(page.getByTestId("last-navigate")).toHaveText("/payment-success");
+  });
 });

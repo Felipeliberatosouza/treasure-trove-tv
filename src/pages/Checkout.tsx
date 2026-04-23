@@ -129,7 +129,7 @@ const Checkout = () => {
 
   // Cashback selection (lifted to parent so summary + form stay in sync)
   const { config: cashbackConfig } = useCashbackConfig();
-  const { account: cashbackAccount } = useCashbackAccount();
+  const { account: cashbackAccount, refresh: refreshCashbackAccount } = useCashbackAccount();
   const cartTotal =
     state?.mode === "subscription" ? Number(state?.planPrice ?? 0) : Number(state?.unitPrice ?? 0);
   const maxUsableCashback = useMemo(

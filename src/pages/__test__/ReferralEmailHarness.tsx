@@ -177,19 +177,46 @@ export default function ReferralEmailHarness() {
         data-testid="send-email-button"
         onClick={sendByEmail}
         disabled={sendingEmail}
+        aria-busy={sendingEmail}
+        aria-disabled={sendingEmail}
+        aria-label={
+          sendingEmail
+            ? "Enviando link de indicação por e-mail"
+            : "Receber link de indicação por e-mail"
+        }
       >
         {sendingEmail ? (
           <>
-            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            <Loader2
+              className="h-4 w-4 mr-2 animate-spin"
+              aria-hidden="true"
+            />
             Enviando…
           </>
         ) : (
           <>
-            <Mail className="h-4 w-4 mr-2" />
+            <Mail className="h-4 w-4 mr-2" aria-hidden="true" />
             Receber por e-mail
           </>
         )}
       </Button>
+
+      {/*
+        Live region so screen readers announce send state changes
+        (idle → sending → result) without the user having to refocus
+        the button. The E2E asserts on this text too.
+      */}
+      <div
+        data-testid="send-status-live"
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        style={{ marginTop: 12, minHeight: "1.25rem" }}
+      >
+        {sendingEmail
+          ? "Enviando link de indicação por e-mail…"
+          : lastToast || "Pronto para enviar o link de indicação."}
+      </div>
 
       <dl style={{ marginTop: 24, display: "grid", gap: 8 }}>
         <div>

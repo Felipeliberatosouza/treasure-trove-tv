@@ -204,7 +204,7 @@ export const SimuladoMaterial = ({ offered, setOffered, price, setPrice, questio
               <div className="flex items-start gap-2">
                 <span className="text-xs font-semibold text-primary shrink-0 mt-1">Q{qi + 1}</span>
                 <div className="flex-1">
-                  <Textarea
+                  <SpellCheckedTextarea
                     value={q.question}
                     maxLength={questionMax}
                     onChange={(e) => updateQuestion(qi, { question: e.target.value })}
@@ -231,7 +231,7 @@ export const SimuladoMaterial = ({ offered, setOffered, price, setPrice, questio
                       className="accent-primary shrink-0"
                       title="Marcar como gabarito"
                     />
-                    <Input
+                    <SpellCheckedInput
                       value={opt}
                       maxLength={optionMax}
                       onChange={(e) => updateOption(qi, oi, e.target.value)}

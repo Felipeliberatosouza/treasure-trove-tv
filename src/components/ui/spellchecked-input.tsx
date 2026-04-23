@@ -41,11 +41,13 @@ function useDetectedLang(value: unknown, override?: string, debounceMs = DEFAULT
   return debouncedLang;
 }
 
+type SpellExtras = { langDebounceMs?: number };
+
 export const SpellCheckedInput = React.forwardRef<
   HTMLInputElement,
-  React.ComponentProps<typeof Input>
->(({ lang, spellCheck, value, ...props }, ref) => {
-  const detected = useDetectedLang(value, lang);
+  React.ComponentProps<typeof Input> & SpellExtras
+>(({ lang, spellCheck, value, langDebounceMs, ...props }, ref) => {
+  const detected = useDetectedLang(value, lang, langDebounceMs);
   return (
     <Input
       ref={ref}
@@ -61,9 +63,9 @@ SpellCheckedInput.displayName = "SpellCheckedInput";
 
 export const SpellCheckedTextarea = React.forwardRef<
   HTMLTextAreaElement,
-  React.ComponentProps<typeof Textarea>
->(({ lang, spellCheck, value, ...props }, ref) => {
-  const detected = useDetectedLang(value, lang);
+  React.ComponentProps<typeof Textarea> & SpellExtras
+>(({ lang, spellCheck, value, langDebounceMs, ...props }, ref) => {
+  const detected = useDetectedLang(value, lang, langDebounceMs);
   return (
     <Textarea
       ref={ref}

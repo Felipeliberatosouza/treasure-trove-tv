@@ -2394,6 +2394,10 @@ export type Database = {
         }
         Returns: number
       }
+      preview_cashback_usage: {
+        Args: { _cart_amount: number; _user_id: string }
+        Returns: Json
+      }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
         Returns: {

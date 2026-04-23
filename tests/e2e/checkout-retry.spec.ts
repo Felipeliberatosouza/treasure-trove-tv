@@ -23,6 +23,12 @@ test.describe("Checkout retry & double-click safety", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/__test/checkout-retry");
     await expect(page.getByTestId("pay-button")).toBeVisible();
+    // Belt-and-braces: even though Playwright gives each test a
+    // fresh page, calling __resetHarness here means a future test
+    // that re-uses the same page (or a manually chained scenario)
+    // always starts from a known-clean slate — empty mock queue,
+    // navigatedRef cleared, all counters back to zero.
+    await page.evaluate(() => window.__resetHarness?.());
   });
 
   test("double-click only fires the server call once", async ({ page }) => {

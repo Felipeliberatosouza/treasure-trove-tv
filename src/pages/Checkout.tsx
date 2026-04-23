@@ -461,6 +461,7 @@ interface CheckoutFormProps {
   onStepChange?: (s: CheckoutStep) => void;
   onReady?: (submit: () => void) => void;
   onSubmittingChange?: (submitting: boolean) => void;
+  cashbackAmount?: number;
 }
 
 function CheckoutForm({
@@ -471,6 +472,7 @@ function CheckoutForm({
   onStepChange,
   onReady,
   onSubmittingChange,
+  cashbackAmount = 0,
 }: CheckoutFormProps) {
   const stripe = useStripe();
   const elements = useElements();
@@ -623,12 +625,18 @@ function CheckoutForm({
           : "create-payment-embedded";
       const body =
         state.mode === "subscription"
-          ? { priceId: state.priceId, paymentMethodId: paymentMethod.id, billing: billingPayload }
+          ? {
+              priceId: state.priceId,
+              paymentMethodId: paymentMethod.id,
+              billing: billingPayload,
+              cashbackAmount,
+            }
           : {
               contentId: state.contentId,
               contentType: state.contentType,
               paymentMethodId: paymentMethod.id,
               billing: billingPayload,
+              cashbackAmount,
             };
 
       const { data, error: fnError } = await supabase.functions.invoke(fnName, { body });
@@ -640,7 +648,9 @@ function CheckoutForm({
 
       const clientSecret: string | null = data.clientSecret;
 
-      // 4. If a client_secret was returned, confirm 3DS / SCA on the card
+      // 4. If a client_secret was returned, confirm 3DS / SCA on the card.
+      // If cashback covered 100% of the cart, no clientSecret comes back —
+      // the purchase is already completed server-side.
       if (clientSecret) {
         if (state.mode === "subscription") {
           const { error: confirmError } = await stripe.confirmCardPayment(clientSecret);

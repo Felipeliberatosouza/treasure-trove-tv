@@ -129,7 +129,7 @@ const Checkout = () => {
 
   // Cashback selection (lifted to parent so summary + form stay in sync)
   const { config: cashbackConfig } = useCashbackConfig();
-  const { account: cashbackAccount } = useCashbackAccount();
+  const { account: cashbackAccount, refresh: refreshCashbackAccount } = useCashbackAccount();
   const cartTotal =
     state?.mode === "subscription" ? Number(state?.planPrice ?? 0) : Number(state?.unitPrice ?? 0);
   const maxUsableCashback = useMemo(
@@ -282,6 +282,14 @@ const Checkout = () => {
                 }}
                 onSubmittingChange={setMobileSubmitting}
                 cashbackAmount={useCashback ? cashbackAmount : 0}
+                onCashbackRejected={() => {
+                  // Server rejected our cashback amount. Clear the selection,
+                  // turn off the toggle and refetch the live balance so the UI
+                  // matches the source of truth before the next attempt.
+                  setCashbackAmount(0);
+                  setUseCashback(false);
+                  void refreshCashbackAccount();
+                }}
               />
             </Elements>
           </div>
@@ -462,6 +470,7 @@ interface CheckoutFormProps {
   onReady?: (submit: () => void) => void;
   onSubmittingChange?: (submitting: boolean) => void;
   cashbackAmount?: number;
+  onCashbackRejected?: (message: string) => void;
 }
 
 function CheckoutForm({
@@ -473,6 +482,7 @@ function CheckoutForm({
   onReady,
   onSubmittingChange,
   cashbackAmount = 0,
+  onCashbackRejected,
 }: CheckoutFormProps) {
   const stripe = useStripe();
   const elements = useElements();
@@ -642,7 +652,26 @@ function CheckoutForm({
       const { data, error: fnError } = await supabase.functions.invoke(fnName, { body });
       if (fnError) throw fnError;
       if (!data?.ok) {
-        setError(data?.error || "Não foi possível concluir o pagamento.");
+        const errMsg = data?.error || "Não foi possível concluir o pagamento.";
+        // Detect cashback-related rejection (insufficient balance / cap exceeded)
+        // and surface it loudly + reset the parent's cashback selection so
+        // the slider re-syncs with the actual server-side max.
+        const isCashbackError =
+          typeof errMsg === "string" &&
+          /cashback/i.test(errMsg) &&
+          (/insuficiente/i.test(errMsg) ||
+            /máximo/i.test(errMsg) ||
+            /maximo/i.test(errMsg) ||
+            /excede/i.test(errMsg));
+        if (isCashbackError) {
+          toast.error(errMsg, {
+            description:
+              "Ajustamos seu saldo de cashback. Revise o valor aplicado e tente novamente.",
+            duration: 7000,
+          });
+          onCashbackRejected?.(errMsg);
+        }
+        setError(errMsg);
         return;
       }
 

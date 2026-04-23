@@ -282,6 +282,14 @@ const Checkout = () => {
                 }}
                 onSubmittingChange={setMobileSubmitting}
                 cashbackAmount={useCashback ? cashbackAmount : 0}
+                onCashbackRejected={() => {
+                  // Server rejected our cashback amount. Clear the selection,
+                  // turn off the toggle and refetch the live balance so the UI
+                  // matches the source of truth before the next attempt.
+                  setCashbackAmount(0);
+                  setUseCashback(false);
+                  void refreshCashbackAccount();
+                }}
               />
             </Elements>
           </div>

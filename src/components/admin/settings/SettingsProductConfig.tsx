@@ -144,16 +144,6 @@ const SettingsProductConfig = () => {
                   <PenTool className="h-3.5 w-3.5 text-primary" /> Quadro negro com palavras de impacto
                 </Label>
               </div>
-
-              <div className="flex items-center gap-2">
-                <Switch
-                  checked={form.revisoes.enable_auto_cover}
-                  onCheckedChange={(v) => updRev("enable_auto_cover", v)}
-                />
-                <Label className="cursor-pointer flex items-center gap-1.5">
-                  <Image className="h-3.5 w-3.5 text-primary" /> Capa automática de introdução
-                </Label>
-              </div>
             </div>
           </div>
 

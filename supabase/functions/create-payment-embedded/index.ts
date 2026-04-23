@@ -58,6 +58,7 @@ serve(async (req) => {
     const contentType = String(body?.contentType || "").trim();
     const paymentMethodId = String(body?.paymentMethodId || "").trim();
     const billing = (body?.billing || {}) as BillingDetails;
+    const requestedCashback = Number(body?.cashbackAmount || 0);
 
     if (!contentId || !["lesson", "exam_solution"].includes(contentType)) {
       return json({ ok: false, error: "Conteúdo inválido" }, 200);
@@ -97,6 +98,22 @@ serve(async (req) => {
     if (finalPrice <= 0) {
       return json({ ok: false, error: "Esta aula não está disponível para compra avulsa" }, 200);
     }
+
+    // Compute cashback to apply (capped server-side by config + balance)
+    let cashbackApplied = 0;
+    if (requestedCashback > 0) {
+      const { data: previewData, error: previewErr } = await sb.rpc(
+        "preview_cashback_usage",
+        { _user_id: user.id, _cart_amount: finalPrice },
+      );
+      if (previewErr) log("Cashback preview error", { err: previewErr.message });
+      const maxUsable = Number(
+        (previewData as Record<string, number> | null)?.max_usable ?? 0,
+      );
+      cashbackApplied = Math.min(requestedCashback, maxUsable);
+      if (cashbackApplied < 0) cashbackApplied = 0;
+    }
+    const chargeAmount = Math.max(finalPrice - cashbackApplied, 0);
 
     // Block duplicates
     const { data: existing } = await sb
@@ -146,7 +163,33 @@ serve(async (req) => {
       if (!msg.includes("already") && !msg.includes("attached")) throw e;
     }
 
-    const amountCents = Math.round(finalPrice * 100);
+    const amountCents = Math.round(chargeAmount * 100);
+
+    // If cashback covers 100% of the cart, skip Stripe entirely
+    if (amountCents <= 0) {
+      const consumed = await sb.rpc("consume_cashback", {
+        _user_id: user.id,
+        _requested_amount: cashbackApplied,
+        _source_reference: `lesson:${contentId}`,
+      });
+      log("Fully covered by cashback", { consumed: consumed.data });
+      const fakeRef = `cashback_${user.id}_${contentId}_${Date.now()}`;
+      await sb.from("video_purchases").insert({
+        user_id: user.id,
+        content_id: contentId,
+        content_type: contentType,
+        amount: finalPrice,
+        payment_status: "completed",
+        stripe_payment_id: fakeRef,
+      });
+      return json({
+        ok: true,
+        paymentIntentId: fakeRef,
+        clientSecret: null,
+        status: "succeeded",
+        cashbackApplied,
+      });
+    }
 
     const intent = await stripe.paymentIntents.create({
       amount: amountCents,
@@ -161,8 +204,21 @@ serve(async (req) => {
         content_type: contentType,
         teacher_id: content.teacher_id ?? "",
         cpf: billing.cpf || "",
+        cashback_applied: String(cashbackApplied),
       },
     });
+
+    // Consume cashback now (best-effort). If payment later fails, the user
+    // keeps the discount as a no-op refund — acceptable trade-off given
+    // partial-PI failures are rare with embedded confirm.
+    if (cashbackApplied > 0) {
+      const consumed = await sb.rpc("consume_cashback", {
+        _user_id: user.id,
+        _requested_amount: cashbackApplied,
+        _source_reference: intent.id,
+      });
+      log("Cashback consumed", { amount: consumed.data });
+    }
 
     // Insert pending purchase
     await sb.from("video_purchases").insert({
@@ -181,6 +237,7 @@ serve(async (req) => {
       paymentIntentId: intent.id,
       clientSecret: intent.client_secret,
       status: intent.status,
+      cashbackApplied,
     });
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);

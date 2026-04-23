@@ -230,6 +230,10 @@ export default function CheckoutRetryHarness() {
           <dd data-testid="last-navigate">{lastNavigate}</dd>
         </div>
         <div>
+          <dt>Navigate count</dt>
+          <dd data-testid="navigate-count">{navigateCount}</dd>
+        </div>
+        <div>
           <dt>Last error</dt>
           <dd data-testid="last-error">{lastError}</dd>
         </div>

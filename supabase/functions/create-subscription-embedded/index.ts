@@ -80,9 +80,21 @@ serve(async (req) => {
         limit: 1,
       });
       if (existing.data.length > 0) {
+        // Idempotent retry: signal already-active without reapplying cashback.
+        log("Duplicate active subscription detected", {
+          userId: user.id,
+          subscriptionId: existing.data[0].id,
+        });
         return json(
-          { ok: false, error: "Você já possui uma assinatura ativa. Gerencie-a pelo painel." },
-          200
+          {
+            ok: true,
+            alreadyActive: true,
+            subscriptionId: existing.data[0].id,
+            status: existing.data[0].status,
+            cashbackApplied: 0,
+            message: "Você já possui uma assinatura ativa. Gerencie-a pelo seu painel.",
+          },
+          200,
         );
       }
     } else {

@@ -17,7 +17,6 @@ import {
   ClipboardList,
   Subtitles,
   PenTool,
-  Image,
   Tag,
   Settings as SettingsIcon,
   Type,

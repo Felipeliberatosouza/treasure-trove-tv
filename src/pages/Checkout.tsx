@@ -493,6 +493,15 @@ function CheckoutForm({
   const navigate = useNavigate();
   const { user, refreshSubscription } = useAuth();
   const [submitting, setSubmitting] = useState(false);
+  // Sticky "we're leaving" flag. Becomes true the moment we commit to
+  // navigating away (success, alreadyOwned, alreadySucceededOnRetry,
+  // payment-success polling). Stays true for the rest of this
+  // component's lifetime so the Pay button is disabled during the
+  // brief window between `setSubmitting(false)` running in the
+  // `finally` block and the route actually unmounting. Without this,
+  // the user could squeeze in an extra click while React is still
+  // flushing the navigation.
+  const [redirecting, setRedirecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [cepLoading, setCepLoading] = useState(false);
 
@@ -509,6 +518,7 @@ function CheckoutForm({
   const safeNavigate: typeof navigate = (...args) => {
     if (navigatedRef.current) return;
     navigatedRef.current = true;
+    setRedirecting(true);
     return navigate(...(args as Parameters<typeof navigate>));
   };
 

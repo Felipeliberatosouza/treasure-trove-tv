@@ -30,6 +30,7 @@ import { template as commitmentPenaltyRefunded } from './commitment-penalty-refu
 import { template as teacherPaymentPaid } from './teacher-payment-paid.tsx'
 import { template as passwordRecovery } from './password-recovery.tsx'
 import { template as contactMessage } from './contact-message.tsx'
+import { template as cashbackReferralShare } from './cashback-referral-share.tsx'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'password_recovery': passwordRecovery,
@@ -54,4 +55,5 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'commitment-penalty-refunded': commitmentPenaltyRefunded,
   'teacher-payment-paid': teacherPaymentPaid,
   'contact-message': contactMessage,
+  'cashback-referral-share': cashbackReferralShare,
 }

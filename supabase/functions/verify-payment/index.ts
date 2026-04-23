@@ -55,7 +55,7 @@ serve(async (req) => {
     // Find the matching pending purchase belonging to this user
     const { data: purchase } = await supabaseAdmin
       .from("video_purchases")
-      .select("id, user_id, payment_status")
+      .select("id, user_id, payment_status, amount")
       .eq("stripe_payment_id", sessionId)
       .maybeSingle();
 
@@ -68,6 +68,37 @@ serve(async (req) => {
         .update({ payment_status: "completed" })
         .eq("id", purchase.id);
       log("Purchase marked completed", { purchaseId: purchase.id });
+
+      // Credit cashback (purchase + referral, best-effort)
+      try {
+        const purchaseAmount = Number(
+          purchase.amount ?? (session.amount_total ? session.amount_total / 100 : 0),
+        );
+        if (purchaseAmount > 0) {
+          const { data: cb, error: cbErr } = await supabaseAdmin.rpc(
+            "credit_cashback_purchase",
+            {
+              _user_id: user.id,
+              _purchase_amount: purchaseAmount,
+              _source_type: "video_purchase",
+              _source_reference: sessionId,
+            },
+          );
+          log("Cashback purchase credited", { tx: cb, err: cbErr?.message });
+
+          const { data: ref, error: refErr } = await supabaseAdmin.rpc(
+            "credit_cashback_referral",
+            {
+              _referred_user_id: user.id,
+              _purchase_amount: purchaseAmount,
+              _source_reference: sessionId,
+            },
+          );
+          log("Cashback referral credited", { tx: ref, err: refErr?.message });
+        }
+      } catch (e) {
+        log("Cashback credit error", { error: e instanceof Error ? e.message : String(e) });
+      }
     }
 
     return json({

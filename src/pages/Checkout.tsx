@@ -686,7 +686,7 @@ function CheckoutForm({
               code === "payment_intent_unexpected_state" &&
               paymentIntent?.status === "succeeded"
             ) {
-              log("Payment already confirmed on retry — proceeding");
+              console.info("[Checkout] Subscription payment already confirmed on retry");
             } else {
               setError(confirmError.message || "Pagamento não autorizado.");
               return;
@@ -702,7 +702,7 @@ function CheckoutForm({
               code === "payment_intent_unexpected_state" &&
               paymentIntent?.status === "succeeded"
             ) {
-              log("Payment already confirmed on retry — proceeding");
+              console.info("[Checkout] Unit payment already confirmed on retry");
             } else {
               setError(confirmError.message || "Pagamento não autorizado.");
               return;

@@ -429,3 +429,248 @@ const DateChip = ({
 );
 
 export default ReferralStatusPanel;
+
+/**
+ * Surfaces the raw, technical details of a single referral so the user
+ * can reconcile what they see in the dashboard with what's recorded in
+ * the cashback ledger:
+ *   - The transaction ID (referenced in support tickets / receipts).
+ *   - All exact timestamps (creation, 1st purchase, release, expiry,
+ *     consumption, last update).
+ *   - The reason behind a "cancelled" or "expired" outcome, derived
+ *     from the transaction status + notes/metadata when available.
+ */
+const ReferralDetailsDialog = ({
+  derived,
+  onClose,
+}: {
+  derived: DerivedReferral | null;
+  onClose: () => void;
+}) => {
+  const open = derived !== null;
+  const meta = derived ? STATUS_META[derived.status] : null;
+  const tx = derived?.transaction ?? null;
+
+  const reason = derived ? buildReasonText(derived) : null;
+
+  const copyId = async (id: string, label: string) => {
+    try {
+      await navigator.clipboard.writeText(id);
+      toast({ title: `${label} copiado`, description: id });
+    } catch {
+      toast({
+        title: "Não foi possível copiar",
+        description: "Copie manualmente o identificador.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Info className="h-5 w-5 text-primary" aria-hidden="true" />
+            Detalhes da indicação
+          </DialogTitle>
+          <DialogDescription>
+            Informações técnicas completas para sua referência ou para
+            anexar a um pedido de suporte.
+          </DialogDescription>
+        </DialogHeader>
+
+        {derived && meta && (
+          <div className="space-y-4 text-sm">
+            <div className="flex items-center gap-2 flex-wrap">
+              <Badge variant={meta.badgeVariant}>{meta.label}</Badge>
+              <span className="text-xs text-muted-foreground">
+                Código usado:{" "}
+                <code className="font-mono">
+                  {derived.referral.referral_code_used}
+                </code>
+              </span>
+            </div>
+
+            {/* IDs */}
+            <section className="rounded-md border border-border bg-muted/20 p-3 space-y-2">
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Identificadores
+              </h4>
+              <IdRow
+                label="ID da indicação"
+                value={derived.referral.id}
+                onCopy={() => copyId(derived.referral.id, "ID da indicação")}
+              />
+              <IdRow
+                label="ID da transação"
+                value={tx?.id ?? null}
+                onCopy={
+                  tx ? () => copyId(tx.id, "ID da transação") : undefined
+                }
+                emptyHint="Ainda não há transação (aguardando 1ª compra)"
+              />
+              {tx?.source_reference && (
+                <IdRow
+                  label="Referência da compra"
+                  value={tx.source_reference}
+                  onCopy={() =>
+                    copyId(tx.source_reference!, "Referência da compra")
+                  }
+                />
+              )}
+            </section>
+
+            {/* Datas exatas */}
+            <section className="rounded-md border border-border bg-muted/20 p-3 space-y-2">
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Datas exatas
+              </h4>
+              <DetailRow
+                label="Indicação criada em"
+                value={fmtDateTime(derived.referral.created_at)}
+              />
+              <DetailRow
+                label="1ª compra do indicado"
+                value={fmtDateTime(derived.referral.first_purchase_at)}
+              />
+              <DetailRow
+                label="Recompensa registrada em"
+                value={fmtDateTime(derived.rewardedAt)}
+              />
+              <DetailRow
+                label="Liberação (fim da carência)"
+                value={fmtDateTime(derived.availableAt)}
+              />
+              <DetailRow
+                label="Validade"
+                value={fmtDateTime(derived.expiresAt)}
+              />
+              <DetailRow
+                label="Consumido em"
+                value={fmtDateTime(tx?.consumed_at)}
+              />
+              {tx?.updated_at && (
+                <DetailRow
+                  label="Última atualização"
+                  value={fmtDateTime(tx.updated_at)}
+                />
+              )}
+            </section>
+
+            {/* Motivo */}
+            {reason && (
+              <section className="rounded-md border border-border bg-muted/20 p-3 space-y-1">
+                <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  {derived.status === "expired"
+                    ? "Motivo da expiração"
+                    : derived.status === "cancelled"
+                      ? "Motivo do cancelamento"
+                      : "Observações"}
+                </h4>
+                <p className="text-sm text-foreground/90 whitespace-pre-line">
+                  {reason}
+                </p>
+              </section>
+            )}
+          </div>
+        )}
+
+        <DialogFooter>
+          <Button type="button" variant="secondary" onClick={onClose}>
+            Fechar
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+const IdRow = ({
+  label,
+  value,
+  onCopy,
+  emptyHint,
+}: {
+  label: string;
+  value: string | null;
+  onCopy?: () => void;
+  emptyHint?: string;
+}) => (
+  <div className="flex items-start justify-between gap-2">
+    <div className="min-w-0">
+      <p className="text-[11px] uppercase tracking-wider text-muted-foreground">
+        {label}
+      </p>
+      {value ? (
+        <code className="text-xs font-mono break-all text-foreground/90">
+          {value}
+        </code>
+      ) : (
+        <p className="text-xs text-muted-foreground italic">
+          {emptyHint ?? "—"}
+        </p>
+      )}
+    </div>
+    {value && onCopy && (
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        className="h-7 px-2 shrink-0"
+        onClick={onCopy}
+        aria-label={`Copiar ${label}`}
+      >
+        <Copy className="h-3.5 w-3.5" aria-hidden="true" />
+      </Button>
+    )}
+  </div>
+);
+
+const DetailRow = ({ label, value }: { label: string; value: string }) => (
+  <div className="flex items-start justify-between gap-3 text-xs">
+    <span className="text-muted-foreground">{label}</span>
+    <span className="text-foreground/90 text-right">{value}</span>
+  </div>
+);
+
+/**
+ * Builds a human-readable explanation for the current outcome,
+ * preferring server-provided context (transaction.notes,
+ * metadata.reason / metadata.cancellation_reason) and falling back to
+ * a sensible default per derived status.
+ */
+const buildReasonText = (d: DerivedReferral): string | null => {
+  const tx = d.transaction;
+  const md = (tx?.metadata ?? null) as
+    | (Record<string, unknown> & {
+        reason?: string;
+        cancellation_reason?: string;
+        expiration_reason?: string;
+      })
+    | null;
+
+  const fromMeta =
+    (typeof md?.cancellation_reason === "string" && md.cancellation_reason) ||
+    (typeof md?.expiration_reason === "string" && md.expiration_reason) ||
+    (typeof md?.reason === "string" && md.reason) ||
+    null;
+
+  if (d.status === "cancelled") {
+    return (
+      fromMeta ||
+      tx?.notes ||
+      "A indicação foi cancelada — geralmente porque o pagamento do indicado foi estornado durante o período de carência de 30 dias."
+    );
+  }
+  if (d.status === "expired") {
+    return (
+      fromMeta ||
+      tx?.notes ||
+      "O cashback expirou porque não foi utilizado dentro do prazo de validade definido pela plataforma."
+    );
+  }
+  if (tx?.notes) return tx.notes;
+  if (fromMeta) return fromMeta;
+  return null;
+};

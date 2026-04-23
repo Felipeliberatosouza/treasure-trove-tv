@@ -6,12 +6,12 @@ import { Sparkles, Copy, TrendingUp, Wallet, Users, Clock, ArrowUpRight, ArrowDo
 import {
   useCashbackAccount,
   useCashbackTransactions,
-  useCashbackReferrals,
   useCashbackConfig,
 } from "@/hooks/useCashback";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import ReferralStatusPanel from "./ReferralStatusPanel";
 
 const fmt = (n: number) =>
   n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -47,7 +47,6 @@ const StudentCashbackTab = () => {
   const { user, profile } = useAuth();
   const { account, loading: loadingAcc } = useCashbackAccount();
   const { transactions, loading: loadingTx } = useCashbackTransactions();
-  const { referrals, loading: loadingRef } = useCashbackReferrals();
   const { config, loading: loadingCfg } = useCashbackConfig();
   const [sendingEmail, setSendingEmail] = useState(false);
 
@@ -249,30 +248,9 @@ const StudentCashbackTab = () => {
           </p>
         </div>
 
-        {referrals.length > 0 && (
-          <div className="mt-5 pt-4 border-t border-border">
-            <p className="text-sm font-medium mb-2">Suas indicações ({referrals.length})</p>
-            <div className="space-y-2">
-              {referrals.slice(0, 5).map((r) => (
-                <div key={r.id} className="flex justify-between items-center text-sm py-1.5">
-                  <span className="text-muted-foreground">
-                    {fmtDate(r.created_at)} —{" "}
-                    {r.status === "rewarded" ? "Compra concluída" : "Aguardando 1ª compra"}
-                  </span>
-                  <Badge variant={r.status === "rewarded" ? "default" : "secondary"}>
-                    {r.status === "rewarded" ? `+${fmt(r.reward_amount)}` : "Pendente"}
-                  </Badge>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-        {!loadingRef && referrals.length === 0 && (
-          <p className="text-xs text-muted-foreground mt-4">
-            Nenhuma indicação ainda. Comece a compartilhar seu código!
-          </p>
-        )}
       </Card>
+
+      <ReferralStatusPanel />
 
       <Card className="p-5">
         <h3 className="font-display font-semibold mb-3">Extrato</h3>

@@ -281,6 +281,7 @@ const Checkout = () => {
                   submitRef.current = submit;
                 }}
                 onSubmittingChange={setMobileSubmitting}
+                cashbackAmount={useCashback ? cashbackAmount : 0}
               />
             </Elements>
           </div>
@@ -326,6 +327,76 @@ const Checkout = () => {
                     </p>
                   )}
                 </div>
+
+                {cashbackEnabled && (
+                  <div className="border-t border-border pt-3 mt-3 space-y-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-start gap-2 min-w-0">
+                        <Wallet className="h-4 w-4 mt-0.5 text-primary shrink-0" />
+                        <div className="min-w-0">
+                          <p className="text-xs font-semibold">Usar meu cashback</p>
+                          <p className="text-[11px] text-muted-foreground leading-snug">
+                            Saldo:{" "}
+                            <span className="font-medium text-foreground">
+                              R$ {(cashbackAccount?.balance_available ?? 0).toFixed(2).replace(".", ",")}
+                            </span>
+                            {" · "}máx.{" "}
+                            <span className="font-medium text-foreground">
+                              R$ {maxUsableCashback.toFixed(2).replace(".", ",")}
+                            </span>{" "}
+                            ({cashbackConfig.max_checkout_pct}% do pedido)
+                          </p>
+                        </div>
+                      </div>
+                      <Switch
+                        checked={useCashback}
+                        onCheckedChange={setUseCashback}
+                        aria-label="Usar saldo de cashback"
+                      />
+                    </div>
+                    {useCashback && (
+                      <div className="space-y-2">
+                        <Slider
+                          value={[Math.round(cashbackAmount * 100)]}
+                          onValueChange={(v) => setCashbackAmount(v[0] / 100)}
+                          min={0}
+                          max={Math.round(maxUsableCashback * 100)}
+                          step={1}
+                          aria-label="Valor de cashback a aplicar"
+                        />
+                        <div className="flex items-center justify-between text-[11px]">
+                          <span className="text-muted-foreground">Aplicado</span>
+                          <span className="font-semibold text-primary">
+                            − R$ {cashbackAmount.toFixed(2).replace(".", ",")}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {useCashback && cashbackAmount > 0 && (
+                  <div className="border-t border-border pt-3 mt-3 space-y-1 text-xs">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Subtotal</span>
+                      <span>{baseAmountLabel}</span>
+                    </div>
+                    <div className="flex justify-between text-primary">
+                      <span>Cashback</span>
+                      <span>− R$ {cashbackAmount.toFixed(2).replace(".", ",")}</span>
+                    </div>
+                    <div className="flex justify-between font-semibold pt-1 border-t border-border mt-1">
+                      <span>Total</span>
+                      <span>R$ {finalAmount.toFixed(2).replace(".", ",")}</span>
+                    </div>
+                    {state.mode === "subscription" && (
+                      <p className="text-[10px] text-muted-foreground pt-1">
+                        Desconto válido apenas na 1ª cobrança. As próximas voltam ao valor cheio.
+                      </p>
+                    )}
+                  </div>
+                )}
+
                 <div className="border-t border-border pt-3 mt-3">
                   <div className="flex items-center gap-2 text-xs text-success">
                     <ShieldCheck className="h-3.5 w-3.5" />

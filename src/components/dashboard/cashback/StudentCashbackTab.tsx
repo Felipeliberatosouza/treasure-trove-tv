@@ -225,6 +225,30 @@ const StudentCashbackTab = () => {
           </div>
         </div>
 
+        <div className="mt-4">
+          <Button
+            variant="secondary"
+            onClick={sendByEmail}
+            disabled={sendingEmail || !account?.referral_code}
+            className="w-full md:w-auto"
+          >
+            {sendingEmail ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Enviando…
+              </>
+            ) : (
+              <>
+                <Mail className="h-4 w-4 mr-2" />
+                Receber por e-mail
+              </>
+            )}
+          </Button>
+          <p className="text-xs text-muted-foreground mt-2">
+            Enviamos seu código, link e um texto pronto para compartilhar com amigos.
+          </p>
+        </div>
+
         {referrals.length > 0 && (
           <div className="mt-5 pt-4 border-t border-border">
             <p className="text-sm font-medium mb-2">Suas indicações ({referrals.length})</p>

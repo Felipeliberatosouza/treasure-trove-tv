@@ -590,8 +590,11 @@ function CheckoutForm({
 
   // Mirror submitting state to parent (for mobile sticky bar button)
   useEffect(() => {
-    onSubmittingChange?.(submitting);
-  }, [submitting, onSubmittingChange]);
+    // Mirror BOTH `submitting` and the sticky `redirecting` flag so
+    // the mobile sticky-bar button stays disabled during the brief
+    // post-success window before the route unmounts.
+    onSubmittingChange?.(submitting || redirecting);
+  }, [submitting, redirecting, onSubmittingChange]);
 
   // Expose latest handleSubmit to parent via ref-callback
   const handleSubmitRef = useRef<() => void>(() => {});

@@ -114,7 +114,7 @@ export const ResumoMaterial = ({ offered, setOffered, price, setPrice, text, set
         <label className="text-xs text-muted-foreground mb-1 block">
           Texto do resumo (auto-preenchido com a descrição da aula — pode editar livremente)
         </label>
-        <Textarea
+        <SpellCheckedTextarea
           value={text}
           maxLength={textMax}
           onChange={(e) => setText(e.target.value)}

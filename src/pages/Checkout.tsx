@@ -743,9 +743,9 @@ function CheckoutForm({
             } catch {
               /* ignore */
             }
-            navigate("/dashboard?tab=subscription", { replace: true });
+            safeNavigate("/dashboard?tab=subscription", { replace: true });
           } else {
-            navigate(`/aula/${state.contentId}`, { replace: true });
+            safeNavigate(`/aula/${state.contentId}`, { replace: true });
           }
           return;
         }
@@ -759,9 +759,9 @@ function CheckoutForm({
         } catch {
           /* ignore — PaymentSuccess will poll */
         }
-        navigate("/payment-success", { replace: true });
+        safeNavigate("/payment-success", { replace: true });
       } else {
-        navigate(
+        safeNavigate(
           `/payment-success?session_id=${data.paymentIntentId || ""}&content_id=${state.contentId}`,
           { replace: true },
         );

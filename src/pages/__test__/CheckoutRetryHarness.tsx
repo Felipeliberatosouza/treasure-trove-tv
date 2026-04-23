@@ -103,9 +103,29 @@ export default function CheckoutRetryHarness() {
       );
     };
     window.__forceRerender = () => setRerenderTick((t) => t + 1);
+    // Resets every piece of harness state so a single Playwright
+    // worker can run the same flow back-to-back and prove the
+    // pipeline behaves identically on each fresh run. Test specs
+    // call this in a beforeEach (or between iterations of a loop)
+    // to guarantee no cross-test bleed of mock queues, navigation
+    // flags, cashback totals, or toast/error strings.
+    window.__resetHarness = () => {
+      window.__mockCheckoutResponses = [];
+      window.__checkoutHarnessMode = undefined;
+      submittingRef.current = false;
+      navigatedRef.current = false;
+      setInvokeCount(0);
+      setCashbackTotal(0);
+      setLastToast("");
+      setLastNavigate("");
+      setLastError("");
+      setNavigateCount(0);
+      setRerenderTick((t) => t + 1);
+    };
     return () => {
       delete window.__simulateDuplicateStripeCallback;
       delete window.__forceRerender;
+      delete window.__resetHarness;
     };
   });
 

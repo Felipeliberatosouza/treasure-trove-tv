@@ -126,6 +126,40 @@ const Checkout = () => {
   const [mobileSubmitting, setMobileSubmitting] = useState(false);
   const submitRef = useRef<(() => void) | null>(null);
   const [keyboardOpen, setKeyboardOpen] = useState(false);
+
+  // Cashback selection (lifted to parent so summary + form stay in sync)
+  const { config: cashbackConfig } = useCashbackConfig();
+  const { account: cashbackAccount } = useCashbackAccount();
+  const cartTotal =
+    state?.mode === "subscription" ? Number(state?.planPrice ?? 0) : Number(state?.unitPrice ?? 0);
+  const maxUsableCashback = useMemo(
+    () =>
+      maxCashbackForCheckout(
+        cartTotal,
+        cashbackAccount?.balance_available ?? 0,
+        cashbackConfig,
+      ),
+    [cartTotal, cashbackAccount?.balance_available, cashbackConfig],
+  );
+  const [useCashback, setUseCashback] = useState(false);
+  const [cashbackAmount, setCashbackAmount] = useState(0);
+
+  // Initialize cashback amount when toggling on or when max changes
+  useEffect(() => {
+    if (!useCashback) {
+      setCashbackAmount(0);
+    } else {
+      setCashbackAmount((prev) => {
+        if (prev === 0) return Math.round(maxUsableCashback * 100) / 100;
+        return Math.min(prev, maxUsableCashback);
+      });
+    }
+  }, [useCashback, maxUsableCashback]);
+
+  const cashbackEnabled =
+    cashbackConfig.enabled && (cashbackAccount?.balance_available ?? 0) > 0 && maxUsableCashback > 0;
+  const finalAmount = Math.max(cartTotal - (useCashback ? cashbackAmount : 0), 0);
+
   // Keep summary always open on desktop
   useEffect(() => {
     if (!isMobile) setSummaryOpen(true);
@@ -187,10 +221,16 @@ const Checkout = () => {
     state.mode === "subscription"
       ? `Assinar ${state.planName ?? "plano"}`
       : `Comprar ${state.contentTitle ?? "aula"}`;
-  const amountLabel =
+  const baseAmountLabel =
     state.mode === "subscription"
       ? `R$ ${Number(state.planPrice ?? 0).toFixed(2).replace(".", ",")}/mês`
       : `R$ ${Number(state.unitPrice ?? 0).toFixed(2).replace(".", ",")}`;
+  const amountLabel =
+    useCashback && cashbackAmount > 0
+      ? state.mode === "subscription"
+        ? `R$ ${finalAmount.toFixed(2).replace(".", ",")} (1ª cobrança)`
+        : `R$ ${finalAmount.toFixed(2).replace(".", ",")}`
+      : baseAmountLabel;
 
   return (
     <div className="min-h-screen bg-background">

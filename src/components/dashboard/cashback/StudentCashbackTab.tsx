@@ -6,7 +6,6 @@ import { Sparkles, Copy, TrendingUp, Wallet, Users, Clock, ArrowUpRight, ArrowDo
 import {
   useCashbackAccount,
   useCashbackTransactions,
-  useCashbackReferrals,
   useCashbackConfig,
 } from "@/hooks/useCashback";
 import { toast } from "sonner";
@@ -48,7 +47,6 @@ const StudentCashbackTab = () => {
   const { user, profile } = useAuth();
   const { account, loading: loadingAcc } = useCashbackAccount();
   const { transactions, loading: loadingTx } = useCashbackTransactions();
-  const { referrals, loading: loadingRef } = useCashbackReferrals();
   const { config, loading: loadingCfg } = useCashbackConfig();
   const [sendingEmail, setSendingEmail] = useState(false);
 

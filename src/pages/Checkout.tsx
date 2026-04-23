@@ -937,6 +937,16 @@ function CheckoutForm({
         )}
       </Button>
 
+      {redirecting && (
+        <p
+          role="status"
+          aria-live="polite"
+          className="text-center text-xs text-muted-foreground"
+        >
+          Estamos confirmando seu pagamento. Não feche esta janela nem clique novamente — você será redirecionado em instantes.
+        </p>
+      )}
+
       <p className="text-center text-[11px] text-muted-foreground">
         Ao confirmar, você concorda com os Termos de Uso e Política de Privacidade.
       </p>

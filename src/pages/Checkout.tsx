@@ -496,6 +496,22 @@ function CheckoutForm({
   const [error, setError] = useState<string | null>(null);
   const [cepLoading, setCepLoading] = useState(false);
 
+  // Hard guard against double-navigation. Once we've decided to leave the
+  // checkout page (success, already-owned, retry-already-confirmed, …),
+  // any further navigate(...) call from this component is dropped. This
+  // protects against:
+  //   • React StrictMode / re-renders firing handlers twice
+  //   • Duplicate edge-function responses (network retries) racing the
+  //     Stripe confirm callback
+  //   • A late `confirmCardPayment` resolution after we've already
+  //     redirected via the `alreadyOwned` branch
+  const navigatedRef = useRef(false);
+  const safeNavigate: typeof navigate = (...args) => {
+    if (navigatedRef.current) return;
+    navigatedRef.current = true;
+    return navigate(...(args as Parameters<typeof navigate>));
+  };
+
   const [billing, setBilling] = useState<BillingForm>({
     name: initialName,
     cpf: initialCpf,

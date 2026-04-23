@@ -282,7 +282,13 @@ const SummaryPill = ({
   </div>
 );
 
-const ReferralRow = ({ derived }: { derived: DerivedReferral }) => {
+const ReferralRow = ({
+  derived,
+  onShowDetails,
+}: {
+  derived: DerivedReferral;
+  onShowDetails: () => void;
+}) => {
   const meta = STATUS_META[derived.status];
   const Icon = meta.icon;
   const releaseInDays =
@@ -327,6 +333,17 @@ const ReferralRow = ({ derived }: { derived: DerivedReferral }) => {
               sobre {fmtMoney(derived.referral.first_purchase_amount)}
             </p>
           )}
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="mt-1 h-7 px-2 text-xs"
+            onClick={onShowDetails}
+            aria-label={`Ver detalhes da indicação de ${fmtDate(derived.referral.created_at)}`}
+          >
+            <Info className="h-3.5 w-3.5 mr-1" aria-hidden="true" />
+            Ver detalhes
+          </Button>
         </div>
       </div>
 

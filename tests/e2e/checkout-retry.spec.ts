@@ -355,4 +355,55 @@ test.describe("Checkout retry & double-click safety", () => {
     await expect(page.getByTestId("cashback-total-applied")).toHaveText("9.00");
     await expect(page.getByTestId("last-error")).toHaveText("");
   });
+
+  test("repeated runs after __resetHarness produce identical results", async ({
+    page,
+  }) => {
+    // Runs the SAME happy-path flow three times in a row on the same
+    // page, calling __resetHarness between iterations. This proves:
+    //   1. The reset hook fully clears mock queue, navigatedRef,
+    //      cashback totals, toasts, errors and counters.
+    //   2. The pipeline is deterministic — every run produces the
+    //      exact same invoke-count, cashback-total-applied,
+    //      navigate-count, last-toast and last-navigate.
+    //   3. No state from a previous iteration can leak forward and
+    //      mask a regression (e.g. a stale navigatedRef silently
+    //      suppressing a navigation that should have happened).
+    const btn = page.getByTestId("pay-button");
+
+    for (let i = 0; i < 3; i++) {
+      await page.evaluate(() => {
+        window.__resetHarness?.();
+        window.__checkoutHarnessMode = "unit";
+        window.__mockCheckoutResponses = [
+          {
+            data: {
+              ok: true,
+              clientSecret: "pi_test_secret",
+              cashbackApplied: 3.5,
+            },
+            stripe: { paymentIntentStatus: "succeeded" },
+          },
+        ];
+      });
+
+      // Post-reset baseline: every counter and surface is empty.
+      await expect(page.getByTestId("invoke-count")).toHaveText("0");
+      await expect(page.getByTestId("cashback-total-applied")).toHaveText("0.00");
+      await expect(page.getByTestId("navigate-count")).toHaveText("0");
+      await expect(page.getByTestId("last-toast")).toHaveText("");
+      await expect(page.getByTestId("last-navigate")).toHaveText("");
+      await expect(page.getByTestId("last-error")).toHaveText("");
+
+      await btn.click();
+
+      // Identical outcomes on every iteration.
+      await expect(page.getByTestId("invoke-count")).toHaveText("1");
+      await expect(page.getByTestId("cashback-total-applied")).toHaveText("3.50");
+      await expect(page.getByTestId("navigate-count")).toHaveText("1");
+      await expect(page.getByTestId("last-toast")).toHaveText("Pagamento aprovado!");
+      await expect(page.getByTestId("last-navigate")).toHaveText("/payment-success");
+      await expect(page.getByTestId("last-error")).toHaveText("");
+    }
+  });
 });

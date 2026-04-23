@@ -38,7 +38,13 @@ function useDetectedLang(value: unknown, override?: string, debounceMs = DEFAULT
     return () => window.clearTimeout(handle);
   }, [text, override, debounceMs]);
 
-  return debouncedLang;
+  // Force immediate re-detection (used on blur to lock in the final dictionary).
+  const flush = React.useCallback(() => {
+    if (override) return;
+    setDebouncedLang(detectLanguage(text));
+  }, [text, override]);
+
+  return [debouncedLang, flush] as const;
 }
 
 type SpellExtras = { langDebounceMs?: number };
@@ -46,8 +52,8 @@ type SpellExtras = { langDebounceMs?: number };
 export const SpellCheckedInput = React.forwardRef<
   HTMLInputElement,
   React.ComponentProps<typeof Input> & SpellExtras
->(({ lang, spellCheck, value, langDebounceMs, ...props }, ref) => {
-  const detected = useDetectedLang(value, lang, langDebounceMs);
+>(({ lang, spellCheck, value, langDebounceMs, onBlur, ...props }, ref) => {
+  const [detected, flushLang] = useDetectedLang(value, lang, langDebounceMs);
   return (
     <Input
       ref={ref}
@@ -55,6 +61,10 @@ export const SpellCheckedInput = React.forwardRef<
       lang={detected}
       spellCheck={spellCheck ?? true}
       autoCorrect="on"
+      onBlur={(e) => {
+        flushLang();
+        onBlur?.(e);
+      }}
       {...props}
     />
   );
@@ -64,8 +74,8 @@ SpellCheckedInput.displayName = "SpellCheckedInput";
 export const SpellCheckedTextarea = React.forwardRef<
   HTMLTextAreaElement,
   React.ComponentProps<typeof Textarea> & SpellExtras
->(({ lang, spellCheck, value, langDebounceMs, ...props }, ref) => {
-  const detected = useDetectedLang(value, lang, langDebounceMs);
+>(({ lang, spellCheck, value, langDebounceMs, onBlur, ...props }, ref) => {
+  const [detected, flushLang] = useDetectedLang(value, lang, langDebounceMs);
   return (
     <Textarea
       ref={ref}
@@ -73,6 +83,10 @@ export const SpellCheckedTextarea = React.forwardRef<
       lang={detected}
       spellCheck={spellCheck ?? true}
       autoCorrect="on"
+      onBlur={(e) => {
+        flushLang();
+        onBlur?.(e);
+      }}
       {...props}
     />
   );

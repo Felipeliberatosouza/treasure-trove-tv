@@ -313,6 +313,37 @@ serve(async (req) => {
           // Could add a payment-failed email template here in the future
         }
       }
+    } else if (event.type === "checkout.session.completed") {
+      // One-off purchases (mode=payment) - credit cashback after payment
+      const session = event.data.object as Stripe.Checkout.Session;
+      if (
+        session.mode === "payment" &&
+        session.payment_status === "paid" &&
+        session.customer
+      ) {
+        await creditCashbackForCustomer(
+          session.customer as string,
+          session.amount_total ?? 0,
+          "checkout_session",
+          session.id,
+        );
+      } else {
+        logStep("checkout.session.completed - skipped", {
+          mode: session.mode,
+          payment_status: session.payment_status,
+        });
+      }
+    } else if (event.type === "invoice.payment_succeeded") {
+      // Subscription renewals / first invoice paid - credit cashback
+      const invoice = event.data.object as Stripe.Invoice;
+      if (invoice.customer && (invoice.amount_paid ?? 0) > 0) {
+        await creditCashbackForCustomer(
+          invoice.customer as string,
+          invoice.amount_paid,
+          "subscription_invoice",
+          invoice.id ?? `inv_${event.id}`,
+        );
+      }
     } else {
       logStep("Unhandled event type", { type: event.type });
     }

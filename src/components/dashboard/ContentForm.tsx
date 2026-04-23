@@ -855,7 +855,7 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
       {/* Title */}
       <div>
         <label className="text-sm text-muted-foreground mb-1 block">Nome da aula *</label>
-        <Input
+        <SpellCheckedInput
           value={title}
           maxLength={TITLE_MAX}
           onChange={(e) => setTitle(e.target.value)}

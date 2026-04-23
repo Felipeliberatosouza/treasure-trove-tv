@@ -672,7 +672,10 @@ function CheckoutForm({
 
       if (action.kind === "alreadyOwned") {
         // Idempotent retry: server detected an existing purchase / active
-        // sub. No cashback was reapplied server-side.
+        // sub. No cashback was reapplied server-side. Skip 3DS entirely
+        // and go straight to the final destination (subscription tab or
+        // lesson page) — bypassing /payment-success polling, which would
+        // be confusing for an already-completed purchase.
         toast.success(action.message);
         if (state.mode === "subscription") {
           try {
@@ -680,9 +683,9 @@ function CheckoutForm({
           } catch {
             /* ignore */
           }
-          navigate("/dashboard?tab=subscription");
+          navigate("/dashboard?tab=subscription", { replace: true });
         } else {
-          navigate(`/aula/${state.contentId}`);
+          navigate(`/aula/${state.contentId}`, { replace: true });
         }
         return;
       }
@@ -709,6 +712,26 @@ function CheckoutForm({
           console.info(
             `[Checkout] ${state.mode} payment already confirmed on retry — no cashback reapplied`,
           );
+          // Network retry on an already-confirmed PI: webhook already
+          // ran (or will shortly), cashback was consumed exactly once.
+          // Skip the /payment-success polling page and land the user
+          // directly on the final destination.
+          toast.success(
+            state.mode === "subscription"
+              ? "Assinatura já confirmada."
+              : "Pagamento já confirmado.",
+          );
+          if (state.mode === "subscription") {
+            try {
+              await refreshSubscription();
+            } catch {
+              /* ignore */
+            }
+            navigate("/dashboard?tab=subscription", { replace: true });
+          } else {
+            navigate(`/aula/${state.contentId}`, { replace: true });
+          }
+          return;
         }
       }
 
@@ -720,10 +743,11 @@ function CheckoutForm({
         } catch {
           /* ignore — PaymentSuccess will poll */
         }
-        navigate("/payment-success");
+        navigate("/payment-success", { replace: true });
       } else {
         navigate(
-          `/payment-success?session_id=${data.paymentIntentId || ""}&content_id=${state.contentId}`
+          `/payment-success?session_id=${data.paymentIntentId || ""}&content_id=${state.contentId}`,
+          { replace: true },
         );
       }
     } catch (e) {

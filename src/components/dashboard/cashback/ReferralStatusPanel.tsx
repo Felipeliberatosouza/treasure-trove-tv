@@ -1,6 +1,16 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { toast } from "@/hooks/use-toast";
 import {
   Users,
   Clock,
@@ -9,6 +19,8 @@ import {
   Hourglass,
   CalendarDays,
   CalendarX,
+  Info,
+  Copy,
 } from "lucide-react";
 import {
   useCashbackReferrals,

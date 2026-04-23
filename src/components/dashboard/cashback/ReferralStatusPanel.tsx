@@ -35,6 +35,17 @@ const fmtMoney = (n: number) =>
 const fmtDate = (d: string | null | undefined) =>
   d ? new Date(d).toLocaleDateString("pt-BR") : "—";
 
+const fmtDateTime = (d: string | null | undefined) =>
+  d
+    ? new Date(d).toLocaleString("pt-BR", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : "—";
+
 const daysUntil = (d: string | null | undefined): number | null => {
   if (!d) return null;
   const diffMs = new Date(d).getTime() - Date.now();

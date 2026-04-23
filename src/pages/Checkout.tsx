@@ -699,9 +699,9 @@ function CheckoutForm({
           } catch {
             /* ignore */
           }
-          navigate("/dashboard?tab=subscription", { replace: true });
+          safeNavigate("/dashboard?tab=subscription", { replace: true });
         } else {
-          navigate(`/aula/${state.contentId}`, { replace: true });
+          safeNavigate(`/aula/${state.contentId}`, { replace: true });
         }
         return;
       }

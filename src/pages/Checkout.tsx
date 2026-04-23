@@ -12,11 +12,18 @@ import { Card } from "@/components/ui/card";
 import CpfInput from "@/components/CpfInput";
 import PaymentSecurityBadge from "@/components/PaymentSecurityBadge";
 import { isValidCPF } from "@/lib/cpfValidator";
-import { ArrowLeft, Check, ChevronDown, CreditCard, Loader2, ShieldCheck, UserRound } from "lucide-react";
+import { ArrowLeft, Check, ChevronDown, CreditCard, Loader2, ShieldCheck, UserRound, Wallet } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Switch } from "@/components/ui/switch";
+import { Slider } from "@/components/ui/slider";
+import {
+  useCashbackAccount,
+  useCashbackConfig,
+  maxCashbackForCheckout,
+} from "@/hooks/useCashback";
 
 type CheckoutStep = "billing" | "card" | "confirm";
 

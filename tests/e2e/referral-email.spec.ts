@@ -225,4 +225,101 @@ test.describe("Referral email — duplicate-send safety", () => {
       );
     }
   });
+
+  test("accessibility: button exposes correct disabled/busy state and accessible name during loading", async ({
+    page,
+  }) => {
+    const btn = page.getByTestId("send-email-button");
+    const liveRegion = page.getByTestId("send-status-live");
+
+    // --- Idle baseline ---------------------------------------------------
+    // Before any click the button must be enabled, NOT busy, and expose
+    // a clear accessible name describing the action (not the loading
+    // state). The live region announces a neutral "ready" message.
+    await expect(btn).toBeEnabled();
+    await expect(btn).toHaveAttribute("aria-busy", "false");
+    await expect(btn).toHaveAttribute(
+      "aria-label",
+      "Receber link de indicação por e-mail",
+    );
+    await expect(btn).toHaveAccessibleName(
+      "Receber link de indicação por e-mail",
+    );
+    await expect(btn).toHaveRole("button");
+    await expect(liveRegion).toHaveAttribute("role", "status");
+    await expect(liveRegion).toHaveAttribute("aria-live", "polite");
+    await expect(liveRegion).toHaveText(
+      "Pronto para enviar o link de indicação.",
+    );
+
+    // --- In-flight state -------------------------------------------------
+    // Pin the mock to "hang" so we can inspect the loading attributes
+    // without racing the resolution.
+    await page.evaluate(() => {
+      window.__setReferralInvokeBehavior?.("hang");
+    });
+    await btn.click();
+
+    await expect(page.getByTestId("sending-state")).toHaveText("true");
+    await expect(btn).toBeDisabled();
+    await expect(btn).toHaveAttribute("aria-busy", "true");
+    await expect(btn).toHaveAttribute("aria-disabled", "true");
+    // Accessible name must change to describe the loading action so
+    // screen readers don't keep announcing "Receber por e-mail" while
+    // a send is in progress.
+    await expect(btn).toHaveAttribute(
+      "aria-label",
+      "Enviando link de indicação por e-mail",
+    );
+    await expect(btn).toHaveAccessibleName(
+      "Enviando link de indicação por e-mail",
+    );
+    // Live region announces the in-flight state.
+    await expect(liveRegion).toHaveText(
+      "Enviando link de indicação por e-mail…",
+    );
+
+    // The decorative icon must be hidden from assistive tech so the
+    // accessible name is not polluted by the lucide SVG.
+    const iconAriaHidden = await btn.locator("svg").first().getAttribute(
+      "aria-hidden",
+    );
+    expect(iconAriaHidden).toBe("true");
+
+    // --- Recovery to enabled state after success -------------------------
+    await page.evaluate(() => window.__resetReferralHarness?.());
+    await page.evaluate(() => {
+      window.__setReferralInvokeBehavior?.("success");
+    });
+    await btn.click();
+
+    await expect(page.getByTestId("sending-state")).toHaveText("false");
+    await expect(btn).toBeEnabled();
+    await expect(btn).toHaveAttribute("aria-busy", "false");
+    await expect(btn).toHaveAttribute("aria-disabled", "false");
+    await expect(btn).toHaveAccessibleName(
+      "Receber link de indicação por e-mail",
+    );
+    // Live region updates to the success toast text.
+    await expect(liveRegion).toHaveText(
+      "Enviamos o link de indicação para o seu e-mail!",
+    );
+
+    // --- Recovery to enabled state after error ---------------------------
+    await page.evaluate(() => window.__resetReferralHarness?.());
+    await page.evaluate(() => {
+      window.__setReferralInvokeBehavior?.("error");
+    });
+    await btn.click();
+
+    await expect(page.getByTestId("sending-state")).toHaveText("false");
+    await expect(btn).toBeEnabled();
+    await expect(btn).toHaveAttribute("aria-busy", "false");
+    await expect(btn).toHaveAccessibleName(
+      "Receber link de indicação por e-mail",
+    );
+    await expect(liveRegion).toHaveText(
+      "Não foi possível enviar agora. Tente novamente em instantes.",
+    );
+  });
 });

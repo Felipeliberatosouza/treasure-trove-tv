@@ -12,11 +12,18 @@ import { Card } from "@/components/ui/card";
 import CpfInput from "@/components/CpfInput";
 import PaymentSecurityBadge from "@/components/PaymentSecurityBadge";
 import { isValidCPF } from "@/lib/cpfValidator";
-import { ArrowLeft, Check, ChevronDown, CreditCard, Loader2, ShieldCheck, UserRound } from "lucide-react";
+import { ArrowLeft, Check, ChevronDown, CreditCard, Loader2, ShieldCheck, UserRound, Wallet } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Switch } from "@/components/ui/switch";
+import { Slider } from "@/components/ui/slider";
+import {
+  useCashbackAccount,
+  useCashbackConfig,
+  maxCashbackForCheckout,
+} from "@/hooks/useCashback";
 
 type CheckoutStep = "billing" | "card" | "confirm";
 
@@ -119,6 +126,40 @@ const Checkout = () => {
   const [mobileSubmitting, setMobileSubmitting] = useState(false);
   const submitRef = useRef<(() => void) | null>(null);
   const [keyboardOpen, setKeyboardOpen] = useState(false);
+
+  // Cashback selection (lifted to parent so summary + form stay in sync)
+  const { config: cashbackConfig } = useCashbackConfig();
+  const { account: cashbackAccount } = useCashbackAccount();
+  const cartTotal =
+    state?.mode === "subscription" ? Number(state?.planPrice ?? 0) : Number(state?.unitPrice ?? 0);
+  const maxUsableCashback = useMemo(
+    () =>
+      maxCashbackForCheckout(
+        cartTotal,
+        cashbackAccount?.balance_available ?? 0,
+        cashbackConfig,
+      ),
+    [cartTotal, cashbackAccount?.balance_available, cashbackConfig],
+  );
+  const [useCashback, setUseCashback] = useState(false);
+  const [cashbackAmount, setCashbackAmount] = useState(0);
+
+  // Initialize cashback amount when toggling on or when max changes
+  useEffect(() => {
+    if (!useCashback) {
+      setCashbackAmount(0);
+    } else {
+      setCashbackAmount((prev) => {
+        if (prev === 0) return Math.round(maxUsableCashback * 100) / 100;
+        return Math.min(prev, maxUsableCashback);
+      });
+    }
+  }, [useCashback, maxUsableCashback]);
+
+  const cashbackEnabled =
+    cashbackConfig.enabled && (cashbackAccount?.balance_available ?? 0) > 0 && maxUsableCashback > 0;
+  const finalAmount = Math.max(cartTotal - (useCashback ? cashbackAmount : 0), 0);
+
   // Keep summary always open on desktop
   useEffect(() => {
     if (!isMobile) setSummaryOpen(true);
@@ -180,10 +221,16 @@ const Checkout = () => {
     state.mode === "subscription"
       ? `Assinar ${state.planName ?? "plano"}`
       : `Comprar ${state.contentTitle ?? "aula"}`;
-  const amountLabel =
+  const baseAmountLabel =
     state.mode === "subscription"
       ? `R$ ${Number(state.planPrice ?? 0).toFixed(2).replace(".", ",")}/mês`
       : `R$ ${Number(state.unitPrice ?? 0).toFixed(2).replace(".", ",")}`;
+  const amountLabel =
+    useCashback && cashbackAmount > 0
+      ? state.mode === "subscription"
+        ? `R$ ${finalAmount.toFixed(2).replace(".", ",")} (1ª cobrança)`
+        : `R$ ${finalAmount.toFixed(2).replace(".", ",")}`
+      : baseAmountLabel;
 
   return (
     <div className="min-h-screen bg-background">
@@ -234,6 +281,7 @@ const Checkout = () => {
                   submitRef.current = submit;
                 }}
                 onSubmittingChange={setMobileSubmitting}
+                cashbackAmount={useCashback ? cashbackAmount : 0}
               />
             </Elements>
           </div>
@@ -279,6 +327,76 @@ const Checkout = () => {
                     </p>
                   )}
                 </div>
+
+                {cashbackEnabled && (
+                  <div className="border-t border-border pt-3 mt-3 space-y-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-start gap-2 min-w-0">
+                        <Wallet className="h-4 w-4 mt-0.5 text-primary shrink-0" />
+                        <div className="min-w-0">
+                          <p className="text-xs font-semibold">Usar meu cashback</p>
+                          <p className="text-[11px] text-muted-foreground leading-snug">
+                            Saldo:{" "}
+                            <span className="font-medium text-foreground">
+                              R$ {(cashbackAccount?.balance_available ?? 0).toFixed(2).replace(".", ",")}
+                            </span>
+                            {" · "}máx.{" "}
+                            <span className="font-medium text-foreground">
+                              R$ {maxUsableCashback.toFixed(2).replace(".", ",")}
+                            </span>{" "}
+                            ({cashbackConfig.max_checkout_pct}% do pedido)
+                          </p>
+                        </div>
+                      </div>
+                      <Switch
+                        checked={useCashback}
+                        onCheckedChange={setUseCashback}
+                        aria-label="Usar saldo de cashback"
+                      />
+                    </div>
+                    {useCashback && (
+                      <div className="space-y-2">
+                        <Slider
+                          value={[Math.round(cashbackAmount * 100)]}
+                          onValueChange={(v) => setCashbackAmount(v[0] / 100)}
+                          min={0}
+                          max={Math.round(maxUsableCashback * 100)}
+                          step={1}
+                          aria-label="Valor de cashback a aplicar"
+                        />
+                        <div className="flex items-center justify-between text-[11px]">
+                          <span className="text-muted-foreground">Aplicado</span>
+                          <span className="font-semibold text-primary">
+                            − R$ {cashbackAmount.toFixed(2).replace(".", ",")}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {useCashback && cashbackAmount > 0 && (
+                  <div className="border-t border-border pt-3 mt-3 space-y-1 text-xs">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Subtotal</span>
+                      <span>{baseAmountLabel}</span>
+                    </div>
+                    <div className="flex justify-between text-primary">
+                      <span>Cashback</span>
+                      <span>− R$ {cashbackAmount.toFixed(2).replace(".", ",")}</span>
+                    </div>
+                    <div className="flex justify-between font-semibold pt-1 border-t border-border mt-1">
+                      <span>Total</span>
+                      <span>R$ {finalAmount.toFixed(2).replace(".", ",")}</span>
+                    </div>
+                    {state.mode === "subscription" && (
+                      <p className="text-[10px] text-muted-foreground pt-1">
+                        Desconto válido apenas na 1ª cobrança. As próximas voltam ao valor cheio.
+                      </p>
+                    )}
+                  </div>
+                )}
+
                 <div className="border-t border-border pt-3 mt-3">
                   <div className="flex items-center gap-2 text-xs text-success">
                     <ShieldCheck className="h-3.5 w-3.5" />
@@ -343,6 +461,7 @@ interface CheckoutFormProps {
   onStepChange?: (s: CheckoutStep) => void;
   onReady?: (submit: () => void) => void;
   onSubmittingChange?: (submitting: boolean) => void;
+  cashbackAmount?: number;
 }
 
 function CheckoutForm({
@@ -353,6 +472,7 @@ function CheckoutForm({
   onStepChange,
   onReady,
   onSubmittingChange,
+  cashbackAmount = 0,
 }: CheckoutFormProps) {
   const stripe = useStripe();
   const elements = useElements();
@@ -505,12 +625,18 @@ function CheckoutForm({
           : "create-payment-embedded";
       const body =
         state.mode === "subscription"
-          ? { priceId: state.priceId, paymentMethodId: paymentMethod.id, billing: billingPayload }
+          ? {
+              priceId: state.priceId,
+              paymentMethodId: paymentMethod.id,
+              billing: billingPayload,
+              cashbackAmount,
+            }
           : {
               contentId: state.contentId,
               contentType: state.contentType,
               paymentMethodId: paymentMethod.id,
               billing: billingPayload,
+              cashbackAmount,
             };
 
       const { data, error: fnError } = await supabase.functions.invoke(fnName, { body });
@@ -522,7 +648,9 @@ function CheckoutForm({
 
       const clientSecret: string | null = data.clientSecret;
 
-      // 4. If a client_secret was returned, confirm 3DS / SCA on the card
+      // 4. If a client_secret was returned, confirm 3DS / SCA on the card.
+      // If cashback covered 100% of the cart, no clientSecret comes back —
+      // the purchase is already completed server-side.
       if (clientSecret) {
         if (state.mode === "subscription") {
           const { error: confirmError } = await stripe.confirmCardPayment(clientSecret);

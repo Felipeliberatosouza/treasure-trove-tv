@@ -60,6 +60,7 @@ serve(async (req) => {
     const priceId = String(body?.priceId || "").trim();
     const paymentMethodId = String(body?.paymentMethodId || "").trim();
     const billing = (body?.billing || {}) as BillingDetails;
+    const requestedCashback = Number(body?.cashbackAmount || 0);
 
     if (!priceId.startsWith("price_")) return json({ ok: false, error: "Plano inválido" }, 200);
     if (!paymentMethodId.startsWith("pm_")) return json({ ok: false, error: "Cartão inválido" }, 200);
@@ -118,6 +119,34 @@ serve(async (req) => {
       invoice_settings: { default_payment_method: paymentMethodId },
     });
 
+    // 4b. Apply cashback as a one-shot Stripe coupon on the first invoice.
+    let cashbackApplied = 0;
+    let discountId: string | undefined;
+    if (requestedCashback > 0) {
+      // Resolve the price's recurring amount to compute cap
+      const price = await stripe.prices.retrieve(priceId);
+      const cartAmount = (price.unit_amount ?? 0) / 100;
+      const { data: previewData } = await sb.rpc("preview_cashback_usage", {
+        _user_id: user.id,
+        _cart_amount: cartAmount,
+      });
+      const maxUsable = Number(
+        (previewData as Record<string, number> | null)?.max_usable ?? 0,
+      );
+      cashbackApplied = Math.min(requestedCashback, maxUsable);
+      if (cashbackApplied > 0) {
+        const coupon = await stripe.coupons.create({
+          amount_off: Math.round(cashbackApplied * 100),
+          currency: "brl",
+          duration: "once",
+          name: `Cashback R$ ${cashbackApplied.toFixed(2).replace(".", ",")}`,
+          metadata: { user_id: user.id, kind: "cashback" },
+        });
+        discountId = coupon.id;
+        log("Cashback coupon created", { id: coupon.id, amount: cashbackApplied });
+      }
+    }
+
     // 5. Create subscription with default_incomplete → returns PI client_secret
     const subscription = await stripe.subscriptions.create({
       customer: customerId,
@@ -126,8 +155,22 @@ serve(async (req) => {
       payment_behavior: "default_incomplete",
       payment_settings: { save_default_payment_method: "on_subscription" },
       expand: ["latest_invoice.payment_intent"],
-      metadata: { user_id: user.id, cpf: billing.cpf || "" },
+      ...(discountId ? { discounts: [{ coupon: discountId }] } : {}),
+      metadata: {
+        user_id: user.id,
+        cpf: billing.cpf || "",
+        cashback_applied: String(cashbackApplied),
+      },
     });
+
+    if (cashbackApplied > 0) {
+      const consumed = await sb.rpc("consume_cashback", {
+        _user_id: user.id,
+        _requested_amount: cashbackApplied,
+        _source_reference: subscription.id,
+      });
+      log("Cashback consumed", { amount: consumed.data });
+    }
 
     const latestInvoice = subscription.latest_invoice as Stripe.Invoice & {
       payment_intent?: Stripe.PaymentIntent | string;
@@ -147,6 +190,7 @@ serve(async (req) => {
       subscriptionId: subscription.id,
       status: subscription.status,
       clientSecret,
+      cashbackApplied,
     });
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);

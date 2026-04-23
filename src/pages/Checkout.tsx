@@ -462,6 +462,7 @@ interface CheckoutFormProps {
   onReady?: (submit: () => void) => void;
   onSubmittingChange?: (submitting: boolean) => void;
   cashbackAmount?: number;
+  onCashbackRejected?: (message: string) => void;
 }
 
 function CheckoutForm({
@@ -473,6 +474,7 @@ function CheckoutForm({
   onReady,
   onSubmittingChange,
   cashbackAmount = 0,
+  onCashbackRejected,
 }: CheckoutFormProps) {
   const stripe = useStripe();
   const elements = useElements();

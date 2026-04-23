@@ -61,6 +61,7 @@ declare global {
     __checkoutHarnessMode?: CheckoutMode;
     __simulateDuplicateStripeCallback?: () => void;
     __forceRerender?: () => void;
+    __resetHarness?: () => void;
   }
 }
 

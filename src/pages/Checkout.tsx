@@ -644,7 +644,26 @@ function CheckoutForm({
       const { data, error: fnError } = await supabase.functions.invoke(fnName, { body });
       if (fnError) throw fnError;
       if (!data?.ok) {
-        setError(data?.error || "Não foi possível concluir o pagamento.");
+        const errMsg = data?.error || "Não foi possível concluir o pagamento.";
+        // Detect cashback-related rejection (insufficient balance / cap exceeded)
+        // and surface it loudly + reset the parent's cashback selection so
+        // the slider re-syncs with the actual server-side max.
+        const isCashbackError =
+          typeof errMsg === "string" &&
+          /cashback/i.test(errMsg) &&
+          (/insuficiente/i.test(errMsg) ||
+            /máximo/i.test(errMsg) ||
+            /maximo/i.test(errMsg) ||
+            /excede/i.test(errMsg));
+        if (isCashbackError) {
+          toast.error(errMsg, {
+            description:
+              "Ajustamos seu saldo de cashback. Revise o valor aplicado e tente novamente.",
+            duration: 7000,
+          });
+          onCashbackRejected?.(errMsg);
+        }
+        setError(errMsg);
         return;
       }
 

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Settings, Palette, Phone, FileText, Star, Layout, Gift, FolderOpen, Mail, Package, FileSignature, Smartphone, Heart, GraduationCap, Users, Megaphone, Target, CalendarClock } from "lucide-react";
+import { Settings, Palette, Phone, FileText, Star, Layout, Gift, FolderOpen, Mail, Package, FileSignature, Smartphone, Heart, GraduationCap, Users, Megaphone, Target, CalendarClock, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import SettingsBranding from "./settings/SettingsBranding";
@@ -17,6 +17,7 @@ import SettingsTwilio from "./settings/SettingsTwilio";
 import SettingsRetentionCoupon from "./settings/SettingsRetentionCoupon";
 import SettingsTeacherGoal from "./settings/SettingsTeacherGoal";
 import SettingsAulaParticular from "./settings/SettingsAulaParticular";
+import SettingsCashback from "./settings/SettingsCashback";
 
 const sections = [
   { id: "branding", label: "Identidade Visual", icon: Palette },
@@ -34,6 +35,7 @@ const sections = [
   { id: "trial", label: "Teste Grátis", icon: Gift },
   { id: "products", label: "Config. de Produtos", icon: Package },
   { id: "aula_particular", label: "Aula Particular", icon: CalendarClock },
+  { id: "cashback", label: "Cashback", icon: Sparkles },
   { id: "contract", label: "Contrato do Professor", icon: FileSignature },
   { id: "teacher_goal", label: "Metas do Professor", icon: Target },
   { id: "twilio", label: "Verificação Celular", icon: Smartphone },
@@ -113,6 +115,7 @@ const AdminSettingsTab = () => {
       {activeSection === "trial" && <SettingsFreeTrial />}
       {activeSection === "products" && <SettingsProductConfig />}
       {activeSection === "aula_particular" && <SettingsAulaParticular />}
+      {activeSection === "cashback" && <SettingsCashback />}
       {activeSection === "contract" && <SettingsTeacherContract />}
       {activeSection === "teacher_goal" && <SettingsTeacherGoal />}
       {activeSection === "twilio" && <SettingsTwilio />}

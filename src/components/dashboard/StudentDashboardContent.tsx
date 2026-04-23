@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { User, CreditCard, Lock, BookOpen, Info, LifeBuoy } from "lucide-react";
+import { User, CreditCard, Lock, BookOpen, Info, LifeBuoy, Sparkles } from "lucide-react";
 import PersonalDataTab from "@/components/dashboard/PersonalDataTab";
 import LoginDataTab from "@/components/dashboard/LoginDataTab";
 import StudentSubscriptionTab from "@/components/dashboard/StudentSubscriptionTab";
@@ -9,11 +9,13 @@ import StudentInstructionsTab from "@/components/dashboard/StudentInstructionsTa
 import InterestAreasTab from "@/components/dashboard/InterestAreasTab";
 import PastDueBillingAlert from "@/components/dashboard/PastDueBillingAlert";
 import SupportTicketsTab from "@/components/dashboard/SupportTicketsTab";
+import StudentCashbackTab from "@/components/dashboard/cashback/StudentCashbackTab";
 
 const tabs = [
   { id: "personal", label: "Dados Pessoais", icon: User },
   { id: "login", label: "Dados de Login", icon: Lock },
   { id: "subscription", label: "Assinatura e Compras", icon: CreditCard },
+  { id: "cashback", label: "Cashback", icon: Sparkles },
   { id: "interests", label: "Áreas de Interesse", icon: BookOpen },
   { id: "support", label: "Atendimento", icon: LifeBuoy },
   { id: "instructions", label: "Como Usar", icon: Info },
@@ -73,6 +75,7 @@ const StudentDashboardContent = () => {
         {activeTab === "personal" && <PersonalDataTab />}
         {activeTab === "login" && <LoginDataTab />}
         {activeTab === "subscription" && <StudentSubscriptionTab />}
+        {activeTab === "cashback" && <StudentCashbackTab />}
         {activeTab === "interests" && <InterestAreasTab />}
         {activeTab === "support" && <SupportTicketsTab userRole="student" />}
         {activeTab === "instructions" && <StudentInstructionsTab />}

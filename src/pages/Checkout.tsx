@@ -917,11 +917,11 @@ function CheckoutForm({
 
       <Button
         onClick={handleSubmit}
-        disabled={!stripe || submitting}
+        disabled={!stripe || submitting || redirecting}
         size="lg"
         className="w-full font-display"
       >
-        {submitting ? (
+        {submitting || redirecting ? (
           <>
             <Loader2 className="h-4 w-4 animate-spin mr-2" /> Processando pagamento...
           </>

@@ -604,6 +604,11 @@ function CheckoutForm({
 
   const handleSubmit = async () => {
     if (!stripe || !elements) return;
+    // Belt-and-braces: if we've already committed to navigating away,
+    // refuse any further submit attempts even if the button somehow
+    // received a click (e.g. a keypress queued before the disabled
+    // attribute applied).
+    if (redirecting) return;
     setError(null);
 
     const billingError = validateBilling();

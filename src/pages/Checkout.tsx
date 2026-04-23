@@ -646,6 +646,29 @@ function CheckoutForm({
         return;
       }
 
+      // Idempotent retry: server detected an existing purchase / active sub.
+      // Show a consistent success message and skip Stripe confirmation
+      // (no cashback was reapplied server-side).
+      if (data.alreadyCompleted || data.alreadyActive) {
+        toast.success(
+          data.message ||
+            (state.mode === "subscription"
+              ? "Você já possui uma assinatura ativa."
+              : "Esta aula já foi comprada anteriormente."),
+        );
+        if (state.mode === "subscription") {
+          try {
+            await refreshSubscription();
+          } catch {
+            /* ignore */
+          }
+          navigate("/dashboard?tab=subscription");
+        } else {
+          navigate(`/aula/${state.contentId}`);
+        }
+        return;
+      }
+
       const clientSecret: string | null = data.clientSecret;
 
       // 4. If a client_secret was returned, confirm 3DS / SCA on the card.
@@ -653,20 +676,38 @@ function CheckoutForm({
       // the purchase is already completed server-side.
       if (clientSecret) {
         if (state.mode === "subscription") {
-          const { error: confirmError } = await stripe.confirmCardPayment(clientSecret);
+          const { error: confirmError, paymentIntent } = await stripe.confirmCardPayment(clientSecret);
           if (confirmError) {
-            setError(confirmError.message || "Pagamento não autorizado.");
-            return;
+            // If Stripe says the PI is already succeeded (retry after a
+            // network blip), treat as success — don't reapply cashback,
+            // don't show a scary error.
+            const code = (confirmError as { code?: string }).code;
+            if (
+              code === "payment_intent_unexpected_state" &&
+              paymentIntent?.status === "succeeded"
+            ) {
+              console.info("[Checkout] Subscription payment already confirmed on retry");
+            } else {
+              setError(confirmError.message || "Pagamento não autorizado.");
+              return;
+            }
           }
         } else {
           const { error: confirmError, paymentIntent } = await stripe.confirmCardPayment(
             clientSecret
           );
           if (confirmError) {
-            setError(confirmError.message || "Pagamento não autorizado.");
-            return;
-          }
-          if (paymentIntent?.status !== "succeeded") {
+            const code = (confirmError as { code?: string }).code;
+            if (
+              code === "payment_intent_unexpected_state" &&
+              paymentIntent?.status === "succeeded"
+            ) {
+              console.info("[Checkout] Unit payment already confirmed on retry");
+            } else {
+              setError(confirmError.message || "Pagamento não autorizado.");
+              return;
+            }
+          } else if (paymentIntent?.status !== "succeeded") {
             setError("Pagamento não foi concluído. Tente novamente.");
             return;
           }

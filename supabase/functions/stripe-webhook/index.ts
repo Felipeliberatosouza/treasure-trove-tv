@@ -59,6 +59,54 @@ serve(async (req) => {
 
     logStep("Event received", { type: event.type, id: event.id });
 
+    // Helper: credit cashback for a confirmed purchase + referral bonus
+    const creditCashbackForCustomer = async (
+      customerId: string,
+      amountCents: number,
+      sourceType: string,
+      sourceReference: string,
+    ) => {
+      if (!amountCents || amountCents <= 0) return;
+      try {
+        const customer = await stripe.customers.retrieve(customerId);
+        if (customer.deleted || !("email" in customer) || !customer.email) return;
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("user_id")
+          .eq("email", customer.email)
+          .maybeSingle();
+        if (!profile) {
+          logStep("Cashback skipped - no profile", { email: customer.email });
+          return;
+        }
+        const purchaseAmount = amountCents / 100;
+        const { data: cb, error: cbErr } = await supabase.rpc(
+          "credit_cashback_purchase",
+          {
+            _user_id: profile.user_id,
+            _purchase_amount: purchaseAmount,
+            _source_type: sourceType,
+            _source_reference: sourceReference,
+          },
+        );
+        logStep("Cashback purchase credited", { tx: cb, err: cbErr?.message });
+
+        const { data: ref, error: refErr } = await supabase.rpc(
+          "credit_cashback_referral",
+          {
+            _referred_user_id: profile.user_id,
+            _purchase_amount: purchaseAmount,
+            _source_reference: sourceReference,
+          },
+        );
+        logStep("Cashback referral credited", { tx: ref, err: refErr?.message });
+      } catch (e) {
+        logStep("Cashback credit error", {
+          error: e instanceof Error ? e.message : String(e),
+        });
+      }
+    };
+
     // Handle subscription events
     if (
       event.type === "customer.subscription.deleted" ||

@@ -694,42 +694,21 @@ function CheckoutForm({
       // If cashback covered 100% of the cart, no clientSecret comes back —
       // the purchase is already completed server-side.
       if (clientSecret) {
-        if (state.mode === "subscription") {
-          const { error: confirmError, paymentIntent } = await stripe.confirmCardPayment(clientSecret);
-          if (confirmError) {
-            // If Stripe says the PI is already succeeded (retry after a
-            // network blip), treat as success — don't reapply cashback,
-            // don't show a scary error.
-            const code = (confirmError as { code?: string }).code;
-            if (
-              code === "payment_intent_unexpected_state" &&
-              paymentIntent?.status === "succeeded"
-            ) {
-              console.info("[Checkout] Subscription payment already confirmed on retry");
-            } else {
-              setError(confirmError.message || "Pagamento não autorizado.");
-              return;
-            }
-          }
-        } else {
-          const { error: confirmError, paymentIntent } = await stripe.confirmCardPayment(
-            clientSecret
+        const { error: confirmError, paymentIntent } =
+          await stripe.confirmCardPayment(clientSecret);
+        const decision = classifyStripeConfirm({
+          errorCode: (confirmError as { code?: string } | undefined)?.code,
+          errorMessage: confirmError?.message,
+          paymentIntentStatus: paymentIntent?.status,
+        });
+        if (decision.kind === "fail") {
+          setError(decision.message);
+          return;
+        }
+        if (decision.kind === "alreadySucceededOnRetry") {
+          console.info(
+            `[Checkout] ${state.mode} payment already confirmed on retry — no cashback reapplied`,
           );
-          if (confirmError) {
-            const code = (confirmError as { code?: string }).code;
-            if (
-              code === "payment_intent_unexpected_state" &&
-              paymentIntent?.status === "succeeded"
-            ) {
-              console.info("[Checkout] Unit payment already confirmed on retry");
-            } else {
-              setError(confirmError.message || "Pagamento não autorizado.");
-              return;
-            }
-          } else if (paymentIntent?.status !== "succeeded") {
-            setError("Pagamento não foi concluído. Tente novamente.");
-            return;
-          }
         }
       }
 

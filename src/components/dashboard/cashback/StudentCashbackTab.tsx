@@ -1,8 +1,8 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Sparkles, Copy, TrendingUp, Wallet, Users, Clock, ArrowUpRight, ArrowDownRight, Crown } from "lucide-react";
+import { Sparkles, Copy, TrendingUp, Wallet, Users, Clock, ArrowUpRight, ArrowDownRight, Crown, Mail, Loader2 } from "lucide-react";
 import {
   useCashbackAccount,
   useCashbackTransactions,
@@ -10,6 +10,8 @@ import {
   useCashbackConfig,
 } from "@/hooks/useCashback";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 const fmt = (n: number) =>
   n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });

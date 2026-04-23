@@ -130,11 +130,11 @@ const StudentCashbackTab = () => {
         </Card>
       </div>
 
-      <Card className="p-5 bg-gradient-to-br from-amber-500/10 to-orange-500/5 border-amber-500/20">
+      <Card className="p-5 bg-gradient-to-br from-primary/10 to-accent/5 border-primary/20">
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <Crown className="h-5 w-5 text-amber-500" />
+              <Crown className="h-5 w-5 text-primary" />
               <span className="text-xs uppercase tracking-wider text-muted-foreground">Seu nível</span>
             </div>
             <p className="text-2xl font-display font-bold">{currentTier?.name ?? "Bronze"}</p>

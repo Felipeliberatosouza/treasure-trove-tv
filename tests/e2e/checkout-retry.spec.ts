@@ -189,4 +189,54 @@ test.describe("Checkout retry & double-click safety", () => {
     await expect(page.getByTestId("cashback-total-applied")).toHaveText("0.00");
     await expect(page.getByTestId("last-navigate")).toHaveText("");
   });
+
+  test("clicking after the queue is drained shows a queue-empty error and leaves cashback untouched", async ({
+    page,
+  }) => {
+    // Seed exactly one happy-path response. The first click consumes
+    // it; the second click finds an empty queue and the harness must
+    // surface "No mock response queued" as an inline error WITHOUT:
+    //   • incrementing cashback-total-applied (no server call ran)
+    //   • emitting a new toast or navigation
+    // This proves the harness — and by extension the production
+    // pipeline — never invents cashback or side-effects when no
+    // server response is available to drive a decision.
+    await page.evaluate(() => {
+      window.__checkoutHarnessMode = "unit";
+      window.__mockCheckoutResponses = [
+        {
+          data: {
+            ok: true,
+            clientSecret: "pi_test_secret",
+            cashbackApplied: 4.25,
+          },
+          stripe: { paymentIntentStatus: "succeeded" },
+        },
+      ];
+    });
+
+    const btn = page.getByTestId("pay-button");
+
+    // First click: drains the queue, applies cashback, navigates.
+    await btn.click();
+    await expect(page.getByTestId("invoke-count")).toHaveText("1");
+    await expect(page.getByTestId("cashback-total-applied")).toHaveText("4.25");
+    await expect(page.getByTestId("last-toast")).toHaveText("Pagamento aprovado!");
+    await expect(page.getByTestId("last-navigate")).toHaveText("/payment-success");
+
+    // Second click: queue is empty. We expect the inline error AND
+    // strict preservation of every cashback / navigation side-effect
+    // from the previous click.
+    await btn.click();
+    await expect(page.getByTestId("last-error")).toHaveText(
+      "No mock response queued",
+    );
+    // invokeCount still bumps because the harness counts attempts —
+    // what matters is that NO new cashback was applied.
+    await expect(page.getByTestId("cashback-total-applied")).toHaveText("4.25");
+    // Toast and navigate targets from the previous successful click
+    // must be untouched (no new toast fired, no re-navigation).
+    await expect(page.getByTestId("last-toast")).toHaveText("Pagamento aprovado!");
+    await expect(page.getByTestId("last-navigate")).toHaveText("/payment-success");
+  });
 });

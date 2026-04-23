@@ -493,6 +493,15 @@ function CheckoutForm({
   const navigate = useNavigate();
   const { user, refreshSubscription } = useAuth();
   const [submitting, setSubmitting] = useState(false);
+  // Sticky "we're leaving" flag. Becomes true the moment we commit to
+  // navigating away (success, alreadyOwned, alreadySucceededOnRetry,
+  // payment-success polling). Stays true for the rest of this
+  // component's lifetime so the Pay button is disabled during the
+  // brief window between `setSubmitting(false)` running in the
+  // `finally` block and the route actually unmounting. Without this,
+  // the user could squeeze in an extra click while React is still
+  // flushing the navigation.
+  const [redirecting, setRedirecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [cepLoading, setCepLoading] = useState(false);
 
@@ -509,6 +518,7 @@ function CheckoutForm({
   const safeNavigate: typeof navigate = (...args) => {
     if (navigatedRef.current) return;
     navigatedRef.current = true;
+    setRedirecting(true);
     return navigate(...(args as Parameters<typeof navigate>));
   };
 
@@ -580,8 +590,11 @@ function CheckoutForm({
 
   // Mirror submitting state to parent (for mobile sticky bar button)
   useEffect(() => {
-    onSubmittingChange?.(submitting);
-  }, [submitting, onSubmittingChange]);
+    // Mirror BOTH `submitting` and the sticky `redirecting` flag so
+    // the mobile sticky-bar button stays disabled during the brief
+    // post-success window before the route unmounts.
+    onSubmittingChange?.(submitting || redirecting);
+  }, [submitting, redirecting, onSubmittingChange]);
 
   // Expose latest handleSubmit to parent via ref-callback
   const handleSubmitRef = useRef<() => void>(() => {});
@@ -591,6 +604,11 @@ function CheckoutForm({
 
   const handleSubmit = async () => {
     if (!stripe || !elements) return;
+    // Belt-and-braces: if we've already committed to navigating away,
+    // refuse any further submit attempts even if the button somehow
+    // received a click (e.g. a keypress queued before the disabled
+    // attribute applied).
+    if (redirecting) return;
     setError(null);
 
     const billingError = validateBilling();
@@ -904,11 +922,11 @@ function CheckoutForm({
 
       <Button
         onClick={handleSubmit}
-        disabled={!stripe || submitting}
+        disabled={!stripe || submitting || redirecting}
         size="lg"
         className="w-full font-display"
       >
-        {submitting ? (
+        {submitting || redirecting ? (
           <>
             <Loader2 className="h-4 w-4 animate-spin mr-2" /> Processando pagamento...
           </>

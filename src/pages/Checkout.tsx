@@ -655,40 +655,25 @@ function CheckoutForm({
 
       const { data, error: fnError } = await supabase.functions.invoke(fnName, { body });
       if (fnError) throw fnError;
-      if (!data?.ok) {
-        const errMsg = data?.error || "Não foi possível concluir o pagamento.";
-        // Detect cashback-related rejection (insufficient balance / cap exceeded)
-        // and surface it loudly + reset the parent's cashback selection so
-        // the slider re-syncs with the actual server-side max.
-        const isCashbackError =
-          typeof errMsg === "string" &&
-          /cashback/i.test(errMsg) &&
-          (/insuficiente/i.test(errMsg) ||
-            /máximo/i.test(errMsg) ||
-            /maximo/i.test(errMsg) ||
-            /excede/i.test(errMsg));
-        if (isCashbackError) {
-          toast.error(errMsg, {
+      const action = classifyCheckoutResponse(data, state.mode);
+
+      if (action.kind === "error") {
+        if (action.cashbackRejected) {
+          toast.error(action.message, {
             description:
               "Ajustamos seu saldo de cashback. Revise o valor aplicado e tente novamente.",
             duration: 7000,
           });
-          onCashbackRejected?.(errMsg);
+          onCashbackRejected?.(action.message);
         }
-        setError(errMsg);
+        setError(action.message);
         return;
       }
 
-      // Idempotent retry: server detected an existing purchase / active sub.
-      // Show a consistent success message and skip Stripe confirmation
-      // (no cashback was reapplied server-side).
-      if (data.alreadyCompleted || data.alreadyActive) {
-        toast.success(
-          data.message ||
-            (state.mode === "subscription"
-              ? "Você já possui uma assinatura ativa."
-              : "Esta aula já foi comprada anteriormente."),
-        );
+      if (action.kind === "alreadyOwned") {
+        // Idempotent retry: server detected an existing purchase / active
+        // sub. No cashback was reapplied server-side.
+        toast.success(action.message);
         if (state.mode === "subscription") {
           try {
             await refreshSubscription();
@@ -702,7 +687,8 @@ function CheckoutForm({
         return;
       }
 
-      const clientSecret: string | null = data.clientSecret;
+      const clientSecret: string | null =
+        action.kind === "needsConfirmation" ? action.clientSecret : null;
 
       // 4. If a client_secret was returned, confirm 3DS / SCA on the card.
       // If cashback covered 100% of the cart, no clientSecret comes back —

@@ -44,10 +44,12 @@ const statusVariant = (s: string): "default" | "secondary" | "destructive" | "ou
 };
 
 const StudentCashbackTab = () => {
+  const { user, profile } = useAuth();
   const { account, loading: loadingAcc } = useCashbackAccount();
   const { transactions, loading: loadingTx } = useCashbackTransactions();
   const { referrals, loading: loadingRef } = useCashbackReferrals();
   const { config, loading: loadingCfg } = useCashbackConfig();
+  const [sendingEmail, setSendingEmail] = useState(false);
 
   const currentTier = useMemo(() => {
     if (!account) return null;
@@ -74,6 +76,42 @@ const StudentCashbackTab = () => {
   const copyLink = () => {
     navigator.clipboard.writeText(referralLink);
     toast.success("Link copiado!");
+  };
+
+  const shareText = useMemo(() => {
+    if (!referralLink) return "";
+    return `Estou estudando na Revisão Fácil e curtindo demais! Use meu link e ganhe acesso aos conteúdos: ${referralLink}`;
+  }, [referralLink]);
+
+  const sendByEmail = async () => {
+    if (!user?.email || !account?.referral_code) {
+      toast.error("Não foi possível identificar seu e-mail.");
+      return;
+    }
+    setSendingEmail(true);
+    try {
+      const { error } = await supabase.functions.invoke("send-transactional-email", {
+        body: {
+          templateName: "cashback-referral-share",
+          recipientEmail: user.email,
+          idempotencyKey: `cashback-referral-share-${user.id}-${Date.now()}`,
+          templateData: {
+            name: (profile as { name?: string } | null)?.name ?? "",
+            referralCode: account.referral_code,
+            referralLink,
+            shareText,
+            referralPercent: config.referral_percent,
+          },
+        },
+      });
+      if (error) throw error;
+      toast.success("Enviamos o link de indicação para o seu e-mail!");
+    } catch (e) {
+      console.error("send referral email failed", e);
+      toast.error("Não foi possível enviar agora. Tente novamente em instantes.");
+    } finally {
+      setSendingEmail(false);
+    }
   };
 
   if (loadingAcc || loadingCfg) {

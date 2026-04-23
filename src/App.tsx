@@ -50,6 +50,9 @@ import { lazy, Suspense } from "react";
 const CheckoutRetryHarness = lazy(
   () => import("./pages/__test__/CheckoutRetryHarness.tsx"),
 );
+const ReferralEmailHarness = lazy(
+  () => import("./pages/__test__/ReferralEmailHarness.tsx"),
+);
 
 const queryClient = new QueryClient();
 
@@ -100,6 +103,16 @@ const App = () => (
                 element={
                   <Suspense fallback={<div>Loading harness…</div>}>
                     <CheckoutRetryHarness />
+                  </Suspense>
+                }
+              />
+            )}
+            {!import.meta.env.PROD && (
+              <Route
+                path="/__test/referral-email"
+                element={
+                  <Suspense fallback={<div>Loading harness…</div>}>
+                    <ReferralEmailHarness />
                   </Suspense>
                 }
               />

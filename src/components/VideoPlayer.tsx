@@ -4,6 +4,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Progress } from "@/components/ui/progress";
 import { Play, Pause, Volume2, VolumeX, Maximize, RotateCcw, Subtitles } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import ForensicWatermark from "@/components/ForensicWatermark";
+import { useContentProtection } from "@/hooks/useContentProtection";
 
 interface VideoPlayerProps {
   videoUrl: string;
@@ -33,6 +35,8 @@ const VideoPlayer = ({
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
+  // Protege a sessão enquanto o player está montado (atalhos, copy, devtools, prints).
+  useContentProtection({ context: `video:${contentType}:${contentId}` });
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -188,6 +192,10 @@ const VideoPlayer = ({
           onProgressMilestone?.(100);
         }}
         onClick={togglePlay}
+        onContextMenu={(e) => e.preventDefault()}
+        controlsList="nodownload noremoteplayback noplaybackrate"
+        disablePictureInPicture
+        disableRemotePlayback
         playsInline
         crossOrigin="anonymous"
       >
@@ -202,6 +210,9 @@ const VideoPlayer = ({
           />
         )}
       </video>
+
+      {/* Marca d'água forense — sobre o vídeo, baixa opacidade, identifica o usuário */}
+      <ForensicWatermark variant="video" />
 
       {/* Big play overlay when paused */}
       {!isPlaying && (

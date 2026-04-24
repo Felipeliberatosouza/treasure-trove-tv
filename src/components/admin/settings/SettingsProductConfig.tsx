@@ -22,6 +22,7 @@ import {
   Type,
   ListChecks,
   Hand,
+  Stamp,
 } from "lucide-react";
 import AdminResourcePricingTab from "@/components/admin/AdminResourcePricingTab";
 
@@ -156,6 +157,20 @@ const SettingsProductConfig = () => {
               </div>
               <p className="text-xs text-muted-foreground -mt-1 pl-8">
                 Quando ativado, exibe um botão de acessibilidade em Libras na página dos vídeos. O aluno pode ativá-lo e fechá-lo a qualquer momento.
+              </p>
+
+              <div className="flex items-center gap-2 pt-1">
+                <Switch
+                  checked={form.revisoes.enable_watermark}
+                  onCheckedChange={(v) => updRev("enable_watermark", v)}
+                />
+                <Label className="cursor-pointer flex items-center gap-1.5">
+                  <Stamp className="h-3.5 w-3.5 text-primary" /> Marca d'água da plataforma no vídeo
+                </Label>
+              </div>
+              <p className="text-xs text-muted-foreground -mt-1 pl-8">
+                Adiciona a logomarca e/ou o nome da plataforma como marca d'água permanente
+                no canto inferior direito de todos os vídeos processados (gravados ou enviados por upload).
               </p>
             </div>
           </div>

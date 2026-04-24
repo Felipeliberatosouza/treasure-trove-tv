@@ -1142,6 +1142,49 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
         minBullets={pc.colinhas.min_bullets}
       />
 
+      {watermarkStatus && watermarkStatus.kind !== "disabled" && (
+        <div
+          role="status"
+          aria-live="polite"
+          className={`rounded-lg border p-3 text-sm flex items-start gap-2 ${
+            watermarkStatus.kind === "logo_failed"
+              ? "border-amber-500/40 bg-amber-500/10 text-amber-900 dark:text-amber-200"
+              : "border-green-500/30 bg-green-500/5 text-green-800 dark:text-green-300"
+          }`}
+        >
+          {watermarkStatus.kind === "logo_failed" ? (
+            <>
+              <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+              <div className="space-y-1">
+                <p className="font-semibold">Marca d'água: logo não carregada</p>
+                <p className="text-xs leading-relaxed">
+                  {watermarkStatus.fellBackToText
+                    ? "Não foi possível baixar a logo configurada. O vídeo foi marcado apenas com o nome da plataforma como fallback."
+                    : "Não foi possível baixar a logo configurada e nenhum nome de plataforma está definido. O vídeo será publicado sem marca d'água."}
+                </p>
+                {watermarkStatus.kind === "logo_failed" && watermarkStatus.error && (
+                  <p className="text-[11px] opacity-70">Detalhes: {watermarkStatus.error}</p>
+                )}
+              </div>
+            </>
+          ) : (
+            <>
+              <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0" />
+              <div className="space-y-0.5">
+                <p className="font-semibold">Marca d'água aplicada</p>
+                <p className="text-xs leading-relaxed">
+                  {watermarkStatus.logoLoaded && watermarkStatus.textApplied
+                    ? "Logo + nome da plataforma aplicados com sucesso."
+                    : watermarkStatus.logoLoaded
+                    ? "Logo aplicada com sucesso."
+                    : "Nome da plataforma aplicado com sucesso."}
+                </p>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
       <div className="flex gap-3 pt-2">
         <Button type="submit" disabled={saving || !allValid} className="font-display">
           <Upload className="h-4 w-4 mr-1" />

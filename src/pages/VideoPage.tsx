@@ -28,6 +28,8 @@ import MaterialViewerModal, { type MaterialKind } from "@/components/MaterialVie
 import AdminVideoModerationPanel from "@/components/admin/AdminVideoModerationPanel";
 import { useLessonMaterials } from "@/hooks/useLessonMaterials";
 import BookLessonModal from "@/components/BookLessonModal";
+import AccessSuspendedScreen from "@/components/AccessSuspendedScreen";
+import { useActiveBlock } from "@/hooks/useActiveBlock";
 
 const DEMO_VIDEO_URL = "/demo-course.mp4";
 
@@ -74,6 +76,7 @@ const VideoPage = () => {
   const [isBookLessonOpen, setIsBookLessonOpen] = useState(false);
   const [materialModal, setMaterialModal] = useState<MaterialKind | null>(null);
   const { availability: materials } = useLessonMaterials(id || null);
+  const { block: activeBlock, loading: blockLoading } = useActiveBlock();
 
   const resolveVideoPlaybackUrl = useCallback(async (storedVideoUrl?: string | null) => {
     if (!storedVideoUrl) return undefined;
@@ -470,6 +473,23 @@ const VideoPage = () => {
         <Navbar />
         <div className="flex-1 flex items-center justify-center pt-24">
           <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary"></div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  // Acesso suspenso: bloqueia totalmente a página de aula e mostra a data
+  // de liberação automática. Tem prioridade sobre paywall, trial, etc.
+  if (!blockLoading && activeBlock) {
+    return (
+      <div className="min-h-screen bg-background text-foreground flex flex-col">
+        <Navbar />
+        <div className="flex-1 pt-24 pb-12">
+          <AccessSuspendedScreen
+            blockedUntil={activeBlock.blocked_until}
+            reason={activeBlock.reason}
+          />
         </div>
         <Footer />
       </div>

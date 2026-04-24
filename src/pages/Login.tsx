@@ -261,6 +261,29 @@ const Login = () => {
           </div>
         )}
 
+        {contentBlockUntil && (
+          <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive space-y-1">
+            <p className="font-semibold">Acesso temporariamente bloqueado</p>
+            <p>
+              Detectamos múltiplas tentativas de violação das políticas de proteção de
+              conteúdo na sua conta. O acesso será liberado automaticamente em{" "}
+              <strong>
+                {(() => {
+                  try {
+                    return new Date(contentBlockUntil).toLocaleString("pt-BR", {
+                      dateStyle: "short",
+                      timeStyle: "short",
+                    });
+                  } catch {
+                    return contentBlockUntil;
+                  }
+                })()}
+              </strong>
+              . Em caso de dúvida, entre em contato com o suporte.
+            </p>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="relative">
             <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />

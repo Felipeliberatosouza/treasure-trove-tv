@@ -1037,6 +1037,39 @@ export type Database = {
         }
         Relationships: []
       }
+      material_access_log: {
+        Row: {
+          access_day: string
+          accessed_at: string
+          id: string
+          lesson_id: string
+          material_type: string
+          teacher_id: string
+          user_id: string
+          via_subscription: boolean
+        }
+        Insert: {
+          access_day?: string
+          accessed_at?: string
+          id?: string
+          lesson_id: string
+          material_type: string
+          teacher_id: string
+          user_id: string
+          via_subscription?: boolean
+        }
+        Update: {
+          access_day?: string
+          accessed_at?: string
+          id?: string
+          lesson_id?: string
+          material_type?: string
+          teacher_id?: string
+          user_id?: string
+          via_subscription?: boolean
+        }
+        Relationships: []
+      }
       mfa_recovery_codes: {
         Row: {
           code_hash: string
@@ -1112,6 +1145,63 @@ export type Database = {
           key?: string
           updated_at?: string
           value?: Json
+        }
+        Relationships: []
+      }
+      pool_runs: {
+        Row: {
+          config_snapshot: Json | null
+          created_at: string
+          id: string
+          net_revenue: number
+          notes: string | null
+          period_end: string
+          period_start: string
+          pool_amount: number
+          ran_by: string | null
+          status: string
+          subscription_gross_revenue: number
+          taxes_amount: number
+          total_distributed: number
+          total_minutes: number
+          total_unique_accesses: number
+          updated_at: string
+        }
+        Insert: {
+          config_snapshot?: Json | null
+          created_at?: string
+          id?: string
+          net_revenue?: number
+          notes?: string | null
+          period_end: string
+          period_start: string
+          pool_amount?: number
+          ran_by?: string | null
+          status?: string
+          subscription_gross_revenue?: number
+          taxes_amount?: number
+          total_distributed?: number
+          total_minutes?: number
+          total_unique_accesses?: number
+          updated_at?: string
+        }
+        Update: {
+          config_snapshot?: Json | null
+          created_at?: string
+          id?: string
+          net_revenue?: number
+          notes?: string | null
+          period_end?: string
+          period_start?: string
+          pool_amount?: number
+          ran_by?: string | null
+          status?: string
+          subscription_gross_revenue?: number
+          taxes_amount?: number
+          total_distributed?: number
+          total_minutes?: number
+          total_unique_accesses?: number
+          updated_at?: string
         }
         Relationships: []
       }
@@ -2080,18 +2170,157 @@ export type Database = {
         }
         Relationships: []
       }
+      teacher_monthly_stats: {
+        Row: {
+          avg_rating: number | null
+          bonus_amount: number
+          commission_total: number
+          created_at: string
+          id: string
+          material_minutes_equivalent: number
+          material_unique_accesses: number
+          package_fee_total: number
+          packages_completed: number
+          period_end: string
+          period_start: string
+          pool_base_amount: number
+          pool_cap_applied: boolean
+          pool_final_amount: number
+          pool_floor_applied: boolean
+          pool_run_id: string | null
+          pool_share_pct: number
+          quality_bonus_pct: number
+          ratings_count: number
+          rf_score: number | null
+          rf_score_bonus_pct: number
+          teacher_id: string
+          total_consumption_minutes: number
+          total_gross: number
+          unit_sales_count: number
+          unit_sales_gross: number
+          updated_at: string
+          video_minutes: number
+        }
+        Insert: {
+          avg_rating?: number | null
+          bonus_amount?: number
+          commission_total?: number
+          created_at?: string
+          id?: string
+          material_minutes_equivalent?: number
+          material_unique_accesses?: number
+          package_fee_total?: number
+          packages_completed?: number
+          period_end: string
+          period_start: string
+          pool_base_amount?: number
+          pool_cap_applied?: boolean
+          pool_final_amount?: number
+          pool_floor_applied?: boolean
+          pool_run_id?: string | null
+          pool_share_pct?: number
+          quality_bonus_pct?: number
+          ratings_count?: number
+          rf_score?: number | null
+          rf_score_bonus_pct?: number
+          teacher_id: string
+          total_consumption_minutes?: number
+          total_gross?: number
+          unit_sales_count?: number
+          unit_sales_gross?: number
+          updated_at?: string
+          video_minutes?: number
+        }
+        Update: {
+          avg_rating?: number | null
+          bonus_amount?: number
+          commission_total?: number
+          created_at?: string
+          id?: string
+          material_minutes_equivalent?: number
+          material_unique_accesses?: number
+          package_fee_total?: number
+          packages_completed?: number
+          period_end?: string
+          period_start?: string
+          pool_base_amount?: number
+          pool_cap_applied?: boolean
+          pool_final_amount?: number
+          pool_floor_applied?: boolean
+          pool_run_id?: string | null
+          pool_share_pct?: number
+          quality_bonus_pct?: number
+          ratings_count?: number
+          rf_score?: number | null
+          rf_score_bonus_pct?: number
+          teacher_id?: string
+          total_consumption_minutes?: number
+          total_gross?: number
+          unit_sales_count?: number
+          unit_sales_gross?: number
+          updated_at?: string
+          video_minutes?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teacher_monthly_stats_pool_run_id_fkey"
+            columns: ["pool_run_id"]
+            isOneToOne: false
+            referencedRelation: "pool_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teacher_monthly_targets: {
+        Row: {
+          created_at: string
+          id: string
+          monthly_package_target: number
+          notes: string | null
+          teacher_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          monthly_package_target?: number
+          notes?: string | null
+          teacher_id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          monthly_package_target?: number
+          notes?: string | null
+          teacher_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       teacher_payments: {
         Row: {
           avg_rating: number | null
+          commission_amount: number
           created_at: string
           gross_amount: number
           id: string
           net_amount: number
           notes: string | null
+          package_count: number
           payment_type: string
           period_end: string
           period_start: string
           platform_fee: number
+          pool_minutes: number
+          pool_run_id: string | null
+          pool_share_pct: number
+          quality_bonus_pct: number
+          rf_score: number | null
+          rf_score_bonus_pct: number
           status: string
           teacher_id: string
           total_views: number | null
@@ -2099,15 +2328,23 @@ export type Database = {
         }
         Insert: {
           avg_rating?: number | null
+          commission_amount?: number
           created_at?: string
           gross_amount?: number
           id?: string
           net_amount?: number
           notes?: string | null
+          package_count?: number
           payment_type?: string
           period_end: string
           period_start: string
           platform_fee?: number
+          pool_minutes?: number
+          pool_run_id?: string | null
+          pool_share_pct?: number
+          quality_bonus_pct?: number
+          rf_score?: number | null
+          rf_score_bonus_pct?: number
           status?: string
           teacher_id: string
           total_views?: number | null
@@ -2115,19 +2352,101 @@ export type Database = {
         }
         Update: {
           avg_rating?: number | null
+          commission_amount?: number
           created_at?: string
           gross_amount?: number
           id?: string
           net_amount?: number
           notes?: string | null
+          package_count?: number
           payment_type?: string
           period_end?: string
           period_start?: string
           platform_fee?: number
+          pool_minutes?: number
+          pool_run_id?: string | null
+          pool_share_pct?: number
+          quality_bonus_pct?: number
+          rf_score?: number | null
+          rf_score_bonus_pct?: number
           status?: string
           teacher_id?: string
           total_views?: number | null
           updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teacher_payments_pool_run_id_fkey"
+            columns: ["pool_run_id"]
+            isOneToOne: false
+            referencedRelation: "pool_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teacher_rf_score_components: {
+        Row: {
+          agenda_days_updated: number
+          agenda_score: number
+          created_at: string
+          doubts_answered_in_time: number
+          doubts_received: number
+          doubts_score: number
+          final_score: number
+          id: string
+          insertion_actual: number
+          insertion_score: number
+          insertion_target: number
+          lessons_delivered: number
+          lessons_scheduled: number
+          lessons_score: number
+          period_end: string
+          period_start: string
+          teacher_id: string
+          updated_at: string
+          weights_snapshot: Json | null
+        }
+        Insert: {
+          agenda_days_updated?: number
+          agenda_score?: number
+          created_at?: string
+          doubts_answered_in_time?: number
+          doubts_received?: number
+          doubts_score?: number
+          final_score?: number
+          id?: string
+          insertion_actual?: number
+          insertion_score?: number
+          insertion_target?: number
+          lessons_delivered?: number
+          lessons_scheduled?: number
+          lessons_score?: number
+          period_end: string
+          period_start: string
+          teacher_id: string
+          updated_at?: string
+          weights_snapshot?: Json | null
+        }
+        Update: {
+          agenda_days_updated?: number
+          agenda_score?: number
+          created_at?: string
+          doubts_answered_in_time?: number
+          doubts_received?: number
+          doubts_score?: number
+          final_score?: number
+          id?: string
+          insertion_actual?: number
+          insertion_score?: number
+          insertion_target?: number
+          lessons_delivered?: number
+          lessons_scheduled?: number
+          lessons_score?: number
+          period_end?: string
+          period_start?: string
+          teacher_id?: string
+          updated_at?: string
+          weights_snapshot?: Json | null
         }
         Relationships: []
       }
@@ -2359,6 +2678,36 @@ export type Database = {
         }
         Relationships: []
       }
+      video_watch_log: {
+        Row: {
+          id: string
+          lesson_id: string
+          seconds_watched: number
+          teacher_id: string
+          user_id: string
+          via_subscription: boolean
+          watched_at: string
+        }
+        Insert: {
+          id?: string
+          lesson_id: string
+          seconds_watched?: number
+          teacher_id: string
+          user_id: string
+          via_subscription?: boolean
+          watched_at?: string
+        }
+        Update: {
+          id?: string
+          lesson_id?: string
+          seconds_watched?: number
+          teacher_id?: string
+          user_id?: string
+          via_subscription?: boolean
+          watched_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -2375,6 +2724,10 @@ export type Database = {
           _source_reference: string
           _user_id: string
         }
+        Returns: number
+      }
+      count_completed_packages: {
+        Args: { _end: string; _start: string; _teacher_id: string }
         Returns: number
       }
       credit_cashback_purchase: {
@@ -2406,6 +2759,10 @@ export type Database = {
       expire_old_cashback: { Args: never; Returns: number }
       generate_cashback_referral_code: { Args: never; Returns: string }
       get_cashback_config: { Args: never; Returns: Json }
+      get_teacher_monthly_target: {
+        Args: { _teacher_id: string }
+        Returns: number
+      }
       get_user_cashback_tier: { Args: { _user_id: string }; Returns: Json }
       has_role: {
         Args: {

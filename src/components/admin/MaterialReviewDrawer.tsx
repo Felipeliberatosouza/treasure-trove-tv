@@ -158,7 +158,7 @@ const MaterialReviewDrawer = ({ open, onClose, lessonId, lessonTitle, onChanged 
         .eq("lesson_id", lessonId),
       supabase
         .from("lessons")
-        .select("description, video_url, thumbnail_url")
+        .select("description, video_url, thumbnail_url, carousel_cover_url")
         .eq("id", lessonId)
         .maybeSingle(),
       supabase.from("lesson_summaries").select("content").eq("lesson_id", lessonId).maybeSingle(),

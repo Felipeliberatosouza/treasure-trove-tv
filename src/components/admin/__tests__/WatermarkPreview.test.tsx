@@ -66,25 +66,26 @@ describe("CoverWithWatermark", () => {
     // Mesmas classes utilitárias.
     expect(vInner.className).toBe(cInner.className);
 
-    // Mesmas regras inline derivadas das constantes geométricas.
-    const expected = {
-      paddingRight: `${WATERMARK_GEOMETRY.paddingCqh}cqh`,
-      paddingBottom: `${WATERMARK_GEOMETRY.paddingCqh}cqh`,
-      height: `${WATERMARK_GEOMETRY.heightCqh}cqh`,
-      gap: `${WATERMARK_GEOMETRY.gapCqw}cqw`,
-    };
-    for (const key of Object.keys(expected) as Array<keyof typeof expected>) {
-      expect(vInner.style.getPropertyValue(toCss(key))).toBe(expected[key]);
-      expect(cInner.style.getPropertyValue(toCss(key))).toBe(expected[key]);
-    }
+    // jsdom não reconhece unidades de container queries (cqh/cqw) e remove o
+    // valor de `style.*`, então comparamos via atributo `style` cru, que é o
+    // que de fato é entregue ao navegador.
+    const vStyle = vInner.getAttribute("style") || "";
+    const cStyle = cInner.getAttribute("style") || "";
+    expect(vStyle).toBe(cStyle);
+    expect(vStyle).toContain(`padding-right: ${WATERMARK_GEOMETRY.paddingCqh}cqh`);
+    expect(vStyle).toContain(`padding-bottom: ${WATERMARK_GEOMETRY.paddingCqh}cqh`);
+    expect(vStyle).toContain(`height: ${WATERMARK_GEOMETRY.heightCqh}cqh`);
+    expect(vStyle).toContain(`gap: ${WATERMARK_GEOMETRY.gapCqw}cqw`);
   });
 
   it("o texto da marca d'água usa fontSize idêntico baseado no container", () => {
     const { video, carousel } = renderPair();
     const vText = within(video).getByTestId("watermark-text");
     const cText = within(carousel).getByTestId("watermark-text");
-    expect(vText.style.fontSize).toBe(`${WATERMARK_GEOMETRY.fontSizeCqh}cqh`);
-    expect(cText.style.fontSize).toBe(vText.style.fontSize);
+    const vStyle = vText.getAttribute("style") || "";
+    const cStyle = cText.getAttribute("style") || "";
+    expect(vStyle).toBe(cStyle);
+    expect(vStyle).toContain(`font-size: ${WATERMARK_GEOMETRY.fontSizeCqh}cqh`);
   });
 
   it("não renderiza o overlay quando a marca d'água está desativada", () => {
@@ -115,7 +116,3 @@ describe("CoverWithWatermark", () => {
     ).toBeNull();
   });
 });
-
-function toCss(prop: string): string {
-  return prop.replace(/[A-Z]/g, (m) => `-${m.toLowerCase()}`);
-}

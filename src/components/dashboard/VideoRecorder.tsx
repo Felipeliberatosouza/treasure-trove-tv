@@ -12,6 +12,9 @@ interface VideoRecorderProps {
   enableSubtitles?: boolean;
   enableBlackboard?: boolean;
   enableAutoCover?: boolean;
+  enableWatermark?: boolean;
+  watermarkText?: string;
+  watermarkLogoUrl?: string;
   lessonTitle?: string;
   lessonArea?: string;
   teacherName?: string;
@@ -26,6 +29,9 @@ const VideoRecorder = ({
   enableSubtitles = false,
   enableBlackboard = false,
   enableAutoCover = false,
+  enableWatermark = false,
+  watermarkText = "",
+  watermarkLogoUrl = "",
   lessonTitle = "",
   lessonArea = "",
   teacherName = "",
@@ -52,7 +58,8 @@ const VideoRecorder = ({
   const subtitlesVttRef = useRef<string>("");
 
   const maxSeconds = maxMinutes * 60;
-  const needsProcessing = enableSubtitles || enableBlackboard || enableAutoCover;
+  const needsProcessing =
+    enableSubtitles || enableBlackboard || enableAutoCover || enableWatermark;
 
   const stopStream = useCallback(() => {
     streamRef.current?.getTracks().forEach((t) => t.stop());
@@ -213,8 +220,9 @@ const VideoRecorder = ({
         setProcessingProgress(40);
       }
 
-      // Step 2: Composite video with blackboard/intro if needed
-      const shouldComposite = enableBlackboard || enableAutoCover;
+      // Step 2: Composite video with blackboard/intro/watermark if needed
+      const hasWatermark = enableWatermark && (watermarkText.trim() || watermarkLogoUrl.trim());
+      const shouldComposite = enableBlackboard || enableAutoCover || !!hasWatermark;
 
       // Fallback: if blackboard is enabled but AI returned no impact words,
       // build a basic set from the lesson title so the chalkboard still renders.
@@ -240,7 +248,9 @@ const VideoRecorder = ({
         setProcessingStep(
           enableBlackboard
             ? "Processando vídeo com quadro negro..."
-            : "Adicionando capa de introdução..."
+            : enableAutoCover
+              ? "Adicionando capa de introdução..."
+              : "Aplicando marca d'água da plataforma...",
         );
 
         const compositedBlob = await compositeVideo(videoBlob, {
@@ -248,6 +258,8 @@ const VideoRecorder = ({
           introTitle: enableAutoCover ? lessonTitle : undefined,
           introArea: enableAutoCover ? lessonArea : undefined,
           introTeacher: enableAutoCover ? teacherName : undefined,
+          watermarkText: enableWatermark ? watermarkText || undefined : undefined,
+          watermarkLogoUrl: enableWatermark ? watermarkLogoUrl || undefined : undefined,
           onProgress: (p) => {
             setProcessingProgress(40 + Math.round(p * 0.55));
           },
@@ -479,6 +491,7 @@ const VideoRecorder = ({
               enableSubtitles && "legendas automáticas",
               enableBlackboard && "quadro negro com palavras-chave",
               enableAutoCover && "capa de introdução",
+              enableWatermark && "marca d'água da plataforma",
             ].filter(Boolean).join(", ")}
           </p>
         )}

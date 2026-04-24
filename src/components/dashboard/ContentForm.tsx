@@ -247,7 +247,11 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
   const enableSubtitles = productConfig?.revisoes?.enable_subtitles ?? false;
   const enableBlackboard = productConfig?.revisoes?.enable_blackboard ?? false;
   const enableAutoCover = productConfig?.revisoes?.enable_auto_cover ?? false;
-  const needsProcessing = enableSubtitles || enableBlackboard || enableAutoCover;
+  const enableWatermark = productConfig?.revisoes?.enable_watermark ?? false;
+  const watermarkText = (branding?.platform_name || "").trim();
+  const watermarkLogoUrl = (branding?.logo_url || "").trim();
+  const needsProcessing =
+    enableSubtitles || enableBlackboard || enableAutoCover || enableWatermark;
 
   const revisaoPricing = resourcePrices.find((r) => r.resource_type === "revisoes");
   const cfgFor = (t: string): MaterialPriceInfo | undefined => {
@@ -529,14 +533,20 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
             impactWords = funcData.impactWords || [];
           }
         }
-        if ((enableBlackboard && impactWords.length > 0) || enableAutoCover) {
-          setProcessingStep("Processando vídeo com quadro negro e capa...");
+        const willComposite =
+          (enableBlackboard && impactWords.length > 0) ||
+          enableAutoCover ||
+          (enableWatermark && (watermarkText || watermarkLogoUrl));
+        if (willComposite) {
+          setProcessingStep("Aplicando recursos visuais ao vídeo...");
           const videoBlob = new Blob([await file.arrayBuffer()], { type: file.type });
           const compositedBlob = await compositeVideo(videoBlob, {
             impactWords: enableBlackboard ? impactWords : [],
             introTitle: enableAutoCover ? title : undefined,
             introArea: enableAutoCover ? (selectedAreas[0] || "") : undefined,
             introTeacher: enableAutoCover ? teacherName : undefined,
+            watermarkText: enableWatermark ? watermarkText || undefined : undefined,
+            watermarkLogoUrl: enableWatermark ? watermarkLogoUrl || undefined : undefined,
             onProgress: () => {},
           });
           const processedFile = new File([compositedBlob], `processado-${Date.now()}.webm`, { type: compositedBlob.type });
@@ -564,7 +574,18 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
         setProcessingStep("");
       }
     },
-    [enableSubtitles, enableBlackboard, enableAutoCover, title, selectedAreas, teacherName, extractAudioBase64],
+    [
+      enableSubtitles,
+      enableBlackboard,
+      enableAutoCover,
+      enableWatermark,
+      watermarkText,
+      watermarkLogoUrl,
+      title,
+      selectedAreas,
+      teacherName,
+      extractAudioBase64,
+    ],
   );
 
   const uploadFile = async (file: File, bucket: string) => {
@@ -962,6 +983,9 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
             enableSubtitles={enableSubtitles}
             enableBlackboard={enableBlackboard}
             enableAutoCover={enableAutoCover}
+            enableWatermark={enableWatermark}
+            watermarkText={watermarkText}
+            watermarkLogoUrl={watermarkLogoUrl}
             lessonTitle={title}
             lessonArea={selectedAreas[0] || ""}
             teacherName={teacherName}

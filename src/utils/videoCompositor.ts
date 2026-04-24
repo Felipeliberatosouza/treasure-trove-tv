@@ -16,6 +16,10 @@ export interface CompositeOptions {
   introTeacher?: string;
   logoUrl?: string;
   introDurationSec?: number;
+  /** Texto da marca d'água persistente (ex: nome da plataforma). */
+  watermarkText?: string;
+  /** URL pública opcional de uma logomarca PNG/JPG para exibir junto/no lugar do texto. */
+  watermarkLogoUrl?: string;
   onProgress?: (percent: number) => void;
 }
 
@@ -34,6 +38,8 @@ export async function compositeVideo(
     introArea,
     introTeacher,
     introDurationSec = 4,
+    watermarkText,
+    watermarkLogoUrl,
     onProgress,
   } = options;
 
@@ -55,6 +61,17 @@ export async function compositeVideo(
       canvas.width = w;
       canvas.height = h;
       const ctx = canvas.getContext("2d")!;
+
+      // Pré-carregar logomarca da plataforma (se houver) para a marca d'água.
+      let watermarkImg: HTMLImageElement | null = null;
+      if (watermarkLogoUrl) {
+        try {
+          watermarkImg = await loadImage(watermarkLogoUrl);
+        } catch (err) {
+          console.warn("[Compositor] Failed to load watermark logo", err);
+          watermarkImg = null;
+        }
+      }
 
       // Set up audio from original video using Web Audio API
       const AudioCtx =
@@ -136,6 +153,11 @@ export async function compositeVideo(
 
         if (activeWords.length > 0) {
           drawBlackboard(ctx, w, h, activeWords);
+        }
+
+        // Marca d'água persistente da plataforma (logo e/ou texto).
+        if (watermarkImg || watermarkText) {
+          drawWatermark(ctx, w, h, watermarkText, watermarkImg);
         }
 
         // Report progress
@@ -320,4 +342,56 @@ function wrapText(
   lines.forEach((l, i) => {
     ctx.fillText(l, x, startY + i * lineHeight, maxWidth);
   });
+}
+
+function loadImage(url: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error(`Failed to load image: ${url}`));
+    img.src = url;
+  });
+}
+
+function drawWatermark(
+  ctx: CanvasRenderingContext2D,
+  w: number,
+  h: number,
+  text?: string,
+  logo?: HTMLImageElement | null,
+) {
+  ctx.save();
+  const padding = Math.round(Math.min(w, h) * 0.02);
+  const baseHeight = Math.max(28, Math.round(h * 0.06));
+  let cursorRight = w - padding;
+  const baselineY = h - padding;
+
+  // Texto à direita (se houver), com leve sombra para legibilidade sobre qualquer fundo.
+  if (text && text.trim()) {
+    const fontSize = Math.round(baseHeight * 0.45);
+    ctx.font = `600 ${fontSize}px sans-serif`;
+    ctx.textAlign = "right";
+    ctx.textBaseline = "alphabetic";
+    ctx.shadowColor = "rgba(0,0,0,0.6)";
+    ctx.shadowBlur = 6;
+    ctx.fillStyle = "rgba(255,255,255,0.85)";
+    ctx.fillText(text, cursorRight, baselineY);
+    cursorRight -= ctx.measureText(text).width + Math.round(padding * 0.6);
+    ctx.shadowBlur = 0;
+  }
+
+  // Logo à esquerda do texto (se houver).
+  if (logo) {
+    const logoH = baseHeight;
+    const ratio = logo.naturalWidth / Math.max(1, logo.naturalHeight);
+    const logoW = Math.round(logoH * ratio);
+    const logoX = cursorRight - logoW;
+    const logoY = baselineY - logoH + Math.round(logoH * 0.15);
+    ctx.globalAlpha = 0.9;
+    ctx.drawImage(logo, logoX, logoY, logoW, logoH);
+    ctx.globalAlpha = 1;
+  }
+
+  ctx.restore();
 }

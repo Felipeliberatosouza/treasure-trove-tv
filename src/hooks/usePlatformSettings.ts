@@ -295,6 +295,7 @@ export interface ProductConfigSettings {
     enable_blackboard: boolean;
     enable_auto_cover: boolean;
     enable_libras: boolean;
+    enable_watermark: boolean;
     title_max: number;
     description_max: number;
   };
@@ -326,6 +327,7 @@ export const DEFAULT_PRODUCT_CONFIG: ProductConfigSettings = {
     enable_blackboard: false,
     enable_auto_cover: false,
     enable_libras: false,
+    enable_watermark: true,
     title_max: 100,
     description_max: 200,
   },

@@ -30,20 +30,30 @@ export interface WatermarkPreviewConfig {
 export const WatermarkOverlay = ({ text, logoUrl }: { text: string; logoUrl: string }) => {
   if (!text && !logoUrl) return null;
   const g = WATERMARK_GEOMETRY;
+  // Custom properties expõem a geometria para o CSS e também para os testes,
+  // que podem inspecioná-las via `getAttribute("style")` (jsdom não preserva
+  // unidades de container queries em propriedades CSS conhecidas, mas mantém
+  // intactos os valores de variáveis CSS).
+  const overlayVars = {
+    "--wm-pad": `${g.paddingCqh}cqh`,
+    "--wm-h": `${g.heightCqh}cqh`,
+    "--wm-font": `${g.fontSizeCqh}cqh`,
+    "--wm-gap": `${g.gapCqw}cqw`,
+  } as React.CSSProperties;
   return (
     <div
       data-testid="watermark-overlay"
       className="pointer-events-none absolute inset-0 flex items-end justify-end bg-gradient-to-t from-black/50 via-transparent to-transparent"
-      style={{ containerType: "size" } as React.CSSProperties}
+      style={{ containerType: "size", ...overlayVars } as React.CSSProperties}
     >
       <div
         data-testid="watermark-inner"
         className="flex items-center"
         style={{
-          paddingRight: `${g.paddingCqh}cqh`,
-          paddingBottom: `${g.paddingCqh}cqh`,
-          height: `${g.heightCqh}cqh`,
-          gap: `${g.gapCqw}cqw`,
+          paddingRight: "var(--wm-pad)",
+          paddingBottom: "var(--wm-pad)",
+          height: "var(--wm-h)",
+          gap: "var(--wm-gap)",
         }}
       >
         {logoUrl && (
@@ -61,7 +71,7 @@ export const WatermarkOverlay = ({ text, logoUrl }: { text: string; logoUrl: str
           <span
             data-testid="watermark-text"
             className="font-semibold text-white whitespace-nowrap leading-none [text-shadow:_0_1px_2px_rgb(0_0_0_/_70%)]"
-            style={{ fontSize: `${g.fontSizeCqh}cqh` }}
+            style={{ fontSize: "var(--wm-font)" }}
           >
             {text}
           </span>

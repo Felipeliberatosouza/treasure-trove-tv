@@ -36,6 +36,12 @@ interface LessonInfo {
   carousel_cover_url: string | null;
 }
 
+interface WatermarkPreviewInfo {
+  enabled: boolean;
+  text: string;
+  logoUrl: string;
+}
+
 interface QuizQuestion {
   id: string;
   question: string;

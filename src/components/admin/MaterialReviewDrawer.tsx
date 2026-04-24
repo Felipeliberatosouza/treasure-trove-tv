@@ -11,6 +11,7 @@ import { CheckCircle, XCircle, FileText, ClipboardList, Trophy, StickyNote, Eye,
 import { useNavigate } from "react-router-dom";
 import SimuladoModal from "@/components/SimuladoModal";
 import ColinhaFlashcardModal from "@/components/ColinhaFlashcardModal";
+import { CoverWithWatermark } from "@/components/admin/WatermarkPreview";
 
 interface Props {
   open: boolean;
@@ -72,45 +73,6 @@ const TYPE_LABELS: Record<string, { label: string; icon: any }> = {
 };
 
 const EMPTY_PREVIEW: PreviewData = { resumo: "", simulado: [], top_questoes: [], colinhas: [] };
-
-const WatermarkOverlay = ({ text, logoUrl }: { text: string; logoUrl: string }) => {
-  if (!text && !logoUrl) return null;
-  return (
-    <div className="pointer-events-none absolute inset-x-0 bottom-0 flex items-center justify-end gap-2 p-2 bg-gradient-to-t from-black/60 to-transparent">
-      {logoUrl && (
-        <img
-          src={logoUrl}
-          alt="Logo da plataforma"
-          className="h-6 w-auto opacity-90 drop-shadow"
-          onError={(e) => { (e.currentTarget.style.display = 'none'); }}
-        />
-      )}
-      {text && (
-        <span className="text-[11px] font-semibold text-white drop-shadow [text-shadow:_0_1px_2px_rgb(0_0_0_/_70%)]">
-          {text}
-        </span>
-      )}
-    </div>
-  );
-};
-
-const CoverWithWatermark = ({
-  src,
-  alt,
-  watermark,
-}: {
-  src: string;
-  alt: string;
-  watermark: { enabled: boolean; text: string; logoUrl: string };
-}) => {
-  const showWatermark = watermark.enabled && (watermark.text || watermark.logoUrl);
-  return (
-    <a href={src} target="_blank" rel="noreferrer" className="relative block rounded-md overflow-hidden border border-border bg-muted hover:opacity-90">
-      <img src={src} alt={alt} className="w-full aspect-video object-cover" />
-      {showWatermark && <WatermarkOverlay text={watermark.text} logoUrl={watermark.logoUrl} />}
-    </a>
-  );
-};
 
 const MaterialPreview = ({ type, data }: { type: MaterialMeta["material_type"]; data: PreviewData }) => {
   if (type === "resumo") {
@@ -382,7 +344,7 @@ const MaterialReviewDrawer = ({ open, onClose, lessonId, lessonTitle, onChanged 
                       )}
                     </div>
                     {lesson?.thumbnail_url ? (
-                      <CoverWithWatermark src={lesson.thumbnail_url} alt="Capa do vídeo" watermark={watermark} />
+                      <CoverWithWatermark src={lesson.thumbnail_url} alt="Capa do vídeo" watermark={watermark} testId="cover-video" />
                     ) : (
                       <div className="aspect-video rounded-md border border-dashed border-border flex items-center justify-center text-[11px] text-muted-foreground">
                         Sem capa do vídeo
@@ -399,10 +361,10 @@ const MaterialReviewDrawer = ({ open, onClose, lessonId, lessonTitle, onChanged 
                       )}
                     </div>
                     {lesson?.carousel_cover_url ? (
-                      <CoverWithWatermark src={lesson.carousel_cover_url} alt="Capa do carrossel" watermark={watermark} />
+                      <CoverWithWatermark src={lesson.carousel_cover_url} alt="Capa do carrossel" watermark={watermark} testId="cover-carousel" />
                     ) : lesson?.thumbnail_url ? (
                       <>
-                        <CoverWithWatermark src={lesson.thumbnail_url} alt="Capa do carrossel (fallback)" watermark={watermark} />
+                        <CoverWithWatermark src={lesson.thumbnail_url} alt="Capa do carrossel (fallback)" watermark={watermark} testId="cover-carousel" />
                         <p className="text-[10px] text-muted-foreground italic">
                           Sem capa específica para o carrossel — usará a capa do vídeo (prévia acima).
                         </p>

@@ -60,32 +60,30 @@ describe("CoverWithWatermark", () => {
 
   it("o bloco interno (logo+texto) usa as mesmas regras de tamanho/padding", () => {
     const { video, carousel } = renderPair();
+    const vOverlay = within(video).getByTestId("watermark-overlay");
+    const cOverlay = within(carousel).getByTestId("watermark-overlay");
+    const vStyle = vOverlay.getAttribute("style") || "";
+    const cStyle = cOverlay.getAttribute("style") || "";
+    // Geometria publicada via custom properties — idêntica entre as capas.
+    expect(vStyle).toBe(cStyle);
+    expect(vStyle).toContain(`--wm-pad: ${WATERMARK_GEOMETRY.paddingCqh}cqh`);
+    expect(vStyle).toContain(`--wm-h: ${WATERMARK_GEOMETRY.heightCqh}cqh`);
+    expect(vStyle).toContain(`--wm-font: ${WATERMARK_GEOMETRY.fontSizeCqh}cqh`);
+    expect(vStyle).toContain(`--wm-gap: ${WATERMARK_GEOMETRY.gapCqw}cqw`);
+
+    // Bloco interno consome essas variáveis: classes e style atributo iguais.
     const vInner = within(video).getByTestId("watermark-inner");
     const cInner = within(carousel).getByTestId("watermark-inner");
-
-    // Mesmas classes utilitárias.
     expect(vInner.className).toBe(cInner.className);
-
-    // jsdom não reconhece unidades de container queries (cqh/cqw) e remove o
-    // valor de `style.*`, então comparamos via atributo `style` cru, que é o
-    // que de fato é entregue ao navegador.
-    const vStyle = vInner.getAttribute("style") || "";
-    const cStyle = cInner.getAttribute("style") || "";
-    expect(vStyle).toBe(cStyle);
-    expect(vStyle).toContain(`padding-right: ${WATERMARK_GEOMETRY.paddingCqh}cqh`);
-    expect(vStyle).toContain(`padding-bottom: ${WATERMARK_GEOMETRY.paddingCqh}cqh`);
-    expect(vStyle).toContain(`height: ${WATERMARK_GEOMETRY.heightCqh}cqh`);
-    expect(vStyle).toContain(`gap: ${WATERMARK_GEOMETRY.gapCqw}cqw`);
+    expect(vInner.getAttribute("style")).toBe(cInner.getAttribute("style"));
   });
 
   it("o texto da marca d'água usa fontSize idêntico baseado no container", () => {
     const { video, carousel } = renderPair();
     const vText = within(video).getByTestId("watermark-text");
     const cText = within(carousel).getByTestId("watermark-text");
-    const vStyle = vText.getAttribute("style") || "";
-    const cStyle = cText.getAttribute("style") || "";
-    expect(vStyle).toBe(cStyle);
-    expect(vStyle).toContain(`font-size: ${WATERMARK_GEOMETRY.fontSizeCqh}cqh`);
+    expect(vText.getAttribute("style")).toBe(cText.getAttribute("style"));
+    expect(vText.className).toBe(cText.className);
   });
 
   it("não renderiza o overlay quando a marca d'água está desativada", () => {

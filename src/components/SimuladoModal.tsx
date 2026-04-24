@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import ForensicWatermark from "@/components/ForensicWatermark";
+import { useContentProtection } from "@/hooks/useContentProtection";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,6 +24,7 @@ interface SimuladoModalProps {
 }
 
 const SimuladoModal = ({ open, onClose, lessonId, lessonTitle }: SimuladoModalProps) => {
+  useContentProtection({ context: `material:simulado:${lessonId}`, enabled: open });
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [loading, setLoading] = useState(true);
   const [answers, setAnswers] = useState<Record<string, number>>({});
@@ -67,7 +70,8 @@ const SimuladoModal = ({ open, onClose, lessonId, lessonTitle }: SimuladoModalPr
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-card">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-card relative">
+        <ForensicWatermark variant="document" cols={2} rows={5} />
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <ClipboardList className="h-5 w-5 text-primary" />

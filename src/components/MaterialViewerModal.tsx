@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { FileText, Trophy, StickyNote } from "lucide-react";
+import ForensicWatermark from "@/components/ForensicWatermark";
+import { useContentProtection } from "@/hooks/useContentProtection";
 
 export type MaterialKind = "resumo" | "top_questoes" | "colinhas";
 
@@ -18,6 +20,11 @@ const MaterialViewerModal = ({ open, onClose, lessonId, lessonTitle, kind }: Pro
   const [summary, setSummary] = useState<string>("");
   const [topQs, setTopQs] = useState<{ question: string; answer: string }[]>([]);
   const [bullets, setBullets] = useState<string[]>([]);
+  // Proteção ativa enquanto o modal estiver aberto.
+  useContentProtection({
+    context: `material:${kind}:${lessonId}`,
+    enabled: open,
+  });
 
   useEffect(() => {
     if (!open) return;
@@ -58,7 +65,9 @@ const MaterialViewerModal = ({ open, onClose, lessonId, lessonTitle, kind }: Pro
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-card">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-card relative">
+        {/* Marca d'água forense sobre o conteúdo do material */}
+        <ForensicWatermark variant="document" cols={2} rows={5} />
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Icon className="h-5 w-5 text-primary" />

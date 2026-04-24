@@ -263,6 +263,21 @@ const VideoRecorder = ({
           onProgress: (p) => {
             setProcessingProgress(40 + Math.round(p * 0.55));
           },
+          onWatermarkStatus: (status) => {
+            if (status.kind === "logo_failed") {
+              if (status.fellBackToText) {
+                toast.warning(
+                  "Não foi possível carregar a logo da plataforma. Marca d'água aplicada apenas com o nome.",
+                  { duration: 8000 },
+                );
+              } else {
+                toast.error(
+                  "Falha ao carregar a logo da plataforma. O vídeo será publicado sem marca d'água.",
+                  { duration: 8000 },
+                );
+              }
+            }
+          },
         });
 
         // If an intro cover was prepended, shift VTT timestamps so that

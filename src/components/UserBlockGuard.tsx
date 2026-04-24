@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -31,6 +31,7 @@ const formatDate = (iso: string) => {
 const UserBlockGuard = () => {
   const { user, signOut } = useAuth();
   const [block, setBlock] = useState<ActiveBlock | null>(null);
+  const expiryTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (!user) {
@@ -58,6 +59,23 @@ const UserBlockGuard = () => {
       }
       if (data) {
         setBlock(data as ActiveBlock);
+        // Agenda expiração precisa: assim que `blocked_until` passar, libera o
+        // estado local automaticamente (com pequeno colchão de 1s para clock skew).
+        if (expiryTimer.current) clearTimeout(expiryTimer.current);
+        const ms = Math.max(
+          1_000,
+          new Date(data.blocked_until).getTime() - Date.now() + 1_000
+        );
+        expiryTimer.current = setTimeout(() => {
+          if (!cancelled) setBlock(null);
+        }, ms);
+      } else {
+        // Sem bloqueio ativo — garante que qualquer estado anterior seja limpo.
+        setBlock(null);
+        if (expiryTimer.current) {
+          clearTimeout(expiryTimer.current);
+          expiryTimer.current = null;
+        }
       }
     };
 
@@ -66,6 +84,10 @@ const UserBlockGuard = () => {
     return () => {
       cancelled = true;
       clearInterval(t);
+      if (expiryTimer.current) {
+        clearTimeout(expiryTimer.current);
+        expiryTimer.current = null;
+      }
     };
   }, [user?.id]);
 

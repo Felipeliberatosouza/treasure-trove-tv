@@ -51,6 +51,7 @@ export async function compositeVideo(
     watermarkText,
     watermarkLogoUrl,
     onProgress,
+    onWatermarkStatus,
   } = options;
 
   return new Promise((resolve, reject) => {
@@ -74,13 +75,33 @@ export async function compositeVideo(
 
       // Pré-carregar logomarca da plataforma (se houver) para a marca d'água.
       let watermarkImg: HTMLImageElement | null = null;
+      let watermarkLogoError: string | null = null;
       if (watermarkLogoUrl) {
         try {
           watermarkImg = await loadImage(watermarkLogoUrl);
         } catch (err) {
           console.warn("[Compositor] Failed to load watermark logo", err);
           watermarkImg = null;
+          watermarkLogoError = err instanceof Error ? err.message : String(err);
         }
+      }
+
+      // Reporta status da marca d'água logo após tentativa de carregamento da logo.
+      const hasAnyWatermark = !!(watermarkLogoUrl || (watermarkText && watermarkText.trim()));
+      if (!hasAnyWatermark) {
+        onWatermarkStatus?.({ kind: "disabled" });
+      } else if (watermarkLogoUrl && !watermarkImg) {
+        onWatermarkStatus?.({
+          kind: "logo_failed",
+          fellBackToText: !!(watermarkText && watermarkText.trim()),
+          error: watermarkLogoError ?? undefined,
+        });
+      } else {
+        onWatermarkStatus?.({
+          kind: "applied",
+          logoLoaded: !!watermarkImg,
+          textApplied: !!(watermarkText && watermarkText.trim()),
+        });
       }
 
       // Set up audio from original video using Web Audio API

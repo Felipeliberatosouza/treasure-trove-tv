@@ -18,6 +18,7 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [deactivatedMsg, setDeactivatedMsg] = useState(false);
   const [blockedMsg, setBlockedMsg] = useState(false);
+  const [contentBlockUntil, setContentBlockUntil] = useState<string | null>(null);
   const [showMfaChallenge, setShowMfaChallenge] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -30,6 +31,7 @@ const Login = () => {
     setLoading(true);
     setDeactivatedMsg(false);
     setBlockedMsg(false);
+    setContentBlockUntil(null);
 
     // Check if login is blocked (brute-force protection)
     try {
@@ -99,6 +101,36 @@ const Login = () => {
       if (profile && profile.active === false) {
         await supabase.auth.signOut();
         setDeactivatedMsg(true);
+        setLoading(false);
+        return;
+      }
+
+      // Check if user has an active temporary block from content protection.
+      const { data: activeBlock } = await supabase
+        .from("user_blocks")
+        .select("blocked_until, reason")
+        .eq("user_id", signInData.user.id)
+        .is("unblocked_at", null)
+        .gt("blocked_until", new Date().toISOString())
+        .order("blocked_until", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (activeBlock) {
+        await supabase.auth.signOut();
+        try {
+          await supabase.from("audit_logs").insert([{
+            user_id: signInData.user.id,
+            action: "security.login_blocked_active_suspension",
+            metadata: {
+              blocked_until: activeBlock.blocked_until,
+              reason: activeBlock.reason,
+            },
+          }] as any);
+        } catch {
+          // Non-critical
+        }
+        setContentBlockUntil(activeBlock.blocked_until);
         setLoading(false);
         return;
       }
@@ -226,6 +258,29 @@ const Login = () => {
           <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive space-y-1">
             <p className="font-semibold">Conta desativada</p>
             <p>Sua conta foi desativada pelo administrador. Para mais informações ou reativação, entre em contato com o suporte pelo e-mail ou WhatsApp disponíveis na página de contato.</p>
+          </div>
+        )}
+
+        {contentBlockUntil && (
+          <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive space-y-1">
+            <p className="font-semibold">Acesso temporariamente bloqueado</p>
+            <p>
+              Detectamos múltiplas tentativas de violação das políticas de proteção de
+              conteúdo na sua conta. O acesso será liberado automaticamente em{" "}
+              <strong>
+                {(() => {
+                  try {
+                    return new Date(contentBlockUntil).toLocaleString("pt-BR", {
+                      dateStyle: "short",
+                      timeStyle: "short",
+                    });
+                  } catch {
+                    return contentBlockUntil;
+                  }
+                })()}
+              </strong>
+              . Em caso de dúvida, entre em contato com o suporte.
+            </p>
           </div>
         )}
 

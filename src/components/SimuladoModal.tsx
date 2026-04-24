@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import ForensicWatermark from "@/components/ForensicWatermark";
+import { useContentProtection } from "@/hooks/useContentProtection";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,6 +24,7 @@ interface SimuladoModalProps {
 }
 
 const SimuladoModal = ({ open, onClose, lessonId, lessonTitle }: SimuladoModalProps) => {
+  useContentProtection({ context: `material:simulado:${lessonId}`, enabled: open });
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [loading, setLoading] = useState(true);
   const [answers, setAnswers] = useState<Record<string, number>>({});

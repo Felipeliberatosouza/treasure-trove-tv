@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import ForensicWatermark from "@/components/ForensicWatermark";
+import { useContentProtection } from "@/hooks/useContentProtection";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,6 +16,7 @@ interface Props {
 }
 
 const ColinhaFlashcardModal = ({ open, onClose, lessonId, lessonTitle }: Props) => {
+  useContentProtection({ context: `material:colinhas:${lessonId}`, enabled: open });
   const [bullets, setBullets] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [mode, setMode] = useState<"flashcard" | "list">("flashcard");

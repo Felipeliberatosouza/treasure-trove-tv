@@ -1039,7 +1039,6 @@ export type Database = {
       }
       material_access_log: {
         Row: {
-          access_day: string
           accessed_at: string
           id: string
           lesson_id: string
@@ -1049,7 +1048,6 @@ export type Database = {
           via_subscription: boolean
         }
         Insert: {
-          access_day?: string
           accessed_at?: string
           id?: string
           lesson_id: string
@@ -1059,7 +1057,6 @@ export type Database = {
           via_subscription?: boolean
         }
         Update: {
-          access_day?: string
           accessed_at?: string
           id?: string
           lesson_id?: string

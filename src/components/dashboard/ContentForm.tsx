@@ -77,6 +77,7 @@ const vttToPlainText = (vtt: string): string => {
 const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) => {
   const { user } = useAuth();
   const { data: productConfig } = usePlatformSettings("product_config");
+  const { data: branding } = usePlatformSettings("branding");
   const pc = {
     revisoes: { ...DEFAULT_PRODUCT_CONFIG.revisoes, ...(productConfig?.revisoes || {}) },
     resumos: { ...DEFAULT_PRODUCT_CONFIG.resumos, ...(productConfig?.resumos || {}) },

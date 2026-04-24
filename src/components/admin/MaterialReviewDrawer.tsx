@@ -154,10 +154,11 @@ const MaterialReviewDrawer = ({ open, onClose, lessonId, lessonTitle, onChanged 
   const [rejecting, setRejecting] = useState<MaterialMeta | null>(null);
   const [reason, setReason] = useState("");
   const [testingMaterial, setTestingMaterial] = useState<"simulado" | "colinhas" | null>(null);
+  const [watermark, setWatermark] = useState<WatermarkPreviewInfo>({ enabled: true, text: "", logoUrl: "" });
 
   const load = async () => {
     setLoading(true);
-    const [metaRes, lessonRes, sumRes, quizRes, topRes, cheatRes] = await Promise.all([
+    const [metaRes, lessonRes, sumRes, quizRes, topRes, cheatRes, settingsRes] = await Promise.all([
       supabase
         .from("lesson_material_meta")
         .select("id, material_type, offered, admin_approved, submitted_for_review, rejection_reason")
@@ -183,6 +184,10 @@ const MaterialReviewDrawer = ({ open, onClose, lessonId, lessonTitle, onChanged 
         .select("text, position")
         .eq("lesson_id", lessonId)
         .order("position", { ascending: true }),
+      supabase
+        .from("platform_settings")
+        .select("key, value")
+        .in("key", ["product_config", "branding"]),
     ]);
 
     setMetas((metaRes.data || []) as MaterialMeta[]);
@@ -199,6 +204,16 @@ const MaterialReviewDrawer = ({ open, onClose, lessonId, lessonTitle, onChanged 
       top_questoes: (topRes.data || []) as TopQuestion[],
       colinhas: (cheatRes.data || []).map((d: any) => d.text),
     });
+
+    const settingsRows = (settingsRes.data || []) as Array<{ key: string; value: any }>;
+    const productCfg = settingsRows.find((r) => r.key === "product_config")?.value || {};
+    const branding = settingsRows.find((r) => r.key === "branding")?.value || {};
+    setWatermark({
+      enabled: productCfg?.enable_watermark !== false,
+      text: branding?.platform_name || "",
+      logoUrl: branding?.logo_url || "",
+    });
+
     setLoading(false);
   };
 

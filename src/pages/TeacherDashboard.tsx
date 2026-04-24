@@ -14,6 +14,7 @@ import TeacherContractTab from "@/components/dashboard/TeacherContractTab";
 import StudentDashboardContent from "@/components/dashboard/StudentDashboardContent";
 import SalesBoostTab from "@/components/teacher/SalesBoostTab";
 import TeacherStatementTab from "@/components/dashboard/TeacherStatementTab";
+import TeacherCompensationTab from "@/components/dashboard/TeacherCompensationTab";
 import TeacherAgendaTab from "@/components/dashboard/TeacherAgendaTab";
 import SupportTicketsTab from "@/components/dashboard/SupportTicketsTab";
 import { Button } from "@/components/ui/button";
@@ -26,6 +27,7 @@ const teacherTabs = [
   { id: "login", label: "Dados de Login", icon: Lock },
   { id: "sales-boost", label: "Aumentar Minhas Vendas", icon: Megaphone },
   { id: "sales", label: "Meu Extrato", icon: DollarSign },
+  { id: "compensation", label: "Minha Remuneração", icon: DollarSign },
   { id: "contract", label: "Meu Contrato", icon: FileSignature },
   { id: "agenda", label: "Minha Agenda - Aula Particular", icon: CalendarDays },
   { id: "support", label: "Atendimento", icon: LifeBuoy },

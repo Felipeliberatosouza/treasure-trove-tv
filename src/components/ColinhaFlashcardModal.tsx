@@ -63,7 +63,8 @@ const ColinhaFlashcardModal = ({ open, onClose, lessonId, lessonTitle }: Props) 
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-card">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-card relative">
+        <ForensicWatermark variant="document" cols={2} rows={5} />
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <StickyNote className="h-5 w-5 text-primary" />

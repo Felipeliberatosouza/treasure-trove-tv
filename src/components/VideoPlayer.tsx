@@ -47,6 +47,24 @@ const VideoPlayer = ({
   const [subtitlesEnabled, setSubtitlesEnabled] = useState(true);
   const hideControlsTimer = useRef<ReturnType<typeof setTimeout>>();
   const lastSavedPercentage = useRef(0);
+  // Acumulador de segundos assistidos para o Pool de remuneração
+  const watchAccumulatorSec = useRef(0);
+  const lastTimestampRef = useRef<number | null>(null);
+
+  const flushWatchSeconds = useCallback(async () => {
+    if (!user) return;
+    const seconds = Math.floor(watchAccumulatorSec.current);
+    if (seconds <= 0) return;
+    watchAccumulatorSec.current = 0;
+    if (contentType !== "lesson") return;
+    try {
+      await supabase.functions.invoke("log-video-watch", {
+        body: { lesson_id: contentId, seconds_watched: seconds },
+      });
+    } catch {
+      // silencioso: não interrompe player
+    }
+  }, [user, contentType, contentId]);
 
   const saveProgress = useCallback(
     async (pct: number) => {
@@ -78,8 +96,15 @@ const VideoPlayer = ({
       if (maxPercentage > lastSavedPercentage.current) {
         saveProgress(maxPercentage);
       }
+      flushWatchSeconds();
     };
-  }, [maxPercentage, saveProgress]);
+  }, [maxPercentage, saveProgress, flushWatchSeconds]);
+
+  // Flush periódico a cada 30s
+  useEffect(() => {
+    const id = setInterval(() => { flushWatchSeconds(); }, 30000);
+    return () => clearInterval(id);
+  }, [flushWatchSeconds]);
 
   // Manage subtitle track visibility
   useEffect(() => {
@@ -95,6 +120,14 @@ const VideoPlayer = ({
     const video = videoRef.current;
     if (!video || !video.duration) return;
     const pct = (video.currentTime / video.duration) * 100;
+    // Acumula segundos reais assistidos (delta seguro entre 0 e 2s para evitar saltos por seek)
+    if (lastTimestampRef.current !== null && !video.paused) {
+      const delta = video.currentTime - lastTimestampRef.current;
+      if (delta > 0 && delta < 2) {
+        watchAccumulatorSec.current += delta;
+      }
+    }
+    lastTimestampRef.current = video.currentTime;
     setCurrentTime(video.currentTime);
     setPercentage(pct);
 

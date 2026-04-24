@@ -155,6 +155,11 @@ export async function compositeVideo(
           drawBlackboard(ctx, w, h, activeWords);
         }
 
+        // Marca d'água persistente da plataforma (logo e/ou texto).
+        if (watermarkImg || watermarkText) {
+          drawWatermark(ctx, w, h, watermarkText, watermarkImg);
+        }
+
         // Report progress
         const elapsed = introOffset + currentTime;
         onProgress?.(Math.min(99, Math.round((elapsed / totalDuration) * 100)));

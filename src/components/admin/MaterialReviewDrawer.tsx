@@ -73,27 +73,61 @@ const TYPE_LABELS: Record<string, { label: string; icon: any }> = {
 
 const EMPTY_PREVIEW: PreviewData = { resumo: "", simulado: [], top_questoes: [], colinhas: [] };
 
+/**
+ * Overlay da marca d'água renderizado sobre uma "tela" de proporção fixa (16:9),
+ * usando unidades relativas ao container (cqw/cqh) para garantir que a posição
+ * e o tamanho sejam idênticos independentemente da resolução da imagem de origem.
+ * Espelha o cálculo aplicado no compositor de vídeo (drawWatermark): canto
+ * inferior direito, padding ≈ 2% do menor lado, altura base ≈ 6% da altura.
+ */
 const WatermarkOverlay = ({ text, logoUrl }: { text: string; logoUrl: string }) => {
   if (!text && !logoUrl) return null;
   return (
-    <div className="pointer-events-none absolute inset-x-0 bottom-0 flex items-center justify-end gap-2 p-2 bg-gradient-to-t from-black/60 to-transparent">
-      {logoUrl && (
-        <img
-          src={logoUrl}
-          alt="Logo da plataforma"
-          className="h-6 w-auto opacity-90 drop-shadow"
-          onError={(e) => { (e.currentTarget.style.display = 'none'); }}
-        />
-      )}
-      {text && (
-        <span className="text-[11px] font-semibold text-white drop-shadow [text-shadow:_0_1px_2px_rgb(0_0_0_/_70%)]">
-          {text}
-        </span>
-      )}
+    <div
+      data-testid="watermark-overlay"
+      className="pointer-events-none absolute inset-0 flex items-end justify-end bg-gradient-to-t from-black/50 via-transparent to-transparent"
+      style={{ containerType: "size" } as React.CSSProperties}
+    >
+      <div
+        className="flex items-center gap-[1.2cqw]"
+        style={{
+          // Padding ≈ 2% do menor lado (em 16:9, cqh é o menor → 2cqh).
+          paddingRight: "2cqh",
+          paddingBottom: "2cqh",
+          // Altura base ≈ 6% da altura do container.
+          height: "6cqh",
+        }}
+      >
+        {logoUrl && (
+          <img
+            src={logoUrl}
+            alt="Logo da plataforma"
+            data-testid="watermark-logo"
+            className="h-full w-auto opacity-90 drop-shadow object-contain"
+            onError={(e) => { (e.currentTarget.style.display = 'none'); }}
+          />
+        )}
+        {text && (
+          <span
+            data-testid="watermark-text"
+            className="font-semibold text-white whitespace-nowrap leading-none [text-shadow:_0_1px_2px_rgb(0_0_0_/_70%)]"
+            style={{ fontSize: "2.7cqh" }}
+          >
+            {text}
+          </span>
+        )}
+      </div>
     </div>
   );
 };
 
+/**
+ * Wrapper de capa com overlay padronizado. A imagem é exibida em um quadro
+ * 16:9 fixo com object-cover, garantindo que o overlay (também 16:9) ocupe
+ * exatamente a mesma região visual em todas as capas, mesmo quando a imagem
+ * original tem proporção diferente. Isso evita que capas verticais ou
+ * quadradas produzam marca d'água em posição/tamanho inconsistente.
+ */
 const CoverWithWatermark = ({
   src,
   alt,
@@ -105,8 +139,14 @@ const CoverWithWatermark = ({
 }) => {
   const showWatermark = watermark.enabled && (watermark.text || watermark.logoUrl);
   return (
-    <a href={src} target="_blank" rel="noreferrer" className="relative block rounded-md overflow-hidden border border-border bg-muted hover:opacity-90">
-      <img src={src} alt={alt} className="w-full aspect-video object-cover" />
+    <a
+      href={src}
+      target="_blank"
+      rel="noreferrer"
+      data-testid="cover-with-watermark"
+      className="relative block rounded-md overflow-hidden border border-border bg-muted hover:opacity-90 aspect-video w-full"
+    >
+      <img src={src} alt={alt} className="absolute inset-0 h-full w-full object-cover" />
       {showWatermark && <WatermarkOverlay text={watermark.text} logoUrl={watermark.logoUrl} />}
     </a>
   );

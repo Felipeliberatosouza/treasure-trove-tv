@@ -12,7 +12,7 @@ import { toast } from "sonner";
 import AreaSelector from "@/components/AreaSelector";
 import VideoRecorder from "./VideoRecorder";
 import { usePlatformSettings, DEFAULT_PRODUCT_CONFIG } from "@/hooks/usePlatformSettings";
-import { compositeVideo, type ImpactWord } from "@/utils/videoCompositor";
+import { compositeVideo, type ImpactWord, type WatermarkStatus } from "@/utils/videoCompositor";
 import { shiftVtt } from "@/utils/vttSync";
 import { generateDefaultCover } from "@/utils/coverGenerator";
 import {
@@ -124,6 +124,7 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
   const [teacherName, setTeacherName] = useState("");
   const [processingUpload, setProcessingUpload] = useState(false);
   const [processingStep, setProcessingStep] = useState("");
+  const [watermarkStatus, setWatermarkStatus] = useState<WatermarkStatus | null>(null);
   const [resourcePrices, setResourcePrices] = useState<ResourcePriceInfo[]>([]);
   const [aiGenerating, setAiGenerating] = useState<null | "simulado" | "top_questoes" | "colinha">(null);
   const [regeneratingDescription, setRegeneratingDescription] = useState(false);

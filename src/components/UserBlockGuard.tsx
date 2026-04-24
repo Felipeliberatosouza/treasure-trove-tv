@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { ShieldAlert } from "lucide-react";
+import { useLocation } from "react-router-dom";
 
 /**
  * Guard global que detecta se o usuário autenticado está sob bloqueio ativo
@@ -30,6 +31,11 @@ const formatDate = (iso: string) => {
 
 const UserBlockGuard = () => {
   const { user, signOut } = useAuth();
+  const location = useLocation();
+  // Em rotas de aula (`/aula/:id`), a própria VideoPage renderiza um screen
+  // dedicado de "Acesso Suspenso" — evitamos modal + signOut aqui para que o
+  // usuário possa visualizar a data/hora de desbloqueio sem perder a sessão.
+  const isLessonRoute = location.pathname.startsWith("/aula/");
   const [block, setBlock] = useState<ActiveBlock | null>(null);
   const expiryTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -94,12 +100,12 @@ const UserBlockGuard = () => {
   // Sai imediatamente ao detectar bloqueio: o modal continua visível porque
   // mantemos o estado local até o usuário confirmar.
   useEffect(() => {
-    if (block) {
+    if (block && !isLessonRoute) {
       void signOut();
     }
-  }, [block, signOut]);
+  }, [block, signOut, isLessonRoute]);
 
-  if (!block) return null;
+  if (!block || isLessonRoute) return null;
 
   return (
     <AlertDialog open>

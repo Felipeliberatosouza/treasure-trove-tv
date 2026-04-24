@@ -18,6 +18,7 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [deactivatedMsg, setDeactivatedMsg] = useState(false);
   const [blockedMsg, setBlockedMsg] = useState(false);
+  const [contentBlockUntil, setContentBlockUntil] = useState<string | null>(null);
   const [showMfaChallenge, setShowMfaChallenge] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -30,6 +31,7 @@ const Login = () => {
     setLoading(true);
     setDeactivatedMsg(false);
     setBlockedMsg(false);
+    setContentBlockUntil(null);
 
     // Check if login is blocked (brute-force protection)
     try {
@@ -99,6 +101,36 @@ const Login = () => {
       if (profile && profile.active === false) {
         await supabase.auth.signOut();
         setDeactivatedMsg(true);
+        setLoading(false);
+        return;
+      }
+
+      // Check if user has an active temporary block from content protection.
+      const { data: activeBlock } = await supabase
+        .from("user_blocks")
+        .select("blocked_until, reason")
+        .eq("user_id", signInData.user.id)
+        .is("unblocked_at", null)
+        .gt("blocked_until", new Date().toISOString())
+        .order("blocked_until", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (activeBlock) {
+        await supabase.auth.signOut();
+        try {
+          await supabase.from("audit_logs").insert([{
+            user_id: signInData.user.id,
+            action: "security.login_blocked_active_suspension",
+            metadata: {
+              blocked_until: activeBlock.blocked_until,
+              reason: activeBlock.reason,
+            },
+          }] as any);
+        } catch {
+          // Non-critical
+        }
+        setContentBlockUntil(activeBlock.blocked_until);
         setLoading(false);
         return;
       }

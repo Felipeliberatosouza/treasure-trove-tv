@@ -21,7 +21,17 @@ export interface CompositeOptions {
   /** URL pública opcional de uma logomarca PNG/JPG para exibir junto/no lugar do texto. */
   watermarkLogoUrl?: string;
   onProgress?: (percent: number) => void;
+  /**
+   * Reporta o status final da marca d'água após a tentativa de carregamento da logo.
+   * Útil para exibir alertas/fallbacks quando a logo não pôde ser baixada.
+   */
+  onWatermarkStatus?: (status: WatermarkStatus) => void;
 }
+
+export type WatermarkStatus =
+  | { kind: "disabled" }
+  | { kind: "applied"; logoLoaded: boolean; textApplied: boolean }
+  | { kind: "logo_failed"; fellBackToText: boolean; error?: string };
 
 /**
  * Composites a video blob with blackboard overlay and optional intro.

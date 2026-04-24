@@ -33,6 +33,7 @@ interface LessonInfo {
   description: string | null;
   video_url: string | null;
   thumbnail_url: string | null;
+  carousel_cover_url: string | null;
 }
 
 interface QuizQuestion {

@@ -9,6 +9,7 @@ import Navbar from "@/components/Navbar";
 import AdminOverviewTab from "@/components/admin/AdminOverviewTab";
 import AdminContentTab from "@/components/admin/AdminContentTab";
 import AdminPaymentsTab from "@/components/admin/AdminPaymentsTab";
+import AdminCompensationConfigTab from "@/components/admin/AdminCompensationConfigTab";
 import AdminSettingsTab from "@/components/admin/AdminSettingsTab";
 import AdminDoubtsTab from "@/components/admin/AdminDoubtsTab";
 import AdminEmailsTab from "@/components/admin/AdminEmailsTab";
@@ -46,6 +47,7 @@ const tabs = [
   { id: "content", label: "Aprovação de Conteúdos", icon: Video, hidden: true },
   { id: "doubts", label: "Aprovação de Dúvidas", icon: HelpCircle, hidden: true },
   { id: "payments", label: "Pagamento de Professores", icon: DollarSign, hidden: true },
+  { id: "compensation", label: "Remuneração de Professores", icon: DollarSign, hidden: true },
   { id: "subscriptions", label: "Vencimento de Assinaturas", icon: CalendarClock, hidden: true },
   { id: "emails", label: "Monitoramento de E-mails", icon: Mail, hidden: true },
   { id: "sales-posts", label: "Posts de Divulgação", icon: Megaphone, hidden: true },
@@ -111,6 +113,7 @@ const AdminDashboard = () => {
             {activeTab === "content" && <AdminContentTab />}
             {activeTab === "doubts" && <AdminDoubtsTab />}
             {activeTab === "payments" && <AdminPaymentsTab />}
+            {activeTab === "compensation" && <AdminCompensationConfigTab />}
             {activeTab === "subscriptions" && <AdminSubscriptionsTab />}
             {activeTab === "emails" && <AdminEmailsTab />}
             {activeTab === "sales-posts" && <AdminSalesPostsTab />}

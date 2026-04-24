@@ -540,6 +540,7 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
           (enableWatermark && (watermarkText || watermarkLogoUrl));
         if (willComposite) {
           setProcessingStep("Aplicando recursos visuais ao vídeo...");
+          setWatermarkStatus(null);
           const videoBlob = new Blob([await file.arrayBuffer()], { type: file.type });
           const compositedBlob = await compositeVideo(videoBlob, {
             impactWords: enableBlackboard ? impactWords : [],
@@ -549,6 +550,22 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
             watermarkText: enableWatermark ? watermarkText || undefined : undefined,
             watermarkLogoUrl: enableWatermark ? watermarkLogoUrl || undefined : undefined,
             onProgress: () => {},
+            onWatermarkStatus: (status) => {
+              setWatermarkStatus(status);
+              if (status.kind === "logo_failed") {
+                if (status.fellBackToText) {
+                  toast.warning(
+                    "Não foi possível carregar a logo da plataforma. A marca d'água será aplicada apenas com o nome da plataforma.",
+                    { duration: 8000 },
+                  );
+                } else {
+                  toast.error(
+                    "Falha ao carregar a logo da plataforma. O vídeo será publicado sem marca d'água.",
+                    { duration: 8000 },
+                  );
+                }
+              }
+            },
           });
           const processedFile = new File([compositedBlob], `processado-${Date.now()}.webm`, { type: compositedBlob.type });
           // Shift VTT timestamps to account for the prepended intro cover

@@ -2203,6 +2203,45 @@ export type Database = {
         }
         Relationships: []
       }
+      user_blocks: {
+        Row: {
+          blocked_at: string
+          blocked_until: string
+          context: string | null
+          created_at: string
+          id: string
+          metadata: Json
+          reason: string
+          unblocked_at: string | null
+          unblocked_by: string | null
+          user_id: string
+        }
+        Insert: {
+          blocked_at?: string
+          blocked_until: string
+          context?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json
+          reason: string
+          unblocked_at?: string | null
+          unblocked_by?: string | null
+          user_id: string
+        }
+        Update: {
+          blocked_at?: string
+          blocked_until?: string
+          context?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json
+          reason?: string
+          unblocked_at?: string | null
+          unblocked_by?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -2385,6 +2424,7 @@ export type Database = {
       }
       is_login_blocked: { Args: { check_email: string }; Returns: boolean }
       is_teacher: { Args: { _user_id: string }; Returns: boolean }
+      is_user_blocked: { Args: { _user_id: string }; Returns: boolean }
       move_to_dlq: {
         Args: {
           dlq_name: string

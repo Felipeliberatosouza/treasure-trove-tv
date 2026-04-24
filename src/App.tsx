@@ -41,6 +41,7 @@ import Checkout from "./pages/Checkout.tsx";
 import PreviewPlanChange from "./pages/PreviewPlanChange.tsx";
 import DynamicBranding from "./components/DynamicBranding.tsx";
 import InactivityGuard from "./components/InactivityGuard.tsx";
+import UserBlockGuard from "./components/UserBlockGuard.tsx";
 import GlobalRedirectOverlay from "./components/GlobalRedirectOverlay.tsx";
 import OnboardingGuard from "./components/OnboardingGuard.tsx";
 import ScrollToTop from "./components/ScrollToTop.tsx";
@@ -125,6 +126,7 @@ const App = () => (
           <InactivityGuard />
           <GlobalRedirectOverlay />
           <OnboardingGuard />
+          <UserBlockGuard />
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

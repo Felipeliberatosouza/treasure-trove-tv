@@ -16,6 +16,10 @@ export interface CompositeOptions {
   introTeacher?: string;
   logoUrl?: string;
   introDurationSec?: number;
+  /** Texto da marca d'água persistente (ex: nome da plataforma). */
+  watermarkText?: string;
+  /** URL pública opcional de uma logomarca PNG/JPG para exibir junto/no lugar do texto. */
+  watermarkLogoUrl?: string;
   onProgress?: (percent: number) => void;
 }
 
@@ -34,6 +38,8 @@ export async function compositeVideo(
     introArea,
     introTeacher,
     introDurationSec = 4,
+    watermarkText,
+    watermarkLogoUrl,
     onProgress,
   } = options;
 
@@ -55,6 +61,17 @@ export async function compositeVideo(
       canvas.width = w;
       canvas.height = h;
       const ctx = canvas.getContext("2d")!;
+
+      // Pré-carregar logomarca da plataforma (se houver) para a marca d'água.
+      let watermarkImg: HTMLImageElement | null = null;
+      if (watermarkLogoUrl) {
+        try {
+          watermarkImg = await loadImage(watermarkLogoUrl);
+        } catch (err) {
+          console.warn("[Compositor] Failed to load watermark logo", err);
+          watermarkImg = null;
+        }
+      }
 
       // Set up audio from original video using Web Audio API
       const AudioCtx =

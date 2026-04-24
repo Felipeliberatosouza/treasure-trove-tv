@@ -362,9 +362,16 @@ const MaterialReviewDrawer = ({ open, onClose, lessonId, lessonTitle, onChanged 
                     </div>
                   )}
                 </div>
-                {/* Capas para revisão */}
+                {/* Capas para revisão (com prévia idêntica da marca d'água) */}
                 <div className="rounded-lg border border-border bg-card p-3 space-y-3">
-                  <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Capas para aprovação</p>
+                  <div className="flex items-center justify-between">
+                    <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Capas para aprovação</p>
+                    {watermark.enabled && (watermark.text || watermark.logoUrl) ? (
+                      <Badge variant="outline" className="border-green-500/30 text-green-600 dark:text-green-400 text-[10px]">Marca d'água ativa</Badge>
+                    ) : (
+                      <Badge variant="outline" className="text-muted-foreground text-[10px]">Sem marca d'água</Badge>
+                    )}
+                  </div>
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <p className="text-xs font-semibold text-foreground">Capa do vídeo (thumbnail)</p>
@@ -375,9 +382,7 @@ const MaterialReviewDrawer = ({ open, onClose, lessonId, lessonTitle, onChanged 
                       )}
                     </div>
                     {lesson?.thumbnail_url ? (
-                      <a href={lesson.thumbnail_url} target="_blank" rel="noreferrer" className="block rounded-md overflow-hidden border border-border bg-muted hover:opacity-90">
-                        <img src={lesson.thumbnail_url} alt="Capa do vídeo" className="w-full aspect-video object-cover" />
-                      </a>
+                      <CoverWithWatermark src={lesson.thumbnail_url} alt="Capa do vídeo" watermark={watermark} />
                     ) : (
                       <div className="aspect-video rounded-md border border-dashed border-border flex items-center justify-center text-[11px] text-muted-foreground">
                         Sem capa do vídeo
@@ -394,58 +399,24 @@ const MaterialReviewDrawer = ({ open, onClose, lessonId, lessonTitle, onChanged 
                       )}
                     </div>
                     {lesson?.carousel_cover_url ? (
-                      <a href={lesson.carousel_cover_url} target="_blank" rel="noreferrer" className="block rounded-md overflow-hidden border border-border bg-muted hover:opacity-90">
-                        <img src={lesson.carousel_cover_url} alt="Capa do carrossel" className="w-full aspect-video object-cover" />
-                      </a>
+                      <CoverWithWatermark src={lesson.carousel_cover_url} alt="Capa do carrossel" watermark={watermark} />
+                    ) : lesson?.thumbnail_url ? (
+                      <>
+                        <CoverWithWatermark src={lesson.thumbnail_url} alt="Capa do carrossel (fallback)" watermark={watermark} />
+                        <p className="text-[10px] text-muted-foreground italic">
+                          Sem capa específica para o carrossel — usará a capa do vídeo (prévia acima).
+                        </p>
+                      </>
                     ) : (
                       <div className="aspect-video rounded-md border border-dashed border-border flex items-center justify-center text-[11px] text-muted-foreground">
-                        Capa do carrossel não enviada — o vídeo usará a capa do vídeo no carrossel.
+                        Capa do carrossel não enviada.
                       </div>
                     )}
                   </div>
-                </div>
-                {/* Prévia da marca d'água da plataforma */}
-                <div className="rounded-lg border border-border bg-card p-3 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Marca d'água da plataforma</p>
-                    {watermark.enabled && (watermark.text || watermark.logoUrl) ? (
-                      <Badge variant="outline" className="border-green-500/30 text-green-600 dark:text-green-400 text-[10px]">Será aplicada</Badge>
-                    ) : (
-                      <Badge variant="outline" className="text-muted-foreground text-[10px]">Desativada</Badge>
-                    )}
-                  </div>
-                  {watermark.enabled && (watermark.text || watermark.logoUrl) ? (
-                    <div className="relative aspect-video rounded-md overflow-hidden border border-border bg-muted">
-                      {lesson?.thumbnail_url ? (
-                        <img src={lesson.thumbnail_url} alt="Prévia da marca d'água" className="absolute inset-0 w-full h-full object-cover" />
-                      ) : (
-                        <div className="absolute inset-0 bg-gradient-to-br from-slate-700 to-slate-900" />
-                      )}
-                      <div className="absolute inset-x-0 bottom-0 flex items-center justify-end gap-2 p-2 bg-gradient-to-t from-black/60 to-transparent">
-                        {watermark.logoUrl && (
-                          <img
-                            src={watermark.logoUrl}
-                            alt="Logo da plataforma"
-                            className="h-6 w-auto opacity-90 drop-shadow"
-                            onError={(e) => { (e.currentTarget.style.display = 'none'); }}
-                          />
-                        )}
-                        {watermark.text && (
-                          <span className="text-[11px] font-semibold text-white drop-shadow [text-shadow:_0_1px_2px_rgb(0_0_0_/_70%)]">
-                            {watermark.text}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  ) : (
-                    <p className="text-[11px] text-muted-foreground italic">
-                      {watermark.enabled
-                        ? "Sem logo nem nome da plataforma configurados em Branding."
-                        : "Desativada em Configurações de Produtos. O vídeo será exibido sem marca d'água."}
-                    </p>
-                  )}
                   <p className="text-[10px] text-muted-foreground">
-                    Esta prévia simula como a logo/nome aparecerão no canto inferior direito do vídeo durante o processamento.
+                    {watermark.enabled && (watermark.text || watermark.logoUrl)
+                      ? "A marca d'água sobreposta nas capas acima simula como ela aparecerá no canto inferior direito do vídeo final."
+                      : "Marca d'água desativada em Configurações de Produtos ou sem logo/nome em Branding."}
                   </p>
                 </div>
                 {lesson?.description && (

@@ -12,7 +12,7 @@ import { toast } from "sonner";
 import AreaSelector from "@/components/AreaSelector";
 import VideoRecorder from "./VideoRecorder";
 import { usePlatformSettings, DEFAULT_PRODUCT_CONFIG } from "@/hooks/usePlatformSettings";
-import { compositeVideo, type ImpactWord } from "@/utils/videoCompositor";
+import { compositeVideo, type ImpactWord, type WatermarkStatus } from "@/utils/videoCompositor";
 import { shiftVtt } from "@/utils/vttSync";
 import { generateDefaultCover } from "@/utils/coverGenerator";
 import {
@@ -124,6 +124,7 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
   const [teacherName, setTeacherName] = useState("");
   const [processingUpload, setProcessingUpload] = useState(false);
   const [processingStep, setProcessingStep] = useState("");
+  const [watermarkStatus, setWatermarkStatus] = useState<WatermarkStatus | null>(null);
   const [resourcePrices, setResourcePrices] = useState<ResourcePriceInfo[]>([]);
   const [aiGenerating, setAiGenerating] = useState<null | "simulado" | "top_questoes" | "colinha">(null);
   const [regeneratingDescription, setRegeneratingDescription] = useState(false);
@@ -539,6 +540,7 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
           (enableWatermark && (watermarkText || watermarkLogoUrl));
         if (willComposite) {
           setProcessingStep("Aplicando recursos visuais ao vídeo...");
+          setWatermarkStatus(null);
           const videoBlob = new Blob([await file.arrayBuffer()], { type: file.type });
           const compositedBlob = await compositeVideo(videoBlob, {
             impactWords: enableBlackboard ? impactWords : [],
@@ -548,6 +550,22 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
             watermarkText: enableWatermark ? watermarkText || undefined : undefined,
             watermarkLogoUrl: enableWatermark ? watermarkLogoUrl || undefined : undefined,
             onProgress: () => {},
+            onWatermarkStatus: (status) => {
+              setWatermarkStatus(status);
+              if (status.kind === "logo_failed") {
+                if (status.fellBackToText) {
+                  toast.warning(
+                    "Não foi possível carregar a logo da plataforma. A marca d'água será aplicada apenas com o nome da plataforma.",
+                    { duration: 8000 },
+                  );
+                } else {
+                  toast.error(
+                    "Falha ao carregar a logo da plataforma. O vídeo será publicado sem marca d'água.",
+                    { duration: 8000 },
+                  );
+                }
+              }
+            },
           });
           const processedFile = new File([compositedBlob], `processado-${Date.now()}.webm`, { type: compositedBlob.type });
           // Shift VTT timestamps to account for the prepended intro cover
@@ -1123,6 +1141,49 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
         bulletMax={pc.colinhas.bullet_max}
         minBullets={pc.colinhas.min_bullets}
       />
+
+      {watermarkStatus && watermarkStatus.kind !== "disabled" && (
+        <div
+          role="status"
+          aria-live="polite"
+          className={`rounded-lg border p-3 text-sm flex items-start gap-2 ${
+            watermarkStatus.kind === "logo_failed"
+              ? "border-amber-500/40 bg-amber-500/10 text-amber-900 dark:text-amber-200"
+              : "border-green-500/30 bg-green-500/5 text-green-800 dark:text-green-300"
+          }`}
+        >
+          {watermarkStatus.kind === "logo_failed" ? (
+            <>
+              <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+              <div className="space-y-1">
+                <p className="font-semibold">Marca d'água: logo não carregada</p>
+                <p className="text-xs leading-relaxed">
+                  {watermarkStatus.fellBackToText
+                    ? "Não foi possível baixar a logo configurada. O vídeo foi marcado apenas com o nome da plataforma como fallback."
+                    : "Não foi possível baixar a logo configurada e nenhum nome de plataforma está definido. O vídeo será publicado sem marca d'água."}
+                </p>
+                {watermarkStatus.kind === "logo_failed" && watermarkStatus.error && (
+                  <p className="text-[11px] opacity-70">Detalhes: {watermarkStatus.error}</p>
+                )}
+              </div>
+            </>
+          ) : (
+            <>
+              <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0" />
+              <div className="space-y-0.5">
+                <p className="font-semibold">Marca d'água aplicada</p>
+                <p className="text-xs leading-relaxed">
+                  {watermarkStatus.logoLoaded && watermarkStatus.textApplied
+                    ? "Logo + nome da plataforma aplicados com sucesso."
+                    : watermarkStatus.logoLoaded
+                    ? "Logo aplicada com sucesso."
+                    : "Nome da plataforma aplicado com sucesso."}
+                </p>
+              </div>
+            </>
+          )}
+        </div>
+      )}
 
       <div className="flex gap-3 pt-2">
         <Button type="submit" disabled={saving || !allValid} className="font-display">

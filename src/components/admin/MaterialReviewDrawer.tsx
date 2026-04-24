@@ -36,6 +36,12 @@ interface LessonInfo {
   carousel_cover_url: string | null;
 }
 
+interface WatermarkPreviewInfo {
+  enabled: boolean;
+  text: string;
+  logoUrl: string;
+}
+
 interface QuizQuestion {
   id: string;
   question: string;
@@ -148,10 +154,11 @@ const MaterialReviewDrawer = ({ open, onClose, lessonId, lessonTitle, onChanged 
   const [rejecting, setRejecting] = useState<MaterialMeta | null>(null);
   const [reason, setReason] = useState("");
   const [testingMaterial, setTestingMaterial] = useState<"simulado" | "colinhas" | null>(null);
+  const [watermark, setWatermark] = useState<WatermarkPreviewInfo>({ enabled: true, text: "", logoUrl: "" });
 
   const load = async () => {
     setLoading(true);
-    const [metaRes, lessonRes, sumRes, quizRes, topRes, cheatRes] = await Promise.all([
+    const [metaRes, lessonRes, sumRes, quizRes, topRes, cheatRes, settingsRes] = await Promise.all([
       supabase
         .from("lesson_material_meta")
         .select("id, material_type, offered, admin_approved, submitted_for_review, rejection_reason")
@@ -177,6 +184,10 @@ const MaterialReviewDrawer = ({ open, onClose, lessonId, lessonTitle, onChanged 
         .select("text, position")
         .eq("lesson_id", lessonId)
         .order("position", { ascending: true }),
+      supabase
+        .from("platform_settings")
+        .select("key, value")
+        .in("key", ["product_config", "branding"]),
     ]);
 
     setMetas((metaRes.data || []) as MaterialMeta[]);
@@ -193,6 +204,16 @@ const MaterialReviewDrawer = ({ open, onClose, lessonId, lessonTitle, onChanged 
       top_questoes: (topRes.data || []) as TopQuestion[],
       colinhas: (cheatRes.data || []).map((d: any) => d.text),
     });
+
+    const settingsRows = (settingsRes.data || []) as Array<{ key: string; value: any }>;
+    const productCfg = settingsRows.find((r) => r.key === "product_config")?.value || {};
+    const branding = settingsRows.find((r) => r.key === "branding")?.value || {};
+    setWatermark({
+      enabled: productCfg?.enable_watermark !== false,
+      text: branding?.platform_name || "",
+      logoUrl: branding?.logo_url || "",
+    });
+
     setLoading(false);
   };
 
@@ -343,6 +364,50 @@ const MaterialReviewDrawer = ({ open, onClose, lessonId, lessonTitle, onChanged 
                       </div>
                     )}
                   </div>
+                </div>
+                {/* Prévia da marca d'água da plataforma */}
+                <div className="rounded-lg border border-border bg-card p-3 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Marca d'água da plataforma</p>
+                    {watermark.enabled && (watermark.text || watermark.logoUrl) ? (
+                      <Badge variant="outline" className="border-green-500/30 text-green-600 dark:text-green-400 text-[10px]">Será aplicada</Badge>
+                    ) : (
+                      <Badge variant="outline" className="text-muted-foreground text-[10px]">Desativada</Badge>
+                    )}
+                  </div>
+                  {watermark.enabled && (watermark.text || watermark.logoUrl) ? (
+                    <div className="relative aspect-video rounded-md overflow-hidden border border-border bg-muted">
+                      {lesson?.thumbnail_url ? (
+                        <img src={lesson.thumbnail_url} alt="Prévia da marca d'água" className="absolute inset-0 w-full h-full object-cover" />
+                      ) : (
+                        <div className="absolute inset-0 bg-gradient-to-br from-slate-700 to-slate-900" />
+                      )}
+                      <div className="absolute inset-x-0 bottom-0 flex items-center justify-end gap-2 p-2 bg-gradient-to-t from-black/60 to-transparent">
+                        {watermark.logoUrl && (
+                          <img
+                            src={watermark.logoUrl}
+                            alt="Logo da plataforma"
+                            className="h-6 w-auto opacity-90 drop-shadow"
+                            onError={(e) => { (e.currentTarget.style.display = 'none'); }}
+                          />
+                        )}
+                        {watermark.text && (
+                          <span className="text-[11px] font-semibold text-white drop-shadow [text-shadow:_0_1px_2px_rgb(0_0_0_/_70%)]">
+                            {watermark.text}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-[11px] text-muted-foreground italic">
+                      {watermark.enabled
+                        ? "Sem logo nem nome da plataforma configurados em Branding."
+                        : "Desativada em Configurações de Produtos. O vídeo será exibido sem marca d'água."}
+                    </p>
+                  )}
+                  <p className="text-[10px] text-muted-foreground">
+                    Esta prévia simula como a logo/nome aparecerão no canto inferior direito do vídeo durante o processamento.
+                  </p>
                 </div>
                 {lesson?.description && (
                   <div className="rounded-lg border border-border bg-card p-3">

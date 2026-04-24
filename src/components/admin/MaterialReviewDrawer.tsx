@@ -302,6 +302,48 @@ const MaterialReviewDrawer = ({ open, onClose, lessonId, lessonTitle, onChanged 
                     </div>
                   )}
                 </div>
+                {/* Capas para revisão */}
+                <div className="rounded-lg border border-border bg-card p-3 space-y-3">
+                  <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Capas para aprovação</p>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs font-semibold text-foreground">Capa do vídeo (thumbnail)</p>
+                      {lesson?.thumbnail_url ? (
+                        <Badge variant="outline" className="border-green-500/30 text-green-600 dark:text-green-400 text-[10px]">Enviada</Badge>
+                      ) : (
+                        <Badge variant="outline" className="border-destructive/30 text-destructive text-[10px]">Ausente</Badge>
+                      )}
+                    </div>
+                    {lesson?.thumbnail_url ? (
+                      <a href={lesson.thumbnail_url} target="_blank" rel="noreferrer" className="block rounded-md overflow-hidden border border-border bg-muted hover:opacity-90">
+                        <img src={lesson.thumbnail_url} alt="Capa do vídeo" className="w-full aspect-video object-cover" />
+                      </a>
+                    ) : (
+                      <div className="aspect-video rounded-md border border-dashed border-border flex items-center justify-center text-[11px] text-muted-foreground">
+                        Sem capa do vídeo
+                      </div>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs font-semibold text-foreground">Capa do carrossel</p>
+                      {lesson?.carousel_cover_url ? (
+                        <Badge variant="outline" className="border-green-500/30 text-green-600 dark:text-green-400 text-[10px]">Enviada</Badge>
+                      ) : (
+                        <Badge variant="outline" className="text-muted-foreground text-[10px]">Não enviada</Badge>
+                      )}
+                    </div>
+                    {lesson?.carousel_cover_url ? (
+                      <a href={lesson.carousel_cover_url} target="_blank" rel="noreferrer" className="block rounded-md overflow-hidden border border-border bg-muted hover:opacity-90">
+                        <img src={lesson.carousel_cover_url} alt="Capa do carrossel" className="w-full aspect-video object-cover" />
+                      </a>
+                    ) : (
+                      <div className="aspect-video rounded-md border border-dashed border-border flex items-center justify-center text-[11px] text-muted-foreground">
+                        Capa do carrossel não enviada — o vídeo usará a capa do vídeo no carrossel.
+                      </div>
+                    )}
+                  </div>
+                </div>
                 {lesson?.description && (
                   <div className="rounded-lg border border-border bg-card p-3">
                     <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1">Descrição</p>

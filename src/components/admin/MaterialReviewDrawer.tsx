@@ -344,7 +344,7 @@ const MaterialReviewDrawer = ({ open, onClose, lessonId, lessonTitle, onChanged 
                       )}
                     </div>
                     {lesson?.thumbnail_url ? (
-                      <CoverWithWatermark src={lesson.thumbnail_url} alt="Capa do vídeo" watermark={watermark} />
+                      <CoverWithWatermark src={lesson.thumbnail_url} alt="Capa do vídeo" watermark={watermark} testId="cover-video" />
                     ) : (
                       <div className="aspect-video rounded-md border border-dashed border-border flex items-center justify-center text-[11px] text-muted-foreground">
                         Sem capa do vídeo
@@ -361,10 +361,10 @@ const MaterialReviewDrawer = ({ open, onClose, lessonId, lessonTitle, onChanged 
                       )}
                     </div>
                     {lesson?.carousel_cover_url ? (
-                      <CoverWithWatermark src={lesson.carousel_cover_url} alt="Capa do carrossel" watermark={watermark} />
+                      <CoverWithWatermark src={lesson.carousel_cover_url} alt="Capa do carrossel" watermark={watermark} testId="cover-carousel" />
                     ) : lesson?.thumbnail_url ? (
                       <>
-                        <CoverWithWatermark src={lesson.thumbnail_url} alt="Capa do carrossel (fallback)" watermark={watermark} />
+                        <CoverWithWatermark src={lesson.thumbnail_url} alt="Capa do carrossel (fallback)" watermark={watermark} testId="cover-carousel" />
                         <p className="text-[10px] text-muted-foreground italic">
                           Sem capa específica para o carrossel — usará a capa do vídeo (prévia acima).
                         </p>

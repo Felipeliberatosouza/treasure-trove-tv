@@ -343,3 +343,55 @@ function wrapText(
     ctx.fillText(l, x, startY + i * lineHeight, maxWidth);
   });
 }
+
+function loadImage(url: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error(`Failed to load image: ${url}`));
+    img.src = url;
+  });
+}
+
+function drawWatermark(
+  ctx: CanvasRenderingContext2D,
+  w: number,
+  h: number,
+  text?: string,
+  logo?: HTMLImageElement | null,
+) {
+  ctx.save();
+  const padding = Math.round(Math.min(w, h) * 0.02);
+  const baseHeight = Math.max(28, Math.round(h * 0.06));
+  let cursorRight = w - padding;
+  const baselineY = h - padding;
+
+  // Texto à direita (se houver), com leve sombra para legibilidade sobre qualquer fundo.
+  if (text && text.trim()) {
+    const fontSize = Math.round(baseHeight * 0.45);
+    ctx.font = `600 ${fontSize}px sans-serif`;
+    ctx.textAlign = "right";
+    ctx.textBaseline = "alphabetic";
+    ctx.shadowColor = "rgba(0,0,0,0.6)";
+    ctx.shadowBlur = 6;
+    ctx.fillStyle = "rgba(255,255,255,0.85)";
+    ctx.fillText(text, cursorRight, baselineY);
+    cursorRight -= ctx.measureText(text).width + Math.round(padding * 0.6);
+    ctx.shadowBlur = 0;
+  }
+
+  // Logo à esquerda do texto (se houver).
+  if (logo) {
+    const logoH = baseHeight;
+    const ratio = logo.naturalWidth / Math.max(1, logo.naturalHeight);
+    const logoW = Math.round(logoH * ratio);
+    const logoX = cursorRight - logoW;
+    const logoY = baselineY - logoH + Math.round(logoH * 0.15);
+    ctx.globalAlpha = 0.9;
+    ctx.drawImage(logo, logoX, logoY, logoW, logoH);
+    ctx.globalAlpha = 1;
+  }
+
+  ctx.restore();
+}

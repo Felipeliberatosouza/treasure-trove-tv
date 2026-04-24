@@ -53,8 +53,12 @@ function parseJwtClaims(token: string): Record<string, unknown> | null {
 }
 
 // Move a message to the dead letter queue and log the reason.
+// NOTE: typed as `any` because the generated SDK schema is `never` for these
+// runtime-managed tables (`email_send_log`) and SECURITY DEFINER RPCs
+// (`move_to_dlq`), which are exposed only via Postgres functions.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function moveToDlq(
-  supabase: ReturnType<typeof createClient>,
+  supabase: any,
   queue: string,
   msg: { msg_id: number; message: Record<string, unknown> },
   reason: string
@@ -111,7 +115,11 @@ Deno.serve(async (req) => {
     )
   }
 
-  const supabase = createClient(supabaseUrl, supabaseServiceKey)
+  // Typed as `any` to allow access to runtime-managed tables / RPCs that
+  // aren't reflected in the generated database types (e.g. `email_send_log`,
+  // `read_email_batch`, `move_to_dlq`).
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const supabase: any = createClient(supabaseUrl, supabaseServiceKey)
 
   // 1. Check rate-limit cooldown and read queue config
   const { data: state } = await supabase
@@ -156,12 +164,12 @@ Deno.serve(async (req) => {
     const messageIds = Array.from(
       new Set(
         messages
-          .map((msg) =>
+          .map((msg: { message?: { message_id?: unknown } }) =>
             msg?.message?.message_id && typeof msg.message.message_id === 'string'
               ? msg.message.message_id
               : null
           )
-          .filter((id): id is string => Boolean(id))
+          .filter((id: string | null): id is string => Boolean(id))
       )
     )
     const failedAttemptsByMessageId = new Map<string, number>()

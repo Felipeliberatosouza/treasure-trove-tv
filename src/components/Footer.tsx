@@ -11,7 +11,7 @@ const Footer = () => {
   return (
     <footer className="border-t border-border px-6 py-10 md:px-12 lg:px-20">
       <div className="mx-auto flex max-w-6xl flex-col items-center gap-6 md:flex-row md:justify-between">
-        <div className="flex flex-col items-center md:items-start gap-0 leading-none">
+        <div className="flex flex-col items-center gap-0 leading-none">
           {branding?.logo_url ? (
             <img
               src={branding.logo_url}
@@ -22,7 +22,7 @@ const Footer = () => {
             <span className="font-display text-lg font-bold text-gradient">{name}</span>
           )}
           {slogan && (
-            <span className="-mt-3 md:-mt-4 text-[11px] text-muted-foreground leading-none max-w-[300px] text-center md:text-left">
+            <span className="-mt-3 md:-mt-4 text-[11px] text-muted-foreground leading-none max-w-[300px] text-center">
               {slogan}
             </span>
           )}

@@ -484,27 +484,27 @@ const AdminCompensationConfigTab = () => {
                       <div className="grid md:grid-cols-2 gap-3">
                         <div>
                           <Label className="text-xs">Alta leve</Label>
-                          <Textarea rows={2} value={data.up} onChange={(e) => updateMetric(m, { up: e.target.value })} />
+                          <Textarea rows={2} value={data.up} onChange={(e) => updateMetricMessage(m, { up: e.target.value })} />
                         </div>
                         <div>
                           <Label className="text-xs">Alta forte (≥ limiar)</Label>
-                          <Textarea rows={2} value={data.up_strong} onChange={(e) => updateMetric(m, { up_strong: e.target.value })} />
+                          <Textarea rows={2} value={data.up_strong} onChange={(e) => updateMetricMessage(m, { up_strong: e.target.value })} />
                         </div>
                         <div>
                           <Label className="text-xs">Queda leve</Label>
-                          <Textarea rows={2} value={data.down} onChange={(e) => updateMetric(m, { down: e.target.value })} />
+                          <Textarea rows={2} value={data.down} onChange={(e) => updateMetricMessage(m, { down: e.target.value })} />
                         </div>
                         <div>
                           <Label className="text-xs">Queda forte (≥ limiar)</Label>
-                          <Textarea rows={2} value={data.down_strong} onChange={(e) => updateMetric(m, { down_strong: e.target.value })} />
+                          <Textarea rows={2} value={data.down_strong} onChange={(e) => updateMetricMessage(m, { down_strong: e.target.value })} />
                         </div>
                         <div>
                           <Label className="text-xs">Estável</Label>
-                          <Textarea rows={2} value={data.stable} onChange={(e) => updateMetric(m, { stable: e.target.value })} />
+                          <Textarea rows={2} value={data.stable} onChange={(e) => updateMetricMessage(m, { stable: e.target.value })} />
                         </div>
                         <div>
                           <Label className="text-xs">Sem dados (sem mês anterior)</Label>
-                          <Textarea rows={2} value={data.no_data} onChange={(e) => updateMetric(m, { no_data: e.target.value })} />
+                          <Textarea rows={2} value={data.no_data} onChange={(e) => updateMetricMessage(m, { no_data: e.target.value })} />
                         </div>
                       </div>
                     </div>

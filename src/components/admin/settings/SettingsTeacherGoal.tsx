@@ -228,7 +228,27 @@ const SettingsTeacherGoal = () => {
             <div className="space-y-3">
               {(Object.keys(RELATIONSHIP_LABELS) as (keyof RelationshipGoals)[]).map((k) => (
                 <div key={k} className="grid grid-cols-[1fr_120px] items-end gap-3">
-                  <Label htmlFor={`r-${k}`} className="text-xs">{RELATIONSHIP_LABELS[k]}</Label>
+                  <Label htmlFor={`r-${k}`} className="text-xs flex items-center gap-1.5">
+                    {RELATIONSHIP_LABELS[k]}
+                    {PERCENT_FIELDS.has(k) && PERCENT_HELP[k] && (
+                      <TooltipProvider delayDuration={150}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              type="button"
+                              aria-label="Como este percentual é calculado"
+                              className="text-muted-foreground hover:text-foreground transition-colors"
+                            >
+                              <HelpCircle className="h-3.5 w-3.5" />
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="max-w-xs text-xs leading-relaxed">
+                            {PERCENT_HELP[k]}
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    )}
+                  </Label>
                   {PERCENT_FIELDS.has(k) ? (
                     <div className="relative">
                       <Input

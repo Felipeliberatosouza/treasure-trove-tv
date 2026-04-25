@@ -22,6 +22,62 @@ interface CompConfig {
   rf_score_bonus_pct: number;
   default_monthly_package_target: number;
   rf_weights: { content_insertion: number; lessons_delivered: number; doubts_answered: number; agenda_updated: number; };
+  proximity_alerts?: ProximityAlertsConfig;
+}
+
+interface ProximityAlertsConfig {
+  enabled: boolean;
+  near_cap_threshold_pct: number;   // % do teto a partir do qual mostrar alerta (ex: 80)
+  near_floor_ratio_pct: number;     // proporcional/piso <= X% (ex: 120)
+  cap_color_hsl: string;            // ex: "217 91% 60%"
+  floor_color_hsl: string;          // ex: "38 92% 50%"
+  near_cap_title: string;
+  near_cap_body: string;             // suporta {pct_of_cap}, {proportional}, {cap_value}, {cap_pct}
+  cap_applied_title: string;
+  cap_applied_body: string;          // suporta {cap_value}, {cap_pct}
+  near_floor_title: string;
+  near_floor_body: string;           // suporta {ratio_pct}, {proportional}, {floor_value}, {accesses}, {min_per_access}
+  floor_applied_title: string;
+  floor_applied_body: string;        // suporta {accesses}, {min_per_access}, {floor_value}
+}
+
+const DEFAULT_PROXIMITY: ProximityAlertsConfig = {
+  enabled: true,
+  near_cap_threshold_pct: 80,
+  near_floor_ratio_pct: 120,
+  cap_color_hsl: "217 91% 60%",
+  floor_color_hsl: "38 92% 50%",
+  near_cap_title: "Você está próximo do teto ({pct_of_cap}% do limite)",
+  near_cap_body: "Sua fatia proporcional ({proportional}) está se aproximando do teto de {cap_pct}% do Pool ({cap_value}). Acima desse valor, o consumo extra não aumenta seu repasse.",
+  cap_applied_title: "Teto atingido — sua fatia foi limitada a {cap_pct}% do Pool",
+  cap_applied_body: "Limite atual: {cap_value}. Consumo extra acima disso é redistribuído entre os outros professores.",
+  near_floor_title: "Volume baixo — você está perto de acionar o piso mínimo",
+  near_floor_body: "Seu cálculo proporcional ({proportional}) está apenas {ratio_pct}% acima do piso ({floor_value} = {accesses} acessos × {min_per_access}). Se o consumo cair, o piso será aplicado automaticamente.",
+  floor_applied_title: "Piso mínimo acionado — volume baixo neste mês",
+  floor_applied_body: "Sua fatia proporcional ficou abaixo do piso garantido de {min_per_access} por acesso único ({accesses} acessos = {floor_value}). O piso foi aplicado para proteger sua remuneração.",
+};
+
+const TOKEN_HELP = "Variáveis: {pct_of_cap}, {proportional}, {cap_value}, {cap_pct}, {ratio_pct}, {floor_value}, {accesses}, {min_per_access}";
+
+const ColorSwatch = ({ hsl }: { hsl: string }) => (
+  <span className="inline-block h-6 w-6 rounded-md border border-border" style={{ background: `hsl(${hsl})` }} />
+);
+
+const isValidHsl = (v: string) => /^\d{1,3}\s+\d{1,3}%\s+\d{1,3}%$/.test(v.trim());
+
+const ensureProximity = (cfg: CompConfig): CompConfig => {
+  if (cfg.proximity_alerts) return cfg;
+  return { ...cfg, proximity_alerts: DEFAULT_PROXIMITY };
+};
+
+const setProximity = (cfg: CompConfig, patch: Partial<ProximityAlertsConfig>): CompConfig => {
+  const current = cfg.proximity_alerts ?? DEFAULT_PROXIMITY;
+  return { ...cfg, proximity_alerts: { ...current, ...patch } };
+};
+
+import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
+
 }
 
 const formatBRL = (n: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(n || 0);

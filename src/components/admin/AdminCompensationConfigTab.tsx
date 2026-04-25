@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Play, RefreshCw, Settings as SettingsIcon, Users } from "lucide-react";
+import { Loader2, Play, RefreshCw, Settings as SettingsIcon, Users, AlertCircle } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { format } from "date-fns";
@@ -20,6 +20,7 @@ import {
   TOOLTIP_METRIC_UNIT_HINT,
   mergeTooltipMessages,
 } from "@/components/dashboard/tooltipMessagesConfig";
+import { cn } from "@/lib/utils";
 
 interface CompConfig {
   package_fee_brl: number;

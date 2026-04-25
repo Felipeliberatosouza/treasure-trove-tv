@@ -13,7 +13,8 @@ export interface BuildEmailLogoParams {
   slogan?: string | null;
   /** Cor do texto do nome da plataforma quando usado como fallback. */
   headingColor?: string;
-  /** Largura de referência da logo em px (default 320, igual ao site). */
+  /** Largura EXATA renderizada da logo em px (default 240). O slogan ocupa
+   *  exatamente esta mesma largura, garantindo paridade visual. */
   logoMaxWidth?: number;
 }
 
@@ -40,31 +41,36 @@ export function buildEmailLogoHtml({
   platformName,
   slogan,
   headingColor = "#dc2626",
-  logoMaxWidth = 320,
+  logoMaxWidth = 240,
 }: BuildEmailLogoParams): string {
+  // Largura compartilhada por logo e slogan — garante "comprimento" idêntico.
+  const w = logoMaxWidth;
   const cleanSlogan = (slogan || "").trim();
-  // Mesma fórmula do Navbar/Footer: cap em 18px (não 14px) para manter
-  // proporcionalidade visual idêntica ao site.
+  // Mesma fórmula do Navbar/Footer: cap em 18px para manter proporcionalidade
+  // visual idêntica ao site, calculada sobre a largura real (w).
   const sloganFontSize =
     cleanSlogan.length > 0
-      ? Math.max(8, Math.min(18, (logoMaxWidth / cleanSlogan.length) * 1.7))
+      ? Math.max(8, Math.min(18, (w / cleanSlogan.length) * 1.7))
       : 11;
 
-  // Margem negativa proporcional à logo (espelha `-mt-6` do site = -24px com h-20=80px).
+  // Slogan: bloco de largura fixa `w` (mesma da logo). margin auto centraliza.
+  // margem-top negativa aproxima do logo (espelha `-mt-6` do site).
   const sloganHtml = cleanSlogan
-    ? `<div style="text-align:center;margin-top:-24px;margin-bottom:16px;">` +
-      `<span style="display:inline-block;max-width:${logoMaxWidth}px;color:#6b7280;` +
-      `font-size:${sloganFontSize.toFixed(1)}px;line-height:1;white-space:nowrap;overflow:hidden;">` +
-      `${escapeHtml(cleanSlogan)}</span></div>`
+    ? `<div style="width:${w}px;margin:-12px auto 16px;text-align:center;` +
+      `color:#6b7280;font-size:${sloganFontSize.toFixed(1)}px;line-height:1;` +
+      `white-space:nowrap;overflow:hidden;">` +
+      `${escapeHtml(cleanSlogan)}</div>`
     : "";
 
   const bottomMargin = cleanSlogan ? "0" : "16px";
+  // Logo: renderizada com largura EXATA = w (mesma do slogan), altura
+  // proporcional (height:auto). Centralizada via margin auto.
   const inner =
     useUploadedLogo && logoUrl
       ? `<div style="text-align:center;margin-bottom:${bottomMargin};">` +
         `<img src="${escapeHtml(logoUrl)}" alt="Logo" ` +
-        `style="max-height:80px;max-width:${logoMaxWidth}px;display:inline-block;" /></div>`
-      : `<div style="text-align:center;margin-bottom:${bottomMargin};` +
+        `style="width:${w}px;max-width:${w}px;height:auto;display:block;margin:0 auto;" /></div>`
+      : `<div style="width:${w}px;margin:0 auto ${bottomMargin};text-align:center;` +
         `font-size:24px;font-weight:bold;color:${headingColor};">` +
         `${escapeHtml(platformName)}</div>`;
 

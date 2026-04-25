@@ -459,16 +459,16 @@ const AdminCompensationConfigTab = () => {
                           </Label>
                           <div className="flex items-center gap-1">
                             <Input
-                              type="number"
-                              step="0.1"
-                              min={0}
-                              value={data.strong_threshold}
+                              type="text"
+                              inputMode="decimal"
+                              value={thresholdInputs[m] ?? String(data.strong_threshold)}
                               onChange={(e) =>
-                                updateMetric(m, { strong_threshold: Number(e.target.value) })
+                                updateMetric(m, e.target.value)
                               }
                               className={cn(thresholdErrors[m] && "border-destructive focus-visible:ring-destructive")}
                               aria-invalid={!!thresholdErrors[m]}
                               aria-describedby={thresholdErrors[m] ? `error-${m}` : undefined}
+                              placeholder="0.0"
                             />
                             <span className="text-xs text-muted-foreground">{m === "qb" || m === "share" ? "p.p." : "%"}</span>
                           </div>

@@ -16,13 +16,13 @@ const Footer = () => {
             <img
               src={branding.logo_url}
               alt={name}
-              className="h-10 md:h-12 max-w-[220px] object-contain block"
+              className="h-16 md:h-20 max-w-[320px] object-contain block"
             />
           ) : (
             <span className="font-display text-lg font-bold text-gradient">{name}</span>
           )}
           {slogan && (
-            <span className="-mt-1 text-[11px] text-muted-foreground leading-none max-w-[260px] text-center md:text-left">
+            <span className="-mt-3 md:-mt-4 text-[11px] text-muted-foreground leading-none max-w-[300px] text-center md:text-left">
               {slogan}
             </span>
           )}

@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
-import { Target, Loader2, Save, FileText, Users, Megaphone, Settings as SettingsIcon } from "lucide-react";
+import { Target, Loader2, Save, FileText, Users, Megaphone, Settings as SettingsIcon, HelpCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 
 interface ContentGoals {
@@ -58,6 +59,14 @@ const PERCENT_FIELDS: ReadonlySet<keyof RelationshipGoals> = new Set([
   "completed_lessons",
   "doubts_answered_in_time",
 ]);
+
+// Texto de ajuda explicando como cada percentual é calculado
+const PERCENT_HELP: Record<string, string> = {
+  completed_lessons:
+    "Cálculo: (Aulas realizadas ÷ Aulas agendadas no mês) × 100. Exemplo: 18 realizadas de 20 agendadas = 90%. Quando não há aulas agendadas no período, o indicador é exibido como “Sem aulas agendadas”.",
+  doubts_answered_in_time:
+    "Cálculo: (Dúvidas respondidas dentro do prazo ÷ Dúvidas recebidas no mês) × 100. O prazo é o definido em “Prazo máximo para resposta de dúvidas”. Exemplo: 9 respondidas no prazo de 10 recebidas = 90%. Sem dúvidas no período, o indicador é “Sem dúvidas recebidas”.",
+};
 
 const SUB_TABS = [
   { id: "content", label: "Conteúdo", icon: FileText },

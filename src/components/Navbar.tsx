@@ -85,6 +85,29 @@ const Navbar = () => {
   const { user, role } = useAuth();
   const { settings } = useAllPlatformSettings();
   const branding = settings.branding as BrandingSettings | undefined;
+  const logoRef = useRef<HTMLImageElement | null>(null);
+  const [logoWidth, setLogoWidth] = useState<number>(0);
+
+  useEffect(() => {
+    const el = logoRef.current;
+    if (!el) {
+      setLogoWidth(0);
+      return;
+    }
+    const measure = () => setLogoWidth(el.getBoundingClientRect().width);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [branding?.logo_url, branding?.slogan]);
+
+  const slogan = branding?.slogan || "";
+  // Calcula font-size para o slogan ocupar a mesma largura da logo
+  // Aproximação: largura média de caractere ≈ 0.5 * fontSize
+  const sloganFontSize =
+    logoWidth > 0 && slogan.length > 0
+      ? Math.max(8, Math.min(18, (logoWidth / slogan.length) * 1.7))
+      : 11;
   const { isActive: hasActiveSubscription } = useActiveSubscription();
 
   const baseMenu = user

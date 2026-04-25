@@ -439,7 +439,9 @@ const AdminCompensationConfigTab = () => {
                           <p className="text-[11px] text-muted-foreground">{TOOLTIP_METRIC_UNIT_HINT[m]}</p>
                         </div>
                         <div className="w-44">
-                          <Label className="text-xs">Limiar "variação forte"</Label>
+                          <Label className={cn("text-xs", thresholdErrors[m] && "text-destructive")}>
+                            Limiar "variação forte"
+                          </Label>
                           <div className="flex items-center gap-1">
                             <Input
                               type="number"
@@ -449,9 +451,18 @@ const AdminCompensationConfigTab = () => {
                               onChange={(e) =>
                                 updateMetric(m, { strong_threshold: Number(e.target.value) })
                               }
+                              className={cn(thresholdErrors[m] && "border-destructive focus-visible:ring-destructive")}
+                              aria-invalid={!!thresholdErrors[m]}
+                              aria-describedby={thresholdErrors[m] ? `error-${m}` : undefined}
                             />
                             <span className="text-xs text-muted-foreground">{m === "qb" || m === "share" ? "p.p." : "%"}</span>
                           </div>
+                          {thresholdErrors[m] && (
+                            <div id={`error-${m}`} className="flex items-center gap-1 mt-1 text-[11px] text-destructive">
+                              <AlertCircle className="h-3 w-3" />
+                              <span>{thresholdErrors[m]}</span>
+                            </div>
+                          )}
                         </div>
                       </div>
 

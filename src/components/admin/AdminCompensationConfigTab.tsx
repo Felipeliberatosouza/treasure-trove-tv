@@ -480,7 +480,7 @@ const AdminCompensationConfigTab = () => {
                             <Input
                               type="text"
                               inputMode="decimal"
-                              value={thresholdInputs[m] ?? String(data.strong_threshold)}
+                              value={thresholdInputs[m] ?? formatBRLNumber(data.strong_threshold)}
                               onChange={(e) =>
                                 updateMetric(m, e.target.value)
                               }

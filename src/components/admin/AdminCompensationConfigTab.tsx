@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Play, RefreshCw, Settings as SettingsIcon, Users } from "lucide-react";
+import { Loader2, Play, RefreshCw, Settings as SettingsIcon, Users, AlertCircle } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { format } from "date-fns";
@@ -20,6 +20,7 @@ import {
   TOOLTIP_METRIC_UNIT_HINT,
   mergeTooltipMessages,
 } from "@/components/dashboard/tooltipMessagesConfig";
+import { cn } from "@/lib/utils";
 
 interface CompConfig {
   package_fee_brl: number;
@@ -107,6 +108,9 @@ const setTooltipEnabled = (cfg: CompConfig, enabled: boolean): CompConfig => {
   return { ...cfg, tooltip_messages: { ...merged, enabled } };
 };
 
+// Tipos de erro de validação
+type TooltipThresholdErrors = Partial<Record<TooltipMetricKey, string>>;
+
 const formatBRL = (n: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(n || 0);
 const formatDate = (d: string) => { try { return format(new Date(d), "dd/MM/yyyy HH:mm", { locale: ptBR }); } catch { return d; } };
 
@@ -120,6 +124,29 @@ const AdminCompensationConfigTab = () => {
   const [targets, setTargets] = useState<any[]>([]);
   const [teachers, setTeachers] = useState<{ id: string; name: string }[]>([]);
   const [newTarget, setNewTarget] = useState({ teacher_id: "", monthly_package_target: 4 });
+  const [thresholdErrors, setThresholdErrors] = useState<TooltipThresholdErrors>({});
+
+  const validateThreshold = (metric: TooltipMetricKey, value: number): string | undefined => {
+    if (value < 0) {
+      return "O limiar não pode ser negativo";
+    }
+    return undefined;
+  };
+
+  const updateMetricWithValidation = (
+    currentCfg: CompConfig,
+    metric: TooltipMetricKey,
+    patch: Partial<TooltipMetricMessages>
+  ) => {
+    const newThreshold = patch.strong_threshold;
+    if (newThreshold !== undefined) {
+      const error = validateThreshold(metric, newThreshold);
+      setThresholdErrors((prev) => ({ ...prev, [metric]: error }));
+    }
+    return setTooltipMetric(currentCfg, metric, patch);
+  };
+
+  const hasThresholdErrors = Object.values(thresholdErrors).some((e) => e !== undefined);
 
   const load = async () => {
     setLoading(true);
@@ -374,8 +401,11 @@ const AdminCompensationConfigTab = () => {
         {(() => {
           const tt = mergeTooltipMessages(cfg.tooltip_messages);
           const updateMetric = (metric: TooltipMetricKey, patch: Partial<TooltipMetricMessages>) =>
-            setCfg(setTooltipMetric(cfg, metric, patch));
-          const reset = () => setCfg({ ...cfg, tooltip_messages: { ...DEFAULT_TOOLTIP_MESSAGES } });
+            setCfg(updateMetricWithValidation(cfg, metric, patch));
+          const reset = () => {
+            setThresholdErrors({});
+            setCfg({ ...cfg, tooltip_messages: { ...DEFAULT_TOOLTIP_MESSAGES } });
+          };
 
           const metricKeys: TooltipMetricKey[] = ["rf", "qb", "share", "pool"];
 
@@ -409,7 +439,9 @@ const AdminCompensationConfigTab = () => {
                           <p className="text-[11px] text-muted-foreground">{TOOLTIP_METRIC_UNIT_HINT[m]}</p>
                         </div>
                         <div className="w-44">
-                          <Label className="text-xs">Limiar "variação forte"</Label>
+                          <Label className={cn("text-xs", thresholdErrors[m] && "text-destructive")}>
+                            Limiar "variação forte"
+                          </Label>
                           <div className="flex items-center gap-1">
                             <Input
                               type="number"
@@ -419,9 +451,18 @@ const AdminCompensationConfigTab = () => {
                               onChange={(e) =>
                                 updateMetric(m, { strong_threshold: Number(e.target.value) })
                               }
+                              className={cn(thresholdErrors[m] && "border-destructive focus-visible:ring-destructive")}
+                              aria-invalid={!!thresholdErrors[m]}
+                              aria-describedby={thresholdErrors[m] ? `error-${m}` : undefined}
                             />
                             <span className="text-xs text-muted-foreground">{m === "qb" || m === "share" ? "p.p." : "%"}</span>
                           </div>
+                          {thresholdErrors[m] && (
+                            <div id={`error-${m}`} className="flex items-center gap-1 mt-1 text-[11px] text-destructive">
+                              <AlertCircle className="h-3 w-3" />
+                              <span>{thresholdErrors[m]}</span>
+                            </div>
+                          )}
                         </div>
                       </div>
 
@@ -467,7 +508,10 @@ const AdminCompensationConfigTab = () => {
       </Card>
 
       <div className="flex justify-end">
-        <Button onClick={save} disabled={saving}>{saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}Salvar configurações</Button>
+        <Button onClick={save} disabled={saving || hasThresholdErrors}>
+          {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+          {hasThresholdErrors ? "Corrija os erros para salvar" : "Salvar configurações"}
+        </Button>
       </div>
 
       <Card className="p-4">

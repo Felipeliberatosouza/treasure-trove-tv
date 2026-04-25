@@ -65,6 +65,20 @@ Deno.serve(async (req: Request) => {
       if (s.key === 'video_pricing') videoPricing = (s.value as Record<string, any>) || {}
     }
     const platformName = brandingData.platform_name || 'Revisão Fácil'
+    const slogan = (brandingData.slogan || '').trim()
+    const logoMaxWidth = 200
+    const sloganFontSize = slogan.length > 0
+      ? Math.max(8, Math.min(14, (logoMaxWidth / slogan.length) * 1.7))
+      : 11
+    const sloganHtml = slogan
+      ? `<div style="text-align:center;margin-top:-6px;margin-bottom:16px;"><span style="display:inline-block;max-width:${logoMaxWidth}px;color:#6b7280;font-size:${sloganFontSize.toFixed(1)}px;line-height:1;white-space:nowrap;overflow:hidden;">${slogan.replace(/</g, '&lt;')}</span></div>`
+      : ''
+    const buildLogoHtml = (logoUrl: string, useUploaded: boolean, headingColor: string) => {
+      const inner = logoUrl && useUploaded
+        ? `<div style="text-align:center;margin-bottom:${slogan ? '0' : '16px'};"><img src="${logoUrl}" alt="Logo" style="max-height:60px;max-width:${logoMaxWidth}px;display:inline-block;" /></div>`
+        : `<div style="text-align:center;margin-bottom:${slogan ? '0' : '16px'};font-size:24px;font-weight:bold;color:${headingColor};">${platformName}</div>`
+      return `${inner}${sloganHtml}`
+    }
 
     const buildFooter = (showSocial: boolean) => {
       if (!showSocial) return ''
@@ -239,9 +253,7 @@ Deno.serve(async (req: Request) => {
         }
 
         const studentLogoUrl = tplStudent.logo_url || brandingData.logo_url || ''
-        const logoHtml = studentLogoUrl && tplStudent.use_uploaded_logo
-          ? `<div style="text-align:center;margin-bottom:16px;"><img src="${studentLogoUrl}" alt="Logo" style="max-height:60px;max-width:200px;" /></div>`
-          : `<div style="text-align:center;margin-bottom:16px;font-size:24px;font-weight:bold;color:${tplStudent.heading_color || '#dc2626'};">${platformName}</div>`
+        const logoHtml = buildLogoHtml(studentLogoUrl, !!tplStudent.use_uploaded_logo, tplStudent.heading_color || '#dc2626')
 
         const baseBody = (tplStudent.body_html && tplStudent.body_html.trim().length > 0)
           ? tplStudent.body_html
@@ -448,9 +460,7 @@ Deno.serve(async (req: Request) => {
         `
 
         const teacherLogoUrl = tplTeacher.logo_url || brandingData.logo_url || ''
-        const logoHtml = teacherLogoUrl && tplTeacher.use_uploaded_logo
-          ? `<div style="text-align:center;margin-bottom:16px;"><img src="${teacherLogoUrl}" alt="Logo" style="max-height:60px;max-width:200px;" /></div>`
-          : `<div style="text-align:center;margin-bottom:16px;font-size:24px;font-weight:bold;color:${tplTeacher.heading_color || '#0891b2'};">${platformName}</div>`
+        const logoHtml = buildLogoHtml(teacherLogoUrl, !!tplTeacher.use_uploaded_logo, tplTeacher.heading_color || '#0891b2')
 
         const baseBody = (tplTeacher.body_html && tplTeacher.body_html.trim().length > 0)
           ? tplTeacher.body_html

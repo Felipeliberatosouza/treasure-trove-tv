@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { DollarSign, TrendingUp, Package, Star, Sparkles, Trophy, Video, FileText, Users, Calendar, MessageCircle, Activity, RefreshCw, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import TeacherCompensationTrendChart from "./TeacherCompensationTrendChart";
 
 const formatBRL = (n: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(n || 0);
 const formatPeriod = (s: string, e: string) => {
@@ -139,6 +140,8 @@ const TeacherCompensationTab = () => {
           </>
         )}
       </Card>
+
+      <TeacherCompensationTrendChart stats={stats} live={live} />
 
       {!latest ? (
         <Card className="p-8 text-center">

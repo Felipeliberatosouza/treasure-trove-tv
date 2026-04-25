@@ -208,6 +208,11 @@ Deno.serve(async (req) => {
       pool_share_pct: sharePct,
       pool_floor_applied: floorApplied,
       pool_cap_applied: capApplied,
+      pool_min_per_access: poolMin,
+      pool_max_share_pct: poolMaxShare,
+      proportional_share_amount: totalPlatformMinutes > 0
+        ? round2(poolAmount * (totalMinutes / totalPlatformMinutes))
+        : 0,
       avg_rating: avgRating,
       ratings_count: ratingsCount,
       rf_score: finalScore,

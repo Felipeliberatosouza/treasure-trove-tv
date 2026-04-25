@@ -164,7 +164,7 @@ const Navbar = () => {
       className="fixed top-0 z-50 w-full border-b border-border/50 bg-background/80 backdrop-blur-xl"
     >
       <div className="flex items-center justify-between px-6 py-3 md:px-12 lg:px-20">
-        <Link to="/" className="flex flex-col items-start gap-0 leading-none">
+        <Link to="/" className="flex flex-col items-center gap-0 leading-none">
           {branding?.logo_url ? (
             <img
               src={branding.logo_url}
@@ -177,7 +177,7 @@ const Navbar = () => {
             </span>
           )}
           {branding?.slogan && (
-            <span className="-mt-3 md:-mt-4 text-[10px] md:text-[11px] text-muted-foreground leading-none max-w-[340px]">
+            <span className="-mt-3 md:-mt-4 text-[10px] md:text-[11px] text-muted-foreground leading-none max-w-[340px] text-center">
               {branding.slogan}
             </span>
           )}

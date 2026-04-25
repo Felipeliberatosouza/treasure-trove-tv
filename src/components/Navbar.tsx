@@ -177,7 +177,7 @@ const Navbar = () => {
             </span>
           )}
           {branding?.slogan && (
-            <span className="-mt-1 text-[10px] md:text-[11px] text-muted-foreground leading-none max-w-[340px]">
+            <span className="-mt-3 md:-mt-4 text-[10px] md:text-[11px] text-muted-foreground leading-none max-w-[340px]">
               {branding.slogan}
             </span>
           )}

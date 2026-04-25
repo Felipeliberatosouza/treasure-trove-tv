@@ -6,11 +6,27 @@ const Footer = () => {
   const contact = settings.contact as ContactSettings | undefined;
   const branding = settings.branding as BrandingSettings | undefined;
   const name = branding?.platform_name || "Revisão Fácil";
+  const slogan = branding?.slogan;
 
   return (
     <footer className="border-t border-border px-6 py-10 md:px-12 lg:px-20">
       <div className="mx-auto flex max-w-6xl flex-col items-center gap-6 md:flex-row md:justify-between">
-        <span className="font-display text-lg font-bold text-gradient">{name}</span>
+        <div className="flex flex-col items-center md:items-start gap-0.5">
+          {branding?.logo_url ? (
+            <img
+              src={branding.logo_url}
+              alt={name}
+              className="h-10 md:h-12 max-w-[220px] object-contain"
+            />
+          ) : (
+            <span className="font-display text-lg font-bold text-gradient">{name}</span>
+          )}
+          {slogan && (
+            <span className="text-xs text-muted-foreground leading-tight max-w-[260px] text-center md:text-left">
+              {slogan}
+            </span>
+          )}
+        </div>
         <div className="flex gap-6 text-sm text-muted-foreground">
           <a href="/sobre" className="hover:text-foreground transition-colors">Sobre</a>
           <a href="/termos" className="hover:text-foreground transition-colors">Termos</a>

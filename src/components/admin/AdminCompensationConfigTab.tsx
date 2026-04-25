@@ -412,10 +412,13 @@ const AdminCompensationConfigTab = () => {
       <Card className="p-4">
         {(() => {
           const tt = mergeTooltipMessages(cfg.tooltip_messages);
-          const updateMetric = (metric: TooltipMetricKey, patch: Partial<TooltipMetricMessages>) =>
-            setCfg(updateMetricWithValidation(cfg, metric, patch));
+          const updateMetric = (metric: TooltipMetricKey, rawValue: string) =>
+            setCfg(updateMetricWithValidation(cfg, metric, rawValue));
+          const updateMetricMessage = (metric: TooltipMetricKey, patch: Partial<TooltipMetricMessages>) =>
+            setCfg(setTooltipMetric(cfg, metric, patch));
           const reset = () => {
             setThresholdErrors({});
+            setThresholdInputs({});
             setCfg({ ...cfg, tooltip_messages: { ...DEFAULT_TOOLTIP_MESSAGES } });
           };
 

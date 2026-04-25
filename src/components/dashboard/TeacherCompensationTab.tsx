@@ -11,6 +11,7 @@ import { ptBR } from "date-fns/locale";
 import TeacherCompensationTrendChart from "./TeacherCompensationTrendChart";
 import PoolFloorCapIndicator from "./PoolFloorCapIndicator";
 import PoolProximityAlerts, { ProximityAlertsConfig } from "./PoolProximityAlerts";
+import { TooltipMessagesConfig, mergeTooltipMessages } from "./tooltipMessagesConfig";
 
 const formatBRL = (n: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(n || 0);
 const formatPeriod = (s: string, e: string) => {
@@ -26,6 +27,7 @@ const TeacherCompensationTab = () => {
   const [liveLoading, setLiveLoading] = useState(false);
   const [poolCfg, setPoolCfg] = useState<{ pool_min_per_access_brl: number; pool_max_share_pct: number } | null>(null);
   const [proximityCfg, setProximityCfg] = useState<ProximityAlertsConfig | null>(null);
+  const [tooltipMsgs, setTooltipMsgs] = useState<TooltipMessagesConfig | null>(null);
 
   const loadLive = async () => {
     if (!user) return;
@@ -57,6 +59,7 @@ const TeacherCompensationTab = () => {
         pool_max_share_pct: Number(cfgVal.pool_max_share_pct ?? 15),
       });
       setProximityCfg((cfgVal.proximity_alerts ?? null) as ProximityAlertsConfig | null);
+      setTooltipMsgs(mergeTooltipMessages(cfgVal.tooltip_messages ?? null));
       setLoading(false);
     })();
     loadLive();
@@ -182,7 +185,7 @@ const TeacherCompensationTab = () => {
         )}
       </Card>
 
-      <TeacherCompensationTrendChart stats={stats} live={live} />
+      <TeacherCompensationTrendChart stats={stats} live={live} tooltipMessages={tooltipMsgs} />
 
       {!latest ? (
         <Card className="p-8 text-center">

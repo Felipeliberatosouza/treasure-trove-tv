@@ -280,12 +280,28 @@ const TeacherCompensationTab = () => {
                 <div>
                   <div className="flex items-center gap-1 text-xs text-muted-foreground mb-1"><Users className="h-3 w-3" /> Aulas (25%)</div>
                   <p className="font-medium">{Number(latestRf.lessons_score).toFixed(1)}/10</p>
-                  <p className="text-xs text-muted-foreground">{latestRf.lessons_delivered}/{latestRf.lessons_scheduled} realizadas</p>
+                  <p className="text-xs text-muted-foreground">
+                    {(() => {
+                      const delivered = Number(latestRf.lessons_delivered) || 0;
+                      const scheduled = Number(latestRf.lessons_scheduled) || 0;
+                      if (scheduled <= 0) return "Sem aulas agendadas";
+                      const pct = Math.max(0, Math.min(100, (delivered / scheduled) * 100));
+                      return `${pct.toFixed(0)}% realizadas (${delivered}/${scheduled})`;
+                    })()}
+                  </p>
                 </div>
                 <div>
                   <div className="flex items-center gap-1 text-xs text-muted-foreground mb-1"><MessageCircle className="h-3 w-3" /> Dúvidas (25%)</div>
                   <p className="font-medium">{Number(latestRf.doubts_score).toFixed(1)}/10</p>
-                  <p className="text-xs text-muted-foreground">{latestRf.doubts_answered_in_time}/{latestRf.doubts_received} no prazo</p>
+                  <p className="text-xs text-muted-foreground">
+                    {(() => {
+                      const inTime = Number(latestRf.doubts_answered_in_time) || 0;
+                      const received = Number(latestRf.doubts_received) || 0;
+                      if (received <= 0) return "Sem dúvidas recebidas";
+                      const pct = Math.max(0, Math.min(100, (inTime / received) * 100));
+                      return `${pct.toFixed(0)}% no prazo (${inTime}/${received})`;
+                    })()}
+                  </p>
                 </div>
                 <div>
                   <div className="flex items-center gap-1 text-xs text-muted-foreground mb-1"><Calendar className="h-3 w-3" /> Agenda (20%)</div>

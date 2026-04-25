@@ -214,13 +214,32 @@ const SettingsTeacherGoal = () => {
               {(Object.keys(RELATIONSHIP_LABELS) as (keyof RelationshipGoals)[]).map((k) => (
                 <div key={k} className="grid grid-cols-[1fr_120px] items-end gap-3">
                   <Label htmlFor={`r-${k}`} className="text-xs">{RELATIONSHIP_LABELS[k]}</Label>
-                  <Input
-                    id={`r-${k}`}
-                    type="number"
-                    min={0}
-                    value={settings.relationship_goals[k]}
-                    onChange={(e) => updateRelation(k, parseInt(e.target.value, 10) || 0)}
-                  />
+                  {PERCENT_FIELDS.has(k) ? (
+                    <div className="relative">
+                      <Input
+                        id={`r-${k}`}
+                        type="number"
+                        min={0}
+                        max={100}
+                        className="pr-8"
+                        value={settings.relationship_goals[k]}
+                        onChange={(e) =>
+                          updateRelation(k, Math.min(100, parseInt(e.target.value, 10) || 0))
+                        }
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground pointer-events-none">
+                        %
+                      </span>
+                    </div>
+                  ) : (
+                    <Input
+                      id={`r-${k}`}
+                      type="number"
+                      min={0}
+                      value={settings.relationship_goals[k]}
+                      onChange={(e) => updateRelation(k, parseInt(e.target.value, 10) || 0)}
+                    />
+                  )}
                 </div>
               ))}
             </div>

@@ -11,6 +11,15 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import {
+  TooltipMessagesConfig,
+  TooltipMetricKey,
+  TooltipMetricMessages,
+  DEFAULT_TOOLTIP_MESSAGES,
+  TOOLTIP_METRIC_LABELS,
+  TOOLTIP_METRIC_UNIT_HINT,
+  mergeTooltipMessages,
+} from "@/components/dashboard/tooltipMessagesConfig";
 
 interface CompConfig {
   package_fee_brl: number;
@@ -25,6 +34,7 @@ interface CompConfig {
   default_monthly_package_target: number;
   rf_weights: { content_insertion: number; lessons_delivered: number; doubts_answered: number; agenda_updated: number; };
   proximity_alerts?: ProximityAlertsConfig;
+  tooltip_messages?: TooltipMessagesConfig;
 }
 
 interface ProximityAlertsConfig {
@@ -77,6 +87,26 @@ const setProximity = (cfg: CompConfig, patch: Partial<ProximityAlertsConfig>): C
   return { ...cfg, proximity_alerts: { ...current, ...patch } };
 };
 
+const setTooltipMetric = (
+  cfg: CompConfig,
+  metric: TooltipMetricKey,
+  patch: Partial<TooltipMetricMessages>
+): CompConfig => {
+  const merged = mergeTooltipMessages(cfg.tooltip_messages);
+  return {
+    ...cfg,
+    tooltip_messages: {
+      ...merged,
+      [metric]: { ...merged[metric], ...patch },
+    },
+  };
+};
+
+const setTooltipEnabled = (cfg: CompConfig, enabled: boolean): CompConfig => {
+  const merged = mergeTooltipMessages(cfg.tooltip_messages);
+  return { ...cfg, tooltip_messages: { ...merged, enabled } };
+};
+
 const formatBRL = (n: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(n || 0);
 const formatDate = (d: string) => { try { return format(new Date(d), "dd/MM/yyyy HH:mm", { locale: ptBR }); } catch { return d; } };
 
@@ -114,7 +144,11 @@ const AdminCompensationConfigTab = () => {
     if (!cfg) return;
     setSaving(true);
     // Garante que proximity_alerts vai persistido
-    const payload = ensureProximity(cfg);
+    const withProximity = ensureProximity(cfg);
+    const payload: CompConfig = {
+      ...withProximity,
+      tooltip_messages: mergeTooltipMessages(withProximity.tooltip_messages),
+    };
     const { error } = await supabase.from("platform_settings").upsert({ key: "teacher_compensation", value: payload as any });
     setSaving(false);
     if (error) { toast({ title: "Erro", description: error.message, variant: "destructive" }); return; }
@@ -326,6 +360,103 @@ const AdminCompensationConfigTab = () => {
 
                 <div className="flex justify-end">
                   <Button variant="ghost" size="sm" onClick={() => updatePa({ ...DEFAULT_PROXIMITY })}>
+                    Restaurar padrões
+                  </Button>
+                </div>
+              </div>
+            </>
+          );
+        })()}
+      </Card>
+
+      {/* Mensagens contextuais do tooltip do gráfico de tendência */}
+      <Card className="p-4">
+        {(() => {
+          const tt = mergeTooltipMessages(cfg.tooltip_messages);
+          const updateMetric = (metric: TooltipMetricKey, patch: Partial<TooltipMetricMessages>) =>
+            setCfg(setTooltipMetric(cfg, metric, patch));
+          const reset = () => setCfg({ ...cfg, tooltip_messages: { ...DEFAULT_TOOLTIP_MESSAGES } });
+
+          const metricKeys: TooltipMetricKey[] = ["rf", "qb", "share", "pool"];
+
+          return (
+            <>
+              <div className="flex items-start justify-between mb-3 gap-2 flex-wrap">
+                <div>
+                  <h3 className="font-medium">Mensagens do tooltip do gráfico</h3>
+                  <p className="text-xs text-muted-foreground">
+                    Personalize as frases contextuais e os limiares de "variação expressiva" mostrados no gráfico de tendência do professor.
+                    Para cada métrica, defina o que aparece em altas/baixas leves, fortes, estabilidade e quando não há comparação.
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Label className="text-xs">Ativar mensagens</Label>
+                  <Switch
+                    checked={!!tt.enabled}
+                    onCheckedChange={(v) => setCfg(setTooltipEnabled(cfg, v))}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                {metricKeys.map((m) => {
+                  const data = tt[m];
+                  return (
+                    <div key={m} className="rounded-lg border border-border p-3 bg-secondary/20">
+                      <div className="flex items-end justify-between gap-3 mb-3 flex-wrap">
+                        <div>
+                          <p className="font-medium text-sm">{TOOLTIP_METRIC_LABELS[m]}</p>
+                          <p className="text-[11px] text-muted-foreground">{TOOLTIP_METRIC_UNIT_HINT[m]}</p>
+                        </div>
+                        <div className="w-44">
+                          <Label className="text-xs">Limiar "variação forte"</Label>
+                          <div className="flex items-center gap-1">
+                            <Input
+                              type="number"
+                              step="0.1"
+                              min={0}
+                              value={data.strong_threshold}
+                              onChange={(e) =>
+                                updateMetric(m, { strong_threshold: Number(e.target.value) })
+                              }
+                            />
+                            <span className="text-xs text-muted-foreground">{m === "qb" || m === "share" ? "p.p." : "%"}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="grid md:grid-cols-2 gap-3">
+                        <div>
+                          <Label className="text-xs">Alta leve</Label>
+                          <Textarea rows={2} value={data.up} onChange={(e) => updateMetric(m, { up: e.target.value })} />
+                        </div>
+                        <div>
+                          <Label className="text-xs">Alta forte (≥ limiar)</Label>
+                          <Textarea rows={2} value={data.up_strong} onChange={(e) => updateMetric(m, { up_strong: e.target.value })} />
+                        </div>
+                        <div>
+                          <Label className="text-xs">Queda leve</Label>
+                          <Textarea rows={2} value={data.down} onChange={(e) => updateMetric(m, { down: e.target.value })} />
+                        </div>
+                        <div>
+                          <Label className="text-xs">Queda forte (≥ limiar)</Label>
+                          <Textarea rows={2} value={data.down_strong} onChange={(e) => updateMetric(m, { down_strong: e.target.value })} />
+                        </div>
+                        <div>
+                          <Label className="text-xs">Estável</Label>
+                          <Textarea rows={2} value={data.stable} onChange={(e) => updateMetric(m, { stable: e.target.value })} />
+                        </div>
+                        <div>
+                          <Label className="text-xs">Sem dados (sem mês anterior)</Label>
+                          <Textarea rows={2} value={data.no_data} onChange={(e) => updateMetric(m, { no_data: e.target.value })} />
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+
+                <div className="flex justify-end">
+                  <Button variant="ghost" size="sm" onClick={reset}>
                     Restaurar padrões
                   </Button>
                 </div>

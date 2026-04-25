@@ -149,11 +149,15 @@ const AdminCompensationConfigTab = () => {
     metric: TooltipMetricKey,
     rawValue: string
   ) => {
-    // Normaliza o input para exibir (converte vírgula em ponto visualmente)
-    const normalizedInput = rawValue.trim().replace(",", ".");
-    setThresholdInputs((prev) => ({ ...prev, [metric]: normalizedInput }));
-    
+    // Guarda o input original para validação
     const result = validateThresholdInput(rawValue);
+    
+    // Formata para exibição brasileira: converte ponto em vírgula
+    const displayValue = result.normalized 
+      ? result.normalized.replace(".", ",")
+      : rawValue.trim();
+    
+    setThresholdInputs((prev) => ({ ...prev, [metric]: displayValue }));
     setThresholdErrors((prev) => ({ ...prev, [metric]: result.error }));
     
     // Só atualiza o config se for um número válido

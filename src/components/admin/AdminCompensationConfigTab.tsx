@@ -124,7 +124,11 @@ const AdminCompensationConfigTab = () => {
     if (!cfg) return;
     setSaving(true);
     // Garante que proximity_alerts vai persistido
-    const payload = ensureProximity(cfg);
+    const withProximity = ensureProximity(cfg);
+    const payload: CompConfig = {
+      ...withProximity,
+      tooltip_messages: mergeTooltipMessages(withProximity.tooltip_messages),
+    };
     const { error } = await supabase.from("platform_settings").upsert({ key: "teacher_compensation", value: payload as any });
     setSaving(false);
     if (error) { toast({ title: "Erro", description: error.message, variant: "destructive" }); return; }

@@ -10,6 +10,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import TeacherCompensationTrendChart from "./TeacherCompensationTrendChart";
 import PoolFloorCapIndicator from "./PoolFloorCapIndicator";
+import PoolProximityAlerts from "./PoolProximityAlerts";
 
 const formatBRL = (n: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(n || 0);
 const formatPeriod = (s: string, e: string) => {
@@ -118,6 +119,19 @@ const TeacherCompensationTab = () => {
             </div>
 
             <div className="mb-4">
+              <div className="mb-2">
+                <PoolProximityAlerts
+                  poolAmount={Number(live.pool_amount)}
+                  proportionalShare={live.proportional_share_amount != null ? Number(live.proportional_share_amount) : null}
+                  uniqueAccesses={Number(live.material_unique_accesses)}
+                  poolMinPerAccess={Number(live.pool_min_per_access ?? 0.3)}
+                  poolMaxSharePct={Number(live.pool_max_share_pct ?? 15)}
+                  floorApplied={!!live.pool_floor_applied}
+                  capApplied={!!live.pool_cap_applied}
+                  totalMinutes={Number(live.total_consumption_minutes)}
+                  totalPlatformMinutes={Number(live.total_platform_minutes ?? 0)}
+                />
+              </div>
               <PoolFloorCapIndicator
                 poolAmount={Number(live.pool_amount)}
                 poolBase={Number(live.pool_base_amount)}

@@ -139,8 +139,14 @@ const SettingsTeacherGoal = () => {
   const updateContent = (k: keyof ContentGoals, v: number) =>
     setSettings((s) => ({ ...s, content_goals: { ...s.content_goals, [k]: Math.max(0, v) } }));
 
-  const updateRelation = (k: keyof RelationshipGoals, v: number) =>
-    setSettings((s) => ({ ...s, relationship_goals: { ...s.relationship_goals, [k]: Math.max(0, v) } }));
+  const updateRelation = (k: keyof RelationshipGoals, v: number) => {
+    const safe = Number.isFinite(v) ? v : 0;
+    // Campos percentuais ficam restritos a 0–100; demais aceitam apenas >= 0
+    const clamped = PERCENT_FIELDS.has(k)
+      ? Math.max(0, Math.min(100, safe))
+      : Math.max(0, safe);
+    setSettings((s) => ({ ...s, relationship_goals: { ...s.relationship_goals, [k]: clamped } }));
+  };
 
   if (loading) {
     return (

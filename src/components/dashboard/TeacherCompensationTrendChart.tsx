@@ -260,7 +260,7 @@ const TeacherCompensationTrendChart = ({ stats, live, tooltipMessages }: Props) 
               <span className="text-muted-foreground">Variação</span>
               <DeltaBadge value={row.d_rf_pct} suffix="%" metricLabel="RF Score" />
             </div>
-            <ContextMessage value={row.d_rf_pct} metric="rf" strongThreshold={10} />
+            <ContextMessage value={row.d_rf_pct} metric="rf" config={ttCfg} />
             <div className="border-t border-border my-1" />
             <div className="flex items-center justify-between gap-3">
               <span className="text-muted-foreground">Bônus Qualidade</span>
@@ -274,7 +274,7 @@ const TeacherCompensationTrendChart = ({ stats, live, tooltipMessages }: Props) 
               <span className="text-muted-foreground">Variação</span>
               <DeltaBadge value={row.d_qb_pp} suffix=" p.p." metricLabel="Bônus de Qualidade" />
             </div>
-            <ContextMessage value={row.d_qb_pp} metric="qb" strongThreshold={5} />
+            <ContextMessage value={row.d_qb_pp} metric="qb" config={ttCfg} />
           </div>
         ) : (
           <div className="space-y-1">
@@ -290,7 +290,7 @@ const TeacherCompensationTrendChart = ({ stats, live, tooltipMessages }: Props) 
               <span className="text-muted-foreground">Variação</span>
               <DeltaBadge value={row.d_share_pp} suffix=" p.p." metricLabel="Fatia do Pool" />
             </div>
-            <ContextMessage value={row.d_share_pp} metric="share" strongThreshold={2} />
+            <ContextMessage value={row.d_share_pp} metric="share" config={ttCfg} />
             <div className="border-t border-border my-1" />
             <div className="flex items-center justify-between gap-3">
               <span className="text-muted-foreground">Pool em R$</span>
@@ -304,7 +304,7 @@ const TeacherCompensationTrendChart = ({ stats, live, tooltipMessages }: Props) 
               <span className="text-muted-foreground">Variação</span>
               <DeltaBadge value={row.d_pool_pct} suffix="%" metricLabel="Pool em R$" />
             </div>
-            <ContextMessage value={row.d_pool_pct} metric="pool" strongThreshold={20} />
+            <ContextMessage value={row.d_pool_pct} metric="pool" config={ttCfg} />
           </div>
         )}
       </div>

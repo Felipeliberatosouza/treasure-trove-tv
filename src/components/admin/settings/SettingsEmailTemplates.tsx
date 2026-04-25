@@ -141,8 +141,13 @@ const SettingsEmailTemplates = () => {
     if (error) {
       toast.error("Erro ao carregar templates de e-mail.");
     } else if (data) {
-      setTemplates(data as unknown as EmailTemplate[]);
-      if (!activeKey && data.length > 0) setActiveKey(data[0].template_key);
+      const sorted = ([...data] as unknown as EmailTemplate[]).sort((a, b) => {
+        const la = TEMPLATE_LABELS[a.template_key] || a.template_key;
+        const lb = TEMPLATE_LABELS[b.template_key] || b.template_key;
+        return la.localeCompare(lb, "pt-BR", { sensitivity: "base" });
+      });
+      setTemplates(sorted);
+      if (!activeKey && sorted.length > 0) setActiveKey(sorted[0].template_key);
     }
     setLoading(false);
   };

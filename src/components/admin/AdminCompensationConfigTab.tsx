@@ -112,6 +112,7 @@ const setTooltipEnabled = (cfg: CompConfig, enabled: boolean): CompConfig => {
 type TooltipThresholdErrors = Partial<Record<TooltipMetricKey, string>>;
 
 const formatBRL = (n: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(n || 0);
+const formatBRLNumber = (n: number) => new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 2 }).format(n || 0);
 const formatDate = (d: string) => { try { return format(new Date(d), "dd/MM/yyyy HH:mm", { locale: ptBR }); } catch { return d; } };
 
 const AdminCompensationConfigTab = () => {

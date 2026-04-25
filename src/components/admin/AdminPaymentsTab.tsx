@@ -4,6 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DollarSign, TrendingUp, Eye, Star, Plus, Pencil, CheckCircle2, Download, X, RefreshCw, History } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -629,15 +630,24 @@ const AdminPaymentsTab = () => {
                   <div className="grid grid-cols-3 gap-3">
                     <div>
                       <Label>Valor Bruto (R$)</Label>
-                      <Input type="number" value={newPayment.gross_amount} onChange={(e) => setNewPayment((p) => ({ ...p, gross_amount: e.target.value }))} />
+                      <CurrencyInput
+                        value={parseFloat(newPayment.gross_amount) || 0}
+                        onValueChange={(v) => setNewPayment((p) => ({ ...p, gross_amount: v ? String(v) : "" }))}
+                      />
                     </div>
                     <div>
                       <Label>Taxa Plataforma (R$)</Label>
-                      <Input type="number" value={newPayment.platform_fee} onChange={(e) => setNewPayment((p) => ({ ...p, platform_fee: e.target.value }))} />
+                      <CurrencyInput
+                        value={parseFloat(newPayment.platform_fee) || 0}
+                        onValueChange={(v) => setNewPayment((p) => ({ ...p, platform_fee: v ? String(v) : "" }))}
+                      />
                     </div>
                     <div>
                       <Label>Valor Líquido (R$)</Label>
-                      <Input type="number" value={newPayment.net_amount} onChange={(e) => setNewPayment((p) => ({ ...p, net_amount: e.target.value }))} />
+                      <CurrencyInput
+                        value={parseFloat(newPayment.net_amount) || 0}
+                        onValueChange={(v) => setNewPayment((p) => ({ ...p, net_amount: v ? String(v) : "" }))}
+                      />
                     </div>
                   </div>
                   <div>
@@ -910,15 +920,24 @@ const AdminPaymentsTab = () => {
             <div className="grid grid-cols-3 gap-3">
               <div>
                 <Label>Bruto (R$)</Label>
-                <Input type="number" value={editForm.gross_amount} onChange={(e) => setEditForm((p) => ({ ...p, gross_amount: e.target.value }))} />
+                <CurrencyInput
+                  value={parseFloat(editForm.gross_amount) || 0}
+                  onValueChange={(v) => setEditForm((p) => ({ ...p, gross_amount: v ? String(v) : "" }))}
+                />
               </div>
               <div>
                 <Label>Taxa (R$)</Label>
-                <Input type="number" value={editForm.platform_fee} onChange={(e) => setEditForm((p) => ({ ...p, platform_fee: e.target.value }))} />
+                <CurrencyInput
+                  value={parseFloat(editForm.platform_fee) || 0}
+                  onValueChange={(v) => setEditForm((p) => ({ ...p, platform_fee: v ? String(v) : "" }))}
+                />
               </div>
               <div>
                 <Label>Líquido (R$)</Label>
-                <Input type="number" value={editForm.net_amount} onChange={(e) => setEditForm((p) => ({ ...p, net_amount: e.target.value }))} />
+                <CurrencyInput
+                  value={parseFloat(editForm.net_amount) || 0}
+                  onValueChange={(v) => setEditForm((p) => ({ ...p, net_amount: v ? String(v) : "" }))}
+                />
               </div>
             </div>
             <div>

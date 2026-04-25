@@ -34,6 +34,7 @@ const tabs = [
   { id: "support-tickets", label: "Tickets de Atendimento", icon: LifeBuoy },
   { id: "usage-history", label: "Histórico de Uso", icon: Activity, hidden: true },
   { id: "cancellations", label: "Cancelamentos", icon: XCircle },
+  { id: "compensation", label: "Pagamento de Professores", icon: DollarSign },
   { id: "security", label: "Segurança", icon: Shield },
   { id: "settings", label: "Configurações", icon: Settings },
   // Hidden: agora acessadas como submenu dentro de Cancelamentos
@@ -46,8 +47,7 @@ const tabs = [
   // Hidden tabs (acessadas via menu hambúrguer / deep-link, não exibidas no menu lateral)
   { id: "content", label: "Aprovação de Conteúdos", icon: Video, hidden: true },
   { id: "doubts", label: "Aprovação de Dúvidas", icon: HelpCircle, hidden: true },
-  { id: "payments", label: "Pagamento de Professores", icon: DollarSign, hidden: true },
-  { id: "compensation", label: "Remuneração de Professores", icon: DollarSign, hidden: true },
+  { id: "payments", label: "Pagamento de Professores (legado)", icon: DollarSign, hidden: true },
   { id: "subscriptions", label: "Vencimento de Assinaturas", icon: CalendarClock, hidden: true },
   { id: "emails", label: "Monitoramento de E-mails", icon: Mail, hidden: true },
   { id: "sales-posts", label: "Posts de Divulgação", icon: Megaphone, hidden: true },

@@ -7,6 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Play, RefreshCw, Settings as SettingsIcon, Users } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -74,9 +76,6 @@ const setProximity = (cfg: CompConfig, patch: Partial<ProximityAlertsConfig>): C
   const current = cfg.proximity_alerts ?? DEFAULT_PROXIMITY;
   return { ...cfg, proximity_alerts: { ...current, ...patch } };
 };
-
-import { Switch } from "@/components/ui/switch";
-import { Textarea } from "@/components/ui/textarea";
 
 }
 

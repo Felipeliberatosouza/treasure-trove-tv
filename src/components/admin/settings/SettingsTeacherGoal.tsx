@@ -32,7 +32,7 @@ interface TeacherGoalSettings {
 const DEFAULTS: TeacherGoalSettings = {
   monthly_goal: 8,
   content_goals: { revisoes: 4, resolucoes: 4, resumos: 2, colinhas: 2, simulados: 2, top_questoes: 2 },
-  relationship_goals: { agenda_weekly_updates: 4, completed_lessons: 4, doubts_answered_in_time: 5 },
+  relationship_goals: { agenda_weekly_updates: 4, completed_lessons: 90, doubts_answered_in_time: 90 },
   sales_posts_goal: 2,
   doubt_response_hours: 48,
   email_alerts_enabled: true,
@@ -49,9 +49,15 @@ const CONTENT_LABELS: Record<keyof ContentGoals, string> = {
 
 const RELATIONSHIP_LABELS: Record<keyof RelationshipGoals, string> = {
   agenda_weekly_updates: "Atualizações Semanais de Agenda (por mês)",
-  completed_lessons: "Aulas Agendadas Realizadas (por mês)",
-  doubts_answered_in_time: "Dúvidas Respondidas no Prazo (por mês)",
+  completed_lessons: "Aulas Agendadas Realizadas (% do total agendado)",
+  doubts_answered_in_time: "Dúvidas Respondidas no Prazo (% do total recebido)",
 };
+
+// Campos medidos em porcentagem (0–100)
+const PERCENT_FIELDS: ReadonlySet<keyof RelationshipGoals> = new Set([
+  "completed_lessons",
+  "doubts_answered_in_time",
+]);
 
 const SUB_TABS = [
   { id: "content", label: "Conteúdo", icon: FileText },

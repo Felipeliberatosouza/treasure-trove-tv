@@ -32,11 +32,11 @@ const UserMenu = forwardRef<HTMLDivElement>((_, forwardedRef) => {
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 rounded-full bg-secondary px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-muted"
+        className="flex items-center gap-2 rounded-full bg-white px-3 py-1.5 text-sm font-medium text-black transition-colors hover:bg-white/90"
       >
         <User className="h-4 w-4 text-primary" />
         <span className="max-w-[100px] truncate">{firstName}</span>
-        <ChevronDown className={`h-3 w-3 transition-transform ${open ? "rotate-180" : ""}`} />
+        <ChevronDown className={`h-3 w-3 text-black transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
 
       {open && (

@@ -6,6 +6,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.101.1'
+import { buildEmailLogoHtml } from '../_shared/email-logo.ts'
 
 interface ReengagementConfig {
   student_inactive_days: number
@@ -65,27 +66,14 @@ Deno.serve(async (req: Request) => {
       if (s.key === 'video_pricing') videoPricing = (s.value as Record<string, any>) || {}
     }
     const platformName = brandingData.platform_name || 'Revisão Fácil'
-    const slogan = (brandingData.slogan || '').trim()
-    const escapeHtml = (s: string) =>
-      String(s)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;')
-    const logoMaxWidth = 200
-    const sloganFontSize = slogan.length > 0
-      ? Math.max(8, Math.min(14, (logoMaxWidth / slogan.length) * 1.7))
-      : 11
-    const sloganHtml = slogan
-      ? `<div style="text-align:center;margin-top:-6px;margin-bottom:16px;"><span style="display:inline-block;max-width:${logoMaxWidth}px;color:#6b7280;font-size:${sloganFontSize.toFixed(1)}px;line-height:1;white-space:nowrap;overflow:hidden;">${escapeHtml(slogan)}</span></div>`
-      : ''
-    const buildLogoHtml = (logoUrl: string, useUploaded: boolean, headingColor: string) => {
-      const inner = logoUrl && useUploaded
-        ? `<div style="text-align:center;margin-bottom:${slogan ? '0' : '16px'};"><img src="${escapeHtml(logoUrl)}" alt="Logo" style="max-height:60px;max-width:${logoMaxWidth}px;display:inline-block;" /></div>`
-        : `<div style="text-align:center;margin-bottom:${slogan ? '0' : '16px'};font-size:24px;font-weight:bold;color:${headingColor};">${escapeHtml(platformName)}</div>`
-      return `${inner}${sloganHtml}`
-    }
+    const buildLogoHtml = (logoUrl: string, useUploaded: boolean, headingColor: string) =>
+      buildEmailLogoHtml({
+        logoUrl,
+        useUploadedLogo: useUploaded,
+        platformName,
+        slogan: brandingData.slogan,
+        headingColor,
+      })
 
     const buildFooter = (showSocial: boolean) => {
       if (!showSocial) return ''

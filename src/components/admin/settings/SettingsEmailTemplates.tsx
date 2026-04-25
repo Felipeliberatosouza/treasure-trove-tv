@@ -387,8 +387,9 @@ const SettingsEmailTemplates = () => {
 
     const platformName = brandingData?.platform_name || "Revisão Fácil";
     let logoHtml = "";
-    if (active.use_uploaded_logo && active.logo_url) {
-      logoHtml = `<div style="text-align:center;margin-bottom:16px;"><img src="${active.logo_url}" alt="Logo" style="max-height:60px;max-width:200px;" /></div>`;
+    const effectiveLogoUrl = active.logo_url || brandingData?.logo_url || "";
+    if (active.use_uploaded_logo && effectiveLogoUrl) {
+      logoHtml = `<div style="text-align:center;margin-bottom:16px;"><img src="${effectiveLogoUrl}" alt="Logo" style="max-height:60px;max-width:200px;" /></div>`;
     } else {
       logoHtml = `<div style="text-align:center;margin-bottom:16px;font-size:24px;font-weight:bold;color:${headingColor};">${platformName}</div>`;
     }

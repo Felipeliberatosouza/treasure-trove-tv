@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Card } from "@/components/ui/card";
@@ -103,8 +104,8 @@ const SettingsCashback = () => {
           </div>
           <div>
             <Label>Compra mínima (R$)</Label>
-            <Input type="number" min={0} step="0.01" value={cfg.min_purchase_amount}
-              onChange={(e) => setCfg({ ...cfg, min_purchase_amount: Math.max(0, parseFloat(e.target.value) || 0) })} />
+            <CurrencyInput value={cfg.min_purchase_amount}
+              onValueChange={(v) => setCfg({ ...cfg, min_purchase_amount: Math.max(0, v) })} />
             <p className="text-xs text-muted-foreground mt-1">Valor mínimo de compra para gerar cashback.</p>
           </div>
         </div>
@@ -123,8 +124,8 @@ const SettingsCashback = () => {
           </div>
           <div>
             <Label>Compra mínima do indicado (R$)</Label>
-            <Input type="number" min={0} step="0.01" value={cfg.referral_min_purchase}
-              onChange={(e) => setCfg({ ...cfg, referral_min_purchase: Math.max(0, parseFloat(e.target.value) || 0) })} />
+            <CurrencyInput value={cfg.referral_min_purchase}
+              onValueChange={(v) => setCfg({ ...cfg, referral_min_purchase: Math.max(0, v) })} />
           </div>
         </div>
         <p className="text-xs text-muted-foreground">
@@ -149,8 +150,8 @@ const SettingsCashback = () => {
               </div>
               <div className="col-span-3">
                 <Label className="text-xs">Gasto mínimo 12m (R$)</Label>
-                <Input type="number" min={0} step="0.01" value={t.min_spent_12m}
-                  onChange={(e) => updateTier(i, { min_spent_12m: Math.max(0, parseFloat(e.target.value) || 0) })} />
+                <CurrencyInput value={t.min_spent_12m}
+                  onValueChange={(v) => updateTier(i, { min_spent_12m: Math.max(0, v) })} />
               </div>
               <div className="col-span-3">
                 <Label className="text-xs">% cashback</Label>

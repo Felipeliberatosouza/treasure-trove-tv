@@ -85,6 +85,29 @@ const Navbar = () => {
   const { user, role } = useAuth();
   const { settings } = useAllPlatformSettings();
   const branding = settings.branding as BrandingSettings | undefined;
+  const logoRef = useRef<HTMLImageElement | null>(null);
+  const [logoWidth, setLogoWidth] = useState<number>(0);
+
+  useEffect(() => {
+    const el = logoRef.current;
+    if (!el) {
+      setLogoWidth(0);
+      return;
+    }
+    const measure = () => setLogoWidth(el.getBoundingClientRect().width);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [branding?.logo_url, branding?.slogan]);
+
+  const slogan = branding?.slogan || "";
+  // Calcula font-size para o slogan ocupar a mesma largura da logo
+  // Aproximação: largura média de caractere ≈ 0.5 * fontSize
+  const sloganFontSize =
+    logoWidth > 0 && slogan.length > 0
+      ? Math.max(8, Math.min(18, (logoWidth / slogan.length) * 1.7))
+      : 11;
   const { isActive: hasActiveSubscription } = useActiveSubscription();
 
   const baseMenu = user
@@ -167,18 +190,26 @@ const Navbar = () => {
         <Link to="/" className="flex flex-col items-center gap-0 leading-none">
           {branding?.logo_url ? (
             <img
+              ref={logoRef}
               src={branding.logo_url}
               alt={branding.platform_name || "Logo"}
               className="h-16 md:h-20 max-w-[340px] object-contain block"
+              onLoad={(e) => setLogoWidth((e.target as HTMLImageElement).getBoundingClientRect().width)}
             />
           ) : (
             <span className="font-display text-xl font-bold text-gradient">
               {branding?.platform_name || "Revisão Fácil"}
             </span>
           )}
-          {branding?.slogan && (
-            <span className="-mt-3 md:-mt-4 text-[10px] md:text-[11px] text-muted-foreground leading-none max-w-[340px] text-center">
-              {branding.slogan}
+          {slogan && (
+            <span
+              className="-mt-2 md:-mt-3 text-muted-foreground leading-none text-center whitespace-nowrap overflow-hidden"
+              style={{
+                width: logoWidth > 0 ? `${logoWidth}px` : undefined,
+                fontSize: `${sloganFontSize}px`,
+              }}
+            >
+              {slogan}
             </span>
           )}
         </Link>

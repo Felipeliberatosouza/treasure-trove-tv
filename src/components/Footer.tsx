@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import { useAllPlatformSettings } from "@/hooks/usePlatformSettings";
 import type { ContactSettings, BrandingSettings } from "@/hooks/usePlatformSettings";
 
@@ -7,6 +8,26 @@ const Footer = () => {
   const branding = settings.branding as BrandingSettings | undefined;
   const name = branding?.platform_name || "Revisão Fácil";
   const slogan = branding?.slogan;
+  const logoRef = useRef<HTMLImageElement | null>(null);
+  const [logoWidth, setLogoWidth] = useState<number>(0);
+
+  useEffect(() => {
+    const el = logoRef.current;
+    if (!el) {
+      setLogoWidth(0);
+      return;
+    }
+    const measure = () => setLogoWidth(el.getBoundingClientRect().width);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [branding?.logo_url, slogan]);
+
+  const sloganFontSize =
+    logoWidth > 0 && slogan && slogan.length > 0
+      ? Math.max(8, Math.min(18, (logoWidth / slogan.length) * 1.7))
+      : 11;
 
   return (
     <footer className="border-t border-border px-6 py-10 md:px-12 lg:px-20">
@@ -14,15 +35,23 @@ const Footer = () => {
         <div className="flex flex-col items-center gap-0 leading-none">
           {branding?.logo_url ? (
             <img
+              ref={logoRef}
               src={branding.logo_url}
               alt={name}
               className="h-16 md:h-20 max-w-[320px] object-contain block"
+              onLoad={(e) => setLogoWidth((e.target as HTMLImageElement).getBoundingClientRect().width)}
             />
           ) : (
             <span className="font-display text-lg font-bold text-gradient">{name}</span>
           )}
           {slogan && (
-            <span className="-mt-3 md:-mt-4 text-[11px] text-muted-foreground leading-none max-w-[300px] text-center">
+            <span
+              className="-mt-2 md:-mt-3 text-muted-foreground leading-none text-center whitespace-nowrap overflow-hidden"
+              style={{
+                width: logoWidth > 0 ? `${logoWidth}px` : undefined,
+                fontSize: `${sloganFontSize}px`,
+              }}
+            >
               {slogan}
             </span>
           )}

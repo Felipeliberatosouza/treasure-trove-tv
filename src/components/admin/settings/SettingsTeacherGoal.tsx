@@ -92,9 +92,31 @@ const SettingsTeacherGoal = () => {
       .from("platform_settings")
       .update({ value: settings as any })
       .eq("key", "teacher_content_goal");
+    if (error) {
+      setSaving(false);
+      toast.error("Erro ao salvar metas");
+      return;
+    }
+    // Sincroniza a meta padrão de pacotes/mês usada em
+    // Pagamento de Professores (teacher_compensation.default_monthly_package_target)
+    // para que a fonte única (Metas do Professor → Geral) reflita imediatamente.
+    const { data: compRow } = await supabase
+      .from("platform_settings")
+      .select("value")
+      .eq("key", "teacher_compensation")
+      .maybeSingle();
+    if (compRow?.value) {
+      const updatedComp = {
+        ...(compRow.value as Record<string, unknown>),
+        default_monthly_package_target: settings.monthly_goal,
+      };
+      await supabase
+        .from("platform_settings")
+        .update({ value: updatedComp as any })
+        .eq("key", "teacher_compensation");
+    }
     setSaving(false);
-    if (error) toast.error("Erro ao salvar metas");
-    else toast.success("Metas atualizadas");
+    toast.success("Metas atualizadas");
   };
 
   const updateContent = (k: keyof ContentGoals, v: number) =>

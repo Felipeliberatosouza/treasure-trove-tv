@@ -206,8 +206,19 @@ const TeacherCompensationTab = () => {
                 <div className="flex justify-between border-t pt-2"><span className="text-muted-foreground">Consumo total</span><span className="font-medium">{Number(latest.total_consumption_minutes).toFixed(0)} min</span></div>
                 <div className="flex justify-between"><span className="text-muted-foreground">Sua fatia do Pool</span><span className="font-medium">{Number(latest.pool_share_pct).toFixed(2)}%</span></div>
                 <div className="flex justify-between"><span className="text-muted-foreground">Valor base (Pool)</span><span className="font-medium">{formatBRL(Number(latest.pool_base_amount))}</span></div>
-                {latest.pool_floor_applied && <Badge variant="secondary">Piso mínimo aplicado</Badge>}
-                {latest.pool_cap_applied && <Badge variant="secondary">Teto de 15% aplicado</Badge>}
+              </div>
+              <div className="mt-3">
+                <PoolFloorCapIndicator
+                  poolAmount={Number(latest.pool_base_amount) / Math.max(Number(latest.pool_share_pct) / 100, 0.0001)}
+                  poolBase={Number(latest.pool_base_amount)}
+                  uniqueAccesses={Number(latest.material_unique_accesses)}
+                  poolMinPerAccess={poolCfg?.pool_min_per_access_brl}
+                  poolMaxSharePct={poolCfg?.pool_max_share_pct}
+                  totalMinutes={Number(latest.total_consumption_minutes)}
+                  totalPlatformMinutes={null}
+                  floorApplied={!!latest.pool_floor_applied}
+                  capApplied={!!latest.pool_cap_applied}
+                />
               </div>
             </Card>
 

@@ -62,6 +62,11 @@ const TeacherCompensationTrendChart = ({ stats, live }: Props) => {
       kind: "closed" | "live";
       d_rf_pct?: number | null; d_qb_pct?: number | null; d_share_pct?: number | null; d_pool_pct?: number | null;
       d_qb_pp?: number | null; d_share_pp?: number | null; d_rf_abs?: number | null;
+      prev_label?: string | null;
+      prev_rf_score?: number | null;
+      prev_quality_bonus_pct?: number | null;
+      prev_pool_share_pct?: number | null;
+      prev_pool_final_amount?: number | null;
     }> = [...stats]
       .filter((s) => s.period_start)
       .sort((a, b) => a.period_start.localeCompare(b.period_start))
@@ -97,6 +102,11 @@ const TeacherCompensationTrendChart = ({ stats, live }: Props) => {
       curr.d_share_pct = pctDelta(curr.pool_share_pct, prev?.pool_share_pct);
       curr.d_share_pp = absDelta(curr.pool_share_pct, prev?.pool_share_pct);
       curr.d_pool_pct = pctDelta(curr.pool_final_amount, prev?.pool_final_amount);
+      curr.prev_label = prev?.label ?? null;
+      curr.prev_rf_score = prev?.rf_score ?? null;
+      curr.prev_quality_bonus_pct = prev?.quality_bonus_pct ?? null;
+      curr.prev_pool_share_pct = prev?.pool_share_pct ?? null;
+      curr.prev_pool_final_amount = prev?.pool_final_amount ?? null;
     }
     return closed;
   }, [stats, live]);
@@ -107,8 +117,9 @@ const TeacherCompensationTrendChart = ({ stats, live }: Props) => {
     if (!active || !payload || !payload.length) return null;
     const row = payload[0]?.payload;
     if (!row) return null;
+    const prevLabel = row.prev_label ?? "mês anterior";
     return (
-      <div className="rounded-lg border border-border bg-card p-2.5 text-xs shadow-md min-w-[180px]">
+      <div className="rounded-lg border border-border bg-card p-2.5 text-xs shadow-md min-w-[220px]">
         <div className="font-medium mb-1.5">{label}</div>
         {mode === "rf" ? (
           <div className="space-y-1">
@@ -117,7 +128,11 @@ const TeacherCompensationTrendChart = ({ stats, live }: Props) => {
               <span>{row.rf_score?.toFixed(2) ?? "—"}/10</span>
             </div>
             <div className="flex items-center justify-between gap-3">
-              <span className="text-muted-foreground">vs mês anterior</span>
+              <span className="text-muted-foreground">{prevLabel}</span>
+              <span>{row.prev_rf_score != null ? `${Number(row.prev_rf_score).toFixed(2)}/10` : "—"}</span>
+            </div>
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-muted-foreground">Variação</span>
               <DeltaBadge value={row.d_rf_pct} suffix="%" />
             </div>
             <div className="border-t border-border my-1" />
@@ -126,7 +141,11 @@ const TeacherCompensationTrendChart = ({ stats, live }: Props) => {
               <span>{row.quality_bonus_pct?.toFixed(0) ?? "—"}%</span>
             </div>
             <div className="flex items-center justify-between gap-3">
-              <span className="text-muted-foreground">vs mês anterior</span>
+              <span className="text-muted-foreground">{prevLabel}</span>
+              <span>{row.prev_quality_bonus_pct != null ? `${Number(row.prev_quality_bonus_pct).toFixed(0)}%` : "—"}</span>
+            </div>
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-muted-foreground">Variação</span>
               <DeltaBadge value={row.d_qb_pp} suffix=" p.p." />
             </div>
           </div>
@@ -137,7 +156,11 @@ const TeacherCompensationTrendChart = ({ stats, live }: Props) => {
               <span>{row.pool_share_pct?.toFixed(2) ?? "—"}%</span>
             </div>
             <div className="flex items-center justify-between gap-3">
-              <span className="text-muted-foreground">vs mês anterior</span>
+              <span className="text-muted-foreground">{prevLabel}</span>
+              <span>{row.prev_pool_share_pct != null ? `${Number(row.prev_pool_share_pct).toFixed(2)}%` : "—"}</span>
+            </div>
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-muted-foreground">Variação</span>
               <DeltaBadge value={row.d_share_pp} suffix=" p.p." />
             </div>
             <div className="border-t border-border my-1" />
@@ -146,7 +169,11 @@ const TeacherCompensationTrendChart = ({ stats, live }: Props) => {
               <span>{fmtBRL(row.pool_final_amount ?? 0)}</span>
             </div>
             <div className="flex items-center justify-between gap-3">
-              <span className="text-muted-foreground">vs mês anterior</span>
+              <span className="text-muted-foreground">{prevLabel}</span>
+              <span>{row.prev_pool_final_amount != null ? fmtBRL(Number(row.prev_pool_final_amount)) : "—"}</span>
+            </div>
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-muted-foreground">Variação</span>
               <DeltaBadge value={row.d_pool_pct} suffix="%" />
             </div>
           </div>

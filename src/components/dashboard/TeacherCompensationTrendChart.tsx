@@ -40,14 +40,52 @@ const absDelta = (curr: number | null | undefined, prev: number | null | undefin
 const fmtPct = (n: number | null) => n == null ? "—" : `${n >= 0 ? "+" : ""}${n.toFixed(1)}%`;
 const fmtBRL = (n: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(n || 0);
 
-const DeltaBadge = ({ value, suffix = "" }: { value: number | null; suffix?: string }) => {
-  if (value == null) return <span className="text-muted-foreground">—</span>;
+const DeltaBadge = ({
+  value,
+  suffix = "",
+  metricLabel,
+}: {
+  value: number | null;
+  suffix?: string;
+  /** Rótulo da métrica para descrever o delta a leitores de tela. */
+  metricLabel?: string;
+}) => {
+  if (value == null) {
+    return (
+      <span
+        className="text-muted-foreground"
+        aria-label={metricLabel ? `${metricLabel}: variação não disponível` : "Variação não disponível"}
+      >
+        —
+      </span>
+    );
+  }
   const Icon = value > 0 ? ArrowUpRight : value < 0 ? ArrowDownRight : Minus;
-  const cls = value > 0 ? "text-emerald-600" : value < 0 ? "text-destructive" : "text-muted-foreground";
+  // Contraste reforçado: tons escuros no claro, tons claros no dark — atende WCAG AA sobre bg-card
+  const cls =
+    value > 0
+      ? "text-emerald-700 dark:text-emerald-400"
+      : value < 0
+      ? "text-red-700 dark:text-red-400"
+      : "text-muted-foreground";
+  const direction = value > 0 ? "aumentou" : value < 0 ? "diminuiu" : "permaneceu estável";
+  const formatted = `${value >= 0 ? "+" : ""}${value.toFixed(1)}${suffix}`;
+  const ariaSuffix = suffix.includes("p.p.")
+    ? "pontos percentuais"
+    : suffix.includes("%")
+    ? "por cento"
+    : "";
+  const aria = metricLabel
+    ? `${metricLabel} ${direction} ${Math.abs(value).toFixed(1)} ${ariaSuffix} em relação ao mês anterior`.trim()
+    : `Variação: ${direction} ${Math.abs(value).toFixed(1)} ${ariaSuffix}`.trim();
   return (
-    <span className={`inline-flex items-center gap-0.5 font-medium ${cls}`}>
-      <Icon className="h-3 w-3" />
-      {value >= 0 ? "+" : ""}{value.toFixed(1)}{suffix}
+    <span
+      className={`inline-flex items-center gap-0.5 font-medium ${cls}`}
+      role="text"
+      aria-label={aria}
+    >
+      <Icon className="h-3 w-3" aria-hidden="true" />
+      <span aria-hidden="true">{formatted}</span>
     </span>
   );
 };
@@ -58,6 +96,13 @@ const DeltaBadge = ({ value, suffix = "" }: { value: number | null; suffix?: str
  * @param metric "rf" | "qb" | "share" | "pool" para escolher palavras adequadas
  * @param strongThreshold magnitude absoluta a partir da qual a variação é "expressiva"
  */
+const METRIC_LABELS: Record<"rf" | "qb" | "share" | "pool", string> = {
+  rf: "RF Score",
+  qb: "Bônus de Qualidade",
+  share: "Fatia do Pool",
+  pool: "Pool em R$",
+};
+
 const ContextMessage = ({
   value,
   metric,
@@ -67,9 +112,15 @@ const ContextMessage = ({
   metric: "rf" | "qb" | "share" | "pool";
   strongThreshold: number;
 }) => {
+  const metricName = METRIC_LABELS[metric];
+
   if (value == null) {
     return (
-      <p className="text-[11px] text-muted-foreground italic">
+      <p
+        className="text-[11px] text-muted-foreground italic"
+        role="status"
+        aria-label={`${metricName}: sem comparação disponível com o mês anterior.`}
+      >
         Sem comparação disponível com o mês anterior.
       </p>
     );
@@ -77,7 +128,11 @@ const ContextMessage = ({
   const abs = Math.abs(value);
   if (abs < 0.05) {
     return (
-      <p className="text-[11px] text-muted-foreground italic">
+      <p
+        className="text-[11px] text-muted-foreground italic"
+        role="status"
+        aria-label={`${metricName}: estável em relação ao mês anterior, sem variação relevante.`}
+      >
         Estável vs mês anterior — sem variação relevante.
       </p>
     );
@@ -114,12 +169,26 @@ const ContextMessage = ({
 
   const dict = msgs[metric];
   const text = positive ? (strong ? dict.upStrong : dict.up) : strong ? dict.downStrong : dict.down;
-  const cls = positive ? "text-emerald-600" : "text-destructive";
+  // Contraste reforçado para WCAG AA sobre bg-card (card claro/dark)
+  const cls = positive
+    ? "text-emerald-700 dark:text-emerald-300"
+    : "text-red-700 dark:text-red-300";
   const Icon = positive ? ArrowUpRight : ArrowDownRight;
+  const directionWord = positive ? (strong ? "Melhorou bastante" : "Melhorou") : (strong ? "Piorou bastante" : "Piorou");
+  const aria = `${metricName}: ${directionWord} em relação ao mês anterior. ${text}`;
+
   return (
-    <p className={`text-[11px] ${cls} flex items-start gap-1 mt-0.5`}>
-      <Icon className="h-3 w-3 mt-px shrink-0" />
-      <span>{text}</span>
+    <p
+      className={`text-[11px] ${cls} flex items-start gap-1 mt-0.5 font-medium`}
+      role="status"
+      aria-label={aria}
+    >
+      <Icon className="h-3 w-3 mt-px shrink-0" aria-hidden="true" />
+      {/* Prefixo visual curto com bom contraste, antes do texto descritivo */}
+      <span>
+        <span className="sr-only">{directionWord}: </span>
+        {text}
+      </span>
     </p>
   );
 };

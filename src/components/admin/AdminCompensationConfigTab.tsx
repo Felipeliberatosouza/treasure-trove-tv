@@ -112,6 +112,7 @@ const setTooltipEnabled = (cfg: CompConfig, enabled: boolean): CompConfig => {
 type TooltipThresholdErrors = Partial<Record<TooltipMetricKey, string>>;
 
 const formatBRL = (n: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(n || 0);
+const formatBRLNumber = (n: number) => new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 2 }).format(n || 0);
 const formatDate = (d: string) => { try { return format(new Date(d), "dd/MM/yyyy HH:mm", { locale: ptBR }); } catch { return d; } };
 
 const AdminCompensationConfigTab = () => {
@@ -148,11 +149,15 @@ const AdminCompensationConfigTab = () => {
     metric: TooltipMetricKey,
     rawValue: string
   ) => {
-    // Normaliza o input para exibir (converte vírgula em ponto visualmente)
-    const normalizedInput = rawValue.trim().replace(",", ".");
-    setThresholdInputs((prev) => ({ ...prev, [metric]: normalizedInput }));
-    
+    // Guarda o input original para validação
     const result = validateThresholdInput(rawValue);
+    
+    // Formata para exibição brasileira: converte ponto em vírgula
+    const displayValue = result.normalized 
+      ? result.normalized.replace(".", ",")
+      : rawValue.trim();
+    
+    setThresholdInputs((prev) => ({ ...prev, [metric]: displayValue }));
     setThresholdErrors((prev) => ({ ...prev, [metric]: result.error }));
     
     // Só atualiza o config se for um número válido
@@ -479,7 +484,7 @@ const AdminCompensationConfigTab = () => {
                             <Input
                               type="text"
                               inputMode="decimal"
-                              value={thresholdInputs[m] ?? String(data.strong_threshold)}
+                              value={thresholdInputs[m] ?? formatBRLNumber(data.strong_threshold)}
                               onChange={(e) =>
                                 updateMetric(m, e.target.value)
                               }

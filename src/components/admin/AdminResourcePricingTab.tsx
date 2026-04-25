@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import { Button } from "@/components/ui/button";
 import { Save, DollarSign } from "lucide-react";
 import {
@@ -126,23 +127,17 @@ const AdminResourcePricingTab = () => {
                   {RESOURCE_LABELS[p.resource_type] || p.resource_type}
                 </TableCell>
                 <TableCell>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    min={0}
+                  <CurrencyInput
                     className="h-9"
                     value={p.min_price}
-                    onChange={(e) => updateField(i, "min_price", parseFloat(e.target.value) || 0)}
+                    onValueChange={(v) => updateField(i, "min_price", v)}
                   />
                 </TableCell>
                 <TableCell>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    min={0}
+                  <CurrencyInput
                     className="h-9"
                     value={p.price}
-                    onChange={(e) => updateField(i, "price", parseFloat(e.target.value) || 0)}
+                    onValueChange={(v) => updateField(i, "price", v)}
                   />
                 </TableCell>
                 <TableCell>

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { usePlatformSettings, SubscriptionPlan, SubscriptionPlansSettings } from "@/hooks/usePlatformSettings";
 import { Input } from "@/components/ui/input";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -71,7 +72,7 @@ const SettingsSubscriptionPlans = () => {
             </div>
             <div>
               <Label>Preço (R$)</Label>
-              <Input type="number" step="0.01" value={plan.price} onChange={(e) => updatePlan(pi, "price", parseFloat(e.target.value) || 0)} />
+              <CurrencyInput value={plan.price} onValueChange={(v) => updatePlan(pi, "price", v)} />
             </div>
           </div>
           <div className="flex items-center gap-2">

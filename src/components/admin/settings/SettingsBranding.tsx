@@ -51,8 +51,8 @@ const SettingsBranding = () => {
       <div className="space-y-2">
         <Label>Logotipo</Label>
         {form.logo_url && (
-          <div className="relative inline-block rounded-lg border border-border bg-muted/30 p-2">
-            <img src={form.logo_url} alt="Logo" className="h-16 max-w-[200px] object-contain" />
+          <div className="relative inline-block rounded-lg border border-border p-2">
+            <img src={form.logo_url} alt="Logo" className="h-20 max-w-[260px] object-contain" />
             <button
               onClick={() => setForm({ ...form, logo_url: "" })}
               className="absolute -right-2 -top-2 rounded-full bg-destructive p-1 text-destructive-foreground hover:opacity-80"

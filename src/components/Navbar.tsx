@@ -166,7 +166,11 @@ const Navbar = () => {
       <div className="flex items-center justify-between px-6 py-3 md:px-12 lg:px-20">
         <Link to="/" className="flex items-center gap-2">
           {branding?.logo_url ? (
-            <img src={branding.logo_url} alt={branding.platform_name || "Logo"} className="h-8 max-w-[160px] object-contain" />
+            <img
+              src={branding.logo_url}
+              alt={branding.platform_name || "Logo"}
+              className="h-12 md:h-14 max-w-[260px] object-contain"
+            />
           ) : (
             <span className="font-display text-xl font-bold text-gradient">
               {branding?.platform_name || "Revisão Fácil"}

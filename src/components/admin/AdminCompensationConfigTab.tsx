@@ -160,6 +160,19 @@ const AdminCompensationConfigTab = () => {
 
   const hasThresholdErrors = Object.values(thresholdErrors).some((e) => e !== undefined);
 
+  const allMetricKeys: TooltipMetricKey[] = ["rf", "qb", "share", "pool"];
+
+  const getFirstError = (): { metric: TooltipMetricKey; message: string } | null => {
+    for (const m of allMetricKeys) {
+      if (thresholdErrors[m]) {
+        return { metric: m, message: thresholdErrors[m]! };
+      }
+    }
+    return null;
+  };
+
+  const firstError = getFirstError();
+
   const load = async () => {
     setLoading(true);
     const { data: cfgRow } = await supabase.from("platform_settings").select("value").eq("key", "teacher_compensation").maybeSingle();
@@ -422,7 +435,7 @@ const AdminCompensationConfigTab = () => {
             setCfg({ ...cfg, tooltip_messages: { ...DEFAULT_TOOLTIP_MESSAGES } });
           };
 
-          const metricKeys: TooltipMetricKey[] = ["rf", "qb", "share", "pool"];
+          const metricKeys = allMetricKeys;
 
           return (
             <>
@@ -522,8 +535,18 @@ const AdminCompensationConfigTab = () => {
         })()}
       </Card>
 
+      {firstError && (
+        <div className="rounded-lg border border-destructive bg-destructive/10 p-3 flex items-start gap-2">
+          <AlertCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" aria-hidden="true" />
+          <div>
+            <p className="text-sm font-medium text-destructive">Erro em {TOOLTIP_METRIC_LABELS[firstError.metric]}</p>
+            <p className="text-sm text-destructive/90">{firstError.message}</p>
+          </div>
+        </div>
+      )}
+
       <div className="flex justify-end">
-        <Button onClick={save} disabled={saving || hasThresholdErrors}>
+        <Button onClick={save} disabled={saving || hasThresholdErrors} aria-describedby={firstError ? "first-error-alert" : undefined}>
           {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
           {hasThresholdErrors ? "Corrija os erros para salvar" : "Salvar configurações"}
         </Button>

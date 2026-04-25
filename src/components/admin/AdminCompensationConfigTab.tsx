@@ -108,6 +108,9 @@ const setTooltipEnabled = (cfg: CompConfig, enabled: boolean): CompConfig => {
   return { ...cfg, tooltip_messages: { ...merged, enabled } };
 };
 
+// Tipos de erro de validação
+type TooltipThresholdErrors = Partial<Record<TooltipMetricKey, string>>;
+
 const formatBRL = (n: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(n || 0);
 const formatDate = (d: string) => { try { return format(new Date(d), "dd/MM/yyyy HH:mm", { locale: ptBR }); } catch { return d; } };
 

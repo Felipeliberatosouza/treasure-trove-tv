@@ -394,18 +394,25 @@ const SettingsEmailTemplates = () => {
     let logoHtml = "";
     const effectiveLogoUrl = active.logo_url || brandingData?.logo_url || "";
     const slogan = (brandingData?.slogan || "").trim();
+    const escapeHtml = (s: string) =>
+      String(s)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
     const logoMaxWidth = 200;
     const sloganFontSize =
       slogan.length > 0
         ? Math.max(8, Math.min(14, (logoMaxWidth / slogan.length) * 1.7))
         : 11;
     const sloganHtml = slogan
-      ? `<div style="text-align:center;margin-top:-6px;margin-bottom:16px;"><span style="display:inline-block;max-width:${logoMaxWidth}px;color:#6b7280;font-size:${sloganFontSize.toFixed(1)}px;line-height:1;white-space:nowrap;overflow:hidden;">${slogan.replace(/</g, "&lt;")}</span></div>`
+      ? `<div style="text-align:center;margin-top:-6px;margin-bottom:16px;"><span style="display:inline-block;max-width:${logoMaxWidth}px;color:#6b7280;font-size:${sloganFontSize.toFixed(1)}px;line-height:1;white-space:nowrap;overflow:hidden;">${escapeHtml(slogan)}</span></div>`
       : "";
     if (active.use_uploaded_logo && effectiveLogoUrl) {
-      logoHtml = `<div style="text-align:center;margin-bottom:${slogan ? "0" : "16px"};"><img src="${effectiveLogoUrl}" alt="Logo" style="max-height:60px;max-width:${logoMaxWidth}px;display:inline-block;" /></div>${sloganHtml}`;
+      logoHtml = `<div style="text-align:center;margin-bottom:${slogan ? "0" : "16px"};"><img src="${escapeHtml(effectiveLogoUrl)}" alt="Logo" style="max-height:60px;max-width:${logoMaxWidth}px;display:inline-block;" /></div>${sloganHtml}`;
     } else {
-      logoHtml = `<div style="text-align:center;margin-bottom:${slogan ? "0" : "16px"};font-size:24px;font-weight:bold;color:${headingColor};">${platformName}</div>${sloganHtml}`;
+      logoHtml = `<div style="text-align:center;margin-bottom:${slogan ? "0" : "16px"};font-size:24px;font-weight:bold;color:${headingColor};">${escapeHtml(platformName)}</div>${sloganHtml}`;
     }
 
     const footerHtml = active.show_social_footer ? buildFooterHtml() : "";

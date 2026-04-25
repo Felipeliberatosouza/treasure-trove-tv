@@ -420,19 +420,19 @@ const TeacherCompensationTrendChart = ({ stats, live }: Props) => {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
             <div className="rounded-md bg-card border border-border p-2">
               <div className="text-muted-foreground text-[10px] uppercase tracking-wide">RF Score</div>
-              <DeltaBadge value={summary.rf} suffix="%" />
+              <DeltaBadge value={summary.rf} suffix="%" metricLabel="RF Score" />
             </div>
             <div className="rounded-md bg-card border border-border p-2">
               <div className="text-muted-foreground text-[10px] uppercase tracking-wide">Bônus Qualidade</div>
-              <DeltaBadge value={summary.qb} suffix=" p.p." />
+              <DeltaBadge value={summary.qb} suffix=" p.p." metricLabel="Bônus de Qualidade" />
             </div>
             <div className="rounded-md bg-card border border-border p-2">
               <div className="text-muted-foreground text-[10px] uppercase tracking-wide">Fatia do Pool</div>
-              <DeltaBadge value={summary.share} suffix=" p.p." />
+              <DeltaBadge value={summary.share} suffix=" p.p." metricLabel="Fatia do Pool" />
             </div>
             <div className="rounded-md bg-card border border-border p-2">
               <div className="text-muted-foreground text-[10px] uppercase tracking-wide">Pool em R$</div>
-              <DeltaBadge value={summary.pool} suffix="%" />
+              <DeltaBadge value={summary.pool} suffix="%" metricLabel="Pool em R$" />
             </div>
           </div>
           {liveIndex >= 0 && (

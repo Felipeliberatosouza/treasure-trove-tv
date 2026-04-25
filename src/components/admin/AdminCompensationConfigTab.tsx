@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
@@ -272,6 +273,19 @@ const AdminCompensationConfigTab = () => {
     </div>
   );
 
+  const currencyField = (label: string, key: keyof CompConfig) => (
+    <div>
+      <Label className="text-xs">{label}</Label>
+      <div className="flex items-center gap-1">
+        <span className="text-xs text-muted-foreground">R$</span>
+        <CurrencyInput
+          value={Number((cfg as any)[key]) || 0}
+          onValueChange={(v) => setCfg({ ...cfg, [key]: v } as CompConfig)}
+        />
+      </div>
+    </div>
+  );
+
   return (
     <div className="space-y-6">
       <div className="flex items-start justify-between">
@@ -293,7 +307,7 @@ const AdminCompensationConfigTab = () => {
       <Card className="p-4">
         <h3 className="font-medium mb-3">1. Taxa de inserção</h3>
         <div className="grid md:grid-cols-3 gap-3 items-end">
-          {cfgField("Valor por pacote completo", "package_fee_brl", "R$")}
+          {currencyField("Valor por pacote completo", "package_fee_brl")}
           <div>
             <Label className="text-xs">Meta padrão de pacotes/mês</Label>
             <div className="flex items-center gap-2 h-10 px-3 rounded-md border border-input bg-muted/40">
@@ -313,7 +327,7 @@ const AdminCompensationConfigTab = () => {
         <h3 className="font-medium mb-3">2. Pool de Assinaturas</h3>
         <div className="grid md:grid-cols-3 gap-3">
           {cfgField("% da receita líquida ao Pool", "pool_net_revenue_pct", "%")}
-          {cfgField("Piso por acesso único", "pool_min_per_access_brl", "R$")}
+          {currencyField("Piso por acesso único", "pool_min_per_access_brl")}
           {cfgField("Teto máximo por professor", "pool_max_share_pct", "%")}
           {cfgField("Material textual = X min de vídeo", "material_access_minutes_equivalent", "min", "1")}
         </div>

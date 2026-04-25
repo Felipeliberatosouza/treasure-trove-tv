@@ -274,7 +274,7 @@ const TeacherCompensationTrendChart = ({ stats, live }: Props) => {
             </div>
             <div className="flex items-center justify-between gap-3">
               <span className="text-muted-foreground">Variação</span>
-              <DeltaBadge value={row.d_rf_pct} suffix="%" />
+              <DeltaBadge value={row.d_rf_pct} suffix="%" metricLabel="RF Score" />
             </div>
             <ContextMessage value={row.d_rf_pct} metric="rf" strongThreshold={10} />
             <div className="border-t border-border my-1" />
@@ -288,7 +288,7 @@ const TeacherCompensationTrendChart = ({ stats, live }: Props) => {
             </div>
             <div className="flex items-center justify-between gap-3">
               <span className="text-muted-foreground">Variação</span>
-              <DeltaBadge value={row.d_qb_pp} suffix=" p.p." />
+              <DeltaBadge value={row.d_qb_pp} suffix=" p.p." metricLabel="Bônus de Qualidade" />
             </div>
             <ContextMessage value={row.d_qb_pp} metric="qb" strongThreshold={5} />
           </div>
@@ -304,7 +304,7 @@ const TeacherCompensationTrendChart = ({ stats, live }: Props) => {
             </div>
             <div className="flex items-center justify-between gap-3">
               <span className="text-muted-foreground">Variação</span>
-              <DeltaBadge value={row.d_share_pp} suffix=" p.p." />
+              <DeltaBadge value={row.d_share_pp} suffix=" p.p." metricLabel="Fatia do Pool" />
             </div>
             <ContextMessage value={row.d_share_pp} metric="share" strongThreshold={2} />
             <div className="border-t border-border my-1" />
@@ -318,7 +318,7 @@ const TeacherCompensationTrendChart = ({ stats, live }: Props) => {
             </div>
             <div className="flex items-center justify-between gap-3">
               <span className="text-muted-foreground">Variação</span>
-              <DeltaBadge value={row.d_pool_pct} suffix="%" />
+              <DeltaBadge value={row.d_pool_pct} suffix="%" metricLabel="Pool em R$" />
             </div>
             <ContextMessage value={row.d_pool_pct} metric="pool" strongThreshold={20} />
           </div>

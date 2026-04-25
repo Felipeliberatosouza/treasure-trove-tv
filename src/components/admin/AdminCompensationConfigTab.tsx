@@ -125,9 +125,17 @@ const AdminCompensationConfigTab = () => {
   const [teachers, setTeachers] = useState<{ id: string; name: string }[]>([]);
   const [newTarget, setNewTarget] = useState({ teacher_id: "", monthly_package_target: 4 });
   const [thresholdErrors, setThresholdErrors] = useState<TooltipThresholdErrors>({});
+  const [thresholdInputs, setThresholdInputs] = useState<Partial<Record<TooltipMetricKey, string>>>({});
 
-  const validateThreshold = (metric: TooltipMetricKey, value: number): string | undefined => {
-    if (value < 0) {
+  const validateThresholdInput = (value: string): string | undefined => {
+    if (value === "" || value.trim() === "") {
+      return "O limiar é obrigatório";
+    }
+    const num = Number(value);
+    if (Number.isNaN(num)) {
+      return "Digite um número válido";
+    }
+    if (num < 0) {
       return "O limiar não pode ser negativo";
     }
     return undefined;
@@ -136,14 +144,18 @@ const AdminCompensationConfigTab = () => {
   const updateMetricWithValidation = (
     currentCfg: CompConfig,
     metric: TooltipMetricKey,
-    patch: Partial<TooltipMetricMessages>
+    rawValue: string
   ) => {
-    const newThreshold = patch.strong_threshold;
-    if (newThreshold !== undefined) {
-      const error = validateThreshold(metric, newThreshold);
-      setThresholdErrors((prev) => ({ ...prev, [metric]: error }));
+    setThresholdInputs((prev) => ({ ...prev, [metric]: rawValue }));
+    const error = validateThresholdInput(rawValue);
+    setThresholdErrors((prev) => ({ ...prev, [metric]: error }));
+    
+    // Só atualiza o config se for um número válido
+    const num = Number(rawValue);
+    if (!Number.isNaN(num) && rawValue !== "") {
+      return setTooltipMetric(currentCfg, metric, { strong_threshold: num });
     }
-    return setTooltipMetric(currentCfg, metric, patch);
+    return currentCfg;
   };
 
   const hasThresholdErrors = Object.values(thresholdErrors).some((e) => e !== undefined);
@@ -400,10 +412,13 @@ const AdminCompensationConfigTab = () => {
       <Card className="p-4">
         {(() => {
           const tt = mergeTooltipMessages(cfg.tooltip_messages);
-          const updateMetric = (metric: TooltipMetricKey, patch: Partial<TooltipMetricMessages>) =>
-            setCfg(updateMetricWithValidation(cfg, metric, patch));
+          const updateMetric = (metric: TooltipMetricKey, rawValue: string) =>
+            setCfg(updateMetricWithValidation(cfg, metric, rawValue));
+          const updateMetricMessage = (metric: TooltipMetricKey, patch: Partial<TooltipMetricMessages>) =>
+            setCfg(setTooltipMetric(cfg, metric, patch));
           const reset = () => {
             setThresholdErrors({});
+            setThresholdInputs({});
             setCfg({ ...cfg, tooltip_messages: { ...DEFAULT_TOOLTIP_MESSAGES } });
           };
 
@@ -444,16 +459,16 @@ const AdminCompensationConfigTab = () => {
                           </Label>
                           <div className="flex items-center gap-1">
                             <Input
-                              type="number"
-                              step="0.1"
-                              min={0}
-                              value={data.strong_threshold}
+                              type="text"
+                              inputMode="decimal"
+                              value={thresholdInputs[m] ?? String(data.strong_threshold)}
                               onChange={(e) =>
-                                updateMetric(m, { strong_threshold: Number(e.target.value) })
+                                updateMetric(m, e.target.value)
                               }
                               className={cn(thresholdErrors[m] && "border-destructive focus-visible:ring-destructive")}
                               aria-invalid={!!thresholdErrors[m]}
                               aria-describedby={thresholdErrors[m] ? `error-${m}` : undefined}
+                              placeholder="0.0"
                             />
                             <span className="text-xs text-muted-foreground">{m === "qb" || m === "share" ? "p.p." : "%"}</span>
                           </div>
@@ -469,27 +484,27 @@ const AdminCompensationConfigTab = () => {
                       <div className="grid md:grid-cols-2 gap-3">
                         <div>
                           <Label className="text-xs">Alta leve</Label>
-                          <Textarea rows={2} value={data.up} onChange={(e) => updateMetric(m, { up: e.target.value })} />
+                          <Textarea rows={2} value={data.up} onChange={(e) => updateMetricMessage(m, { up: e.target.value })} />
                         </div>
                         <div>
                           <Label className="text-xs">Alta forte (≥ limiar)</Label>
-                          <Textarea rows={2} value={data.up_strong} onChange={(e) => updateMetric(m, { up_strong: e.target.value })} />
+                          <Textarea rows={2} value={data.up_strong} onChange={(e) => updateMetricMessage(m, { up_strong: e.target.value })} />
                         </div>
                         <div>
                           <Label className="text-xs">Queda leve</Label>
-                          <Textarea rows={2} value={data.down} onChange={(e) => updateMetric(m, { down: e.target.value })} />
+                          <Textarea rows={2} value={data.down} onChange={(e) => updateMetricMessage(m, { down: e.target.value })} />
                         </div>
                         <div>
                           <Label className="text-xs">Queda forte (≥ limiar)</Label>
-                          <Textarea rows={2} value={data.down_strong} onChange={(e) => updateMetric(m, { down_strong: e.target.value })} />
+                          <Textarea rows={2} value={data.down_strong} onChange={(e) => updateMetricMessage(m, { down_strong: e.target.value })} />
                         </div>
                         <div>
                           <Label className="text-xs">Estável</Label>
-                          <Textarea rows={2} value={data.stable} onChange={(e) => updateMetric(m, { stable: e.target.value })} />
+                          <Textarea rows={2} value={data.stable} onChange={(e) => updateMetricMessage(m, { stable: e.target.value })} />
                         </div>
                         <div>
                           <Label className="text-xs">Sem dados (sem mês anterior)</Label>
-                          <Textarea rows={2} value={data.no_data} onChange={(e) => updateMetric(m, { no_data: e.target.value })} />
+                          <Textarea rows={2} value={data.no_data} onChange={(e) => updateMetricMessage(m, { no_data: e.target.value })} />
                         </div>
                       </div>
                     </div>

@@ -203,7 +203,7 @@ const Navbar = () => {
           )}
           {slogan && (
             <span
-              className="-mt-2 md:-mt-3 text-muted-foreground leading-none text-center whitespace-nowrap overflow-hidden"
+              className="-mt-5 md:-mt-6 text-muted-foreground leading-none text-center whitespace-nowrap overflow-hidden"
               style={{
                 width: logoWidth > 0 ? `${logoWidth}px` : undefined,
                 fontSize: `${sloganFontSize}px`,

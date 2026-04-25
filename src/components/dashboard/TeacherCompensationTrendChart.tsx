@@ -52,6 +52,78 @@ const DeltaBadge = ({ value, suffix = "" }: { value: number | null; suffix?: str
   );
 };
 
+/**
+ * Mensagem contextual curta para o tooltip, baseada no sinal e magnitude da variação.
+ * @param value valor numérico da variação (em %, p.p. ou /10, dependendo da métrica)
+ * @param metric "rf" | "qb" | "share" | "pool" para escolher palavras adequadas
+ * @param strongThreshold magnitude absoluta a partir da qual a variação é "expressiva"
+ */
+const ContextMessage = ({
+  value,
+  metric,
+  strongThreshold,
+}: {
+  value: number | null | undefined;
+  metric: "rf" | "qb" | "share" | "pool";
+  strongThreshold: number;
+}) => {
+  if (value == null) {
+    return (
+      <p className="text-[11px] text-muted-foreground italic">
+        Sem comparação disponível com o mês anterior.
+      </p>
+    );
+  }
+  const abs = Math.abs(value);
+  if (abs < 0.05) {
+    return (
+      <p className="text-[11px] text-muted-foreground italic">
+        Estável vs mês anterior — sem variação relevante.
+      </p>
+    );
+  }
+  const strong = abs >= strongThreshold;
+  const positive = value > 0;
+
+  const msgs: Record<typeof metric, { up: string; upStrong: string; down: string; downStrong: string }> = {
+    rf: {
+      up: "Seu RF Score melhorou vs mês anterior — bom ritmo de entregas.",
+      upStrong: "Salto importante no RF Score! Continue mantendo o engajamento.",
+      down: "Seu RF Score caiu um pouco — atenção às metas do mês.",
+      downStrong: "Queda expressiva no RF Score — revise inserções, aulas e dúvidas em aberto.",
+    },
+    qb: {
+      up: "Bônus de Qualidade subiu — alunos avaliaram melhor seus conteúdos.",
+      upStrong: "Forte aumento no Bônus de Qualidade — excelente recepção dos alunos!",
+      down: "Bônus de Qualidade reduziu — fique de olho nas avaliações recentes.",
+      downStrong: "Queda forte no Bônus de Qualidade — vale revisar feedbacks dos alunos.",
+    },
+    share: {
+      up: "Sua fatia do Pool aumentou — você ganhou espaço relativo na plataforma.",
+      upStrong: "Grande ganho de fatia do Pool — seu conteúdo cresceu bem em relação aos outros.",
+      down: "Sua fatia do Pool diminuiu — outros professores cresceram mais este mês.",
+      downStrong: "Queda significativa de fatia — consumo do seu conteúdo perdeu peso relativo.",
+    },
+    pool: {
+      up: "Pool em R$ melhorou vs mês anterior.",
+      upStrong: "Pool em R$ teve forte alta — combinação de mais consumo e/ou melhores bônus.",
+      down: "Pool em R$ ficou abaixo do mês anterior.",
+      downStrong: "Queda expressiva no Pool em R$ — confira piso/teto e seu RF Score.",
+    },
+  };
+
+  const dict = msgs[metric];
+  const text = positive ? (strong ? dict.upStrong : dict.up) : strong ? dict.downStrong : dict.down;
+  const cls = positive ? "text-emerald-600" : "text-destructive";
+  const Icon = positive ? ArrowUpRight : ArrowDownRight;
+  return (
+    <p className={`text-[11px] ${cls} flex items-start gap-1 mt-0.5`}>
+      <Icon className="h-3 w-3 mt-px shrink-0" />
+      <span>{text}</span>
+    </p>
+  );
+};
+
 const TeacherCompensationTrendChart = ({ stats, live }: Props) => {
   const data = useMemo(() => {
     // Closed months (most recent last) — usar últimos 6
@@ -119,7 +191,7 @@ const TeacherCompensationTrendChart = ({ stats, live }: Props) => {
     if (!row) return null;
     const prevLabel = row.prev_label ?? "mês anterior";
     return (
-      <div className="rounded-lg border border-border bg-card p-2.5 text-xs shadow-md min-w-[220px]">
+      <div className="rounded-lg border border-border bg-card p-2.5 text-xs shadow-md min-w-[240px] max-w-[280px]">
         <div className="font-medium mb-1.5">{label}</div>
         {mode === "rf" ? (
           <div className="space-y-1">
@@ -135,6 +207,7 @@ const TeacherCompensationTrendChart = ({ stats, live }: Props) => {
               <span className="text-muted-foreground">Variação</span>
               <DeltaBadge value={row.d_rf_pct} suffix="%" />
             </div>
+            <ContextMessage value={row.d_rf_pct} metric="rf" strongThreshold={10} />
             <div className="border-t border-border my-1" />
             <div className="flex items-center justify-between gap-3">
               <span className="text-muted-foreground">Bônus Qualidade</span>
@@ -148,6 +221,7 @@ const TeacherCompensationTrendChart = ({ stats, live }: Props) => {
               <span className="text-muted-foreground">Variação</span>
               <DeltaBadge value={row.d_qb_pp} suffix=" p.p." />
             </div>
+            <ContextMessage value={row.d_qb_pp} metric="qb" strongThreshold={5} />
           </div>
         ) : (
           <div className="space-y-1">
@@ -163,6 +237,7 @@ const TeacherCompensationTrendChart = ({ stats, live }: Props) => {
               <span className="text-muted-foreground">Variação</span>
               <DeltaBadge value={row.d_share_pp} suffix=" p.p." />
             </div>
+            <ContextMessage value={row.d_share_pp} metric="share" strongThreshold={2} />
             <div className="border-t border-border my-1" />
             <div className="flex items-center justify-between gap-3">
               <span className="text-muted-foreground">Pool em R$</span>
@@ -176,6 +251,7 @@ const TeacherCompensationTrendChart = ({ stats, live }: Props) => {
               <span className="text-muted-foreground">Variação</span>
               <DeltaBadge value={row.d_pool_pct} suffix="%" />
             </div>
+            <ContextMessage value={row.d_pool_pct} metric="pool" strongThreshold={20} />
           </div>
         )}
       </div>

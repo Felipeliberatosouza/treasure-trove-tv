@@ -2,12 +2,15 @@ import { useState, useRef, useEffect, forwardRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { User, LogOut, LayoutDashboard, ChevronDown } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { usePlatformSettings, BrandingSettings } from "@/hooks/usePlatformSettings";
 
 const UserMenu = forwardRef<HTMLDivElement>((_, forwardedRef) => {
   const { user, role, profile, signOut } = useAuth();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const { data: branding } = usePlatformSettings("branding");
+  const accentColor = (branding as BrandingSettings | null)?.accent_color || "#f59e0b";
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -50,7 +53,8 @@ const UserMenu = forwardRef<HTMLDivElement>((_, forwardedRef) => {
           </Link>
           <button
             onClick={handleSignOut}
-            className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-yellow-500 hover:bg-secondary transition-colors"
+            className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-secondary transition-colors"
+            style={{ color: accentColor }}
           >
             <LogOut className="h-4 w-4" /> Sair
           </button>

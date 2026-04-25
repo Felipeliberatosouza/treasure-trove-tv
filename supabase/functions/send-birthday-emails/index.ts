@@ -244,8 +244,9 @@ Deno.serve(async (req: Request) => {
       if (isTeacher && tplTeacher) tpl = tplTeacher
       else if (isActiveSubscriber && tplStudentSub) tpl = tplStudentSub
 
-      const logoHtml = tpl.logo_url
-        ? `<div style="text-align:center;margin-bottom:16px;"><img src="${tpl.logo_url}" alt="Logo" style="max-height:60px;max-width:200px;" /></div>`
+      const birthdayLogoUrl = tpl.logo_url || brandingData.logo_url || ''
+      const logoHtml = birthdayLogoUrl
+        ? `<div style="text-align:center;margin-bottom:16px;"><img src="${birthdayLogoUrl}" alt="Logo" style="max-height:60px;max-width:200px;" /></div>`
         : ''
 
       // Vídeo recomendado: APENAS para alunos (não para professores)

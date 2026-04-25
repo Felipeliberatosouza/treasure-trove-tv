@@ -238,8 +238,9 @@ Deno.serve(async (req: Request) => {
           continue // sem vídeos elegíveis, não faz sentido mandar
         }
 
-        const logoHtml = tplStudent.logo_url && tplStudent.use_uploaded_logo
-          ? `<div style="text-align:center;margin-bottom:16px;"><img src="${tplStudent.logo_url}" alt="Logo" style="max-height:60px;max-width:200px;" /></div>`
+        const studentLogoUrl = tplStudent.logo_url || brandingData.logo_url || ''
+        const logoHtml = studentLogoUrl && tplStudent.use_uploaded_logo
+          ? `<div style="text-align:center;margin-bottom:16px;"><img src="${studentLogoUrl}" alt="Logo" style="max-height:60px;max-width:200px;" /></div>`
           : `<div style="text-align:center;margin-bottom:16px;font-size:24px;font-weight:bold;color:${tplStudent.heading_color || '#dc2626'};">${platformName}</div>`
 
         const baseBody = (tplStudent.body_html && tplStudent.body_html.trim().length > 0)
@@ -446,8 +447,9 @@ Deno.serve(async (req: Request) => {
           </div>
         `
 
-        const logoHtml = tplTeacher.logo_url && tplTeacher.use_uploaded_logo
-          ? `<div style="text-align:center;margin-bottom:16px;"><img src="${tplTeacher.logo_url}" alt="Logo" style="max-height:60px;max-width:200px;" /></div>`
+        const teacherLogoUrl = tplTeacher.logo_url || brandingData.logo_url || ''
+        const logoHtml = teacherLogoUrl && tplTeacher.use_uploaded_logo
+          ? `<div style="text-align:center;margin-bottom:16px;"><img src="${teacherLogoUrl}" alt="Logo" style="max-height:60px;max-width:200px;" /></div>`
           : `<div style="text-align:center;margin-bottom:16px;font-size:24px;font-weight:bold;color:${tplTeacher.heading_color || '#0891b2'};">${platformName}</div>`
 
         const baseBody = (tplTeacher.body_html && tplTeacher.body_html.trim().length > 0)

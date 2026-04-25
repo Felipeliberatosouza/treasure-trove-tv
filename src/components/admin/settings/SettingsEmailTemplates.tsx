@@ -387,8 +387,9 @@ const SettingsEmailTemplates = () => {
 
     const platformName = brandingData?.platform_name || "Revisão Fácil";
     let logoHtml = "";
-    if (active.use_uploaded_logo && active.logo_url) {
-      logoHtml = `<div style="text-align:center;margin-bottom:16px;"><img src="${active.logo_url}" alt="Logo" style="max-height:60px;max-width:200px;" /></div>`;
+    const effectiveLogoUrl = active.logo_url || brandingData?.logo_url || "";
+    if (active.use_uploaded_logo && effectiveLogoUrl) {
+      logoHtml = `<div style="text-align:center;margin-bottom:16px;"><img src="${effectiveLogoUrl}" alt="Logo" style="max-height:60px;max-width:200px;" /></div>`;
     } else {
       logoHtml = `<div style="text-align:center;margin-bottom:16px;font-size:24px;font-weight:bold;color:${headingColor};">${platformName}</div>`;
     }
@@ -950,16 +951,32 @@ const SettingsEmailTemplates = () => {
 
             {active.use_uploaded_logo && (
               <>
-                {active.logo_url && (
+                {(active.logo_url || brandingData?.logo_url) && (
                   <div className="relative inline-block rounded-lg border border-border bg-muted/30 p-2">
-                    <img src={active.logo_url} alt="Logo" className="h-12 max-w-[180px] object-contain" />
-                    <button
-                      onClick={() => updateField("logo_url", "")}
-                      className="absolute -right-2 -top-2 rounded-full bg-destructive p-1 text-destructive-foreground hover:opacity-80"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
+                    <img
+                      src={active.logo_url || brandingData?.logo_url || ""}
+                      alt="Logo"
+                      className="h-12 max-w-[180px] object-contain"
+                    />
+                    {active.logo_url && (
+                      <button
+                        onClick={() => updateField("logo_url", "")}
+                        className="absolute -right-2 -top-2 rounded-full bg-destructive p-1 text-destructive-foreground hover:opacity-80"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    )}
                   </div>
+                )}
+                {!active.logo_url && brandingData?.logo_url && (
+                  <p className="text-xs text-muted-foreground">
+                    Usando a logomarca configurada em <strong>Identidade Visual</strong>. Envie uma imagem abaixo para sobrescrever apenas para este template.
+                  </p>
+                )}
+                {!active.logo_url && !brandingData?.logo_url && (
+                  <p className="text-xs text-amber-600 dark:text-amber-500">
+                    Nenhuma logomarca encontrada. Envie uma imagem abaixo ou configure em <strong>Identidade Visual</strong>.
+                  </p>
                 )}
                 <div className="flex gap-2">
                   <Button type="button" variant="outline" size="sm" disabled={uploading} onClick={() => fileInputRef.current?.click()}>

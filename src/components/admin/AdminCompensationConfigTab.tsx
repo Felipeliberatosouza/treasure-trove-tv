@@ -160,6 +160,17 @@ const AdminCompensationConfigTab = () => {
 
   const hasThresholdErrors = Object.values(thresholdErrors).some((e) => e !== undefined);
 
+  const getFirstError = (): { metric: TooltipMetricKey; message: string } | null => {
+    for (const m of metricKeys) {
+      if (thresholdErrors[m]) {
+        return { metric: m, message: thresholdErrors[m]! };
+      }
+    }
+    return null;
+  };
+
+  const firstError = getFirstError();
+
   const load = async () => {
     setLoading(true);
     const { data: cfgRow } = await supabase.from("platform_settings").select("value").eq("key", "teacher_compensation").maybeSingle();

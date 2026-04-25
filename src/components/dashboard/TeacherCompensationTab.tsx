@@ -23,6 +23,7 @@ const TeacherCompensationTab = () => {
   const [loading, setLoading] = useState(true);
   const [live, setLive] = useState<any | null>(null);
   const [liveLoading, setLiveLoading] = useState(false);
+  const [poolCfg, setPoolCfg] = useState<{ pool_min_per_access_brl: number; pool_max_share_pct: number } | null>(null);
 
   const loadLive = async () => {
     if (!user) return;
@@ -47,6 +48,12 @@ const TeacherCompensationTab = () => {
         .select("*").eq("teacher_id", user.id)
         .order("period_start", { ascending: false }).limit(12);
       setRfComponents(rf ?? []);
+      const { data: cfgRow } = await supabase.from("platform_settings").select("value").eq("key", "teacher_compensation").maybeSingle();
+      const cfgVal = (cfgRow?.value ?? {}) as any;
+      setPoolCfg({
+        pool_min_per_access_brl: Number(cfgVal.pool_min_per_access_brl ?? 0.3),
+        pool_max_share_pct: Number(cfgVal.pool_max_share_pct ?? 15),
+      });
       setLoading(false);
     })();
     loadLive();

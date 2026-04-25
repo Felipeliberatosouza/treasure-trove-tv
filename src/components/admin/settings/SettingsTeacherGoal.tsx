@@ -68,6 +68,10 @@ const SettingsTeacherGoal = () => {
   const [activeSub, setActiveSub] = useState<SubTabId>("content");
   const [settings, setSettings] = useState<TeacherGoalSettings>(DEFAULTS);
 
+  // Meta total mensal = soma de Revisões de Aulas + Resolução de Provas
+  const computedMonthlyGoal =
+    (settings.content_goals.revisoes || 0) + (settings.content_goals.resolucoes || 0);
+
   useEffect(() => {
     (async () => {
       const { data } = await supabase
@@ -81,6 +85,9 @@ const SettingsTeacherGoal = () => {
         content_goals: { ...DEFAULTS.content_goals, ...((data?.value as any)?.content_goals || {}) },
         relationship_goals: { ...DEFAULTS.relationship_goals, ...((data?.value as any)?.relationship_goals || {}) },
       };
+      // Garante que monthly_goal seja sempre derivado de revisoes + resolucoes
+      merged.monthly_goal =
+        (merged.content_goals.revisoes || 0) + (merged.content_goals.resolucoes || 0);
       setSettings(merged);
       setLoading(false);
     })();
@@ -88,9 +95,13 @@ const SettingsTeacherGoal = () => {
 
   const save = async () => {
     setSaving(true);
+    // Recalcula a meta total antes de persistir, garantindo o racional
+    const monthlyGoal =
+      (settings.content_goals.revisoes || 0) + (settings.content_goals.resolucoes || 0);
+    const payload = { ...settings, monthly_goal: monthlyGoal };
     const { error } = await supabase
       .from("platform_settings")
-      .update({ value: settings as any })
+      .update({ value: payload as any })
       .eq("key", "teacher_content_goal");
     if (error) {
       setSaving(false);
@@ -108,7 +119,7 @@ const SettingsTeacherGoal = () => {
     if (compRow?.value) {
       const updatedComp = {
         ...(compRow.value as Record<string, unknown>),
-        default_monthly_package_target: settings.monthly_goal,
+        default_monthly_package_target: monthlyGoal,
       };
       await supabase
         .from("platform_settings")
@@ -258,17 +269,18 @@ const SettingsTeacherGoal = () => {
               Meta total mensal (referência geral)
             </Label>
             <p className="text-xs text-muted-foreground mt-1 mb-2">
-              Valor total agregado de publicações esperadas. Usado em relatórios resumidos.
+              Calculada automaticamente: <strong>Revisões de Aulas ({settings.content_goals.revisoes || 0})</strong> +{" "}
+              <strong>Resolução de Provas ({settings.content_goals.resolucoes || 0})</strong>. Ajuste essas metas em
+              "Conteúdo".
             </p>
             <Input
               id="monthly-total"
               type="number"
               min={0}
               className="max-w-xs"
-              value={settings.monthly_goal}
-              onChange={(e) =>
-                setSettings((s) => ({ ...s, monthly_goal: Math.max(0, parseInt(e.target.value, 10) || 0) }))
-              }
+              value={computedMonthlyGoal}
+              readOnly
+              disabled
             />
           </div>
 

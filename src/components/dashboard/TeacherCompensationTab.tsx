@@ -9,6 +9,7 @@ import { DollarSign, TrendingUp, Package, Star, Sparkles, Trophy, Video, FileTex
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import TeacherCompensationTrendChart from "./TeacherCompensationTrendChart";
+import PoolFloorCapIndicator from "./PoolFloorCapIndicator";
 
 const formatBRL = (n: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(n || 0);
 const formatPeriod = (s: string, e: string) => {

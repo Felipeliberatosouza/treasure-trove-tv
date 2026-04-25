@@ -13,9 +13,11 @@ export interface BuildEmailLogoParams {
   slogan?: string | null;
   /** Cor do texto do nome da plataforma quando usado como fallback. */
   headingColor?: string;
-  /** Largura EXATA renderizada da logo em px (default 240). O slogan ocupa
-   *  exatamente esta mesma largura, garantindo paridade visual. */
+  /** Largura MÁXIMA da logo em px (default 320, igual ao site `max-w-[320px]`).
+   *  A largura real renderizada segue a proporção natural da imagem (height fixo). */
   logoMaxWidth?: number;
+  /** Altura fixa da logo em px (default 80, igual ao `h-20` do site). */
+  logoHeight?: number;
 }
 
 /** Escape HTML completo (cobre &, <, >, ", '). */
@@ -41,38 +43,50 @@ export function buildEmailLogoHtml({
   platformName,
   slogan,
   headingColor = "#dc2626",
-  logoMaxWidth = 240,
+  logoMaxWidth = 320,
+  logoHeight = 80,
 }: BuildEmailLogoParams): string {
-  // Largura compartilhada por logo e slogan — garante "comprimento" idêntico.
-  const w = logoMaxWidth;
   const cleanSlogan = (slogan || "").trim();
-  // Mesma fórmula do Navbar/Footer: cap em 18px para manter proporcionalidade
-  // visual idêntica ao site, calculada sobre a largura real (w).
+  // Mesma fórmula do Navbar/Footer: cap em 18px. Calculada sobre logoMaxWidth
+  // (referência conservadora, mesma do site `max-w-[320px]`).
   const sloganFontSize =
     cleanSlogan.length > 0
-      ? Math.max(8, Math.min(18, (w / cleanSlogan.length) * 1.7))
+      ? Math.max(8, Math.min(18, (logoMaxWidth / cleanSlogan.length) * 1.7))
       : 11;
 
-  // Slogan: bloco de largura fixa `w` (mesma da logo). margin auto centraliza.
-  // margem-top negativa aproxima do logo (espelha `-mt-6` do site).
-  const sloganHtml = cleanSlogan
-    ? `<div style="width:${w}px;margin:-12px auto 16px;text-align:center;` +
-      `color:#6b7280;font-size:${sloganFontSize.toFixed(1)}px;line-height:1;` +
+  // Estratégia email-safe (sem JS, sem medir DOM):
+  // Envolvemos logo + slogan numa <table> com `width:auto` (shrink-to-fit ao
+  // conteúdo). A logo tem altura fixa (`height=logoHeight`) e largura
+  // proporcional (`width:auto`), assim como no site (`h-20 object-contain`).
+  // O slogan ocupa `width:100%` da mesma célula → fica EXATAMENTE da largura
+  // da logo, igual ao comportamento do `Footer`/`Navbar`.
+
+  const sloganRow = cleanSlogan
+    ? `<tr><td style="padding:0;text-align:center;">` +
+      `<div style="width:100%;margin-top:-12px;color:#6b7280;` +
+      `font-size:${sloganFontSize.toFixed(1)}px;line-height:1;` +
       `white-space:nowrap;overflow:hidden;">` +
-      `${escapeHtml(cleanSlogan)}</div>`
+      `${escapeHtml(cleanSlogan)}</div></td></tr>`
     : "";
 
-  const bottomMargin = cleanSlogan ? "0" : "16px";
-  // Logo: renderizada com largura EXATA = w (mesma do slogan), altura
-  // proporcional (height:auto). Centralizada via margin auto.
-  const inner =
+  const logoCell =
     useUploadedLogo && logoUrl
-      ? `<div style="text-align:center;margin-bottom:${bottomMargin};">` +
-        `<img src="${escapeHtml(logoUrl)}" alt="Logo" ` +
-        `style="width:${w}px;max-width:${w}px;height:auto;display:block;margin:0 auto;" /></div>`
-      : `<div style="width:${w}px;margin:0 auto ${bottomMargin};text-align:center;` +
-        `font-size:24px;font-weight:bold;color:${headingColor};">` +
-        `${escapeHtml(platformName)}</div>`;
+      ? // `height` em atributo HTML para máxima compatibilidade (Outlook).
+        // `width:auto` mantém proporção natural; `max-width` evita overflow.
+        `<img src="${escapeHtml(logoUrl)}" alt="Logo" height="${logoHeight}" ` +
+        `style="height:${logoHeight}px;width:auto;max-width:${logoMaxWidth}px;` +
+        `display:block;border:0;outline:none;" />`
+      : `<div style="font-size:24px;font-weight:bold;color:${headingColor};` +
+        `line-height:1;white-space:nowrap;">${escapeHtml(platformName)}</div>`;
 
-  return `${inner}${sloganHtml}`;
+  // `width:auto` + `display:inline-block` faz a tabela colapsar ao conteúdo
+  // (largura da logo). Wrapper externo centraliza horizontalmente.
+  return (
+    `<div style="text-align:center;margin-bottom:16px;">` +
+    `<table role="presentation" cellpadding="0" cellspacing="0" border="0" ` +
+    `style="border-collapse:collapse;display:inline-block;width:auto;">` +
+    `<tr><td style="padding:0;text-align:center;">${logoCell}</td></tr>` +
+    sloganRow +
+    `</table></div>`
+  );
 }

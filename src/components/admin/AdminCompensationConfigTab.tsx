@@ -401,8 +401,11 @@ const AdminCompensationConfigTab = () => {
         {(() => {
           const tt = mergeTooltipMessages(cfg.tooltip_messages);
           const updateMetric = (metric: TooltipMetricKey, patch: Partial<TooltipMetricMessages>) =>
-            setCfg(setTooltipMetric(cfg, metric, patch));
-          const reset = () => setCfg({ ...cfg, tooltip_messages: { ...DEFAULT_TOOLTIP_MESSAGES } });
+            setCfg(updateMetricWithValidation(cfg, metric, patch));
+          const reset = () => {
+            setThresholdErrors({});
+            setCfg({ ...cfg, tooltip_messages: { ...DEFAULT_TOOLTIP_MESSAGES } });
+          };
 
           const metricKeys: TooltipMetricKey[] = ["rf", "qb", "share", "pool"];
 

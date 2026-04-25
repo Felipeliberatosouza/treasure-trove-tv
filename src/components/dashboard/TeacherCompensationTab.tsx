@@ -141,6 +141,8 @@ const TeacherCompensationTab = () => {
         )}
       </Card>
 
+      <TeacherCompensationTrendChart stats={stats} live={live} />
+
       {!latest ? (
         <Card className="p-8 text-center">
           <DollarSign className="h-10 w-10 mx-auto text-muted-foreground mb-3" />

@@ -127,18 +127,20 @@ const AdminCompensationConfigTab = () => {
   const [thresholdErrors, setThresholdErrors] = useState<TooltipThresholdErrors>({});
   const [thresholdInputs, setThresholdInputs] = useState<Partial<Record<TooltipMetricKey, string>>>({});
 
-  const validateThresholdInput = (value: string): string | undefined => {
+  const validateThresholdInput = (value: string): { error?: string; normalized?: string } => {
     if (value === "" || value.trim() === "") {
-      return "O limiar é obrigatório";
+      return { error: "O limiar é obrigatório" };
     }
-    const num = Number(value);
+    // Normaliza: converte vírgula para ponto
+    const normalized = value.trim().replace(",", ".");
+    const num = Number(normalized);
     if (Number.isNaN(num)) {
-      return "Digite um número válido";
+      return { error: "Digite um número válido", normalized };
     }
     if (num < 0) {
-      return "O limiar não pode ser negativo";
+      return { error: "O limiar não pode ser negativo", normalized };
     }
-    return undefined;
+    return { normalized };
   };
 
   const updateMetricWithValidation = (

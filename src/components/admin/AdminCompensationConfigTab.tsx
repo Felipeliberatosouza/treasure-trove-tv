@@ -125,9 +125,17 @@ const AdminCompensationConfigTab = () => {
   const [teachers, setTeachers] = useState<{ id: string; name: string }[]>([]);
   const [newTarget, setNewTarget] = useState({ teacher_id: "", monthly_package_target: 4 });
   const [thresholdErrors, setThresholdErrors] = useState<TooltipThresholdErrors>({});
+  const [thresholdInputs, setThresholdInputs] = useState<Partial<Record<TooltipMetricKey, string>>>({});
 
-  const validateThreshold = (metric: TooltipMetricKey, value: number): string | undefined => {
-    if (value < 0) {
+  const validateThresholdInput = (value: string): string | undefined => {
+    if (value === "" || value.trim() === "") {
+      return "O limiar é obrigatório";
+    }
+    const num = Number(value);
+    if (Number.isNaN(num)) {
+      return "Digite um número válido";
+    }
+    if (num < 0) {
       return "O limiar não pode ser negativo";
     }
     return undefined;
@@ -136,14 +144,18 @@ const AdminCompensationConfigTab = () => {
   const updateMetricWithValidation = (
     currentCfg: CompConfig,
     metric: TooltipMetricKey,
-    patch: Partial<TooltipMetricMessages>
+    rawValue: string
   ) => {
-    const newThreshold = patch.strong_threshold;
-    if (newThreshold !== undefined) {
-      const error = validateThreshold(metric, newThreshold);
-      setThresholdErrors((prev) => ({ ...prev, [metric]: error }));
+    setThresholdInputs((prev) => ({ ...prev, [metric]: rawValue }));
+    const error = validateThresholdInput(rawValue);
+    setThresholdErrors((prev) => ({ ...prev, [metric]: error }));
+    
+    // Só atualiza o config se for um número válido
+    const num = Number(rawValue);
+    if (!Number.isNaN(num) && rawValue !== "") {
+      return setTooltipMetric(currentCfg, metric, { strong_threshold: num });
     }
-    return setTooltipMetric(currentCfg, metric, patch);
+    return currentCfg;
   };
 
   const hasThresholdErrors = Object.values(thresholdErrors).some((e) => e !== undefined);

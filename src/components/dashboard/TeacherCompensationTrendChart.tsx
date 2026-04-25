@@ -5,6 +5,12 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 import { TrendingUp, ArrowUpRight, ArrowDownRight, Minus } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import {
+  TooltipMessagesConfig,
+  TooltipMetricKey,
+  DEFAULT_TOOLTIP_MESSAGES,
+  TOOLTIP_METRIC_LABELS,
+} from "./tooltipMessagesConfig";
 
 interface Stat {
   period_start: string;
@@ -17,6 +23,7 @@ interface Stat {
 interface Props {
   stats: Stat[];
   live: any | null;
+  tooltipMessages?: TooltipMessagesConfig | null;
 }
 
 const monthLabel = (s: string) => {
@@ -96,32 +103,27 @@ const DeltaBadge = ({
  * @param metric "rf" | "qb" | "share" | "pool" para escolher palavras adequadas
  * @param strongThreshold magnitude absoluta a partir da qual a variação é "expressiva"
  */
-const METRIC_LABELS: Record<"rf" | "qb" | "share" | "pool", string> = {
-  rf: "RF Score",
-  qb: "Bônus de Qualidade",
-  share: "Fatia do Pool",
-  pool: "Pool em R$",
-};
-
 const ContextMessage = ({
   value,
   metric,
-  strongThreshold,
+  config,
 }: {
   value: number | null | undefined;
-  metric: "rf" | "qb" | "share" | "pool";
-  strongThreshold: number;
+  metric: TooltipMetricKey;
+  config: TooltipMessagesConfig;
 }) => {
-  const metricName = METRIC_LABELS[metric];
+  if (!config.enabled) return null;
+  const metricName = TOOLTIP_METRIC_LABELS[metric];
+  const m = config[metric];
 
   if (value == null) {
     return (
       <p
         className="text-[11px] text-muted-foreground italic"
         role="status"
-        aria-label={`${metricName}: sem comparação disponível com o mês anterior.`}
+        aria-label={`${metricName}: ${m.no_data}`}
       >
-        Sem comparação disponível com o mês anterior.
+        {m.no_data}
       </p>
     );
   }
@@ -131,44 +133,16 @@ const ContextMessage = ({
       <p
         className="text-[11px] text-muted-foreground italic"
         role="status"
-        aria-label={`${metricName}: estável em relação ao mês anterior, sem variação relevante.`}
+        aria-label={`${metricName}: ${m.stable}`}
       >
-        Estável vs mês anterior — sem variação relevante.
+        {m.stable}
       </p>
     );
   }
-  const strong = abs >= strongThreshold;
+  const strong = abs >= (m.strong_threshold ?? 0);
   const positive = value > 0;
 
-  const msgs: Record<typeof metric, { up: string; upStrong: string; down: string; downStrong: string }> = {
-    rf: {
-      up: "Seu RF Score melhorou vs mês anterior — bom ritmo de entregas.",
-      upStrong: "Salto importante no RF Score! Continue mantendo o engajamento.",
-      down: "Seu RF Score caiu um pouco — atenção às metas do mês.",
-      downStrong: "Queda expressiva no RF Score — revise inserções, aulas e dúvidas em aberto.",
-    },
-    qb: {
-      up: "Bônus de Qualidade subiu — alunos avaliaram melhor seus conteúdos.",
-      upStrong: "Forte aumento no Bônus de Qualidade — excelente recepção dos alunos!",
-      down: "Bônus de Qualidade reduziu — fique de olho nas avaliações recentes.",
-      downStrong: "Queda forte no Bônus de Qualidade — vale revisar feedbacks dos alunos.",
-    },
-    share: {
-      up: "Sua fatia do Pool aumentou — você ganhou espaço relativo na plataforma.",
-      upStrong: "Grande ganho de fatia do Pool — seu conteúdo cresceu bem em relação aos outros.",
-      down: "Sua fatia do Pool diminuiu — outros professores cresceram mais este mês.",
-      downStrong: "Queda significativa de fatia — consumo do seu conteúdo perdeu peso relativo.",
-    },
-    pool: {
-      up: "Pool em R$ melhorou vs mês anterior.",
-      upStrong: "Pool em R$ teve forte alta — combinação de mais consumo e/ou melhores bônus.",
-      down: "Pool em R$ ficou abaixo do mês anterior.",
-      downStrong: "Queda expressiva no Pool em R$ — confira piso/teto e seu RF Score.",
-    },
-  };
-
-  const dict = msgs[metric];
-  const text = positive ? (strong ? dict.upStrong : dict.up) : strong ? dict.downStrong : dict.down;
+  const text = positive ? (strong ? m.up_strong : m.up) : strong ? m.down_strong : m.down;
   // Contraste reforçado para WCAG AA sobre bg-card (card claro/dark)
   const cls = positive
     ? "text-emerald-700 dark:text-emerald-300"
@@ -193,7 +167,17 @@ const ContextMessage = ({
   );
 };
 
-const TeacherCompensationTrendChart = ({ stats, live }: Props) => {
+const TeacherCompensationTrendChart = ({ stats, live, tooltipMessages }: Props) => {
+  const ttCfg: TooltipMessagesConfig = useMemo(
+    () => ({
+      enabled: tooltipMessages?.enabled ?? DEFAULT_TOOLTIP_MESSAGES.enabled,
+      rf: { ...DEFAULT_TOOLTIP_MESSAGES.rf, ...(tooltipMessages?.rf ?? {}) },
+      qb: { ...DEFAULT_TOOLTIP_MESSAGES.qb, ...(tooltipMessages?.qb ?? {}) },
+      share: { ...DEFAULT_TOOLTIP_MESSAGES.share, ...(tooltipMessages?.share ?? {}) },
+      pool: { ...DEFAULT_TOOLTIP_MESSAGES.pool, ...(tooltipMessages?.pool ?? {}) },
+    }),
+    [tooltipMessages]
+  );
   const data = useMemo(() => {
     // Closed months (most recent last) — usar últimos 6
     const closed: Array<{

@@ -275,6 +275,69 @@ const TeacherCompensationTab = () => {
             </Card>
           )}
 
+          {/* Histórico de ajustes (piso/teto) */}
+          <Card className="p-4 mb-6">
+            <h3 className="font-medium mb-3 flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-primary" /> Histórico de ajustes do Pool (piso / teto)
+            </h3>
+            {(() => {
+              const adjusted = stats.filter((s) => s.pool_floor_applied || s.pool_cap_applied).slice(0, 6);
+              if (adjusted.length === 0) {
+                return <p className="text-xs text-muted-foreground">Nenhum ajuste de piso ou teto aplicado nas últimas apurações. Sua fatia tem ficado dentro dos limites proporcionais.</p>;
+              }
+              return (
+                <div className="space-y-2">
+                  {adjusted.map((s) => {
+                    const poolTotal = Number(s.pool_base_amount) / Math.max(Number(s.pool_share_pct) / 100, 0.0001);
+                    const minPerAccess = poolCfg?.pool_min_per_access_brl ?? 0.3;
+                    const maxSharePct = poolCfg?.pool_max_share_pct ?? 15;
+                    const floorValue = Number(s.material_unique_accesses) * minPerAccess;
+                    const capValue = poolTotal * (maxSharePct / 100);
+                    return (
+                      <div key={s.id} className="rounded-md border border-border p-3 text-sm">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="font-medium">{formatPeriod(s.period_start, s.period_end)}</span>
+                          <div className="flex gap-1">
+                            {s.pool_floor_applied && <Badge variant="secondary" className="bg-amber-500/15 text-amber-700 dark:text-amber-400">Piso</Badge>}
+                            {s.pool_cap_applied && <Badge variant="secondary" className="bg-blue-500/15 text-blue-700 dark:text-blue-400">Teto</Badge>}
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+                          <div>
+                            <p className="text-muted-foreground">Consumo</p>
+                            <p className="font-medium">{Number(s.total_consumption_minutes).toFixed(0)} min</p>
+                          </div>
+                          <div>
+                            <p className="text-muted-foreground">Acessos únicos</p>
+                            <p className="font-medium">{s.material_unique_accesses}</p>
+                          </div>
+                          {s.pool_floor_applied && (
+                            <div>
+                              <p className="text-muted-foreground">Piso disparado</p>
+                              <p className="font-medium text-amber-700 dark:text-amber-400">{formatBRL(floorValue)}</p>
+                              <p className="text-[10px] text-muted-foreground">{s.material_unique_accesses}× {formatBRL(minPerAccess)}</p>
+                            </div>
+                          )}
+                          {s.pool_cap_applied && (
+                            <div>
+                              <p className="text-muted-foreground">Teto disparado</p>
+                              <p className="font-medium text-blue-700 dark:text-blue-400">{formatBRL(capValue)}</p>
+                              <p className="text-[10px] text-muted-foreground">{maxSharePct}% × {formatBRL(poolTotal)}</p>
+                            </div>
+                          )}
+                          <div>
+                            <p className="text-muted-foreground">Valor base final</p>
+                            <p className="font-medium text-primary">{formatBRL(Number(s.pool_base_amount))}</p>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
+          </Card>
+
           <h3 className="font-medium mb-3">Histórico</h3>
           <div className="rounded-lg border border-border overflow-hidden">
             <table className="w-full text-sm">

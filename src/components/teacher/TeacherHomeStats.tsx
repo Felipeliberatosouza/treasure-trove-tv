@@ -73,7 +73,13 @@ const TeacherHomeStats = () => {
         .eq("key", "teacher_content_goal")
         .maybeSingle();
 
-      const globalGoal = (goalSetting?.value as { monthly_goal?: number })?.monthly_goal ?? 8;
+      const goalValue = goalSetting?.value as {
+        monthly_goal?: number;
+        content_goals?: { revisoes?: number; resolucoes?: number };
+      };
+      const derivedGlobalGoal =
+        Number(goalValue?.content_goals?.revisoes ?? 0) + Number(goalValue?.content_goals?.resolucoes ?? 0);
+      const globalGoal = derivedGlobalGoal > 0 ? derivedGlobalGoal : goalValue?.monthly_goal ?? 8;
       const personal = (profile as { monthly_content_goal?: number | null } | null)
         ?.monthly_content_goal;
       const effectiveGoal = personal && personal > 0 ? personal : globalGoal;

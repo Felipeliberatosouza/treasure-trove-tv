@@ -11,18 +11,18 @@ const Footer = () => {
   return (
     <footer className="border-t border-border px-6 py-10 md:px-12 lg:px-20">
       <div className="mx-auto flex max-w-6xl flex-col items-center gap-6 md:flex-row md:justify-between">
-        <div className="flex flex-col items-center md:items-start gap-0.5">
+        <div className="flex flex-col items-center md:items-start gap-0 leading-none">
           {branding?.logo_url ? (
             <img
               src={branding.logo_url}
               alt={name}
-              className="h-10 md:h-12 max-w-[220px] object-contain"
+              className="h-10 md:h-12 max-w-[220px] object-contain block"
             />
           ) : (
             <span className="font-display text-lg font-bold text-gradient">{name}</span>
           )}
           {slogan && (
-            <span className="text-xs text-muted-foreground leading-tight max-w-[260px] text-center md:text-left">
+            <span className="-mt-1 text-[11px] text-muted-foreground leading-none max-w-[260px] text-center md:text-left">
               {slogan}
             </span>
           )}

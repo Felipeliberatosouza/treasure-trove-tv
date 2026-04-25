@@ -4,7 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { DollarSign, TrendingUp, Package, Star, Sparkles, Trophy, Video, FileText, Users, Calendar, MessageCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { DollarSign, TrendingUp, Package, Star, Sparkles, Trophy, Video, FileText, Users, Calendar, MessageCircle, Activity, RefreshCw, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -18,6 +19,19 @@ const TeacherCompensationTab = () => {
   const [stats, setStats] = useState<any[]>([]);
   const [rfComponents, setRfComponents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [live, setLive] = useState<any | null>(null);
+  const [liveLoading, setLiveLoading] = useState(false);
+
+  const loadLive = async () => {
+    if (!user) return;
+    setLiveLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("get-teacher-live-stats");
+      if (!error && data?.ok) setLive(data);
+    } finally {
+      setLiveLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -33,6 +47,10 @@ const TeacherCompensationTab = () => {
       setRfComponents(rf ?? []);
       setLoading(false);
     })();
+    loadLive();
+    const interval = setInterval(loadLive, 60_000); // refresh a cada 60s
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const latest = stats[0];
@@ -47,10 +65,85 @@ const TeacherCompensationTab = () => {
         <p className="text-sm text-muted-foreground">Acompanhe seus 3 fluxos de receita: taxa por pacote, comissão de vendas avulsas e Pool de Assinaturas.</p>
       </div>
 
+      {/* MÊS CORRENTE — PARCIAL / TEMPO REAL */}
+      <Card className="p-4 mb-6 border-primary/40 bg-primary/5">
+        <div className="flex items-start justify-between mb-3 gap-2">
+          <div>
+            <h3 className="font-medium flex items-center gap-2"><Activity className="h-4 w-4 text-primary" /> Mês corrente — parcial em tempo real</h3>
+            <p className="text-xs text-muted-foreground">
+              Estimativa atualizada do mês em andamento. Os valores são provisórios e mudam conforme novos consumos e vendas acontecem. O fechamento oficial ocorre no dia 1º.
+            </p>
+          </div>
+          <Button size="sm" variant="ghost" onClick={loadLive} disabled={liveLoading}>
+            {liveLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
+          </Button>
+        </div>
+        {!live ? (
+          <p className="text-xs text-muted-foreground">Carregando estimativa em tempo real…</p>
+        ) : (
+          <>
+            <div className="grid md:grid-cols-4 gap-3 mb-4">
+              <div>
+                <p className="text-xs text-muted-foreground">Pacotes completos</p>
+                <p className="font-display text-xl font-semibold">{live.packages_completed} <span className="text-xs text-muted-foreground">/ {live.monthly_target}</span></p>
+                <Progress value={Math.min((live.packages_completed / live.monthly_target) * 100, 100)} className="h-1 mt-1" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Consumo (min)</p>
+                <p className="font-display text-xl font-semibold">{Number(live.total_consumption_minutes).toFixed(0)}</p>
+                <p className="text-xs text-muted-foreground">{Number(live.video_minutes).toFixed(0)} vídeo + {live.material_unique_accesses} materiais</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Sua fatia do Pool (estim.)</p>
+                <p className="font-display text-xl font-semibold text-primary">{Number(live.pool_share_pct).toFixed(2)}%</p>
+                <p className="text-xs text-muted-foreground">{formatBRL(Number(live.pool_base_amount))} de {formatBRL(Number(live.pool_amount))}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Pool final estimado</p>
+                <p className="font-display text-xl font-semibold text-primary">{formatBRL(Number(live.pool_final_amount))}</p>
+                <div className="flex gap-1 mt-1 flex-wrap">
+                  {live.pool_floor_applied && <Badge variant="secondary" className="text-[10px]">piso</Badge>}
+                  {live.pool_cap_applied && <Badge variant="secondary" className="text-[10px]">teto</Badge>}
+                </div>
+              </div>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="rounded-lg border border-border bg-background/60 p-3">
+                <div className="flex items-center justify-between text-sm mb-1">
+                  <span className="flex items-center gap-1"><Star className="h-3 w-3" /> Bônus de Qualidade</span>
+                  <Badge variant={Number(live.quality_bonus_pct) > 0 ? "default" : "outline"}>+{Number(live.quality_bonus_pct).toFixed(0)}%</Badge>
+                </div>
+                <Progress value={Math.min(Number(live.avg_rating ?? 0) / 5 * 100, 100)} className="h-1.5 mt-1" />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Média atual: {live.avg_rating != null ? Number(live.avg_rating).toFixed(1) : "—"}★ ({live.ratings_count} avaliações). Mínimo p/ bônus: {Number(live.quality_bonus_threshold).toFixed(1)}★.
+                </p>
+              </div>
+              <div className="rounded-lg border border-border bg-background/60 p-3">
+                <div className="flex items-center justify-between text-sm mb-1">
+                  <span className="flex items-center gap-1"><Trophy className="h-3 w-3" /> RF Score</span>
+                  <Badge variant={Number(live.rf_score_bonus_pct) > 0 ? "default" : "outline"}>+{Number(live.rf_score_bonus_pct).toFixed(0)}%</Badge>
+                </div>
+                <Progress value={Math.min(Number(live.rf_score ?? 0) * 10, 100)} className="h-1.5 mt-1" />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Score atual: {Number(live.rf_score).toFixed(2)}/10. Mínimo p/ bônus: {Number(live.rf_score_bonus_threshold).toFixed(1)}/10.
+                </p>
+                <div className="grid grid-cols-4 gap-1 mt-2 text-[10px]">
+                  <div className="text-center"><p className="text-muted-foreground">Inserção</p><p className="font-medium">{Number(live.rf_components.insertion_score).toFixed(1)}</p></div>
+                  <div className="text-center"><p className="text-muted-foreground">Aulas</p><p className="font-medium">{Number(live.rf_components.lessons_score).toFixed(1)}</p></div>
+                  <div className="text-center"><p className="text-muted-foreground">Dúvidas</p><p className="font-medium">{Number(live.rf_components.doubts_score).toFixed(1)}</p></div>
+                  <div className="text-center"><p className="text-muted-foreground">Agenda</p><p className="font-medium">{Number(live.rf_components.agenda_score).toFixed(1)}</p></div>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+      </Card>
+
       {!latest ? (
         <Card className="p-8 text-center">
           <DollarSign className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
-          <p className="text-sm text-muted-foreground">Nenhuma apuração disponível ainda. Sua primeira remuneração será calculada no fechamento do mês.</p>
+          <p className="text-sm text-muted-foreground">Nenhuma apuração fechada ainda. Sua primeira remuneração consolidada será calculada no fechamento do mês.</p>
         </Card>
       ) : (
         <>

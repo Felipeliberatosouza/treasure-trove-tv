@@ -13,7 +13,7 @@ export interface BuildEmailLogoParams {
   slogan?: string | null;
   /** Cor do texto do nome da plataforma quando usado como fallback. */
   headingColor?: string;
-  /** Largura de referência da logo em px (default 200). */
+  /** Largura de referência da logo em px (default 320, igual ao site). */
   logoMaxWidth?: number;
 }
 
@@ -40,16 +40,19 @@ export function buildEmailLogoHtml({
   platformName,
   slogan,
   headingColor = "#dc2626",
-  logoMaxWidth = 200,
+  logoMaxWidth = 320,
 }: BuildEmailLogoParams): string {
   const cleanSlogan = (slogan || "").trim();
+  // Mesma fórmula do Navbar/Footer: cap em 18px (não 14px) para manter
+  // proporcionalidade visual idêntica ao site.
   const sloganFontSize =
     cleanSlogan.length > 0
-      ? Math.max(8, Math.min(14, (logoMaxWidth / cleanSlogan.length) * 1.7))
+      ? Math.max(8, Math.min(18, (logoMaxWidth / cleanSlogan.length) * 1.7))
       : 11;
 
+  // Margem negativa proporcional à logo (espelha `-mt-6` do site = -24px com h-20=80px).
   const sloganHtml = cleanSlogan
-    ? `<div style="text-align:center;margin-top:-6px;margin-bottom:16px;">` +
+    ? `<div style="text-align:center;margin-top:-24px;margin-bottom:16px;">` +
       `<span style="display:inline-block;max-width:${logoMaxWidth}px;color:#6b7280;` +
       `font-size:${sloganFontSize.toFixed(1)}px;line-height:1;white-space:nowrap;overflow:hidden;">` +
       `${escapeHtml(cleanSlogan)}</span></div>`
@@ -60,7 +63,7 @@ export function buildEmailLogoHtml({
     useUploadedLogo && logoUrl
       ? `<div style="text-align:center;margin-bottom:${bottomMargin};">` +
         `<img src="${escapeHtml(logoUrl)}" alt="Logo" ` +
-        `style="max-height:60px;max-width:${logoMaxWidth}px;display:inline-block;" /></div>`
+        `style="max-height:80px;max-width:${logoMaxWidth}px;display:inline-block;" /></div>`
       : `<div style="text-align:center;margin-bottom:${bottomMargin};` +
         `font-size:24px;font-weight:bold;color:${headingColor};">` +
         `${escapeHtml(platformName)}</div>`;

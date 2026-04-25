@@ -70,7 +70,7 @@ const cases: Array<{ name: string; params: Parameters<typeof buildEmailLogoHtml>
     },
   },
   {
-    name: "slogan curto (font-size atinge teto de 14px)",
+    name: "slogan curto (font-size atinge teto de 18px)",
     params: {
       logoUrl: "https://cdn.example.com/logo.png",
       useUploadedLogo: true,

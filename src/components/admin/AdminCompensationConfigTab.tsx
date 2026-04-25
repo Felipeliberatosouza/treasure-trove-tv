@@ -508,7 +508,10 @@ const AdminCompensationConfigTab = () => {
       </Card>
 
       <div className="flex justify-end">
-        <Button onClick={save} disabled={saving}>{saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}Salvar configurações</Button>
+        <Button onClick={save} disabled={saving || hasThresholdErrors}>
+          {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+          {hasThresholdErrors ? "Corrija os erros para salvar" : "Salvar configurações"}
+        </Button>
       </div>
 
       <Card className="p-4">

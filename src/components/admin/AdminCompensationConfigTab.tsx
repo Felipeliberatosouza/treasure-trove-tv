@@ -435,7 +435,7 @@ const AdminCompensationConfigTab = () => {
             setCfg({ ...cfg, tooltip_messages: { ...DEFAULT_TOOLTIP_MESSAGES } });
           };
 
-          const metricKeys: TooltipMetricKey[] = ["rf", "qb", "share", "pool"];
+          const metricKeys = allMetricKeys;
 
           return (
             <>

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { usePlatformSettings, VideoPricingSettings } from "@/hooks/usePlatformSettings";
-import { Input } from "@/components/ui/input";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -27,18 +27,16 @@ const SettingsVideoPricing = () => {
     <div className="space-y-4 max-w-lg">
       <div>
         <Label>Preço Padrão de Aulas (R$)</Label>
-        <Input
-          type="number" step="0.01"
+        <CurrencyInput
           value={form.default_lesson_price}
-          onChange={(e) => setForm({ ...form, default_lesson_price: parseFloat(e.target.value) || 0 })}
+          onValueChange={(v) => setForm({ ...form, default_lesson_price: v })}
         />
       </div>
       <div>
         <Label>Preço Padrão de Resoluções de Provas (R$)</Label>
-        <Input
-          type="number" step="0.01"
+        <CurrencyInput
           value={form.default_exam_solution_price}
-          onChange={(e) => setForm({ ...form, default_exam_solution_price: parseFloat(e.target.value) || 0 })}
+          onValueChange={(v) => setForm({ ...form, default_exam_solution_price: v })}
         />
       </div>
       <div className="flex items-center gap-2">

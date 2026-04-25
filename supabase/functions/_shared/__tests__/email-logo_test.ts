@@ -148,7 +148,7 @@ Deno.test("logoUrl vazio com useUploadedLogo cai no fallback textual", () => {
 
 // ---------- font-size e largura ----------
 
-Deno.test("font-size do slogan respeita limites [8, 14]px", () => {
+Deno.test("font-size do slogan respeita limites [8, 18]px", () => {
   const longSlogan = "a".repeat(200);
   const htmlLong = buildEmailLogoHtml({
     logoUrl: "https://x/logo.png",
@@ -165,5 +165,5 @@ Deno.test("font-size do slogan respeita limites [8, 14]px", () => {
     platformName: "P",
     slogan: shortSlogan,
   });
-  assertStringIncludes(htmlShort, "font-size:14.0px");
+  assertStringIncludes(htmlShort, "font-size:18.0px");
 });

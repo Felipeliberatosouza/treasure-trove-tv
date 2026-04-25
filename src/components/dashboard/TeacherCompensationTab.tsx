@@ -110,6 +110,21 @@ const TeacherCompensationTab = () => {
               </div>
             </div>
 
+            <div className="mb-4">
+              <PoolFloorCapIndicator
+                poolAmount={Number(live.pool_amount)}
+                poolBase={Number(live.pool_base_amount)}
+                uniqueAccesses={Number(live.material_unique_accesses)}
+                poolMinPerAccess={Number(live.pool_min_per_access ?? 0.3)}
+                poolMaxSharePct={Number(live.pool_max_share_pct ?? 15)}
+                totalMinutes={Number(live.total_consumption_minutes)}
+                totalPlatformMinutes={Number(live.total_platform_minutes ?? 0)}
+                floorApplied={!!live.pool_floor_applied}
+                capApplied={!!live.pool_cap_applied}
+                compact
+              />
+            </div>
+
             <div className="grid md:grid-cols-2 gap-4">
               <div className="rounded-lg border border-border bg-background/60 p-3">
                 <div className="flex items-center justify-between text-sm mb-1">

@@ -26,7 +26,12 @@ const monthLabel = (s: string) => {
 const TeacherCompensationTrendChart = ({ stats, live }: Props) => {
   const data = useMemo(() => {
     // Closed months (most recent last) — usar últimos 6
-    const closed = [...stats]
+    const closed: Array<{
+      label: string; period: string;
+      rf_score: number | null; quality_bonus_pct: number | null;
+      pool_share_pct: number | null; pool_final_amount: number | null;
+      kind: "closed" | "live";
+    }> = [...stats]
       .filter((s) => s.period_start)
       .sort((a, b) => a.period_start.localeCompare(b.period_start))
       .slice(-6)
@@ -37,7 +42,7 @@ const TeacherCompensationTrendChart = ({ stats, live }: Props) => {
         quality_bonus_pct: s.quality_bonus_pct != null ? Number(s.quality_bonus_pct) : null,
         pool_share_pct: s.pool_share_pct != null ? Number(s.pool_share_pct) : null,
         pool_final_amount: s.pool_final_amount != null ? Number(s.pool_final_amount) : null,
-        kind: "closed" as const,
+        kind: "closed",
       }));
     if (live) {
       closed.push({
@@ -47,7 +52,7 @@ const TeacherCompensationTrendChart = ({ stats, live }: Props) => {
         quality_bonus_pct: Number(live.quality_bonus_pct ?? 0),
         pool_share_pct: Number(live.pool_share_pct ?? 0),
         pool_final_amount: Number(live.pool_final_amount ?? 0),
-        kind: "live" as const,
+        kind: "live",
       });
     }
     return closed;

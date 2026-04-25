@@ -50,7 +50,7 @@ const UserMenu = forwardRef<HTMLDivElement>((_, forwardedRef) => {
           </Link>
           <button
             onClick={handleSignOut}
-            className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-destructive hover:bg-secondary transition-colors"
+            className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-yellow-500 hover:bg-secondary transition-colors"
           >
             <LogOut className="h-4 w-4" /> Sair
           </button>

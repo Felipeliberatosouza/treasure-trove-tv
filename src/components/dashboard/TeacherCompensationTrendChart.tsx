@@ -426,6 +426,139 @@ const TeacherCompensationTrendChart = ({ stats, live, tooltipMessages }: Props) 
           )}
         </div>
       )}
+
+      {/* Resumo em texto — alternativa acessível ao gráfico/tooltip */}
+      {data.length > 0 && (
+        <section
+          aria-label="Resumo em texto da evolução mensal"
+          className="mt-4 rounded-lg border border-border bg-card p-3"
+        >
+          <header className="mb-2">
+            <h4 className="text-sm font-medium flex items-center gap-2">
+              <TrendingUp className="h-4 w-4 text-primary" aria-hidden="true" />
+              Resumo em texto
+            </h4>
+            <p className="text-[11px] text-muted-foreground">
+              Versão legível por leitor de tela e mais clara em telas pequenas — valores absolutos e direção da variação para cada mês.
+            </p>
+          </header>
+          <ul className="space-y-3" role="list">
+            {[...data].reverse().map((row) => {
+              const describe = (
+                label: string,
+                curr: number | null | undefined,
+                prev: number | null | undefined,
+                delta: number | null | undefined,
+                fmtCurr: (n: number) => string,
+                deltaSuffix: string,
+              ) => {
+                const currTxt = curr != null ? fmtCurr(curr) : "—";
+                const prevTxt = prev != null ? fmtCurr(prev) : "—";
+                let dir: "up" | "down" | "flat" | "na" = "na";
+                if (delta != null) dir = delta > 0.05 ? "up" : delta < -0.05 ? "down" : "flat";
+                const dirWord =
+                  dir === "up" ? "subiu" : dir === "down" ? "caiu" : dir === "flat" ? "estável" : "sem comparação";
+                const deltaTxt =
+                  delta == null
+                    ? "—"
+                    : `${delta >= 0 ? "+" : ""}${delta.toFixed(1)}${deltaSuffix}`;
+                const cls =
+                  dir === "up"
+                    ? "text-emerald-700 dark:text-emerald-400"
+                    : dir === "down"
+                    ? "text-red-700 dark:text-red-400"
+                    : "text-muted-foreground";
+                const Icon =
+                  dir === "up" ? ArrowUpRight : dir === "down" ? ArrowDownRight : Minus;
+                const aria =
+                  delta == null
+                    ? `${label}: ${currTxt}. Sem mês anterior para comparação.`
+                    : `${label}: ${currTxt}. ${dirWord} ${Math.abs(delta).toFixed(1)}${
+                        deltaSuffix.includes("p.p.")
+                          ? " pontos percentuais"
+                          : deltaSuffix.includes("%")
+                          ? " por cento"
+                          : ""
+                      } em relação a ${row.prev_label ?? "mês anterior"} (${prevTxt}).`;
+                return (
+                  <li
+                    key={label}
+                    className="flex items-start justify-between gap-3 text-xs"
+                    aria-label={aria}
+                  >
+                    <span className="text-muted-foreground shrink-0">{label}</span>
+                    <span className="text-right">
+                      <span className="font-medium text-foreground" aria-hidden="true">
+                        {currTxt}
+                      </span>
+                      <span className="text-muted-foreground" aria-hidden="true">
+                        {" "}
+                        (anterior: {prevTxt})
+                      </span>
+                      <span
+                        className={`inline-flex items-center gap-0.5 ml-2 font-medium ${cls}`}
+                        aria-hidden="true"
+                      >
+                        <Icon className="h-3 w-3" />
+                        {deltaTxt}
+                      </span>
+                    </span>
+                  </li>
+                );
+              };
+              return (
+                <li key={row.period} className="border-b border-border last:border-b-0 pb-3 last:pb-0">
+                  <div className="flex items-center justify-between mb-1.5 flex-wrap gap-2">
+                    <h5 className="text-xs font-semibold">
+                      {row.label}
+                      {row.prev_label && (
+                        <span className="font-normal text-muted-foreground"> · vs {row.prev_label}</span>
+                      )}
+                    </h5>
+                    {row.kind === "live" && (
+                      <Badge variant="outline" className="text-[10px]">Parcial</Badge>
+                    )}
+                  </div>
+                  <ul className="space-y-1" role="list">
+                    {describe(
+                      "RF Score",
+                      row.rf_score,
+                      row.prev_rf_score,
+                      row.d_rf_pct,
+                      (n) => `${n.toFixed(2)}/10`,
+                      "%",
+                    )}
+                    {describe(
+                      "Bônus Qualidade",
+                      row.quality_bonus_pct,
+                      row.prev_quality_bonus_pct,
+                      row.d_qb_pp,
+                      (n) => `${n.toFixed(0)}%`,
+                      " p.p.",
+                    )}
+                    {describe(
+                      "Fatia do Pool",
+                      row.pool_share_pct,
+                      row.prev_pool_share_pct,
+                      row.d_share_pp,
+                      (n) => `${n.toFixed(2)}%`,
+                      " p.p.",
+                    )}
+                    {describe(
+                      "Pool em R$",
+                      row.pool_final_amount,
+                      row.prev_pool_final_amount,
+                      row.d_pool_pct,
+                      (n) => fmtBRL(n),
+                      "%",
+                    )}
+                  </ul>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
     </Card>
   );
 };

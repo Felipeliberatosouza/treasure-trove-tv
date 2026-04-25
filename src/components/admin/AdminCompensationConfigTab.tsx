@@ -11,6 +11,15 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import {
+  TooltipMessagesConfig,
+  TooltipMetricKey,
+  TooltipMetricMessages,
+  DEFAULT_TOOLTIP_MESSAGES,
+  TOOLTIP_METRIC_LABELS,
+  TOOLTIP_METRIC_UNIT_HINT,
+  mergeTooltipMessages,
+} from "@/components/dashboard/tooltipMessagesConfig";
 
 interface CompConfig {
   package_fee_brl: number;
@@ -25,6 +34,7 @@ interface CompConfig {
   default_monthly_package_target: number;
   rf_weights: { content_insertion: number; lessons_delivered: number; doubts_answered: number; agenda_updated: number; };
   proximity_alerts?: ProximityAlertsConfig;
+  tooltip_messages?: TooltipMessagesConfig;
 }
 
 interface ProximityAlertsConfig {

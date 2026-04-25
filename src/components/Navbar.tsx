@@ -164,12 +164,12 @@ const Navbar = () => {
       className="fixed top-0 z-50 w-full border-b border-border/50 bg-background/80 backdrop-blur-xl"
     >
       <div className="flex items-center justify-between px-6 py-3 md:px-12 lg:px-20">
-        <Link to="/" className="flex flex-col items-start gap-0.5">
+        <Link to="/" className="flex flex-col items-start gap-0 leading-none">
           {branding?.logo_url ? (
             <img
               src={branding.logo_url}
               alt={branding.platform_name || "Logo"}
-              className="h-16 md:h-20 max-w-[340px] object-contain"
+              className="h-16 md:h-20 max-w-[340px] object-contain block"
             />
           ) : (
             <span className="font-display text-xl font-bold text-gradient">
@@ -177,7 +177,7 @@ const Navbar = () => {
             </span>
           )}
           {branding?.slogan && (
-            <span className="text-[11px] md:text-xs text-muted-foreground leading-tight max-w-[340px]">
+            <span className="-mt-1 text-[10px] md:text-[11px] text-muted-foreground leading-none max-w-[340px]">
               {branding.slogan}
             </span>
           )}

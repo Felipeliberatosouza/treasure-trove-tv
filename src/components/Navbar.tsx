@@ -164,7 +164,7 @@ const Navbar = () => {
       className="fixed top-0 z-50 w-full border-b border-border/50 bg-background/80 backdrop-blur-xl"
     >
       <div className="flex items-center justify-between px-6 py-3 md:px-12 lg:px-20">
-        <Link to="/" className="flex items-center gap-2">
+        <Link to="/" className="flex flex-col items-start gap-0.5">
           {branding?.logo_url ? (
             <img
               src={branding.logo_url}
@@ -174,6 +174,11 @@ const Navbar = () => {
           ) : (
             <span className="font-display text-xl font-bold text-gradient">
               {branding?.platform_name || "Revisão Fácil"}
+            </span>
+          )}
+          {branding?.slogan && (
+            <span className="text-[11px] md:text-xs text-muted-foreground leading-tight max-w-[340px]">
+              {branding.slogan}
             </span>
           )}
         </Link>

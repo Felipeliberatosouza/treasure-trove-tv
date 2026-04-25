@@ -121,6 +121,7 @@ const TeacherCompensationTab = () => {
               <PoolFloorCapIndicator
                 poolAmount={Number(live.pool_amount)}
                 poolBase={Number(live.pool_base_amount)}
+                proportionalShare={live.proportional_share_amount != null ? Number(live.proportional_share_amount) : null}
                 uniqueAccesses={Number(live.material_unique_accesses)}
                 poolMinPerAccess={Number(live.pool_min_per_access ?? 0.3)}
                 poolMaxSharePct={Number(live.pool_max_share_pct ?? 15)}

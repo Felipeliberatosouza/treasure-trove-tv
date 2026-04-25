@@ -195,8 +195,13 @@ const AdminCompensationConfigTab = () => {
       .select("value")
       .eq("key", "teacher_content_goal")
       .maybeSingle();
-    const monthly = (goalRow?.value as any)?.monthly_goal;
-    if (typeof monthly === "number" && monthly > 0) {
+    const goalValue = goalRow?.value as any;
+    const contentGoals = goalValue?.content_goals ?? {};
+    const derivedMonthly =
+      Number(contentGoals.revisoes ?? 0) + Number(contentGoals.resolucoes ?? 0);
+    const savedMonthly = Number(goalValue?.monthly_goal ?? 0);
+    const monthly = derivedMonthly > 0 ? derivedMonthly : savedMonthly;
+    if (Number.isFinite(monthly) && monthly > 0) {
       setTeacherGoalFromSettings(monthly);
       // Sincroniza o cfg local para refletir a fonte única
       if (cfgRow?.value) {

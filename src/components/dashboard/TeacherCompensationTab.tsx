@@ -10,7 +10,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import TeacherCompensationTrendChart from "./TeacherCompensationTrendChart";
 import PoolFloorCapIndicator from "./PoolFloorCapIndicator";
-import PoolProximityAlerts from "./PoolProximityAlerts";
+import PoolProximityAlerts, { ProximityAlertsConfig } from "./PoolProximityAlerts";
 
 const formatBRL = (n: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(n || 0);
 const formatPeriod = (s: string, e: string) => {
@@ -25,6 +25,7 @@ const TeacherCompensationTab = () => {
   const [live, setLive] = useState<any | null>(null);
   const [liveLoading, setLiveLoading] = useState(false);
   const [poolCfg, setPoolCfg] = useState<{ pool_min_per_access_brl: number; pool_max_share_pct: number } | null>(null);
+  const [proximityCfg, setProximityCfg] = useState<ProximityAlertsConfig | null>(null);
 
   const loadLive = async () => {
     if (!user) return;
@@ -55,6 +56,7 @@ const TeacherCompensationTab = () => {
         pool_min_per_access_brl: Number(cfgVal.pool_min_per_access_brl ?? 0.3),
         pool_max_share_pct: Number(cfgVal.pool_max_share_pct ?? 15),
       });
+      setProximityCfg((cfgVal.proximity_alerts ?? null) as ProximityAlertsConfig | null);
       setLoading(false);
     })();
     loadLive();
@@ -130,6 +132,7 @@ const TeacherCompensationTab = () => {
                   capApplied={!!live.pool_cap_applied}
                   totalMinutes={Number(live.total_consumption_minutes)}
                   totalPlatformMinutes={Number(live.total_platform_minutes ?? 0)}
+                  config={proximityCfg}
                 />
               </div>
               <PoolFloorCapIndicator

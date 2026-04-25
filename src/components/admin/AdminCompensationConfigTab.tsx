@@ -7,6 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Play, RefreshCw, Settings as SettingsIcon, Users } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -22,7 +24,58 @@ interface CompConfig {
   rf_score_bonus_pct: number;
   default_monthly_package_target: number;
   rf_weights: { content_insertion: number; lessons_delivered: number; doubts_answered: number; agenda_updated: number; };
+  proximity_alerts?: ProximityAlertsConfig;
 }
+
+interface ProximityAlertsConfig {
+  enabled: boolean;
+  near_cap_threshold_pct: number;   // % do teto a partir do qual mostrar alerta (ex: 80)
+  near_floor_ratio_pct: number;     // proporcional/piso <= X% (ex: 120)
+  cap_color_hsl: string;            // ex: "217 91% 60%"
+  floor_color_hsl: string;          // ex: "38 92% 50%"
+  near_cap_title: string;
+  near_cap_body: string;             // suporta {pct_of_cap}, {proportional}, {cap_value}, {cap_pct}
+  cap_applied_title: string;
+  cap_applied_body: string;          // suporta {cap_value}, {cap_pct}
+  near_floor_title: string;
+  near_floor_body: string;           // suporta {ratio_pct}, {proportional}, {floor_value}, {accesses}, {min_per_access}
+  floor_applied_title: string;
+  floor_applied_body: string;        // suporta {accesses}, {min_per_access}, {floor_value}
+}
+
+const DEFAULT_PROXIMITY: ProximityAlertsConfig = {
+  enabled: true,
+  near_cap_threshold_pct: 80,
+  near_floor_ratio_pct: 120,
+  cap_color_hsl: "217 91% 60%",
+  floor_color_hsl: "38 92% 50%",
+  near_cap_title: "Você está próximo do teto ({pct_of_cap}% do limite)",
+  near_cap_body: "Sua fatia proporcional ({proportional}) está se aproximando do teto de {cap_pct}% do Pool ({cap_value}). Acima desse valor, o consumo extra não aumenta seu repasse.",
+  cap_applied_title: "Teto atingido — sua fatia foi limitada a {cap_pct}% do Pool",
+  cap_applied_body: "Limite atual: {cap_value}. Consumo extra acima disso é redistribuído entre os outros professores.",
+  near_floor_title: "Volume baixo — você está perto de acionar o piso mínimo",
+  near_floor_body: "Seu cálculo proporcional ({proportional}) está apenas {ratio_pct}% acima do piso ({floor_value} = {accesses} acessos × {min_per_access}). Se o consumo cair, o piso será aplicado automaticamente.",
+  floor_applied_title: "Piso mínimo acionado — volume baixo neste mês",
+  floor_applied_body: "Sua fatia proporcional ficou abaixo do piso garantido de {min_per_access} por acesso único ({accesses} acessos = {floor_value}). O piso foi aplicado para proteger sua remuneração.",
+};
+
+const TOKEN_HELP = "Variáveis: {pct_of_cap}, {proportional}, {cap_value}, {cap_pct}, {ratio_pct}, {floor_value}, {accesses}, {min_per_access}";
+
+const ColorSwatch = ({ hsl }: { hsl: string }) => (
+  <span className="inline-block h-6 w-6 rounded-md border border-border" style={{ background: `hsl(${hsl})` }} />
+);
+
+const isValidHsl = (v: string) => /^\d{1,3}\s+\d{1,3}%\s+\d{1,3}%$/.test(v.trim());
+
+const ensureProximity = (cfg: CompConfig): CompConfig => {
+  if (cfg.proximity_alerts) return cfg;
+  return { ...cfg, proximity_alerts: DEFAULT_PROXIMITY };
+};
+
+const setProximity = (cfg: CompConfig, patch: Partial<ProximityAlertsConfig>): CompConfig => {
+  const current = cfg.proximity_alerts ?? DEFAULT_PROXIMITY;
+  return { ...cfg, proximity_alerts: { ...current, ...patch } };
+};
 
 const formatBRL = (n: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(n || 0);
 const formatDate = (d: string) => { try { return format(new Date(d), "dd/MM/yyyy HH:mm", { locale: ptBR }); } catch { return d; } };
@@ -60,7 +113,9 @@ const AdminCompensationConfigTab = () => {
   const save = async () => {
     if (!cfg) return;
     setSaving(true);
-    const { error } = await supabase.from("platform_settings").upsert({ key: "teacher_compensation", value: cfg as any });
+    // Garante que proximity_alerts vai persistido
+    const payload = ensureProximity(cfg);
+    const { error } = await supabase.from("platform_settings").upsert({ key: "teacher_compensation", value: payload as any });
     setSaving(false);
     if (error) { toast({ title: "Erro", description: error.message, variant: "destructive" }); return; }
     toast({ title: "Configurações salvas" });
@@ -158,6 +213,126 @@ const AdminCompensationConfigTab = () => {
           <div><Label className="text-xs">Agenda (%)</Label><Input type="number" value={cfg.rf_weights.agenda_updated} onChange={(e) => setCfg({ ...cfg, rf_weights: { ...cfg.rf_weights, agenda_updated: Number(e.target.value) } })} /></div>
         </div>
         <p className="text-xs text-muted-foreground mt-2">Soma deve totalizar 100%.</p>
+      </Card>
+
+      {/* Alertas de proximidade (piso/teto) */}
+      <Card className="p-4">
+        {(() => {
+          const pa = cfg.proximity_alerts ?? DEFAULT_PROXIMITY;
+          const updatePa = (patch: Partial<ProximityAlertsConfig>) => setCfg(setProximity(cfg, patch));
+          return (
+            <>
+              <div className="flex items-start justify-between mb-3 gap-2 flex-wrap">
+                <div>
+                  <h3 className="font-medium">Alertas de proximidade (piso/teto)</h3>
+                  <p className="text-xs text-muted-foreground">
+                    Configure quando avisar o professor de que ele está perto do teto ou prestes a acionar o piso, e personalize textos e cores dos alertas.
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Label className="text-xs">Ativar alertas</Label>
+                  <Switch checked={!!pa.enabled} onCheckedChange={(v) => updatePa({ enabled: v })} />
+                </div>
+              </div>
+
+              {/* Limiares */}
+              <div className="grid md:grid-cols-2 gap-3 mb-4">
+                <div>
+                  <Label className="text-xs">Limiar de proximidade do TETO (% do teto)</Label>
+                  <div className="flex items-center gap-1">
+                    <Input
+                      type="number" min={50} max={99} step={1}
+                      value={pa.near_cap_threshold_pct}
+                      onChange={(e) => updatePa({ near_cap_threshold_pct: Number(e.target.value) })}
+                    />
+                    <span className="text-xs text-muted-foreground">%</span>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground mt-1">Mostra o alerta quando a fatia proporcional atinge esse % do teto. Ex: 80% → avisa a partir de 80% do limite.</p>
+                </div>
+                <div>
+                  <Label className="text-xs">Limiar de proximidade do PISO (proporcional ÷ piso)</Label>
+                  <div className="flex items-center gap-1">
+                    <Input
+                      type="number" min={100} max={300} step={1}
+                      value={pa.near_floor_ratio_pct}
+                      onChange={(e) => updatePa({ near_floor_ratio_pct: Number(e.target.value) })}
+                    />
+                    <span className="text-xs text-muted-foreground">%</span>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground mt-1">Avisa quando o cálculo proporcional está até esse % acima do piso. Ex: 120% → avisa quando proporcional ≤ 1,2× o piso.</p>
+                </div>
+              </div>
+
+              {/* Cores */}
+              <div className="grid md:grid-cols-2 gap-3 mb-4">
+                <div>
+                  <Label className="text-xs">Cor do alerta de TETO (HSL)</Label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      value={pa.cap_color_hsl}
+                      onChange={(e) => updatePa({ cap_color_hsl: e.target.value })}
+                      placeholder="217 91% 60%"
+                    />
+                    <ColorSwatch hsl={isValidHsl(pa.cap_color_hsl) ? pa.cap_color_hsl : "217 91% 60%"} />
+                  </div>
+                  <p className="text-[11px] text-muted-foreground mt-1">Formato HSL sem vírgulas, ex: <code className="px-1 rounded bg-muted">217 91% 60%</code></p>
+                </div>
+                <div>
+                  <Label className="text-xs">Cor do alerta de PISO (HSL)</Label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      value={pa.floor_color_hsl}
+                      onChange={(e) => updatePa({ floor_color_hsl: e.target.value })}
+                      placeholder="38 92% 50%"
+                    />
+                    <ColorSwatch hsl={isValidHsl(pa.floor_color_hsl) ? pa.floor_color_hsl : "38 92% 50%"} />
+                  </div>
+                </div>
+              </div>
+
+              {/* Textos */}
+              <div className="space-y-3">
+                <p className="text-xs text-muted-foreground">{TOKEN_HELP}</p>
+
+                <div className="grid md:grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-xs">Próximo do teto — Título</Label>
+                    <Input value={pa.near_cap_title} onChange={(e) => updatePa({ near_cap_title: e.target.value })} />
+                    <Label className="text-xs mt-2 block">Próximo do teto — Mensagem</Label>
+                    <Textarea rows={3} value={pa.near_cap_body} onChange={(e) => updatePa({ near_cap_body: e.target.value })} />
+                  </div>
+                  <div>
+                    <Label className="text-xs">Teto atingido — Título</Label>
+                    <Input value={pa.cap_applied_title} onChange={(e) => updatePa({ cap_applied_title: e.target.value })} />
+                    <Label className="text-xs mt-2 block">Teto atingido — Mensagem</Label>
+                    <Textarea rows={3} value={pa.cap_applied_body} onChange={(e) => updatePa({ cap_applied_body: e.target.value })} />
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-xs">Próximo do piso — Título</Label>
+                    <Input value={pa.near_floor_title} onChange={(e) => updatePa({ near_floor_title: e.target.value })} />
+                    <Label className="text-xs mt-2 block">Próximo do piso — Mensagem</Label>
+                    <Textarea rows={3} value={pa.near_floor_body} onChange={(e) => updatePa({ near_floor_body: e.target.value })} />
+                  </div>
+                  <div>
+                    <Label className="text-xs">Piso aplicado — Título</Label>
+                    <Input value={pa.floor_applied_title} onChange={(e) => updatePa({ floor_applied_title: e.target.value })} />
+                    <Label className="text-xs mt-2 block">Piso aplicado — Mensagem</Label>
+                    <Textarea rows={3} value={pa.floor_applied_body} onChange={(e) => updatePa({ floor_applied_body: e.target.value })} />
+                  </div>
+                </div>
+
+                <div className="flex justify-end">
+                  <Button variant="ghost" size="sm" onClick={() => updatePa({ ...DEFAULT_PROXIMITY })}>
+                    Restaurar padrões
+                  </Button>
+                </div>
+              </div>
+            </>
+          );
+        })()}
       </Card>
 
       <div className="flex justify-end">

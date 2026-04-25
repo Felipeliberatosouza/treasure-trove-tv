@@ -115,9 +115,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const { data: { session: currentSession } } = await supabase.auth.getSession();
       if (!currentSession) return null;
 
-      const { data, error } = await supabase.functions.invoke("check-subscription");
+      // Invoke with a single silent retry on transient 5xx / network errors
+      let data: any = null;
+      let error: any = null;
+      for (let attempt = 0; attempt < 2; attempt++) {
+        const res = await supabase.functions.invoke("check-subscription");
+        data = res.data;
+        error = res.error;
+        if (!error) break;
+        // Retry once after a short delay for transient runtime errors
+        await new Promise((r) => setTimeout(r, 800));
+      }
       if (error) {
-        console.error("Error checking subscription:", error);
+        // Transient — log as warning, do not spam console errors
+        console.warn("[check-subscription] transient failure, will retry next cycle");
         return null;
       }
       if (data) {
@@ -132,7 +143,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
       return null;
     } catch (err) {
-      console.error("Failed to check subscription:", err);
+      console.warn("[check-subscription] failed:", err);
       return null;
     }
   }, []);

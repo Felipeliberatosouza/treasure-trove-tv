@@ -160,8 +160,10 @@ const AdminCompensationConfigTab = () => {
 
   const hasThresholdErrors = Object.values(thresholdErrors).some((e) => e !== undefined);
 
+  const allMetricKeys: TooltipMetricKey[] = ["rf", "qb", "share", "pool"];
+
   const getFirstError = (): { metric: TooltipMetricKey; message: string } | null => {
-    for (const m of metricKeys) {
+    for (const m of allMetricKeys) {
       if (thresholdErrors[m]) {
         return { metric: m, message: thresholdErrors[m]! };
       }

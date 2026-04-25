@@ -124,6 +124,29 @@ const AdminCompensationConfigTab = () => {
   const [targets, setTargets] = useState<any[]>([]);
   const [teachers, setTeachers] = useState<{ id: string; name: string }[]>([]);
   const [newTarget, setNewTarget] = useState({ teacher_id: "", monthly_package_target: 4 });
+  const [thresholdErrors, setThresholdErrors] = useState<TooltipThresholdErrors>({});
+
+  const validateThreshold = (metric: TooltipMetricKey, value: number): string | undefined => {
+    if (value < 0) {
+      return "O limiar não pode ser negativo";
+    }
+    return undefined;
+  };
+
+  const updateMetricWithValidation = (
+    currentCfg: CompConfig,
+    metric: TooltipMetricKey,
+    patch: Partial<TooltipMetricMessages>
+  ) => {
+    const newThreshold = patch.strong_threshold;
+    if (newThreshold !== undefined) {
+      const error = validateThreshold(metric, newThreshold);
+      setThresholdErrors((prev) => ({ ...prev, [metric]: error }));
+    }
+    return setTooltipMetric(currentCfg, metric, patch);
+  };
+
+  const hasThresholdErrors = Object.values(thresholdErrors).some((e) => e !== undefined);
 
   const load = async () => {
     setLoading(true);

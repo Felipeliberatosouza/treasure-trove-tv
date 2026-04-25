@@ -6,48 +6,48 @@
 
 @layer base {
   :root {
-    --background: 240 15% 4%;
+    --background: 210 30% 8%;
     --foreground: 0 0% 95%;
 
-    --card: 240 12% 8%;
+    --card: 210 25% 12%;
     --card-foreground: 0 0% 95%;
 
-    --popover: 240 12% 8%;
+    --popover: 210 25% 12%;
     --popover-foreground: 0 0% 95%;
 
-    --primary: 0 85% 55%;
+    --primary: 215 100% 34%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 240 10% 14%;
+    --secondary: 210 20% 18%;
     --secondary-foreground: 0 0% 90%;
 
-    --muted: 240 8% 16%;
-    --muted-foreground: 240 5% 55%;
+    --muted: 210 15% 20%;
+    --muted-foreground: 210 10% 60%;
 
-    --accent: 35 100% 55%;
+    --accent: 51 100% 50%;
     --accent-foreground: 0 0% 5%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 240 8% 16%;
-    --input: 240 8% 16%;
-    --ring: 0 85% 55%;
+    --border: 210 15% 20%;
+    --input: 210 15% 20%;
+    --ring: 215 100% 34%;
 
     --radius: 0.75rem;
 
-    --sidebar-background: 240 12% 6%;
+    --sidebar-background: 210 30% 6%;
     --sidebar-foreground: 0 0% 90%;
-    --sidebar-primary: 0 85% 55%;
+    --sidebar-primary: 215 100% 34%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 10% 14%;
+    --sidebar-accent: 210 20% 16%;
     --sidebar-accent-foreground: 0 0% 90%;
-    --sidebar-border: 240 8% 16%;
-    --sidebar-ring: 0 85% 55%;
+    --sidebar-border: 210 15% 20%;
+    --sidebar-ring: 215 100% 34%;
 
-    --gradient-hero: linear-gradient(135deg, hsl(0 85% 55% / 0.15), hsl(35 100% 55% / 0.08), transparent);
-    --gradient-card-hover: linear-gradient(180deg, transparent 40%, hsl(0 85% 55% / 0.12) 100%);
-    --shadow-glow: 0 0 40px hsl(0 85% 55% / 0.15);
+    --gradient-hero: linear-gradient(135deg, hsl(215 100% 34% / 0.20), hsl(51 100% 50% / 0.08), transparent);
+    --gradient-card-hover: linear-gradient(180deg, transparent 40%, hsl(215 100% 34% / 0.15) 100%);
+    --shadow-glow: 0 0 40px hsl(215 100% 34% / 0.25);
 
     /* Semantic financial/transactional tokens
        success → upgrade / credit in user's favor (green)
@@ -81,7 +81,7 @@
 
   .text-gradient {
     @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, hsl(0 85% 55%), hsl(35 100% 55%));
+    background-image: linear-gradient(135deg, hsl(215 100% 34%), hsl(51 100% 50%));
   }
 
   .card-shine {

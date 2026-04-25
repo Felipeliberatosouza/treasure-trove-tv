@@ -148,13 +148,16 @@ const AdminCompensationConfigTab = () => {
     metric: TooltipMetricKey,
     rawValue: string
   ) => {
-    setThresholdInputs((prev) => ({ ...prev, [metric]: rawValue }));
-    const error = validateThresholdInput(rawValue);
-    setThresholdErrors((prev) => ({ ...prev, [metric]: error }));
+    // Normaliza o input para exibir (converte vírgula em ponto visualmente)
+    const normalizedInput = rawValue.trim().replace(",", ".");
+    setThresholdInputs((prev) => ({ ...prev, [metric]: normalizedInput }));
+    
+    const result = validateThresholdInput(rawValue);
+    setThresholdErrors((prev) => ({ ...prev, [metric]: result.error }));
     
     // Só atualiza o config se for um número válido
-    const num = Number(rawValue);
-    if (!Number.isNaN(num) && rawValue !== "") {
+    if (!result.error && result.normalized) {
+      const num = Number(result.normalized);
       return setTooltipMetric(currentCfg, metric, { strong_threshold: num });
     }
     return currentCfg;

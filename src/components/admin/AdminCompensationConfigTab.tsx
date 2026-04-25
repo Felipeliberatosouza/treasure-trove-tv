@@ -369,6 +369,103 @@ const AdminCompensationConfigTab = () => {
         })()}
       </Card>
 
+      {/* Mensagens contextuais do tooltip do gráfico de tendência */}
+      <Card className="p-4">
+        {(() => {
+          const tt = mergeTooltipMessages(cfg.tooltip_messages);
+          const updateMetric = (metric: TooltipMetricKey, patch: Partial<TooltipMetricMessages>) =>
+            setCfg(setTooltipMetric(cfg, metric, patch));
+          const reset = () => setCfg({ ...cfg, tooltip_messages: { ...DEFAULT_TOOLTIP_MESSAGES } });
+
+          const metricKeys: TooltipMetricKey[] = ["rf", "qb", "share", "pool"];
+
+          return (
+            <>
+              <div className="flex items-start justify-between mb-3 gap-2 flex-wrap">
+                <div>
+                  <h3 className="font-medium">Mensagens do tooltip do gráfico</h3>
+                  <p className="text-xs text-muted-foreground">
+                    Personalize as frases contextuais e os limiares de "variação expressiva" mostrados no gráfico de tendência do professor.
+                    Para cada métrica, defina o que aparece em altas/baixas leves, fortes, estabilidade e quando não há comparação.
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Label className="text-xs">Ativar mensagens</Label>
+                  <Switch
+                    checked={!!tt.enabled}
+                    onCheckedChange={(v) => setCfg(setTooltipEnabled(cfg, v))}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                {metricKeys.map((m) => {
+                  const data = tt[m];
+                  return (
+                    <div key={m} className="rounded-lg border border-border p-3 bg-secondary/20">
+                      <div className="flex items-end justify-between gap-3 mb-3 flex-wrap">
+                        <div>
+                          <p className="font-medium text-sm">{TOOLTIP_METRIC_LABELS[m]}</p>
+                          <p className="text-[11px] text-muted-foreground">{TOOLTIP_METRIC_UNIT_HINT[m]}</p>
+                        </div>
+                        <div className="w-44">
+                          <Label className="text-xs">Limiar "variação forte"</Label>
+                          <div className="flex items-center gap-1">
+                            <Input
+                              type="number"
+                              step="0.1"
+                              min={0}
+                              value={data.strong_threshold}
+                              onChange={(e) =>
+                                updateMetric(m, { strong_threshold: Number(e.target.value) })
+                              }
+                            />
+                            <span className="text-xs text-muted-foreground">{m === "qb" || m === "share" ? "p.p." : "%"}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="grid md:grid-cols-2 gap-3">
+                        <div>
+                          <Label className="text-xs">Alta leve</Label>
+                          <Textarea rows={2} value={data.up} onChange={(e) => updateMetric(m, { up: e.target.value })} />
+                        </div>
+                        <div>
+                          <Label className="text-xs">Alta forte (≥ limiar)</Label>
+                          <Textarea rows={2} value={data.up_strong} onChange={(e) => updateMetric(m, { up_strong: e.target.value })} />
+                        </div>
+                        <div>
+                          <Label className="text-xs">Queda leve</Label>
+                          <Textarea rows={2} value={data.down} onChange={(e) => updateMetric(m, { down: e.target.value })} />
+                        </div>
+                        <div>
+                          <Label className="text-xs">Queda forte (≥ limiar)</Label>
+                          <Textarea rows={2} value={data.down_strong} onChange={(e) => updateMetric(m, { down_strong: e.target.value })} />
+                        </div>
+                        <div>
+                          <Label className="text-xs">Estável</Label>
+                          <Textarea rows={2} value={data.stable} onChange={(e) => updateMetric(m, { stable: e.target.value })} />
+                        </div>
+                        <div>
+                          <Label className="text-xs">Sem dados (sem mês anterior)</Label>
+                          <Textarea rows={2} value={data.no_data} onChange={(e) => updateMetric(m, { no_data: e.target.value })} />
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+
+                <div className="flex justify-end">
+                  <Button variant="ghost" size="sm" onClick={reset}>
+                    Restaurar padrões
+                  </Button>
+                </div>
+              </div>
+            </>
+          );
+        })()}
+      </Card>
+
       <div className="flex justify-end">
         <Button onClick={save} disabled={saving}>{saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}Salvar configurações</Button>
       </div>

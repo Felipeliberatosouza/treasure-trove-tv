@@ -127,6 +127,7 @@ const AdminCompensationConfigTab = () => {
   const [newTarget, setNewTarget] = useState({ teacher_id: "", monthly_package_target: 4 });
   const [thresholdErrors, setThresholdErrors] = useState<TooltipThresholdErrors>({});
   const [thresholdInputs, setThresholdInputs] = useState<Partial<Record<TooltipMetricKey, string>>>({});
+  const [teacherGoalFromSettings, setTeacherGoalFromSettings] = useState<number | null>(null);
 
   const validateThresholdInput = (value: string): { error?: string; normalized?: string } => {
     if (value === "" || value.trim() === "") {
@@ -187,6 +188,20 @@ const AdminCompensationConfigTab = () => {
     setLoading(true);
     const { data: cfgRow } = await supabase.from("platform_settings").select("value").eq("key", "teacher_compensation").maybeSingle();
     if (cfgRow?.value) setCfg(cfgRow.value as unknown as CompConfig);
+    // Fonte única da meta mensal: Configurações → Metas do Professor → Geral
+    const { data: goalRow } = await supabase
+      .from("platform_settings")
+      .select("value")
+      .eq("key", "teacher_content_goal")
+      .maybeSingle();
+    const monthly = (goalRow?.value as any)?.monthly_goal;
+    if (typeof monthly === "number" && monthly > 0) {
+      setTeacherGoalFromSettings(monthly);
+      // Sincroniza o cfg local para refletir a fonte única
+      if (cfgRow?.value) {
+        setCfg({ ...(cfgRow.value as unknown as CompConfig), default_monthly_package_target: monthly });
+      }
+    }
     const { data: runRows } = await supabase.from("pool_runs").select("*").order("period_start", { ascending: false }).limit(24);
     setRuns(runRows ?? []);
     const { data: tRows } = await supabase.from("teacher_monthly_targets").select("*").order("created_at", { ascending: false });
@@ -209,6 +224,9 @@ const AdminCompensationConfigTab = () => {
     const withProximity = ensureProximity(cfg);
     const payload: CompConfig = {
       ...withProximity,
+      // Mantém sincronizado com a fonte única (Configurações → Metas do Professor → Geral)
+      default_monthly_package_target:
+        teacherGoalFromSettings ?? withProximity.default_monthly_package_target,
       tooltip_messages: mergeTooltipMessages(withProximity.tooltip_messages),
     };
     const { error } = await supabase.from("platform_settings").upsert({ key: "teacher_compensation", value: payload as any });
@@ -274,9 +292,20 @@ const AdminCompensationConfigTab = () => {
 
       <Card className="p-4">
         <h3 className="font-medium mb-3">1. Taxa de inserção</h3>
-        <div className="grid md:grid-cols-3 gap-3">
+        <div className="grid md:grid-cols-3 gap-3 items-end">
           {cfgField("Valor por pacote completo", "package_fee_brl", "R$")}
-          {cfgField("Meta padrão de pacotes/mês", "default_monthly_package_target", "pacotes", "1")}
+          <div>
+            <Label className="text-xs">Meta padrão de pacotes/mês</Label>
+            <div className="flex items-center gap-2 h-10 px-3 rounded-md border border-input bg-muted/40">
+              <span className="text-sm font-medium">
+                {teacherGoalFromSettings ?? cfg.default_monthly_package_target}
+              </span>
+              <span className="text-xs text-muted-foreground">pacotes</span>
+            </div>
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              Definida em <span className="font-medium">Configurações → Metas do Professor → Geral</span>.
+            </p>
+          </div>
         </div>
       </Card>
 

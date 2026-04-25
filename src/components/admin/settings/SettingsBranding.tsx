@@ -1,9 +1,12 @@
 import { useEffect, useState, useRef } from "react";
 import { usePlatformSettings, BrandingSettings } from "@/hooks/usePlatformSettings";
 import { useStorageUpload } from "@/hooks/useStorageUpload";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { Save, Upload, X, Image } from "lucide-react";
 
 const SettingsBranding = () => {
@@ -16,6 +19,7 @@ const SettingsBranding = () => {
     background_color: "#09090f",
   });
   const [saving, setSaving] = useState(false);
+  const [applyToEmails, setApplyToEmails] = useState(false);
 
   useEffect(() => { if (data) setForm(data); }, [data]);
 
@@ -31,6 +35,25 @@ const SettingsBranding = () => {
   const handleSave = async () => {
     setSaving(true);
     await update(form);
+    if (applyToEmails) {
+      const emailStyle = {
+        logo_url: form.logo_url || null,
+        use_uploaded_logo: !!form.logo_url,
+        heading_color: form.secondary_color,
+        button_color: form.primary_color,
+        link_color: form.primary_color,
+        text_color: form.background_color,
+      };
+      const { error } = await supabase
+        .from("email_templates")
+        .update(emailStyle as any)
+        .not("id", "is", null);
+      if (error) {
+        toast.error("Identidade salva, mas falha ao aplicar aos e-mails.");
+      } else {
+        toast.success("Identidade visual aplicada a todos os e-mails!");
+      }
+    }
     setSaving(false);
   };
 
@@ -116,6 +139,21 @@ const SettingsBranding = () => {
             <input type="color" value={form.background_color} onChange={(e) => setForm({ ...form, background_color: e.target.value })} className="w-10 h-10 rounded cursor-pointer border-0" />
             <Input value={form.background_color} onChange={(e) => setForm({ ...form, background_color: e.target.value })} className="flex-1" />
           </div>
+        </div>
+      </div>
+      <div className="flex items-start gap-3 rounded-lg border border-border bg-muted/30 p-3">
+        <Switch
+          id="apply-to-emails"
+          checked={applyToEmails}
+          onCheckedChange={setApplyToEmails}
+        />
+        <div className="flex-1">
+          <Label htmlFor="apply-to-emails" className="cursor-pointer text-sm font-medium">
+            Usar esta identidade visual em todos os e-mails
+          </Label>
+          <p className="text-xs text-muted-foreground mt-1">
+            Ao salvar, a logomarca e as cores (primária, secundária, plano de fundo) serão aplicadas a <strong>todos</strong> os templates de e-mail, sobrescrevendo configurações individuais de cor e logo.
+          </p>
         </div>
       </div>
       <Button onClick={handleSave} disabled={saving}>

@@ -169,7 +169,7 @@ const Navbar = () => {
             <img
               src={branding.logo_url}
               alt={branding.platform_name || "Logo"}
-              className="h-12 md:h-14 max-w-[260px] object-contain"
+              className="h-16 md:h-20 max-w-[340px] object-contain"
             />
           ) : (
             <span className="font-display text-xl font-bold text-gradient">

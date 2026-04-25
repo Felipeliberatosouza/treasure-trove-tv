@@ -619,7 +619,7 @@ const AdminCompensationConfigTab = () => {
           <Button onClick={addTarget}>Salvar meta</Button>
         </div>
         {targets.length === 0 ? (
-          <p className="text-xs text-muted-foreground">Nenhuma meta individual. Todos seguem o padrão global ({cfg.default_monthly_package_target}).</p>
+          <p className="text-xs text-muted-foreground">Nenhuma meta individual. Todos seguem o padrão global ({teacherGoalFromSettings ?? cfg.default_monthly_package_target}).</p>
         ) : (
           <div className="space-y-1">
             {targets.map((t) => {

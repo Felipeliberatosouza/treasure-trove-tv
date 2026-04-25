@@ -87,6 +87,26 @@ const setProximity = (cfg: CompConfig, patch: Partial<ProximityAlertsConfig>): C
   return { ...cfg, proximity_alerts: { ...current, ...patch } };
 };
 
+const setTooltipMetric = (
+  cfg: CompConfig,
+  metric: TooltipMetricKey,
+  patch: Partial<TooltipMetricMessages>
+): CompConfig => {
+  const merged = mergeTooltipMessages(cfg.tooltip_messages);
+  return {
+    ...cfg,
+    tooltip_messages: {
+      ...merged,
+      [metric]: { ...merged[metric], ...patch },
+    },
+  };
+};
+
+const setTooltipEnabled = (cfg: CompConfig, enabled: boolean): CompConfig => {
+  const merged = mergeTooltipMessages(cfg.tooltip_messages);
+  return { ...cfg, tooltip_messages: { ...merged, enabled } };
+};
+
 const formatBRL = (n: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(n || 0);
 const formatDate = (d: string) => { try { return format(new Date(d), "dd/MM/yyyy HH:mm", { locale: ptBR }); } catch { return d; } };
 

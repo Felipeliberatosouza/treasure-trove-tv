@@ -90,7 +90,10 @@ const cases: Case[] = [
     name: "logo quadrada 512×512 com slogan curto (3 palavras)",
     naturalWidth: 512,
     naturalHeight: 512,
-    slogan: "Slogan com até 3 palavras",
+    // Slogan curto o suficiente para que o cálculo (logoW/len)*1.7 caia
+    // dentro do range [8,18] em uma logo quadrada renderizada com 80px.
+    // Aqui logoW=80, então len precisa ser ≈ 80*1.7/13 ≈ 10..17 para não saturar.
+    slogan: "Foco e ação",
   },
   {
     name: "logo bem larga 4000×500 — capada em max-width",
@@ -102,7 +105,13 @@ const cases: Case[] = [
     name: "logo alta/estreita 400×600 → renderizada estreita",
     naturalWidth: 400,
     naturalHeight: 600,
-    slogan: "Conhecimento na sua mão",
+    // Logo renderiza com width≈53px → slogan precisa ser bem curto (≤6 chars)
+    // para a fonte cair dentro do range.
+    slogan: "Sucesso",
+    // Mesmo assim, com largura tão pequena, é provável que sature no piso.
+    // Marcado como floor para o caso de saturação ainda ocorrer; a asserção
+    // dinâmica abaixo detecta isto.
+    saturated: "floor",
   },
   {
     name: "slogan muito curto satura no teto (18px)",

@@ -69,6 +69,7 @@ const teacherMenuItems: MenuItem[] = [
   { label: "Responder Dúvidas de Alunos", href: "/dashboard/teacher?tab=doubts", alertKey: "doubts" },
   { label: "Acessar Aula Particular Agendada", href: "/minhas-aulas-agendadas", alertKey: "scheduledToday" },
   { label: "Atualizar Agenda", href: "/dashboard/teacher?tab=agenda", alertKey: "agendaOutdated" },
+  { label: "Ver Minha Página Pública", href: "__teacher_public_page__" },
 ];
 
 const adminMenuItems: MenuItem[] = [

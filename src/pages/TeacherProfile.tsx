@@ -168,10 +168,16 @@ const TeacherProfile = () => {
 
   const expertiseList = teacher.expertise_area?.split(", ").filter(Boolean) || [];
   const isOwner = !!user && user.id === teacher.user_id;
+  // Hard guard: edição só existe se for o dono. Caso contrário, qualquer estado de edição é forçado a falso.
+  const editing = isOwner && isEditing;
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !user) return;
+    if (!isOwner) {
+      toast({ title: "Ação não permitida", description: "Você não é o dono desta página.", variant: "destructive" });
+      return;
+    }
     setUploadingAvatar(true);
     try {
       const ext = file.name.split(".").pop() || "jpg";
@@ -190,6 +196,10 @@ const TeacherProfile = () => {
 
   const handleSave = async () => {
     if (!user || !teacher) return;
+    if (!isOwner) {
+      toast({ title: "Ação não permitida", description: "Você não é o dono desta página.", variant: "destructive" });
+      return;
+    }
     setSaving(true);
     const proposed: Record<string, unknown> = {
       name: draft.name.trim(),

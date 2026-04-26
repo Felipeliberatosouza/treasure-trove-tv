@@ -112,7 +112,7 @@ export const ResumoMaterial = ({ offered, setOffered, price, setPrice, text, set
     {offered && (
       <div>
         <label className="text-xs text-muted-foreground mb-1 block">
-          Texto do resumo (auto-preenchido com a descrição da aula — pode editar livremente)
+          Texto do resumo (gerado automaticamente pela IA a partir da transcrição do vídeo gravado — pode editar livremente)
         </label>
         <SpellCheckedTextarea
           value={text}

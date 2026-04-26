@@ -260,12 +260,43 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
     return r ? { price: r.price, min_price: r.min_price, platform_percentage: r.platform_percentage } : undefined;
   };
 
-  // Auto-fill resumo from description until user edits it manually
-  useEffect(() => {
-    if (!resumoTouched) {
-      setResumoText(description.slice(0, 250));
-    }
-  }, [description, resumoTouched]);
+  // Generate resumo (short summary, up to 250 chars) from the recorded transcript.
+  const generateResumoFromTranscript = useCallback(
+    async (vtt: string, opts: { silentIfEmpty?: boolean } = {}): Promise<boolean> => {
+      const transcript = vttToPlainText(vtt);
+      if (!transcript.trim()) {
+        if (!opts.silentIfEmpty) {
+          toast.error("Não há transcrição disponível para gerar o resumo.");
+        }
+        return false;
+      }
+      try {
+        const { data, error } = await supabase.functions.invoke(
+          "generate-lesson-material",
+          {
+            body: {
+              kind: "description",
+              title: title || "Aula",
+              area: selectedAreas[0] || "",
+              transcript,
+              maxChars: 250,
+            },
+          },
+        );
+        if (error) throw error;
+        const generated = (data?.description || "").trim().slice(0, 250);
+        if (generated) {
+          setResumoText(generated);
+          return true;
+        }
+        return false;
+      } catch (err) {
+        console.error("Failed to generate resumo from transcript", err);
+        return false;
+      }
+    },
+    [title, selectedAreas],
+  );
 
   // Fetch teacher name
   useEffect(() => {
@@ -1016,6 +1047,11 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
               // Auto-generate description from VTT transcript using AI
               if (vtt && (!description || description.trim().length === 0)) {
                 await generateDescriptionFromTranscript(vtt, { silentIfEmpty: true });
+              }
+
+              // Auto-generate the short resumo (up to 250 chars) from the transcript as well.
+              if (vtt && !resumoTouched) {
+                await generateResumoFromTranscript(vtt, { silentIfEmpty: true });
               }
 
               // Inform teacher about next steps with AI assistance

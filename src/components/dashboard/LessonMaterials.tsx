@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { SpellCheckedInput, SpellCheckedTextarea } from "@/components/ui/spellchecked-input";
 import { Button } from "@/components/ui/button";
@@ -140,6 +141,7 @@ interface SimuladoMaterialProps {
   setQuestions: (q: QuizQuestion[]) => void;
   cfg?: MaterialPriceInfo;
   onGenerate?: () => Promise<void> | void;
+  onGenerateOne?: (existing: QuizQuestion[]) => Promise<QuizQuestion | null>;
   generating?: boolean;
   canGenerate?: boolean;
   questionMax?: number;
@@ -148,7 +150,8 @@ interface SimuladoMaterialProps {
   minOptions?: number;
 }
 
-export const SimuladoMaterial = ({ offered, setOffered, price, setPrice, questions, setQuestions, cfg, onGenerate, generating, canGenerate, questionMax = 200, optionMax = 200, minQuestions = 5, minOptions = 3 }: SimuladoMaterialProps) => {
+export const SimuladoMaterial = ({ offered, setOffered, price, setPrice, questions, setQuestions, cfg, onGenerate, onGenerateOne, generating, canGenerate, questionMax = 200, optionMax = 200, minQuestions = 5, minOptions = 3 }: SimuladoMaterialProps) => {
+  const [addingOne, setAddingOne] = useState(false);
   const updateQuestion = (idx: number, patch: Partial<QuizQuestion>) => {
     setQuestions(questions.map((q, i) => (i === idx ? { ...q, ...patch } : q)));
   };
@@ -173,7 +176,19 @@ export const SimuladoMaterial = ({ offered, setOffered, price, setPrice, questio
       }),
     );
   };
-  const addQuestion = () => {
+  const addQuestion = async () => {
+    if (onGenerateOne && canGenerate !== false) {
+      setAddingOne(true);
+      try {
+        const created = await onGenerateOne(questions);
+        if (created) {
+          setQuestions([...questions, created]);
+          return;
+        }
+      } finally {
+        setAddingOne(false);
+      }
+    }
     setQuestions([...questions, { question: "", options: Array(minOptions).fill(""), correct_index: 0 }]);
   };
   const removeQuestion = (idx: number) => {
@@ -251,8 +266,16 @@ export const SimuladoMaterial = ({ offered, setOffered, price, setPrice, questio
               </div>
             </div>
           ))}
-          <Button type="button" size="sm" variant="outline" className="gap-1" onClick={addQuestion}>
-            <Plus className="h-3.5 w-3.5" /> Adicionar questão
+          <Button type="button" size="sm" variant="outline" className="gap-1" onClick={addQuestion} disabled={addingOne}>
+            {addingOne ? (
+              <>
+                <Loader2 className="h-3.5 w-3.5 animate-spin" /> Gerando com IA...
+              </>
+            ) : (
+              <>
+                <Plus className="h-3.5 w-3.5" /> Adicionar questão{onGenerateOne ? " (IA)" : ""}
+              </>
+            )}
           </Button>
         </div>
       )}
@@ -272,6 +295,7 @@ interface TopQuestionsMaterialProps {
   setQuestions: (q: TopQuestion[]) => void;
   cfg?: MaterialPriceInfo;
   onGenerate?: () => Promise<void> | void;
+  onGenerateOne?: (existing: TopQuestion[]) => Promise<TopQuestion | null>;
   generating?: boolean;
   canGenerate?: boolean;
   questionMax?: number;
@@ -279,11 +303,26 @@ interface TopQuestionsMaterialProps {
   minQuestions?: number;
 }
 
-export const TopQuestionsMaterial = ({ offered, setOffered, price, setPrice, questions, setQuestions, cfg, onGenerate, generating, canGenerate, questionMax = 300, answerMax = 300, minQuestions = 5 }: TopQuestionsMaterialProps) => {
+export const TopQuestionsMaterial = ({ offered, setOffered, price, setPrice, questions, setQuestions, cfg, onGenerate, onGenerateOne, generating, canGenerate, questionMax = 300, answerMax = 300, minQuestions = 5 }: TopQuestionsMaterialProps) => {
+  const [addingOne, setAddingOne] = useState(false);
   const update = (idx: number, patch: Partial<TopQuestion>) => {
     setQuestions(questions.map((q, i) => (i === idx ? { ...q, ...patch } : q)));
   };
-  const add = () => setQuestions([...questions, { question: "", answer: "" }]);
+  const add = async () => {
+    if (onGenerateOne && canGenerate !== false) {
+      setAddingOne(true);
+      try {
+        const created = await onGenerateOne(questions);
+        if (created) {
+          setQuestions([...questions, created]);
+          return;
+        }
+      } finally {
+        setAddingOne(false);
+      }
+    }
+    setQuestions([...questions, { question: "", answer: "" }]);
+  };
   const remove = (idx: number) => {
     if (questions.length <= minQuestions) return;
     setQuestions(questions.filter((_, i) => i !== idx));
@@ -342,8 +381,16 @@ export const TopQuestionsMaterial = ({ offered, setOffered, price, setPrice, que
               </div>
             </div>
           ))}
-          <Button type="button" size="sm" variant="outline" className="gap-1" onClick={add}>
-            <Plus className="h-3.5 w-3.5" /> Adicionar pergunta
+          <Button type="button" size="sm" variant="outline" className="gap-1" onClick={add} disabled={addingOne}>
+            {addingOne ? (
+              <>
+                <Loader2 className="h-3.5 w-3.5 animate-spin" /> Gerando com IA...
+              </>
+            ) : (
+              <>
+                <Plus className="h-3.5 w-3.5" /> Adicionar pergunta{onGenerateOne ? " (IA)" : ""}
+              </>
+            )}
           </Button>
         </div>
       )}
@@ -363,15 +410,31 @@ interface ColinhaMaterialProps {
   setBullets: (b: string[]) => void;
   cfg?: MaterialPriceInfo;
   onGenerate?: () => Promise<void> | void;
+  onGenerateOne?: (existing: string[]) => Promise<string | null>;
   generating?: boolean;
   canGenerate?: boolean;
   bulletMax?: number;
   minBullets?: number;
 }
 
-export const ColinhaMaterial = ({ offered, setOffered, price, setPrice, bullets, setBullets, cfg, onGenerate, generating, canGenerate, bulletMax = 100, minBullets = 10 }: ColinhaMaterialProps) => {
+export const ColinhaMaterial = ({ offered, setOffered, price, setPrice, bullets, setBullets, cfg, onGenerate, onGenerateOne, generating, canGenerate, bulletMax = 100, minBullets = 10 }: ColinhaMaterialProps) => {
+  const [addingOne, setAddingOne] = useState(false);
   const update = (idx: number, value: string) => setBullets(bullets.map((b, i) => (i === idx ? value : b)));
-  const add = () => setBullets([...bullets, ""]);
+  const add = async () => {
+    if (onGenerateOne && canGenerate !== false) {
+      setAddingOne(true);
+      try {
+        const created = await onGenerateOne(bullets);
+        if (created !== null && created !== undefined) {
+          setBullets([...bullets, created]);
+          return;
+        }
+      } finally {
+        setAddingOne(false);
+      }
+    }
+    setBullets([...bullets, ""]);
+  };
   const remove = (idx: number) => {
     if (bullets.length <= minBullets) return;
     setBullets(bullets.filter((_, i) => i !== idx));
@@ -419,8 +482,16 @@ export const ColinhaMaterial = ({ offered, setOffered, price, setPrice, bullets,
               )}
             </div>
           ))}
-          <Button type="button" size="sm" variant="outline" className="gap-1" onClick={add}>
-            <Plus className="h-3.5 w-3.5" /> Adicionar bullet
+          <Button type="button" size="sm" variant="outline" className="gap-1" onClick={add} disabled={addingOne}>
+            {addingOne ? (
+              <>
+                <Loader2 className="h-3.5 w-3.5 animate-spin" /> Gerando com IA...
+              </>
+            ) : (
+              <>
+                <Plus className="h-3.5 w-3.5" /> Adicionar bullet{onGenerateOne ? " (IA)" : ""}
+              </>
+            )}
           </Button>
         </div>
       )}

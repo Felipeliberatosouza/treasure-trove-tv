@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Loader2, TrendingUp, Activity, AlertCircle, ArrowUpRight, Star, TrendingDown, Minus, Megaphone } from "lucide-react";
+import { Loader2, TrendingUp, Activity, AlertCircle, ArrowUpRight, Star, TrendingDown, Minus, Megaphone, ExternalLink } from "lucide-react";
 import {
   Bar,
   BarChart,
@@ -326,10 +326,31 @@ const TeacherHomeStats = () => {
 
   return (
     <section className="px-6 md:px-12 lg:px-20">
-      <h2 className="font-display text-2xl font-bold mb-1">📊 Seus Resultados</h2>
-      <p className="text-sm text-muted-foreground mb-6">
-        Acompanhe vendas, atividades, pendências e avaliações.
-      </p>
+      <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h2 className="font-display text-2xl font-bold mb-1">📊 Seus Resultados</h2>
+          <p className="text-sm text-muted-foreground">
+            Acompanhe vendas, atividades, pendências e avaliações.
+          </p>
+        </div>
+        {(profile as { slug?: string | null } | null)?.slug ? (
+          <Link
+            to={`/${(profile as { slug?: string | null }).slug}`}
+            className="inline-flex items-center gap-1.5 rounded-md border border-border bg-secondary px-3 py-2 text-xs font-medium text-foreground hover:bg-secondary/80 transition-colors"
+          >
+            <ExternalLink className="h-3.5 w-3.5" />
+            Ver/Editar Minha Página Pública
+          </Link>
+        ) : (
+          <Link
+            to="/dashboard/teacher?tab=profile"
+            className="inline-flex items-center gap-1.5 rounded-md border border-border bg-secondary px-3 py-2 text-xs font-medium text-foreground hover:bg-secondary/80 transition-colors"
+          >
+            <ExternalLink className="h-3.5 w-3.5" />
+            Configurar Minha Página Pública
+          </Link>
+        )}
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4">
         {/* Card 1: Sales */}

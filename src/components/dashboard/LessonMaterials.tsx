@@ -212,7 +212,7 @@ export const SimuladoMaterial = ({ offered, setOffered, price, setPrice, questio
                     className="bg-background text-sm"
                     placeholder="Pergunta"
                   />
-                  <p className="text-[10px] text-muted-foreground text-right">{q.question.length}/{questionMax}</p>
+                  <p className="text-[10px] text-accent-foreground text-right">{q.question.length}/{questionMax}</p>
                 </div>
                 {questions.length > minQuestions && (
                   <Button type="button" size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => removeQuestion(qi)}>
@@ -307,7 +307,7 @@ export const TopQuestionsMaterial = ({ offered, setOffered, price, setPrice, que
             Mínimo de {minQuestions} perguntas abertas com resposta textual. Pergunta: até {questionMax} caracteres · Resposta: até {answerMax} caracteres.
           </p>
           {questions.map((q, qi) => (
-            <div key={qi} className="rounded-md border border-border/60 bg-secondary/30 p-3 space-y-2">
+            <div key={qi} className="rounded-md border border-border/60 bg-secondary/30 p-3 space-y-2 text-accent-foreground">
               <div className="flex items-start gap-2">
                 <span className="text-xs font-semibold text-primary shrink-0 mt-1">Q{qi + 1}</span>
                 <div className="flex-1 space-y-1.5">
@@ -320,7 +320,7 @@ export const TopQuestionsMaterial = ({ offered, setOffered, price, setPrice, que
                       className="bg-background text-sm"
                       placeholder="Pergunta aberta"
                     />
-                    <p className="text-[10px] text-muted-foreground text-right">{q.question.length}/{questionMax}</p>
+                    <p className="text-[10px] text-accent-foreground text-right">{q.question.length}/{questionMax}</p>
                   </div>
                   <div>
                     <SpellCheckedTextarea
@@ -331,7 +331,7 @@ export const TopQuestionsMaterial = ({ offered, setOffered, price, setPrice, que
                       className="bg-background text-sm"
                       placeholder="Resposta textual"
                     />
-                    <p className="text-[10px] text-muted-foreground text-right">{q.answer.length}/{answerMax}</p>
+                    <p className="text-[10px] text-accent-foreground text-right">{q.answer.length}/{answerMax}</p>
                   </div>
                 </div>
                 {questions.length > minQuestions && (

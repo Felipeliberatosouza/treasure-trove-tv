@@ -186,27 +186,26 @@ const Navbar = () => {
       animate={{ opacity: 1, y: 0 }}
       className="fixed top-0 z-50 w-full border-b border-border/50 bg-background/80 backdrop-blur-xl"
     >
-      <div className="flex items-center justify-between px-6 py-3 md:px-12 lg:px-20">
-        <Link to="/" className="relative flex flex-col items-center gap-0 leading-none">
+      <div className="flex items-center justify-between gap-3 px-4 py-3 md:px-12 lg:px-20">
+        <Link to="/" className="flex items-center gap-2 leading-none min-w-0">
           {branding?.logo_url ? (
             <img
               ref={logoRef}
               src={branding.logo_url}
               alt={branding.platform_name || "Logo"}
-              className="h-16 md:h-20 max-w-[340px] object-contain block"
+              className="h-10 md:h-12 max-w-[220px] object-contain block shrink-0"
               onLoad={(e) => setLogoWidth((e.target as HTMLImageElement).getBoundingClientRect().width)}
             />
           ) : (
-            <span className="font-display text-xl font-bold text-gradient">
+            <span className="font-display text-xl font-bold text-gradient shrink-0">
               {branding?.platform_name || "Revisão Fácil"}
             </span>
           )}
           {slogan && (
             <span
-              className="absolute left-1/2 -translate-x-1/2 bottom-1 leading-none text-center whitespace-nowrap overflow-hidden pointer-events-none"
+              className="hidden sm:inline leading-none whitespace-nowrap overflow-hidden text-ellipsis"
               style={{
-                width: logoWidth > 0 ? `${logoWidth}px` : undefined,
-                fontSize: `${sloganFontSize}px`,
+                fontSize: "12px",
                 color: branding?.slogan_color || "hsl(var(--muted-foreground))",
               }}
             >

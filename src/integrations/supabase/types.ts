@@ -1219,8 +1219,10 @@ export type Database = {
           birth_date: string | null
           cpf: string | null
           created_at: string
+          education: Json
           email: string
           email_verified: boolean | null
+          experiences: Json
           expertise_area: string | null
           id: string
           monthly_content_goal: number | null
@@ -1244,8 +1246,10 @@ export type Database = {
           birth_date?: string | null
           cpf?: string | null
           created_at?: string
+          education?: Json
           email: string
           email_verified?: boolean | null
+          experiences?: Json
           expertise_area?: string | null
           id?: string
           monthly_content_goal?: number | null
@@ -1269,8 +1273,10 @@ export type Database = {
           birth_date?: string | null
           cpf?: string | null
           created_at?: string
+          education?: Json
           email?: string
           email_verified?: boolean | null
+          experiences?: Json
           expertise_area?: string | null
           id?: string
           monthly_content_goal?: number | null
@@ -2386,6 +2392,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      teacher_profile_change_requests: {
+        Row: {
+          created_at: string
+          id: string
+          proposed: Json
+          rejection_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          teacher_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          proposed?: Json
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          teacher_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          proposed?: Json
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          teacher_id?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       teacher_rf_score_components: {
         Row: {

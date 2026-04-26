@@ -90,7 +90,7 @@ const Navbar = () => {
   const searchInputRef = useRef<HTMLInputElement>(null);
   const searchContainerRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
-  const { user, role } = useAuth();
+  const { user, role, profile } = useAuth();
   const { settings } = useAllPlatformSettings();
   const branding = settings.branding as BrandingSettings | undefined;
   const logoRef = useRef<HTMLImageElement | null>(null);

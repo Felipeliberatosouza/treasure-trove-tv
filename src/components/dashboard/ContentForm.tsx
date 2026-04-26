@@ -243,6 +243,57 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
     }
   };
 
+  const generateMaterialItem = async <T,>(
+    kind: "simulado" | "top_questoes" | "colinha",
+    existing: unknown,
+  ): Promise<T | null> => {
+    if (!canGenerateAi) {
+      toast.error("Preencha o nome e a descrição da aula antes de gerar com IA.");
+      return null;
+    }
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-lesson-material", {
+        body: { kind, title, description, area: selectedAreas[0] || "", mode: "single", existing },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      if (kind === "simulado") {
+        const opts = Array.isArray(data?.options) ? data.options : [];
+        const item: QuizQuestion = {
+          question: String(data?.question || "").slice(0, 200),
+          options: opts.slice(0, 4).map((o: any) => String(o || "").slice(0, 200)),
+          correct_index: Math.max(0, Math.min(3, Number(data?.correct_index ?? 0))),
+        };
+        if (!item.question || item.options.length < 3) throw new Error("Resposta da IA incompleta");
+        return item as unknown as T;
+      }
+      if (kind === "top_questoes") {
+        const item: TopQuestion = {
+          question: String(data?.question || "").slice(0, 300),
+          answer: String(data?.answer || "").slice(0, 300),
+        };
+        if (!item.question || !item.answer) throw new Error("Resposta da IA incompleta");
+        return item as unknown as T;
+      }
+      if (kind === "colinha") {
+        const bullet = String(data?.bullet || "").slice(0, 100);
+        if (!bullet) throw new Error("Resposta da IA incompleta");
+        return bullet as unknown as T;
+      }
+      return null;
+    } catch (err: any) {
+      const msg = err?.message || "Falha ao gerar com IA";
+      if (msg.toLowerCase().includes("rate") || msg.includes("429")) {
+        toast.error("Limite de uso da IA atingido. Tente novamente em instantes.");
+      } else if (msg.includes("402") || msg.toLowerCase().includes("crédito")) {
+        toast.error("Créditos de IA esgotados. Adicione créditos no workspace.");
+      } else {
+        toast.error(msg);
+      }
+      return null;
+    }
+  };
+
   const recordingEnabled = productConfig?.revisoes?.enable_recording ?? false;
   const maxRecordingMinutes = productConfig?.revisoes?.max_recording_minutes ?? 30;
   const enableSubtitles = productConfig?.revisoes?.enable_subtitles ?? false;

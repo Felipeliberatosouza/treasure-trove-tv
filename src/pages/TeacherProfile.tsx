@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 
@@ -67,6 +68,7 @@ const TeacherProfile = () => {
   const [orderDraft, setOrderDraft] = useState<string[]>([]);
   const [savingOrder, setSavingOrder] = useState(false);
   const [dragId, setDragId] = useState<string | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
 
   useEffect(() => {
     if (!slug) return;
@@ -248,6 +250,13 @@ const TeacherProfile = () => {
   const reorderedContent = reordering
     ? orderDraft.map((id) => content.find((c) => c.id === id)).filter(Boolean) as ContentItem[]
     : content;
+
+  // Compute "before/after" diff for the preview
+  const originalOrderIds = content.map((c) => c.id);
+  const proposedOrderIds = orderDraft;
+  const orderChanged = originalOrderIds.join("|") !== proposedOrderIds.join("|");
+  const originalIndexById = new Map(originalOrderIds.map((id, i) => [id, i]));
+  const proposedIndexById = new Map(proposedOrderIds.map((id, i) => [id, i]));
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

@@ -45,6 +45,7 @@ import UserBlockGuard from "./components/UserBlockGuard.tsx";
 import GlobalRedirectOverlay from "./components/GlobalRedirectOverlay.tsx";
 import OnboardingGuard from "./components/OnboardingGuard.tsx";
 import ScrollToTop from "./components/ScrollToTop.tsx";
+import SubscriptionUnavailableBanner from "./components/SubscriptionUnavailableBanner.tsx";
 // Test-only harness route. Lazy import keeps it out of prod chunks unless
 // a test/dev session navigates to /__test/checkout-retry.
 import { lazy, Suspense } from "react";
@@ -127,6 +128,7 @@ const App = () => (
           <GlobalRedirectOverlay />
           <OnboardingGuard />
           <UserBlockGuard />
+          <SubscriptionUnavailableBanner />
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

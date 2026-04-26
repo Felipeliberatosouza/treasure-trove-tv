@@ -15,6 +15,14 @@ export interface BrandingSettings {
   /** When true, always show the platform name as text instead of the uploaded
    *  logo image. Falls back to text automatically if `logo_url` is empty. */
   use_text_logo: boolean;
+  /** Background color of primary CTAs (main buttons). */
+  primary_button_bg: string;
+  /** Text color rendered on top of primary CTAs. */
+  primary_button_text: string;
+  /** Background color of secondary CTAs. */
+  secondary_button_bg: string;
+  /** Text color rendered on top of secondary CTAs. */
+  secondary_button_text: string;
 }
 
 export interface ContactSettings {

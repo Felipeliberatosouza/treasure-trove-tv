@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { isAgendaOutdated } from "@/utils/agendaFreshness";
 
 export interface TeacherAlerts {
   pendingDoubts: boolean;
@@ -78,15 +79,10 @@ export const useTeacherAlerts = (): TeacherAlerts => {
 
       if (cancelled) return;
 
-      const lastRecurring = recurringRes.data?.updated_at
-        ? new Date(recurringRes.data.updated_at).getTime()
-        : 0;
-      const lastException = exceptionsRes.data?.updated_at
-        ? new Date(exceptionsRes.data.updated_at).getTime()
-        : 0;
-      const lastUpdate = Math.max(lastRecurring, lastException);
-      const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
-      const agendaOutdated = lastUpdate === 0 || Date.now() - lastUpdate > sevenDaysMs;
+      const agendaOutdated = isAgendaOutdated({
+        recurringUpdatedAt: recurringRes.data?.updated_at ?? null,
+        exceptionUpdatedAt: exceptionsRes.data?.updated_at ?? null,
+      });
 
       setAlerts({
         pendingDoubts: (doubtsRes.count ?? 0) > 0,

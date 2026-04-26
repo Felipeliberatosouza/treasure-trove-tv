@@ -11,6 +11,8 @@ import type { BrandingSettings } from "@/hooks/usePlatformSettings";
 import { supabase } from "@/integrations/supabase/client";
 import { useActiveSubscription } from "@/hooks/useActiveSubscription";
 import { useTeacherAlerts } from "@/hooks/useTeacherAlerts";
+import { useAdminAlerts } from "@/hooks/useAdminAlerts";
+import { useStudentAlerts } from "@/hooks/useStudentAlerts";
 
 interface SearchResult {
   id: string;
@@ -18,11 +20,21 @@ interface SearchResult {
   type: "lesson" | "exam_solution";
 }
 
+type AlertKey =
+  | "doubts"
+  | "scheduledToday"
+  | "agendaOutdated"
+  | "adminPendingContent"
+  | "adminPendingDoubts"
+  | "adminExpiringSubscriptions"
+  | "studentAnsweredDoubts"
+  | "studentScheduledToday";
+
 type MenuItem = {
   label: string;
   href?: string;
-  alertKey?: "doubts" | "scheduledToday" | "agendaOutdated";
-  children?: { label: string; href: string; alertKey?: "doubts" | "scheduledToday" | "agendaOutdated" }[];
+  alertKey?: AlertKey;
+  children?: { label: string; href: string; alertKey?: AlertKey }[];
 };
 
 const publicMenuItems: MenuItem[] = [
@@ -46,8 +58,8 @@ const loggedMenuItems: MenuItem[] = [
   { label: "Meus Simulados", href: "/meus-simulados" },
   { label: "Minhas Top Questões de Provas", href: "/minhas-top-questoes" },
   { label: "Minhas Colinhas", href: "/minhas-colinhas" },
-  { label: "Minhas Dúvidas", href: "/minhas-duvidas" },
-  { label: "Aula Particular: Agende/Acesse", href: "/minhas-aulas-agendadas" },
+  { label: "Minhas Dúvidas", href: "/minhas-duvidas", alertKey: "studentAnsweredDoubts" },
+  { label: "Aula Particular: Agende/Acesse", href: "/minhas-aulas-agendadas", alertKey: "studentScheduledToday" },
 ];
 
 const teacherMenuItems: MenuItem[] = [
@@ -67,10 +79,10 @@ const teacherMenuItems: MenuItem[] = [
 ];
 
 const adminMenuItems: MenuItem[] = [
-  { label: "Aprovação de Conteúdos", href: "/dashboard/admin?tab=content" },
-  { label: "Aprovação de Dúvidas", href: "/dashboard/admin?tab=doubts" },
+  { label: "Aprovação de Conteúdos", href: "/dashboard/admin?tab=content", alertKey: "adminPendingContent" },
+  { label: "Aprovação de Dúvidas", href: "/dashboard/admin?tab=doubts", alertKey: "adminPendingDoubts" },
   { label: "Pagamento de Professores", href: "/dashboard/admin?tab=compensation" },
-  { label: "Vencimento de Assinaturas", href: "/dashboard/admin?tab=subscriptions" },
+  { label: "Vencimento de Assinaturas", href: "/dashboard/admin?tab=subscriptions", alertKey: "adminExpiringSubscriptions" },
   { label: "Monitoramento de E-mails", href: "/dashboard/admin?tab=emails" },
   { label: "Posts de Divulgação", href: "/dashboard/admin?tab=sales-posts" },
 ];
@@ -112,6 +124,8 @@ const Navbar = () => {
       : 11;
   const { isActive: hasActiveSubscription } = useActiveSubscription();
   const teacherAlerts = useTeacherAlerts();
+  const adminAlerts = useAdminAlerts();
+  const studentAlerts = useStudentAlerts();
 
   const baseMenu = user
     ? role === "admin"
@@ -124,12 +138,28 @@ const Navbar = () => {
     ? [subscriberMenuItem, ...baseMenu]
     : baseMenu;
 
-  const alertActive = (key?: "doubts" | "scheduledToday" | "agendaOutdated") => {
+  const alertActive = (key?: AlertKey) => {
     if (!key) return false;
-    if (key === "doubts") return teacherAlerts.pendingDoubts;
-    if (key === "scheduledToday") return teacherAlerts.scheduledToday;
-    if (key === "agendaOutdated") return teacherAlerts.agendaOutdated;
-    return false;
+    switch (key) {
+      case "doubts":
+        return teacherAlerts.pendingDoubts;
+      case "scheduledToday":
+        return teacherAlerts.scheduledToday;
+      case "agendaOutdated":
+        return teacherAlerts.agendaOutdated;
+      case "adminPendingContent":
+        return adminAlerts.pendingContent;
+      case "adminPendingDoubts":
+        return adminAlerts.pendingDoubts;
+      case "adminExpiringSubscriptions":
+        return adminAlerts.expiringSubscriptions;
+      case "studentAnsweredDoubts":
+        return studentAlerts.answeredDoubts;
+      case "studentScheduledToday":
+        return studentAlerts.scheduledToday;
+      default:
+        return false;
+    }
   };
 
   useEffect(() => {

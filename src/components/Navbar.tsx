@@ -10,6 +10,7 @@ import { useAllPlatformSettings } from "@/hooks/usePlatformSettings";
 import type { BrandingSettings } from "@/hooks/usePlatformSettings";
 import { supabase } from "@/integrations/supabase/client";
 import { useActiveSubscription } from "@/hooks/useActiveSubscription";
+import { useTeacherAlerts } from "@/hooks/useTeacherAlerts";
 
 interface SearchResult {
   id: string;
@@ -20,7 +21,8 @@ interface SearchResult {
 type MenuItem = {
   label: string;
   href?: string;
-  children?: { label: string; href: string }[];
+  alertKey?: "doubts" | "scheduledToday" | "agendaOutdated";
+  children?: { label: string; href: string; alertKey?: "doubts" | "scheduledToday" | "agendaOutdated" }[];
 };
 
 const publicMenuItems: MenuItem[] = [
@@ -50,12 +52,12 @@ const loggedMenuItems: MenuItem[] = [
 
 const teacherMenuItems: MenuItem[] = [
   { label: "Minhas Revisões: Gravar Nova Aula", href: "/dashboard/teacher?tab=lessons" },
-  { label: "Responder Dúvidas de Alunos", href: "/dashboard/teacher?tab=doubts" },
+  { label: "Responder Dúvidas de Alunos", href: "/dashboard/teacher?tab=doubts", alertKey: "doubts" },
   {
     label: "Aula Particular: Acesse Aulas/ Atualize Agenda",
     children: [
-      { label: "Acessar Aulas", href: "/minhas-aulas-agendadas" },
-      { label: "Atualizar Agenda", href: "/dashboard/teacher?tab=agenda" },
+      { label: "Acessar Aulas", href: "/minhas-aulas-agendadas", alertKey: "scheduledToday" },
+      { label: "Atualizar Agenda", href: "/dashboard/teacher?tab=agenda", alertKey: "agendaOutdated" },
     ],
   },
   { label: "Meus Resumos", href: "/meus-resumos" },
@@ -109,6 +111,7 @@ const Navbar = () => {
       ? Math.max(8, Math.min(18, (logoWidth / slogan.length) * 1.7))
       : 11;
   const { isActive: hasActiveSubscription } = useActiveSubscription();
+  const teacherAlerts = useTeacherAlerts();
 
   const baseMenu = user
     ? role === "admin"
@@ -120,6 +123,19 @@ const Navbar = () => {
   const menuItems = user && role === "student" && hasActiveSubscription
     ? [subscriberMenuItem, ...baseMenu]
     : baseMenu;
+
+  const alertActive = (key?: "doubts" | "scheduledToday" | "agendaOutdated") => {
+    if (!key) return false;
+    if (key === "doubts") return teacherAlerts.pendingDoubts;
+    if (key === "scheduledToday") return teacherAlerts.scheduledToday;
+    if (key === "agendaOutdated") return teacherAlerts.agendaOutdated;
+    return false;
+  };
+  const itemHasAlert = (item: MenuItem) => {
+    if (alertActive(item.alertKey)) return true;
+    if (item.children?.some((c) => alertActive(c.alertKey))) return true;
+    return false;
+  };
 
   useEffect(() => {
     if (searchOpen && searchInputRef.current) {
@@ -218,13 +234,20 @@ const Navbar = () => {
         <div className="hidden items-center gap-5 md:flex">
           {menuItems.map((item) => {
             if (item.children && item.children.length > 0) {
+              const parentHas = itemHasAlert(item);
               return (
                 <div key={item.label} className="relative group">
                   <button
                     type="button"
-                    className="text-sm text-muted-foreground transition-colors hover:text-foreground whitespace-nowrap"
+                    className="relative text-sm text-muted-foreground transition-colors hover:text-foreground whitespace-nowrap"
                   >
                     {item.label}
+                    {parentHas && (
+                      <span
+                        aria-label="Pendência"
+                        className="absolute -top-1 -right-2 h-2 w-2 rounded-full bg-destructive ring-2 ring-background"
+                      />
+                    )}
                   </button>
                   <div className="absolute left-0 top-full pt-2 hidden group-hover:block z-50">
                     <div className="min-w-[220px] rounded-md border border-border bg-background shadow-lg py-1">
@@ -232,9 +255,14 @@ const Navbar = () => {
                         <Link
                           key={child.label}
                           to={child.href}
-                          className="block px-3 py-2 text-sm text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+                          className="flex items-center justify-between gap-2 px-3 py-2 text-sm text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
                         >
-                          {child.label}
+                          <span>{child.label}</span>
+                          {alertActive(child.alertKey) && (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-destructive/15 px-2 py-0.5 text-[10px] font-semibold text-destructive">
+                              ● Pendência
+                            </span>
+                          )}
                         </Link>
                       ))}
                     </div>
@@ -243,13 +271,23 @@ const Navbar = () => {
               );
             }
             const href = item.href ?? "#";
+            const hasAlert = alertActive(item.alertKey);
+            const className =
+              "relative inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground whitespace-nowrap";
+            const alertBadge = hasAlert ? (
+              <span className="inline-flex items-center gap-1 rounded-full bg-destructive/15 px-2 py-0.5 text-[10px] font-semibold text-destructive">
+                ● Pendência
+              </span>
+            ) : null;
             return href.startsWith("#") ? (
-              <a key={item.label} href={href} className="text-sm text-muted-foreground transition-colors hover:text-foreground whitespace-nowrap">
+              <a key={item.label} href={href} className={className}>
                 {item.label}
+                {alertBadge}
               </a>
             ) : (
-              <Link key={item.label} to={href} className="text-sm text-muted-foreground transition-colors hover:text-foreground whitespace-nowrap">
+              <Link key={item.label} to={href} className={className}>
                 {item.label}
+                {alertBadge}
               </Link>
             );
           })}
@@ -336,16 +374,28 @@ const Navbar = () => {
               if (item.children && item.children.length > 0) {
                 return (
                   <div key={item.label} className="flex flex-col gap-2">
-                    <span className="text-sm font-medium text-foreground">{item.label}</span>
+                    <span className="inline-flex items-center gap-2 text-sm font-medium text-foreground">
+                      {item.label}
+                      {itemHasAlert(item) && (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-destructive/15 px-2 py-0.5 text-[10px] font-semibold text-destructive">
+                          ● Pendência
+                        </span>
+                      )}
+                    </span>
                     <div className="flex flex-col gap-2 pl-3 border-l border-border">
                       {item.children.map((child) => (
                         <Link
                           key={child.label}
                           to={child.href}
-                          className="text-sm text-muted-foreground hover:text-foreground"
+                          className="inline-flex items-center justify-between gap-2 text-sm text-muted-foreground hover:text-foreground"
                           onClick={() => setMobileOpen(false)}
                         >
-                          {child.label}
+                          <span>{child.label}</span>
+                          {alertActive(child.alertKey) && (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-destructive/15 px-2 py-0.5 text-[10px] font-semibold text-destructive">
+                              ● Pendência
+                            </span>
+                          )}
                         </Link>
                       ))}
                     </div>
@@ -353,13 +403,21 @@ const Navbar = () => {
                 );
               }
               const href = item.href ?? "#";
+              const hasAlert = alertActive(item.alertKey);
+              const alertBadge = hasAlert ? (
+                <span className="inline-flex items-center gap-1 rounded-full bg-destructive/15 px-2 py-0.5 text-[10px] font-semibold text-destructive">
+                  ● Pendência
+                </span>
+              ) : null;
               return href.startsWith("#") ? (
-                <a key={item.label} href={href} className="text-sm text-muted-foreground" onClick={() => setMobileOpen(false)}>
-                  {item.label}
+                <a key={item.label} href={href} className="inline-flex items-center justify-between gap-2 text-sm text-muted-foreground" onClick={() => setMobileOpen(false)}>
+                  <span>{item.label}</span>
+                  {alertBadge}
                 </a>
               ) : (
-                <Link key={item.label} to={href} className="text-sm text-muted-foreground" onClick={() => setMobileOpen(false)}>
-                  {item.label}
+                <Link key={item.label} to={href} className="inline-flex items-center justify-between gap-2 text-sm text-muted-foreground" onClick={() => setMobileOpen(false)}>
+                  <span>{item.label}</span>
+                  {alertBadge}
                 </Link>
               );
             })}

@@ -427,6 +427,7 @@ const SettingsEmailTemplates = () => {
     const textColor = active.text_color || "#333333";
     const headingColor = active.heading_color || "#dc2626";
     const buttonColor = active.button_color || "#6366f1";
+    const buttonTextColor = active.button_text_color || "#ffffff";
     const sloganColor = active.slogan_color || "#6b7280";
     const fontFamily = active.font_family || "Arial, sans-serif";
 
@@ -574,6 +575,12 @@ const SettingsEmailTemplates = () => {
     // Apply button color to elements with button-like styling
     body = body.replace(/background-color:\s*#[0-9a-fA-F]{3,6}/gi, `background-color:${buttonColor}`);
     body = body.replace(/background:\s*#[0-9a-fA-F]{3,6}/gi, `background:${buttonColor}`);
+
+    // Apply button text color to <a> tags styled as buttons (those with our button background)
+    body = body.replace(
+      /(<a\b[^>]*style="[^"]*background(?:-color)?:\s*[^;"]*;[^"]*)(color:\s*#[0-9a-fA-F]{3,6})/gi,
+      (_m, pre) => `${pre}color:${buttonTextColor}`,
+    );
 
     return `
       <div style="max-width:600px;margin:0 auto;font-family:${fontFamily};background:#ffffff;padding:24px;border-radius:8px;color:${textColor};">

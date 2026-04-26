@@ -425,7 +425,11 @@ const SettingsEmailTemplates = () => {
 
     const platformName = brandingData?.platform_name || "Revisão Fácil";
     const effectiveLogoUrl = active.logo_url || brandingData?.logo_url || "";
-    const dims = effectiveLogoUrl ? logoDimsRef.current.get(effectiveLogoUrl) : undefined;
+    const cached = effectiveLogoUrl ? logoDimsRef.current.get(effectiveLogoUrl) : undefined;
+    const dims = cached && cached.width > 0 && cached.height > 0 ? cached : undefined;
+    // Toca o tick para deixar explícita a dependência de re-render quando as
+    // dimensões chegam de forma assíncrona (Image.onload).
+    void logoDimsTick;
     const logoHtml = buildEmailLogoHtml({
       logoUrl: effectiveLogoUrl,
       useUploadedLogo: !!active.use_uploaded_logo,

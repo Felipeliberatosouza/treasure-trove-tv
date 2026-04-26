@@ -4,6 +4,7 @@ const corsHeaders = {
 }
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.101.1'
 import { buildEmailLogoHtml } from '../_shared/email-logo.ts'
+import { fetchImageDimensions, type ImageDimensions } from '../_shared/image-dimensions.ts'
 
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
@@ -99,6 +100,16 @@ Deno.serve(async (req: Request) => {
 
     const platformName = brandingData.platform_name || 'Revisão Fácil'
     const loginLink = supabaseUrl.replace('.supabase.co', '.lovable.app')
+
+    // Cache local de dimensões da logo por URL — evita refetch entre destinatários.
+    const logoDimsCache = new Map<string, ImageDimensions | null>()
+    const getLogoDims = async (url: string): Promise<ImageDimensions | null> => {
+      if (!url) return null
+      if (logoDimsCache.has(url)) return logoDimsCache.get(url) ?? null
+      const dims = await fetchImageDimensions(url).catch(() => null)
+      logoDimsCache.set(url, dims)
+      return dims
+    }
 
     const buildFooter = (showSocial: boolean) => {
       if (!showSocial) return ''
@@ -246,6 +257,7 @@ Deno.serve(async (req: Request) => {
       else if (isActiveSubscriber && tplStudentSub) tpl = tplStudentSub
 
       const birthdayLogoUrl = tpl.logo_url || brandingData.logo_url || ''
+      const birthdayLogoDims = await getLogoDims(birthdayLogoUrl)
       const logoHtml = birthdayLogoUrl
         ? buildEmailLogoHtml({
             logoUrl: birthdayLogoUrl,
@@ -253,6 +265,8 @@ Deno.serve(async (req: Request) => {
             platformName,
             slogan: brandingData.slogan,
             headingColor: '#dc2626',
+            logoNaturalWidth: birthdayLogoDims?.width,
+            logoNaturalHeight: birthdayLogoDims?.height,
           })
         : ''
 

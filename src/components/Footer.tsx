@@ -1,13 +1,26 @@
 import { useEffect, useRef, useState } from "react";
 import { useAllPlatformSettings } from "@/hooks/usePlatformSettings";
-import type { ContactSettings, BrandingSettings } from "@/hooks/usePlatformSettings";
+import type {
+  ContactSettings,
+  BrandingSettings,
+  FooterSettings,
+} from "@/hooks/usePlatformSettings";
+import { DEFAULT_FOOTER_SETTINGS } from "@/hooks/usePlatformSettings";
 
 const Footer = () => {
   const { settings } = useAllPlatformSettings();
   const contact = settings.contact as ContactSettings | undefined;
   const branding = settings.branding as BrandingSettings | undefined;
+  const footer: FooterSettings = {
+    ...DEFAULT_FOOTER_SETTINGS,
+    ...((settings.footer as Partial<FooterSettings>) || {}),
+  };
   const name = branding?.platform_name || "Revisão Fácil";
   const slogan = branding?.slogan;
+  const copyrightText = (footer.copyright || DEFAULT_FOOTER_SETTINGS.copyright).replace(
+    /\{platform_name\}/g,
+    name,
+  );
   const logoRef = useRef<HTMLImageElement | null>(null);
   const [logoWidth, setLogoWidth] = useState<number>(0);
 
@@ -58,10 +71,10 @@ const Footer = () => {
           )}
         </div>
         <div className="flex gap-6 text-sm text-muted-foreground">
-          <a href="/sobre" className="hover:text-foreground transition-colors">Sobre</a>
-          <a href="/termos" className="hover:text-foreground transition-colors">Termos</a>
-          <a href="/privacidade" className="hover:text-foreground transition-colors">Privacidade</a>
-          <a href="/contato" className="hover:text-foreground transition-colors">Contato</a>
+          <a href={footer.about_url} className="hover:text-foreground transition-colors">{footer.about_label}</a>
+          <a href={footer.terms_url} className="hover:text-foreground transition-colors">{footer.terms_label}</a>
+          <a href={footer.privacy_url} className="hover:text-foreground transition-colors">{footer.privacy_label}</a>
+          <a href={footer.contact_url} className="hover:text-foreground transition-colors">{footer.contact_label}</a>
         </div>
         <div className="flex gap-4 text-muted-foreground items-center">
           {contact?.instagram && (
@@ -100,7 +113,7 @@ const Footer = () => {
             </a>
           )}
         </div>
-        <span className="text-xs text-muted-foreground">© 2026 {name}. Todos os direitos reservados.</span>
+        <span className="text-xs text-muted-foreground">{copyrightText}</span>
       </div>
     </footer>
   );

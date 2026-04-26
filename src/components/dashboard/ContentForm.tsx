@@ -1049,6 +1049,11 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
                 await generateDescriptionFromTranscript(vtt, { silentIfEmpty: true });
               }
 
+              // Auto-generate the short resumo (up to 250 chars) from the transcript as well.
+              if (vtt && !resumoTouched) {
+                await generateResumoFromTranscript(vtt, { silentIfEmpty: true });
+              }
+
               // Inform teacher about next steps with AI assistance
               toast.info(
                 "Agora preencha os recursos da aula (Resumo, Simulado, Top Questões e Colinha). Você pode usar a IA gratuita disponível em cada recurso para gerar o conteúdo automaticamente.",

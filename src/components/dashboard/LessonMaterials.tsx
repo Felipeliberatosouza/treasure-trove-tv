@@ -36,9 +36,9 @@ interface PriceHeaderProps {
 const PriceHeader = ({ label, offered, setOffered, price, setPrice, cfg }: PriceHeaderProps) => (
   <div className="rounded-md border border-border/60 bg-secondary/40 p-3 mb-3">
     <div className="flex items-center justify-between gap-3 mb-2">
-      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{label}</p>
+        <p className="text-xs font-semibold uppercase tracking-wide text-accent-foreground">{label}</p>
       <div className="flex items-center gap-2">
-        <Label htmlFor={`offer-${label}`} className="text-xs text-muted-foreground">
+        <Label htmlFor={`offer-${label}`} className="text-xs text-accent-foreground">
           Oferecer este serviço
         </Label>
         <Switch id={`offer-${label}`} checked={offered} onCheckedChange={setOffered} />
@@ -46,7 +46,7 @@ const PriceHeader = ({ label, offered, setOffered, price, setPrice, cfg }: Price
     </div>
     {offered && (
       <div className="flex items-center gap-2">
-        <DollarSign className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+        <DollarSign className="h-3.5 w-3.5 text-accent-foreground shrink-0" />
         <Input
           type="number"
           step="0.01"
@@ -54,10 +54,10 @@ const PriceHeader = ({ label, offered, setOffered, price, setPrice, cfg }: Price
           placeholder={cfg ? `Sugerido R$ ${cfg.price.toFixed(2)} · mín. R$ ${cfg.min_price.toFixed(2)}` : "Preço (R$)"}
           value={price}
           onChange={(e) => setPrice(e.target.value)}
-          className="bg-background text-xs h-9 max-w-[200px]"
+          className="bg-secondary text-accent-foreground placeholder:text-accent-foreground/60 text-xs h-9 max-w-[200px]"
         />
         {cfg && (
-          <span className="text-[11px] text-muted-foreground">
+          <span className="text-[11px] text-accent-foreground">
             sugerido R$ {cfg.price.toFixed(2)} · você recebe {100 - (cfg.platform_percentage || 0)}%
           </span>
         )}

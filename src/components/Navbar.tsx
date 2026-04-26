@@ -374,16 +374,28 @@ const Navbar = () => {
               if (item.children && item.children.length > 0) {
                 return (
                   <div key={item.label} className="flex flex-col gap-2">
-                    <span className="text-sm font-medium text-foreground">{item.label}</span>
+                    <span className="inline-flex items-center gap-2 text-sm font-medium text-foreground">
+                      {item.label}
+                      {itemHasAlert(item) && (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-destructive/15 px-2 py-0.5 text-[10px] font-semibold text-destructive">
+                          ● Pendência
+                        </span>
+                      )}
+                    </span>
                     <div className="flex flex-col gap-2 pl-3 border-l border-border">
                       {item.children.map((child) => (
                         <Link
                           key={child.label}
                           to={child.href}
-                          className="text-sm text-muted-foreground hover:text-foreground"
+                          className="inline-flex items-center justify-between gap-2 text-sm text-muted-foreground hover:text-foreground"
                           onClick={() => setMobileOpen(false)}
                         >
-                          {child.label}
+                          <span>{child.label}</span>
+                          {alertActive(child.alertKey) && (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-destructive/15 px-2 py-0.5 text-[10px] font-semibold text-destructive">
+                              ● Pendência
+                            </span>
+                          )}
                         </Link>
                       ))}
                     </div>
@@ -391,13 +403,21 @@ const Navbar = () => {
                 );
               }
               const href = item.href ?? "#";
+              const hasAlert = alertActive(item.alertKey);
+              const alertBadge = hasAlert ? (
+                <span className="inline-flex items-center gap-1 rounded-full bg-destructive/15 px-2 py-0.5 text-[10px] font-semibold text-destructive">
+                  ● Pendência
+                </span>
+              ) : null;
               return href.startsWith("#") ? (
-                <a key={item.label} href={href} className="text-sm text-muted-foreground" onClick={() => setMobileOpen(false)}>
-                  {item.label}
+                <a key={item.label} href={href} className="inline-flex items-center justify-between gap-2 text-sm text-muted-foreground" onClick={() => setMobileOpen(false)}>
+                  <span>{item.label}</span>
+                  {alertBadge}
                 </a>
               ) : (
-                <Link key={item.label} to={href} className="text-sm text-muted-foreground" onClick={() => setMobileOpen(false)}>
-                  {item.label}
+                <Link key={item.label} to={href} className="inline-flex items-center justify-between gap-2 text-sm text-muted-foreground" onClick={() => setMobileOpen(false)}>
+                  <span>{item.label}</span>
+                  {alertBadge}
                 </Link>
               );
             })}

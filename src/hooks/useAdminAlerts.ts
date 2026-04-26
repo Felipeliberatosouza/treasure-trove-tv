@@ -9,12 +9,15 @@ export interface AdminAlerts {
   pendingDoubts: boolean;
   /** Há assinaturas vencendo nos próximos 7 dias. */
   expiringSubscriptions: boolean;
+  /** Há alterações de páginas públicas de professores aguardando aprovação. */
+  pendingProfileChanges: boolean;
 }
 
 const EMPTY: AdminAlerts = {
   pendingContent: false,
   pendingDoubts: false,
   expiringSubscriptions: false,
+  pendingProfileChanges: false,
 };
 
 /**
@@ -56,12 +59,17 @@ export const useAdminAlerts = (): AdminAlerts => {
         .eq("status", "active")
         .gte("expires_at", now.toISOString())
         .lte("expires_at", in7days.toISOString());
+      const profileChangesPromise = supabase
+        .from("teacher_profile_change_requests")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "pending");
 
-      const [lessonsRes, examsRes, doubtsRes, subsRes] = await Promise.all([
+      const [lessonsRes, examsRes, doubtsRes, subsRes, profChangesRes] = await Promise.all([
         lessonsPromise,
         examsPromise,
         doubtsPromise,
         subsPromise,
+        profileChangesPromise,
       ]);
 
       if (cancelled) return;
@@ -70,6 +78,7 @@ export const useAdminAlerts = (): AdminAlerts => {
         pendingContent: ((lessonsRes.count ?? 0) + (examsRes.count ?? 0)) > 0,
         pendingDoubts: (doubtsRes.count ?? 0) > 0,
         expiringSubscriptions: (subsRes.count ?? 0) > 0,
+        pendingProfileChanges: (profChangesRes.count ?? 0) > 0,
       });
     };
 

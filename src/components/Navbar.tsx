@@ -69,6 +69,7 @@ const teacherMenuItems: MenuItem[] = [
   { label: "Responder Dúvidas de Alunos", href: "/dashboard/teacher?tab=doubts", alertKey: "doubts" },
   { label: "Acessar Aula Particular Agendada", href: "/minhas-aulas-agendadas", alertKey: "scheduledToday" },
   { label: "Atualizar Agenda", href: "/dashboard/teacher?tab=agenda", alertKey: "agendaOutdated" },
+  { label: "Ver Minha Página Pública", href: "__teacher_public_page__" },
 ];
 
 const adminMenuItems: MenuItem[] = [
@@ -89,7 +90,7 @@ const Navbar = () => {
   const searchInputRef = useRef<HTMLInputElement>(null);
   const searchContainerRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
-  const { user, role } = useAuth();
+  const { user, role, profile } = useAuth();
   const { settings } = useAllPlatformSettings();
   const branding = settings.branding as BrandingSettings | undefined;
   const logoRef = useRef<HTMLImageElement | null>(null);
@@ -127,9 +128,20 @@ const Navbar = () => {
         ? teacherMenuItems
         : loggedMenuItems
     : publicMenuItems;
+  const teacherSlug = (profile as { slug?: string | null } | null)?.slug ?? "";
+  const resolvedBase = baseMenu
+    .map((item) => {
+      // Hide "Ver Minha Página Pública" until the teacher has a slug.
+      if (item.href === "__teacher_public_page__") {
+        if (!teacherSlug) return null;
+        return { ...item, href: `/${teacherSlug}` };
+      }
+      return item;
+    })
+    .filter(Boolean) as MenuItem[];
   const menuItems = user && role === "student" && hasActiveSubscription
-    ? [subscriberMenuItem, ...baseMenu]
-    : baseMenu;
+    ? [subscriberMenuItem, ...resolvedBase]
+    : resolvedBase;
 
   const alertActive = (key?: AlertKey) => {
     if (!key) return false;

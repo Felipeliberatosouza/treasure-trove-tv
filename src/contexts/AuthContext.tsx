@@ -35,6 +35,7 @@ interface AuthContextType {
   profile: Profile | null;
   loading: boolean;
   subscription: SubscriptionStatus;
+  subscriptionUnavailable: boolean;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
   refreshSubscription: () => Promise<{ subscribed: boolean; priceId: string | null; productId: string | null; subscriptionEnd: string | null } | null>;
@@ -56,6 +57,7 @@ const AuthContext = createContext<AuthContextType>({
   profile: null,
   loading: true,
   subscription: defaultSubscription,
+  subscriptionUnavailable: false,
   signOut: async () => {},
   refreshProfile: async () => {},
   refreshSubscription: async () => null,
@@ -72,6 +74,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [subscription, setSubscription] = useState<SubscriptionStatus>(defaultSubscription);
+  const [subscriptionUnavailable, setSubscriptionUnavailable] = useState(false);
 
   const fetchRole = async (userId: string) => {
     const { data } = await supabase
@@ -135,9 +138,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (error) {
         // Transient — silent. Will retry on next 60s polling cycle.
         // Do not log to console to avoid triggering global error reporters.
+        setSubscriptionUnavailable(true);
         return null;
       }
       if (data) {
+        if (data.fallback) {
+          // Edge function returned a graceful fallback (e.g. Stripe down)
+          setSubscriptionUnavailable(true);
+          return null;
+        }
+        setSubscriptionUnavailable(false);
         const next = {
           subscribed: data.subscribed ?? false,
           priceId: data.price_id ?? null,
@@ -150,6 +160,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return null;
     } catch (err) {
       // Silent — transient failures are expected during edge runtime cold starts
+      setSubscriptionUnavailable(true);
       return null;
     }
   }, []);
@@ -236,6 +247,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         profile,
         loading,
         subscription,
+        subscriptionUnavailable,
         signOut,
         refreshProfile,
         refreshSubscription,

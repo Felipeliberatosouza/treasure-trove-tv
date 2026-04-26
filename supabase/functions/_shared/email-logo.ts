@@ -13,6 +13,8 @@ export interface BuildEmailLogoParams {
   slogan?: string | null;
   /** Cor do texto do nome da plataforma quando usado como fallback. */
   headingColor?: string;
+  /** Cor do slogan exibido abaixo da logo (default `#6b7280`). */
+  sloganColor?: string;
   /** Largura MÁXIMA da logo em px (default 320, igual ao site `max-w-[320px]`).
    *  A largura real renderizada segue a proporção natural da imagem (height fixo). */
   logoMaxWidth?: number;
@@ -52,6 +54,7 @@ export function buildEmailLogoHtml({
   platformName,
   slogan,
   headingColor = "#dc2626",
+  sloganColor = "#6b7280",
   logoMaxWidth = 320,
   logoHeight = 80,
   logoNaturalWidth,
@@ -89,7 +92,7 @@ export function buildEmailLogoHtml({
 
   const sloganRow = cleanSlogan
     ? `<tr><td style="padding:0;text-align:center;">` +
-      `<div style="width:100%;margin-top:-22px;color:#6b7280;` +
+      `<div style="width:100%;margin-top:-22px;color:${escapeHtml(sloganColor)};` +
       `font-size:${sloganFontSize.toFixed(1)}px;line-height:1;` +
       `white-space:nowrap;overflow:hidden;">` +
       `${escapeHtml(cleanSlogan)}</div></td></tr>`

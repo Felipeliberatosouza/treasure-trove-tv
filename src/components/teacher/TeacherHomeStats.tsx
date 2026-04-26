@@ -16,6 +16,7 @@ import {
 } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/button";
 
 interface SalesPoint {
   month: string;
@@ -326,30 +327,28 @@ const TeacherHomeStats = () => {
 
   return (
     <section className="px-6 md:px-12 lg:px-20">
-      <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h2 className="font-display text-2xl font-bold mb-1">📊 Seus Resultados</h2>
-          <p className="text-sm text-muted-foreground">
-            Acompanhe vendas, atividades, pendências e avaliações.
-          </p>
-        </div>
+      <div className="mb-4">
         {(profile as { slug?: string | null } | null)?.slug ? (
-          <Link
-            to={`/${(profile as { slug?: string | null }).slug}`}
-            className="inline-flex items-center gap-1.5 rounded-md border border-border bg-secondary px-3 py-2 text-xs font-medium text-foreground hover:bg-secondary/80 transition-colors"
-          >
-            <ExternalLink className="h-3.5 w-3.5" />
-            Ver/Editar Minha Página Pública
-          </Link>
+          <Button asChild size="sm">
+            <Link to={`/${(profile as { slug?: string | null }).slug}`}>
+              <ExternalLink className="h-3.5 w-3.5" />
+              Ver/Editar Minha Página Pública
+            </Link>
+          </Button>
         ) : (
-          <Link
-            to="/dashboard/teacher?tab=profile"
-            className="inline-flex items-center gap-1.5 rounded-md border border-border bg-secondary px-3 py-2 text-xs font-medium text-foreground hover:bg-secondary/80 transition-colors"
-          >
-            <ExternalLink className="h-3.5 w-3.5" />
-            Configurar Minha Página Pública
-          </Link>
+          <Button asChild size="sm">
+            <Link to="/dashboard/teacher?tab=profile">
+              <ExternalLink className="h-3.5 w-3.5" />
+              Configurar Minha Página Pública
+            </Link>
+          </Button>
         )}
+      </div>
+      <div className="mb-6">
+        <h2 className="font-display text-2xl font-bold mb-1">📊 Seus Resultados</h2>
+        <p className="text-sm text-muted-foreground">
+          Acompanhe vendas, atividades, pendências e avaliações.
+        </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4">

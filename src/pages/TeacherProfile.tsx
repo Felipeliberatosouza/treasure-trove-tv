@@ -168,10 +168,16 @@ const TeacherProfile = () => {
 
   const expertiseList = teacher.expertise_area?.split(", ").filter(Boolean) || [];
   const isOwner = !!user && user.id === teacher.user_id;
+  // Hard guard: edição só existe se for o dono. Caso contrário, qualquer estado de edição é forçado a falso.
+  const editing = isOwner && isEditing;
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !user) return;
+    if (!isOwner) {
+      toast({ title: "Ação não permitida", description: "Você não é o dono desta página.", variant: "destructive" });
+      return;
+    }
     setUploadingAvatar(true);
     try {
       const ext = file.name.split(".").pop() || "jpg";
@@ -190,6 +196,10 @@ const TeacherProfile = () => {
 
   const handleSave = async () => {
     if (!user || !teacher) return;
+    if (!isOwner) {
+      toast({ title: "Ação não permitida", description: "Você não é o dono desta página.", variant: "destructive" });
+      return;
+    }
     setSaving(true);
     const proposed: Record<string, unknown> = {
       name: draft.name.trim(),
@@ -257,7 +267,7 @@ const TeacherProfile = () => {
                   <Clock className="h-3 w-3" /> Aguardando aprovação do administrador
                 </Badge>
               )}
-              {!isEditing ? (
+              {!editing ? (
                 <Button size="sm" variant="outline" onClick={() => setIsEditing(true)} disabled={hasPending}>
                   <Pencil className="h-3.5 w-3.5" /> Editar Minha Página
                 </Button>
@@ -283,12 +293,12 @@ const TeacherProfile = () => {
 
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 mb-8">
             <div className="h-24 w-24 sm:h-28 sm:w-28 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden shrink-0 border-2 border-primary/20 relative group">
-              {(isEditing ? draft.avatar_url : teacher.avatar_url) ? (
-                <img src={(isEditing ? draft.avatar_url : teacher.avatar_url) || ""} alt={teacher.name} className="h-full w-full object-cover" />
+              {(editing ? draft.avatar_url : teacher.avatar_url) ? (
+                <img src={(editing ? draft.avatar_url : teacher.avatar_url) || ""} alt={teacher.name} className="h-full w-full object-cover" />
               ) : (
                 <span className="text-3xl font-bold text-primary">{teacher.name.charAt(0)}</span>
               )}
-              {isEditing && (
+              {editing && (
                 <label className="absolute inset-0 flex items-center justify-center bg-background/70 cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity">
                   {uploadingAvatar ? <Loader2 className="h-5 w-5 animate-spin" /> : <Upload className="h-5 w-5" />}
                   <input type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} disabled={uploadingAvatar} />
@@ -296,7 +306,7 @@ const TeacherProfile = () => {
               )}
             </div>
             <div className="text-center sm:text-left space-y-2 flex-1 w-full">
-              {isEditing ? (
+              {editing ? (
                 <div className="space-y-2 text-left">
                   <div>
                     <Label className="text-xs">Nome</Label>
@@ -337,7 +347,7 @@ const TeacherProfile = () => {
             </div>
           </div>
 
-          {isEditing ? (
+          {editing ? (
             <div className="mb-8 max-w-xl mx-auto">
               <Label className="text-xs">Título da página</Label>
               <Input value={draft.profile_title} onChange={(e) => setDraft((d) => ({ ...d, profile_title: e.target.value }))} maxLength={150} placeholder="Ex.: Aulas de Direito Constitucional" />
@@ -356,7 +366,7 @@ const TeacherProfile = () => {
                 <Briefcase className="h-4 w-4 text-primary" />
                 <h3 className="font-display font-semibold">Experiência Profissional</h3>
               </div>
-              {isEditing ? (
+              {editing ? (
                 <div className="space-y-3">
                   {draft.experiences.map((exp, i) => (
                     <div key={i} className="rounded-md border border-border p-3 space-y-2">
@@ -396,7 +406,7 @@ const TeacherProfile = () => {
                 <GraduationCap className="h-4 w-4 text-primary" />
                 <h3 className="font-display font-semibold">Formação Acadêmica</h3>
               </div>
-              {isEditing ? (
+              {editing ? (
                 <div className="space-y-3">
                   {draft.education.map((ed, i) => (
                     <div key={i} className="rounded-md border border-border p-3 space-y-2">

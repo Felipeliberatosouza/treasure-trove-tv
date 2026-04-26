@@ -18,6 +18,15 @@ export interface BuildEmailLogoParams {
   logoMaxWidth?: number;
   /** Altura fixa da logo em px (default 80, igual ao `h-20` do site). */
   logoHeight?: number;
+  /** Largura natural (intrínseca) da imagem em px. Quando informada junto com
+   *  `logoNaturalHeight`, o helper calcula a LARGURA REAL renderizada
+   *  (= logoHeight * naturalWidth / naturalHeight, capada em logoMaxWidth) e a
+   *  usa tanto para dimensionar a tabela quanto para calcular o tamanho de
+   *  fonte do slogan — fazendo o slogan ter o MESMO comprimento da logo,
+   *  exatamente como acontece no site (Navbar/Footer). */
+  logoNaturalWidth?: number;
+  /** Altura natural (intrínseca) da imagem em px. Ver `logoNaturalWidth`. */
+  logoNaturalHeight?: number;
 }
 
 /** Escape HTML completo (cobre &, <, >, ", '). */
@@ -45,13 +54,30 @@ export function buildEmailLogoHtml({
   headingColor = "#dc2626",
   logoMaxWidth = 320,
   logoHeight = 80,
+  logoNaturalWidth,
+  logoNaturalHeight,
 }: BuildEmailLogoParams): string {
   const cleanSlogan = (slogan || "").trim();
-  // Mesma fórmula do Navbar/Footer: cap em 18px. Calculada sobre logoMaxWidth
-  // (referência conservadora, mesma do site `max-w-[320px]`).
+  // Largura REAL renderizada da logo (mesmo cálculo do site, que mede o DOM).
+  // Quando temos as dimensões naturais, projetamos com base na altura fixa.
+  // Caso contrário, caímos para `logoMaxWidth` como referência conservadora.
+  const hasNatural =
+    typeof logoNaturalWidth === "number" &&
+    typeof logoNaturalHeight === "number" &&
+    logoNaturalWidth > 0 &&
+    logoNaturalHeight > 0;
+  const renderedLogoWidth = hasNatural
+    ? Math.min(
+        logoMaxWidth,
+        Math.round((logoHeight * logoNaturalWidth!) / logoNaturalHeight!),
+      )
+    : logoMaxWidth;
+  // Mesma fórmula do Navbar/Footer: cap em 18px. Calculada agora sobre a
+  // LARGURA REAL da logo, garantindo que o slogan fique do mesmo comprimento
+  // que a logomarca renderizada.
   const sloganFontSize =
     cleanSlogan.length > 0
-      ? Math.max(8, Math.min(18, (logoMaxWidth / cleanSlogan.length) * 1.7))
+      ? Math.max(8, Math.min(18, (renderedLogoWidth / cleanSlogan.length) * 1.7))
       : 11;
 
   // Estratégia email-safe (sem JS, sem medir DOM):
@@ -72,10 +98,19 @@ export function buildEmailLogoHtml({
   const logoCell =
     useUploadedLogo && logoUrl
       ? // `height` em atributo HTML para máxima compatibilidade (Outlook).
-        // `width:auto` mantém proporção natural; `max-width` evita overflow.
-        `<img src="${escapeHtml(logoUrl)}" alt="Logo" height="${logoHeight}" ` +
-        `style="height:${logoHeight}px;width:auto;max-width:${logoMaxWidth}px;` +
-        `display:block;border:0;outline:none;" />`
+        // Quando temos dimensões naturais, fixamos `width` (atributo + style)
+        // para que a tabela colapse no MESMO valor usado no cálculo do slogan
+        // — caso contrário cada cliente de e-mail (Outlook, Gmail) pode
+        // arredondar a largura intrínseca de formas levemente diferentes.
+        (hasNatural
+          ? `<img src="${escapeHtml(logoUrl)}" alt="Logo" ` +
+            `height="${logoHeight}" width="${renderedLogoWidth}" ` +
+            `style="height:${logoHeight}px;width:${renderedLogoWidth}px;` +
+            `max-width:${logoMaxWidth}px;display:block;border:0;outline:none;" />`
+          : // `width:auto` mantém proporção natural; `max-width` evita overflow.
+            `<img src="${escapeHtml(logoUrl)}" alt="Logo" height="${logoHeight}" ` +
+            `style="height:${logoHeight}px;width:auto;max-width:${logoMaxWidth}px;` +
+            `display:block;border:0;outline:none;" />`)
       : `<div style="font-size:24px;font-weight:bold;color:${headingColor};` +
         `line-height:1;white-space:nowrap;">${escapeHtml(platformName)}</div>`;
 

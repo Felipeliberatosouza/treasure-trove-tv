@@ -7,6 +7,7 @@ const corsHeaders = {
 }
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.101.1'
 import { buildEmailLogoHtml } from '../_shared/email-logo.ts'
+import { fetchImageDimensions, type ImageDimensions } from '../_shared/image-dimensions.ts'
 
 interface ReengagementConfig {
   student_inactive_days: number
@@ -66,14 +67,31 @@ Deno.serve(async (req: Request) => {
       if (s.key === 'video_pricing') videoPricing = (s.value as Record<string, any>) || {}
     }
     const platformName = brandingData.platform_name || 'Revisão Fácil'
-    const buildLogoHtml = (logoUrl: string, useUploaded: boolean, headingColor: string) =>
-      buildEmailLogoHtml({
+    // Cache local de dimensões da logo por URL — evita refetch entre destinatários.
+    const logoDimsCache = new Map<string, ImageDimensions | null>()
+    const getLogoDims = async (url: string): Promise<ImageDimensions | null> => {
+      if (!url) return null
+      if (logoDimsCache.has(url)) return logoDimsCache.get(url) ?? null
+      const dims = await fetchImageDimensions(url).catch(() => null)
+      logoDimsCache.set(url, dims)
+      return dims
+    }
+    const buildLogoHtml = async (
+      logoUrl: string,
+      useUploaded: boolean,
+      headingColor: string,
+    ) => {
+      const dims = useUploaded ? await getLogoDims(logoUrl) : null
+      return buildEmailLogoHtml({
         logoUrl,
         useUploadedLogo: useUploaded,
         platformName,
         slogan: brandingData.slogan,
         headingColor,
+        logoNaturalWidth: dims?.width,
+        logoNaturalHeight: dims?.height,
       })
+    }
 
     const buildFooter = (showSocial: boolean) => {
       if (!showSocial) return ''
@@ -248,7 +266,7 @@ Deno.serve(async (req: Request) => {
         }
 
         const studentLogoUrl = tplStudent.logo_url || brandingData.logo_url || ''
-        const logoHtml = buildLogoHtml(studentLogoUrl, !!tplStudent.use_uploaded_logo, tplStudent.heading_color || '#dc2626')
+        const logoHtml = await buildLogoHtml(studentLogoUrl, !!tplStudent.use_uploaded_logo, tplStudent.heading_color || '#dc2626')
 
         const baseBody = (tplStudent.body_html && tplStudent.body_html.trim().length > 0)
           ? tplStudent.body_html
@@ -455,7 +473,7 @@ Deno.serve(async (req: Request) => {
         `
 
         const teacherLogoUrl = tplTeacher.logo_url || brandingData.logo_url || ''
-        const logoHtml = buildLogoHtml(teacherLogoUrl, !!tplTeacher.use_uploaded_logo, tplTeacher.heading_color || '#0891b2')
+        const logoHtml = await buildLogoHtml(teacherLogoUrl, !!tplTeacher.use_uploaded_logo, tplTeacher.heading_color || '#0891b2')
 
         const baseBody = (tplTeacher.body_html && tplTeacher.body_html.trim().length > 0)
           ? tplTeacher.body_html

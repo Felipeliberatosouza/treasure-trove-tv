@@ -50,7 +50,7 @@ const Footer = () => {
               style={{
                 width: logoWidth > 0 ? `${logoWidth}px` : undefined,
                 fontSize: `${sloganFontSize}px`,
-                color: branding?.slogan_color || undefined,
+                color: branding?.slogan_color || "hsl(var(--muted-foreground))",
               }}
             >
               {slogan}

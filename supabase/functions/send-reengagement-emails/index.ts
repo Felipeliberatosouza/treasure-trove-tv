@@ -287,7 +287,7 @@ Deno.serve(async (req: Request) => {
             </p>
             {{recommended_videos_block}}
             <div style="text-align:center;margin:24px 0;">
-              <a href="{{login_link}}" style="display:inline-block;padding:12px 28px;background:${tplStudent.button_color || '#6366f1'};color:#fff;text-decoration:none;border-radius:8px;font-weight:600;">Acessar a plataforma</a>
+              <a href="{{login_link}}" style="display:inline-block;padding:12px 28px;background:${tplStudent.button_color || '#6366f1'};color:${tplStudent.button_text_color || '#ffffff'};text-decoration:none;border-radius:8px;font-weight:600;">Acessar a plataforma</a>
             </div>
           `
 
@@ -500,7 +500,7 @@ Deno.serve(async (req: Request) => {
             {{teacher_stats_block}}
             {{teacher_scenarios_block}}
             <div style="text-align:center;margin:24px 0;">
-              <a href="{{login_link}}/teacher-dashboard" style="display:inline-block;padding:12px 28px;background:${tplTeacher.button_color || '#0891b2'};color:#fff;text-decoration:none;border-radius:8px;font-weight:600;">Gravar novo vídeo</a>
+              <a href="{{login_link}}/teacher-dashboard" style="display:inline-block;padding:12px 28px;background:${tplTeacher.button_color || '#0891b2'};color:${tplTeacher.button_text_color || '#ffffff'};text-decoration:none;border-radius:8px;font-weight:600;">Gravar novo vídeo</a>
             </div>
           `
 

@@ -111,6 +111,7 @@ const Navbar = () => {
       ? Math.max(8, Math.min(18, (logoWidth / slogan.length) * 1.7))
       : 11;
   const { isActive: hasActiveSubscription } = useActiveSubscription();
+  const teacherAlerts = useTeacherAlerts();
 
   const baseMenu = user
     ? role === "admin"
@@ -122,6 +123,19 @@ const Navbar = () => {
   const menuItems = user && role === "student" && hasActiveSubscription
     ? [subscriberMenuItem, ...baseMenu]
     : baseMenu;
+
+  const alertActive = (key?: "doubts" | "scheduledToday" | "agendaOutdated") => {
+    if (!key) return false;
+    if (key === "doubts") return teacherAlerts.pendingDoubts;
+    if (key === "scheduledToday") return teacherAlerts.scheduledToday;
+    if (key === "agendaOutdated") return teacherAlerts.agendaOutdated;
+    return false;
+  };
+  const itemHasAlert = (item: MenuItem) => {
+    if (alertActive(item.alertKey)) return true;
+    if (item.children?.some((c) => alertActive(c.alertKey))) return true;
+    return false;
+  };
 
   useEffect(() => {
     if (searchOpen && searchInputRef.current) {

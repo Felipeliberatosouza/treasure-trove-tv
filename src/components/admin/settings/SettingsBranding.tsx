@@ -18,6 +18,7 @@ const SettingsBranding = () => {
     primary_color: "#6366f1", secondary_color: "#8b5cf6", accent_color: "#f59e0b",
     background_color: "#09090f", slogan_color: "#6b7280",
     button_text_color: "#ffffff",
+    use_text_logo: false,
   });
   const [saving, setSaving] = useState(false);
   const [applyToEmails, setApplyToEmails] = useState(false);
@@ -95,7 +96,25 @@ const SettingsBranding = () => {
 
       {/* Logo upload */}
       <div className="space-y-2">
-        <Label>Logotipo</Label>
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <Label>Logotipo</Label>
+            <p className="text-xs text-muted-foreground">
+              Quando "Usar título em texto" está ativo, o nome da plataforma aparece em vez da imagem.
+              Sem upload, o nome em texto é exibido automaticamente.
+            </p>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <Switch
+              id="use-text-logo"
+              checked={!!form.use_text_logo}
+              onCheckedChange={(v) => setForm({ ...form, use_text_logo: v })}
+            />
+            <Label htmlFor="use-text-logo" className="cursor-pointer text-xs">
+              Usar título em texto
+            </Label>
+          </div>
+        </div>
         {form.logo_url && (
           <div className="relative inline-block rounded-lg border border-border p-2">
             <img src={form.logo_url} alt="Logo" className="h-20 max-w-[260px] object-contain" />

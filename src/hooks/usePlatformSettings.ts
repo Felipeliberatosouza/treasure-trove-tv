@@ -12,6 +12,9 @@ export interface BrandingSettings {
   background_color: string;
   slogan_color: string;
   button_text_color: string;
+  /** When true, always show the platform name as text instead of the uploaded
+   *  logo image. Falls back to text automatically if `logo_url` is empty. */
+  use_text_logo: boolean;
 }
 
 export interface ContactSettings {

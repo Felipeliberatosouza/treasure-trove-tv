@@ -9,9 +9,14 @@ import { lovable } from "@/integrations/lovable/index";
 import { toast } from "sonner";
 import { translateAuthError } from "@/lib/translateAuthError";
 import TwoFactorChallenge from "@/components/TwoFactorChallenge";
+import { useAllPlatformSettings, type BrandingSettings } from "@/hooks/usePlatformSettings";
 
 const Login = () => {
   const navigate = useNavigate();
+  const { settings } = useAllPlatformSettings();
+  const branding = settings?.branding as BrandingSettings | undefined;
+  const showLogoImage = !!branding?.logo_url && !branding?.use_text_logo;
+  const platformName = branding?.platform_name || "Revisão Fácil";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -203,7 +208,17 @@ const Login = () => {
         </Link>
 
         <div className="text-center space-y-2">
-          <h1 className="font-display text-3xl font-bold text-gradient">Revisão Fácil</h1>
+          {showLogoImage ? (
+            <div className="flex justify-center">
+              <img
+                src={branding!.logo_url}
+                alt={platformName}
+                className="h-16 max-w-[280px] object-contain"
+              />
+            </div>
+          ) : (
+            <h1 className="font-display text-3xl font-bold text-gradient">{platformName}</h1>
+          )}
           <p className="text-sm text-muted-foreground">Entre para continuar aprendendo</p>
         </div>
 

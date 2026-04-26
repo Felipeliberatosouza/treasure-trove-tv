@@ -203,7 +203,7 @@ const Navbar = () => {
           )}
           {slogan && (
             <span
-              className="absolute left-1/2 -translate-x-1/2 bottom-0 translate-y-[60%] leading-none text-center whitespace-nowrap overflow-hidden pointer-events-none"
+              className="absolute left-1/2 -translate-x-1/2 bottom-1 leading-none text-center whitespace-nowrap overflow-hidden pointer-events-none"
               style={{
                 width: logoWidth > 0 ? `${logoWidth}px` : undefined,
                 fontSize: `${sloganFontSize}px`,

@@ -458,6 +458,9 @@ const TeacherProfile = () => {
                   <Button size="sm" variant="ghost" onClick={cancelReorder} disabled={savingOrder}>
                     <X className="h-3.5 w-3.5" /> Cancelar
                   </Button>
+                  <Button size="sm" variant="outline" onClick={() => setShowPreview(true)} disabled={savingOrder}>
+                    <Eye className="h-3.5 w-3.5" /> Prévia
+                  </Button>
                   <Button size="sm" onClick={saveOrder} disabled={savingOrder}>
                     {savingOrder ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
                     Enviar para aprovação
@@ -468,7 +471,7 @@ const TeacherProfile = () => {
           </div>
           {reordering && (
             <p className="text-xs text-muted-foreground mb-3">
-              Arraste os cartões para reordenar (ou use as setas). A nova ordem só será publicada após aprovação do administrador.
+              Arraste os cartões para reordenar (ou use as setas). Use <strong>Prévia</strong> para comparar antes/depois. A nova ordem só será publicada após aprovação do administrador.
             </p>
           )}
 

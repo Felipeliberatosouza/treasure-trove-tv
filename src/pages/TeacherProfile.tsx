@@ -313,6 +313,7 @@ const TeacherProfile = () => {
       avatar_url: teacher.avatar_url || "",
       experiences: teacher.experiences,
       education: teacher.education,
+      content_order: teacher.content_order,
     });
     setIsEditing(false);
   };

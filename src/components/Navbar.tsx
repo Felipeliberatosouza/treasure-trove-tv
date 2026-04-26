@@ -160,6 +160,8 @@ const Navbar = () => {
         return adminAlerts.pendingDoubts;
       case "adminExpiringSubscriptions":
         return adminAlerts.expiringSubscriptions;
+      case "adminPendingProfileChanges":
+        return adminAlerts.pendingProfileChanges;
       case "studentAnsweredDoubts":
         return studentAlerts.answeredDoubts;
       case "studentScheduledToday":

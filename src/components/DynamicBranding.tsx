@@ -36,6 +36,7 @@ const DynamicBranding = () => {
       secondary_color?: string;
       accent_color?: string;
       background_color?: string;
+      button_text_color?: string;
     } | undefined;
 
     if (!branding) return;
@@ -72,6 +73,14 @@ const DynamicBranding = () => {
       if (hsl) {
         root.style.setProperty("--background", hsl);
         root.style.setProperty("--sidebar-background", hsl);
+      }
+    }
+
+    if (branding.button_text_color) {
+      const hsl = hexToHSL(branding.button_text_color);
+      if (hsl) {
+        root.style.setProperty("--primary-foreground", hsl);
+        root.style.setProperty("--sidebar-primary-foreground", hsl);
       }
     }
   }, [settings, loading]);

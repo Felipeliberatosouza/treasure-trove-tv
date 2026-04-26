@@ -17,6 +17,7 @@ const SettingsBranding = () => {
     platform_name: "", slogan: "", logo_url: "",
     primary_color: "#6366f1", secondary_color: "#8b5cf6", accent_color: "#f59e0b",
     background_color: "#09090f", slogan_color: "#6b7280",
+    button_text_color: "#ffffff",
   });
   const [saving, setSaving] = useState(false);
   const [applyToEmails, setApplyToEmails] = useState(false);
@@ -41,6 +42,7 @@ const SettingsBranding = () => {
         use_uploaded_logo: !!form.logo_url,
         heading_color: form.secondary_color,
         button_color: form.primary_color,
+        button_text_color: form.button_text_color || "#ffffff",
         link_color: form.primary_color,
         text_color: form.background_color,
         slogan_color: form.slogan_color,
@@ -160,6 +162,26 @@ const SettingsBranding = () => {
             <input type="color" value={form.background_color} onChange={(e) => setForm({ ...form, background_color: e.target.value })} className="w-10 h-10 rounded cursor-pointer border-0" />
             <Input value={form.background_color} onChange={(e) => setForm({ ...form, background_color: e.target.value })} className="flex-1" />
           </div>
+        </div>
+        <div>
+          <Label>Cor do Texto dos Botões</Label>
+          <div className="flex items-center gap-2">
+            <input
+              type="color"
+              value={form.button_text_color || "#ffffff"}
+              onChange={(e) => setForm({ ...form, button_text_color: e.target.value })}
+              className="w-10 h-10 rounded cursor-pointer border-0"
+            />
+            <Input
+              value={form.button_text_color || "#ffffff"}
+              onChange={(e) => setForm({ ...form, button_text_color: e.target.value })}
+              className="flex-1"
+              maxLength={7}
+            />
+          </div>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Cor da fonte exibida sobre os botões (CTAs) na plataforma e nos e-mails.
+          </p>
         </div>
       </div>
       <div className="flex items-start gap-3 rounded-lg border border-border bg-muted/30 p-3">

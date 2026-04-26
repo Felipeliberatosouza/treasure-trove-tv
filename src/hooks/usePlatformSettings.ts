@@ -11,6 +11,7 @@ export interface BrandingSettings {
   accent_color: string;
   background_color: string;
   slogan_color: string;
+  button_text_color: string;
 }
 
 export interface ContactSettings {

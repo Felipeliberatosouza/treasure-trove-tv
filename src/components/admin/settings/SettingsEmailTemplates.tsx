@@ -26,6 +26,7 @@ interface EmailTemplate {
   link_color: string;
   heading_color: string;
   button_color: string;
+  button_text_color: string;
   slogan_color: string;
   font_family: string;
   use_uploaded_logo: boolean;
@@ -290,6 +291,7 @@ const SettingsEmailTemplates = () => {
         link_color: active.link_color,
         heading_color: active.heading_color,
         button_color: active.button_color,
+        button_text_color: active.button_text_color,
         slogan_color: active.slogan_color,
         font_family: active.font_family,
         use_uploaded_logo: active.use_uploaded_logo,
@@ -321,6 +323,7 @@ const SettingsEmailTemplates = () => {
       link_color: active.link_color,
       heading_color: active.heading_color,
       button_color: active.button_color,
+      button_text_color: active.button_text_color,
       slogan_color: active.slogan_color,
       font_family: active.font_family,
       logo_url: active.logo_url,
@@ -424,6 +427,7 @@ const SettingsEmailTemplates = () => {
     const textColor = active.text_color || "#333333";
     const headingColor = active.heading_color || "#dc2626";
     const buttonColor = active.button_color || "#6366f1";
+    const buttonTextColor = active.button_text_color || "#ffffff";
     const sloganColor = active.slogan_color || "#6b7280";
     const fontFamily = active.font_family || "Arial, sans-serif";
 
@@ -571,6 +575,12 @@ const SettingsEmailTemplates = () => {
     // Apply button color to elements with button-like styling
     body = body.replace(/background-color:\s*#[0-9a-fA-F]{3,6}/gi, `background-color:${buttonColor}`);
     body = body.replace(/background:\s*#[0-9a-fA-F]{3,6}/gi, `background:${buttonColor}`);
+
+    // Apply button text color to <a> tags styled as buttons (those with our button background)
+    body = body.replace(
+      /(<a\b[^>]*style="[^"]*background(?:-color)?:\s*[^;"]*;[^"]*)(color:\s*#[0-9a-fA-F]{3,6})/gi,
+      (_m, pre) => `${pre}color:${buttonTextColor}`,
+    );
 
     return `
       <div style="max-width:600px;margin:0 auto;font-family:${fontFamily};background:#ffffff;padding:24px;border-radius:8px;color:${textColor};">
@@ -1111,6 +1121,23 @@ const SettingsEmailTemplates = () => {
                   <Input
                     value={active.button_color || "#6366f1"}
                     onChange={(e) => updateField("button_color", e.target.value)}
+                    className="flex-1 text-xs"
+                    maxLength={7}
+                  />
+                </div>
+              </div>
+              <div>
+                <Label className="text-xs">Cor do Texto dos Botões</Label>
+                <div className="flex gap-2 items-center">
+                  <input
+                    type="color"
+                    value={active.button_text_color || "#ffffff"}
+                    onChange={(e) => updateField("button_text_color", e.target.value)}
+                    className="w-8 h-8 rounded border border-border cursor-pointer"
+                  />
+                  <Input
+                    value={active.button_text_color || "#ffffff"}
+                    onChange={(e) => updateField("button_text_color", e.target.value)}
                     className="flex-1 text-xs"
                     maxLength={7}
                   />

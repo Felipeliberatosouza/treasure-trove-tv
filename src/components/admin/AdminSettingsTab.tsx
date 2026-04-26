@@ -20,31 +20,37 @@ import SettingsAulaParticular from "./settings/SettingsAulaParticular";
 import SettingsCashback from "./settings/SettingsCashback";
 import SettingsFooter from "./settings/SettingsFooter";
 
-const sections = [
-  { id: "branding", label: "Identidade Visual", icon: Palette },
-  { id: "contact", label: "Dados e Contatos", icon: Phone },
-  { id: "emails", label: "E-mails", icon: Mail },
-  { id: "footer", label: "Rodapé", icon: PanelBottom },
-  { id: "pages", label: "Páginas Institucionais", icon: FileText },
-  { id: "hero", label: "Banner Visitante", icon: Layout },
+const SECTIONS_RAW = [
+  { id: "aula_particular", label: "Aula Particular", icon: CalendarClock },
+  { id: "areas", label: "Áreas de Cursos", icon: FolderOpen },
   { id: "hero_student", label: "Banner Aluno", icon: GraduationCap },
   { id: "hero_teacher", label: "Banner Professor (logado)", icon: Users },
-  { id: "secondary", label: "Banner Secundário Visitante", icon: Megaphone },
   { id: "secondary_student", label: "Banner Secundário Aluno", icon: Megaphone },
   { id: "secondary_teacher", label: "Banner Secundário Professor", icon: Megaphone },
-  { id: "featured", label: "Vídeos em Destaque", icon: Star },
-  { id: "areas", label: "Áreas de Cursos", icon: FolderOpen },
-  { id: "trial", label: "Teste Grátis", icon: Gift },
-  { id: "products", label: "Config. de Produtos", icon: Package },
-  { id: "aula_particular", label: "Aula Particular", icon: CalendarClock },
+  { id: "secondary", label: "Banner Secundário Visitante", icon: Megaphone },
+  { id: "hero", label: "Banner Visitante", icon: Layout },
   { id: "cashback", label: "Cashback", icon: Sparkles },
+  { id: "products", label: "Config. de Produtos", icon: Package },
   { id: "contract", label: "Contrato do Professor", icon: FileSignature },
+  { id: "contact", label: "Dados e Contatos", icon: Phone },
+  { id: "emails", label: "E-mails", icon: Mail },
+  { id: "branding", label: "Identidade Visual", icon: Palette },
   { id: "teacher_goal", label: "Metas do Professor", icon: Target },
-  { id: "twilio", label: "Verificação Celular", icon: Smartphone },
+  { id: "pages", label: "Páginas Institucionais", icon: FileText },
   { id: "retention", label: "Retenção (Cupom)", icon: Heart },
+  { id: "footer", label: "Rodapé", icon: PanelBottom },
+  { id: "trial", label: "Teste Grátis", icon: Gift },
+  { id: "twilio", label: "Verificação Celular", icon: Smartphone },
+  { id: "featured", label: "Vídeos em Destaque", icon: Star },
 ] as const;
 
-type SectionId = (typeof sections)[number]["id"];
+type SectionId = (typeof SECTIONS_RAW)[number]["id"];
+
+// Always render the submenu in alphabetical order (pt-BR). Any new entry added
+// to SECTIONS_RAW above is automatically slotted into the correct position.
+const sections = [...SECTIONS_RAW].sort((a, b) =>
+  a.label.localeCompare(b.label, "pt-BR", { sensitivity: "base" })
+);
 
 const AdminSettingsTab = () => {
   const [activeSection, setActiveSection] = useState<SectionId>("branding");

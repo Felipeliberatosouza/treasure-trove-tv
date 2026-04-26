@@ -10,6 +10,7 @@ import { useAllPlatformSettings } from "@/hooks/usePlatformSettings";
 import type { BrandingSettings } from "@/hooks/usePlatformSettings";
 import { supabase } from "@/integrations/supabase/client";
 import { useActiveSubscription } from "@/hooks/useActiveSubscription";
+import { useTeacherAlerts } from "@/hooks/useTeacherAlerts";
 
 interface SearchResult {
   id: string;
@@ -20,7 +21,8 @@ interface SearchResult {
 type MenuItem = {
   label: string;
   href?: string;
-  children?: { label: string; href: string }[];
+  alertKey?: "doubts" | "scheduledToday" | "agendaOutdated";
+  children?: { label: string; href: string; alertKey?: "doubts" | "scheduledToday" | "agendaOutdated" }[];
 };
 
 const publicMenuItems: MenuItem[] = [
@@ -50,12 +52,12 @@ const loggedMenuItems: MenuItem[] = [
 
 const teacherMenuItems: MenuItem[] = [
   { label: "Minhas Revisões: Gravar Nova Aula", href: "/dashboard/teacher?tab=lessons" },
-  { label: "Responder Dúvidas de Alunos", href: "/dashboard/teacher?tab=doubts" },
+  { label: "Responder Dúvidas de Alunos", href: "/dashboard/teacher?tab=doubts", alertKey: "doubts" },
   {
     label: "Aula Particular: Acesse Aulas/ Atualize Agenda",
     children: [
-      { label: "Acessar Aulas", href: "/minhas-aulas-agendadas" },
-      { label: "Atualizar Agenda", href: "/dashboard/teacher?tab=agenda" },
+      { label: "Acessar Aulas", href: "/minhas-aulas-agendadas", alertKey: "scheduledToday" },
+      { label: "Atualizar Agenda", href: "/dashboard/teacher?tab=agenda", alertKey: "agendaOutdated" },
     ],
   },
   { label: "Meus Resumos", href: "/meus-resumos" },

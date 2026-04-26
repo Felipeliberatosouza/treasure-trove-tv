@@ -41,6 +41,12 @@ const DynamicBranding = () => {
       primary_button_text?: string;
       secondary_button_bg?: string;
       secondary_button_text?: string;
+      input_bg?: string;
+      input_text?: string;
+      input_border?: string;
+      textarea_bg?: string;
+      textarea_text?: string;
+      textarea_border?: string;
     } | undefined;
 
     if (!branding) return;
@@ -100,6 +106,53 @@ const DynamicBranding = () => {
         root.style.setProperty("--secondary-foreground", hsl);
         root.style.setProperty("--sidebar-accent-foreground", hsl);
       }
+    }
+
+    // Form fields & textareas — apply via global CSS rules so every shadcn
+    // Input/Textarea picks them up automatically.
+    const ensureStyleTag = () => {
+      let tag = document.getElementById("dynamic-field-branding") as HTMLStyleElement | null;
+      if (!tag) {
+        tag = document.createElement("style");
+        tag.id = "dynamic-field-branding";
+        document.head.appendChild(tag);
+      }
+      return tag;
+    };
+
+    const inputBg = branding.input_bg;
+    const inputText = branding.input_text;
+    const inputBorder = branding.input_border;
+    const taBg = branding.textarea_bg;
+    const taText = branding.textarea_text;
+    const taBorder = branding.textarea_border;
+
+    if (inputBg || inputText || inputBorder || taBg || taText || taBorder) {
+      const rules: string[] = [];
+      // Single-line inputs (exclude color/file/checkbox/radio/range so the color
+      // pickers in this very settings screen still work as native swatches).
+      const inputSel = `input:not([type="color"]):not([type="file"]):not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="submit"]):not([type="button"]):not([type="reset"]):not([type="image"])`;
+      const inputDecls: string[] = [];
+      if (inputBg) inputDecls.push(`background-color: ${inputBg} !important;`);
+      if (inputText) inputDecls.push(`color: ${inputText} !important;`);
+      if (inputBorder) inputDecls.push(`border-color: ${inputBorder} !important;`);
+      if (inputDecls.length) {
+        rules.push(`${inputSel} { ${inputDecls.join(" ")} }`);
+        if (inputText) {
+          rules.push(`${inputSel}::placeholder { color: ${inputText} !important; opacity: 0.55; }`);
+        }
+      }
+      const taDecls: string[] = [];
+      if (taBg) taDecls.push(`background-color: ${taBg} !important;`);
+      if (taText) taDecls.push(`color: ${taText} !important;`);
+      if (taBorder) taDecls.push(`border-color: ${taBorder} !important;`);
+      if (taDecls.length) {
+        rules.push(`textarea { ${taDecls.join(" ")} }`);
+        if (taText) {
+          rules.push(`textarea::placeholder { color: ${taText} !important; opacity: 0.55; }`);
+        }
+      }
+      ensureStyleTag().textContent = rules.join("\n");
     }
   }, [settings, loading]);
 

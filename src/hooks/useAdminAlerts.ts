@@ -9,15 +9,12 @@ export interface AdminAlerts {
   pendingDoubts: boolean;
   /** Há assinaturas vencendo nos próximos 7 dias. */
   expiringSubscriptions: boolean;
-  /** Há posts de divulgação aguardando aprovação. */
-  pendingSalesPosts: boolean;
 }
 
 const EMPTY: AdminAlerts = {
   pendingContent: false,
   pendingDoubts: false,
   expiringSubscriptions: false,
-  pendingSalesPosts: false,
 };
 
 /**
@@ -57,20 +54,8 @@ export const useAdminAlerts = (): AdminAlerts => {
         .from("student_subscriptions")
         .select("id", { count: "exact", head: true })
         .eq("status", "active")
-        .gte("current_period_end", now.toISOString())
-        .lte("current_period_end", in7days.toISOString());
-
-      // Sales posts: tabela pode não existir em todos os ambientes. Tolera erro.
-      let pendingPosts = 0;
-      try {
-        const postsRes = await (supabase as any)
-          .from("sales_posts")
-          .select("id", { count: "exact", head: true })
-          .eq("status", "pending");
-        pendingPosts = postsRes?.count ?? 0;
-      } catch {
-        pendingPosts = 0;
-      }
+        .gte("expires_at", now.toISOString())
+        .lte("expires_at", in7days.toISOString());
 
       const [lessonsRes, examsRes, doubtsRes, subsRes] = await Promise.all([
         lessonsPromise,
@@ -85,7 +70,6 @@ export const useAdminAlerts = (): AdminAlerts => {
         pendingContent: ((lessonsRes.count ?? 0) + (examsRes.count ?? 0)) > 0,
         pendingDoubts: (doubtsRes.count ?? 0) > 0,
         expiringSubscriptions: (subsRes.count ?? 0) > 0,
-        pendingSalesPosts: pendingPosts > 0,
       });
     };
 

@@ -639,16 +639,16 @@ const TeacherProfile = () => {
       <Footer />
 
       <Dialog open={showPreview} onOpenChange={setShowPreview}>
-        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
-          <DialogHeader>
+        <DialogContent className="w-[calc(100vw-1rem)] sm:w-full max-w-3xl max-h-[92vh] sm:max-h-[85vh] p-4 sm:p-6 flex flex-col gap-3">
+          <DialogHeader className="text-left">
             <DialogTitle>Prévia da nova ordem</DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="text-xs sm:text-sm">
               Compare a ordem atual (publicada) com a nova ordem que será enviada para aprovação do administrador.
               {!orderChanged && " Nenhuma alteração detectada."}
             </DialogDescription>
           </DialogHeader>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 overflow-y-auto -mx-1 px-1 flex-1 min-h-0">
             {/* Antes */}
             <div className="rounded-lg border border-border bg-muted/30 p-3">
               <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-2">Antes (atual)</p>
@@ -659,10 +659,10 @@ const TeacherProfile = () => {
                   const newIdx = proposedIndexById.get(id);
                   const moved = newIdx !== undefined && newIdx !== idx;
                   return (
-                    <li key={id} className={`flex items-center gap-2 text-sm rounded px-2 py-1 ${moved ? "bg-destructive/10 text-destructive-foreground/90" : ""}`}>
-                      <span className="text-[10px] font-bold w-6 text-muted-foreground">#{idx + 1}</span>
-                      <span className="flex-1 line-clamp-1">{item.title}</span>
-                      <span className="text-[10px] text-muted-foreground shrink-0">{item.type === "lesson" ? "Aula" : "Resolução"}</span>
+                    <li key={id} className={`flex flex-wrap items-start gap-x-2 gap-y-1 text-sm rounded px-2 py-1.5 ${moved ? "bg-destructive/10 text-destructive-foreground/90" : ""}`}>
+                      <span className="text-[10px] font-bold w-6 shrink-0 text-muted-foreground pt-0.5">#{idx + 1}</span>
+                      <span className="flex-1 min-w-0 break-words">{item.title}</span>
+                      <span className="text-[10px] text-muted-foreground shrink-0 pt-0.5">{item.type === "lesson" ? "Aula" : "Resolução"}</span>
                     </li>
                   );
                 })}
@@ -680,15 +680,15 @@ const TeacherProfile = () => {
                   const moved = oldIdx !== undefined && oldIdx !== idx;
                   const direction = moved && (oldIdx as number) > idx ? "↑" : moved ? "↓" : "";
                   return (
-                    <li key={id} className={`flex items-center gap-2 text-sm rounded px-2 py-1 ${moved ? "bg-primary/15 font-medium" : ""}`}>
-                      <span className="text-[10px] font-bold w-6 text-primary">#{idx + 1}</span>
-                      <span className="flex-1 line-clamp-1">{item.title}</span>
+                    <li key={id} className={`flex flex-wrap items-start gap-x-2 gap-y-1 text-sm rounded px-2 py-1.5 ${moved ? "bg-primary/15 font-medium" : ""}`}>
+                      <span className="text-[10px] font-bold w-6 shrink-0 text-primary pt-0.5">#{idx + 1}</span>
+                      <span className="flex-1 min-w-0 break-words">{item.title}</span>
                       {moved && (
-                        <span className="text-[10px] text-primary shrink-0">
+                        <span className="text-[10px] text-primary shrink-0 pt-0.5">
                           {direction} de #{(oldIdx as number) + 1}
                         </span>
                       )}
-                      <span className="text-[10px] text-muted-foreground shrink-0">{item.type === "lesson" ? "Aula" : "Resolução"}</span>
+                      <span className="text-[10px] text-muted-foreground shrink-0 pt-0.5">{item.type === "lesson" ? "Aula" : "Resolução"}</span>
                     </li>
                   );
                 })}
@@ -696,13 +696,14 @@ const TeacherProfile = () => {
             </div>
           </div>
 
-          <DialogFooter className="flex-col sm:flex-row gap-2">
-            <Button variant="ghost" onClick={() => setShowPreview(false)}>
+          <DialogFooter className="flex-col-reverse sm:flex-row gap-2 pt-2 border-t border-border">
+            <Button variant="ghost" onClick={() => setShowPreview(false)} className="w-full sm:w-auto">
               Continuar editando
             </Button>
             <Button
               onClick={async () => { setShowPreview(false); await saveOrder(); }}
               disabled={!orderChanged || savingOrder}
+              className="w-full sm:w-auto"
             >
               {savingOrder ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
               Confirmar e enviar para aprovação

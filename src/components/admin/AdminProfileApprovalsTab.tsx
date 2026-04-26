@@ -23,12 +23,14 @@ interface PendingRequest {
     avatar_url?: string;
     experiences?: Experience[];
     education?: Education[];
+    content_order?: string[];
   };
   status: string;
   created_at: string;
   teacher_name?: string;
   teacher_email?: string;
   current?: Record<string, unknown>;
+  content_titles?: Record<string, string>;
 }
 
 const Field = ({ label, current, proposed }: { label: string; current?: string; proposed?: string }) => {
@@ -95,9 +97,27 @@ const AdminProfileApprovalsTab = () => {
     if (teacherIds.length > 0) {
       const { data: profs } = await supabase
         .from("profiles")
-        .select("user_id, name, email, profile_title, expertise_area, bio, avatar_url, experiences, education")
+        .select("user_id, name, email, profile_title, expertise_area, bio, avatar_url, experiences, education, content_order")
         .in("user_id", teacherIds);
       (profs || []).forEach((p) => profMap.set(p.user_id, p));
+    }
+    // Collect all content IDs that may appear in proposed/current orders to fetch titles
+    const allIds = new Set<string>();
+    (reqs || []).forEach((r) => {
+      const proposed = r.proposed as any;
+      (Array.isArray(proposed?.content_order) ? proposed.content_order : []).forEach((id: string) => allIds.add(id));
+      const cur = profMap.get(r.teacher_id);
+      (Array.isArray(cur?.content_order) ? cur.content_order : []).forEach((id: string) => allIds.add(id));
+    });
+    const titlesMap = new Map<string, string>();
+    if (allIds.size > 0) {
+      const ids = Array.from(allIds);
+      const [lessonsRes, examsRes] = await Promise.all([
+        supabase.from("lessons").select("id, title").in("id", ids),
+        supabase.from("exam_solutions").select("id, title").in("id", ids),
+      ]);
+      (lessonsRes.data || []).forEach((l) => titlesMap.set(l.id, l.title));
+      (examsRes.data || []).forEach((e) => titlesMap.set(e.id, e.title));
     }
     setRequests(
       (reqs || []).map((r) => {
@@ -108,6 +128,7 @@ const AdminProfileApprovalsTab = () => {
           teacher_name: cur.name,
           teacher_email: cur.email,
           current: cur,
+          content_titles: Object.fromEntries(titlesMap),
         };
       })
     );
@@ -210,6 +231,12 @@ const AdminProfileApprovalsTab = () => {
                   current={(r.current?.education as Education[]) || []}
                   proposed={r.proposed.education || []}
                   render={(it: Education) => `${it.course || ""}${it.institution ? " — " + it.institution : ""}${it.year ? " (" + it.year + ")" : ""}`}
+                />
+                <ListField
+                  label="Ordem dos conteúdos"
+                  current={((r.current?.content_order as string[]) || []).map((id) => r.content_titles?.[id] || id)}
+                  proposed={(r.proposed.content_order || []).map((id) => r.content_titles?.[id] || id)}
+                  render={(it: string) => it}
                 />
               </div>
             </Card>

@@ -3,13 +3,17 @@ import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { Video, Star, ArrowLeft, Eye, Pencil, Save, X, Upload, Loader2 } from "lucide-react";
+import { Video, Star, ArrowLeft, Eye, Pencil, Save, X, Upload, Loader2, Plus, Trash2, Briefcase, GraduationCap, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
+
+interface Experience { role: string; org: string; period?: string }
+interface Education { course: string; institution: string; year?: string }
 
 interface TeacherData {
   name: string;
@@ -18,6 +22,8 @@ interface TeacherData {
   expertise_area: string | null;
   profile_title: string | null;
   user_id: string;
+  experiences: Experience[];
+  education: Education[];
 }
 
 interface ContentItem {
@@ -28,6 +34,16 @@ interface ContentItem {
   areas: string[] | null;
   type: "lesson" | "exam_solution";
 }
+
+const emptyDraft = {
+  name: "",
+  profile_title: "",
+  expertise_area: "",
+  bio: "",
+  avatar_url: "",
+  experiences: [] as Experience[],
+  education: [] as Education[],
+};
 
 const TeacherProfile = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -42,13 +58,9 @@ const TeacherProfile = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
-  const [draft, setDraft] = useState({
-    name: "",
-    profile_title: "",
-    expertise_area: "",
-    bio: "",
-    avatar_url: "",
-  });
+  const [draft, setDraft] = useState({ ...emptyDraft });
+  const [hasPending, setHasPending] = useState(false);
+  const [pendingReason, setPendingReason] = useState<string | null>(null);
 
   useEffect(() => {
     if (!slug) return;
@@ -56,7 +68,7 @@ const TeacherProfile = () => {
       setLoading(true);
       const { data: profile } = await supabase
         .from("profiles")
-        .select("name, avatar_url, bio, expertise_area, profile_title, user_id")
+        .select("name, avatar_url, bio, expertise_area, profile_title, user_id, experiences, education")
         .eq("slug", slug)
         .maybeSingle();
 
@@ -66,50 +78,55 @@ const TeacherProfile = () => {
         return;
       }
 
-      setTeacher(profile);
+      const experiences = Array.isArray(profile.experiences) ? (profile.experiences as unknown as Experience[]) : [];
+      const education = Array.isArray(profile.education) ? (profile.education as unknown as Education[]) : [];
+      const teacherData: TeacherData = { ...profile, experiences, education };
+      setTeacher(teacherData);
       setDraft({
         name: profile.name || "",
         profile_title: profile.profile_title || "",
         expertise_area: profile.expertise_area || "",
         bio: profile.bio || "",
         avatar_url: profile.avatar_url || "",
+        experiences,
+        education,
       });
 
-      // Fetch lessons and exam solutions by this teacher
-      const [lessonsRes, examsRes] = await Promise.all([
-        supabase
-          .from("lessons")
-          .select("id, title, description, thumbnail_url, areas")
+      // pending approval check (visible only to owner)
+      if (user?.id === profile.user_id) {
+        const { data: pend } = await supabase
+          .from("teacher_profile_change_requests")
+          .select("id, status")
           .eq("teacher_id", profile.user_id)
-          .eq("published", true)
-          .eq("admin_approved", true)
-          .order("created_at", { ascending: false }),
-        supabase
-          .from("exam_solutions")
-          .select("id, title, description, thumbnail_url, areas")
-          .eq("teacher_id", profile.user_id)
-          .eq("published", true)
-          .eq("admin_approved", true)
-          .order("created_at", { ascending: false }),
-      ]);
+          .eq("status", "pending")
+          .maybeSingle();
+        setHasPending(!!pend);
 
+        const { data: lastRej } = await supabase
+          .from("teacher_profile_change_requests")
+          .select("rejection_reason, status, created_at")
+          .eq("teacher_id", profile.user_id)
+          .eq("status", "rejected")
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        setPendingReason(lastRej?.rejection_reason || null);
+      }
+
+      const [lessonsRes, examsRes] = await Promise.all([
+        supabase.from("lessons").select("id, title, description, thumbnail_url, areas").eq("teacher_id", profile.user_id).eq("published", true).eq("admin_approved", true).order("created_at", { ascending: false }),
+        supabase.from("exam_solutions").select("id, title, description, thumbnail_url, areas").eq("teacher_id", profile.user_id).eq("published", true).eq("admin_approved", true).order("created_at", { ascending: false }),
+      ]);
       const lessons: ContentItem[] = (lessonsRes.data || []).map((l) => ({ ...l, type: "lesson" as const }));
       const exams: ContentItem[] = (examsRes.data || []).map((e) => ({ ...e, type: "exam_solution" as const }));
       const allContent = [...lessons, ...exams];
       setContent(allContent);
 
-      // Fetch views and ratings for all content IDs
       const contentIds = allContent.map((c) => c.id);
       if (contentIds.length > 0) {
         const [viewsRes, ratingsRes] = await Promise.all([
-          supabase
-            .from("video_views")
-            .select("id", { count: "exact", head: true })
-            .in("content_id", contentIds),
-          supabase
-            .from("video_ratings")
-            .select("rating")
-            .in("content_id", contentIds),
+          supabase.from("video_views").select("id", { count: "exact", head: true }).in("content_id", contentIds),
+          supabase.from("video_ratings").select("rating").in("content_id", contentIds),
         ]);
         setTotalViews(viewsRes.count || 0);
         const ratings = ratingsRes.data || [];
@@ -122,7 +139,7 @@ const TeacherProfile = () => {
       setLoading(false);
     };
     fetchTeacher();
-  }, [slug]);
+  }, [slug, user?.id]);
 
   if (loading) {
     return (
@@ -163,7 +180,7 @@ const TeacherProfile = () => {
       if (upErr) throw upErr;
       const { data: pub } = supabase.storage.from("avatars").getPublicUrl(path);
       setDraft((d) => ({ ...d, avatar_url: pub.publicUrl }));
-      toast({ title: "Foto carregada", description: "Salve para confirmar." });
+      toast({ title: "Foto carregada", description: "Salve para enviar para aprovação." });
     } catch (err) {
       toast({ title: "Falha no upload", description: (err as Error).message, variant: "destructive" });
     } finally {
@@ -174,22 +191,28 @@ const TeacherProfile = () => {
   const handleSave = async () => {
     if (!user || !teacher) return;
     setSaving(true);
-    const payload = {
+    const proposed: Record<string, unknown> = {
       name: draft.name.trim(),
       profile_title: draft.profile_title.trim(),
       expertise_area: draft.expertise_area.trim(),
       bio: draft.bio.trim(),
       avatar_url: draft.avatar_url.trim(),
+      experiences: draft.experiences.filter((x) => x.role.trim() || x.org.trim()),
+      education: draft.education.filter((x) => x.course.trim() || x.institution.trim()),
     };
-    const { error } = await supabase.from("profiles").update(payload).eq("user_id", user.id);
+    const { error } = await supabase.from("teacher_profile_change_requests").insert({
+      teacher_id: user.id,
+      proposed,
+      status: "pending",
+    } as never);
     setSaving(false);
     if (error) {
-      toast({ title: "Erro ao salvar", description: error.message, variant: "destructive" });
+      toast({ title: "Erro ao enviar", description: error.message, variant: "destructive" });
       return;
     }
-    setTeacher({ ...teacher, ...payload });
+    setHasPending(true);
     setIsEditing(false);
-    toast({ title: "Página atualizada", description: "Suas informações foram salvas." });
+    toast({ title: "Enviado para aprovação", description: "Suas alterações serão revisadas pelo administrador." });
   };
 
   const handleCancel = () => {
@@ -200,8 +223,25 @@ const TeacherProfile = () => {
       expertise_area: teacher.expertise_area || "",
       bio: teacher.bio || "",
       avatar_url: teacher.avatar_url || "",
+      experiences: teacher.experiences,
+      education: teacher.education,
     });
     setIsEditing(false);
+  };
+
+  const updateExp = (i: number, key: keyof Experience, value: string) => {
+    setDraft((d) => {
+      const arr = [...d.experiences];
+      arr[i] = { ...arr[i], [key]: value };
+      return { ...d, experiences: arr };
+    });
+  };
+  const updateEdu = (i: number, key: keyof Education, value: string) => {
+    setDraft((d) => {
+      const arr = [...d.education];
+      arr[i] = { ...arr[i], [key]: value };
+      return { ...d, education: arr };
+    });
   };
 
   return (
@@ -209,12 +249,16 @@ const TeacherProfile = () => {
       <Navbar />
 
       <div className="flex-1 pt-20 pb-12">
-        {/* Teacher header */}
         <div className="max-w-4xl mx-auto px-4 md:px-8">
           {isOwner && (
-            <div className="mb-4 flex justify-end gap-2">
+            <div className="mb-4 flex flex-wrap items-center justify-end gap-2">
+              {hasPending && (
+                <Badge variant="secondary" className="gap-1">
+                  <Clock className="h-3 w-3" /> Aguardando aprovação do administrador
+                </Badge>
+              )}
               {!isEditing ? (
-                <Button size="sm" variant="outline" onClick={() => setIsEditing(true)}>
+                <Button size="sm" variant="outline" onClick={() => setIsEditing(true)} disabled={hasPending}>
                   <Pencil className="h-3.5 w-3.5" /> Editar Minha Página
                 </Button>
               ) : (
@@ -224,10 +268,16 @@ const TeacherProfile = () => {
                   </Button>
                   <Button size="sm" onClick={handleSave} disabled={saving}>
                     {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
-                    Salvar
+                    Enviar para aprovação
                   </Button>
                 </>
               )}
+            </div>
+          )}
+
+          {isOwner && pendingReason && !hasPending && (
+            <div className="mb-4 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-xs">
+              <strong>Última edição rejeitada:</strong> {pendingReason}
             </div>
           )}
 
@@ -250,15 +300,15 @@ const TeacherProfile = () => {
                 <div className="space-y-2 text-left">
                   <div>
                     <Label className="text-xs">Nome</Label>
-                    <Input value={draft.name} onChange={(e) => setDraft((d) => ({ ...d, name: e.target.value }))} />
+                    <Input value={draft.name} onChange={(e) => setDraft((d) => ({ ...d, name: e.target.value }))} maxLength={100} />
                   </div>
                   <div>
                     <Label className="text-xs">Áreas de atuação (separadas por vírgula)</Label>
-                    <Input value={draft.expertise_area} onChange={(e) => setDraft((d) => ({ ...d, expertise_area: e.target.value }))} placeholder="Direito, Administração" />
+                    <Input value={draft.expertise_area} onChange={(e) => setDraft((d) => ({ ...d, expertise_area: e.target.value }))} maxLength={200} placeholder="Direito, Administração" />
                   </div>
                   <div>
                     <Label className="text-xs">Biografia</Label>
-                    <Textarea rows={3} value={draft.bio} onChange={(e) => setDraft((d) => ({ ...d, bio: e.target.value }))} />
+                    <Textarea rows={3} maxLength={1000} value={draft.bio} onChange={(e) => setDraft((d) => ({ ...d, bio: e.target.value }))} />
                   </div>
                 </div>
               ) : (
@@ -287,15 +337,10 @@ const TeacherProfile = () => {
             </div>
           </div>
 
-          {/* Page title */}
           {isEditing ? (
             <div className="mb-8 max-w-xl mx-auto">
               <Label className="text-xs">Título da página</Label>
-              <Input
-                value={draft.profile_title}
-                onChange={(e) => setDraft((d) => ({ ...d, profile_title: e.target.value }))}
-                placeholder="Ex.: Aulas de Direito Constitucional"
-              />
+              <Input value={draft.profile_title} onChange={(e) => setDraft((d) => ({ ...d, profile_title: e.target.value }))} maxLength={150} placeholder="Ex.: Aulas de Direito Constitucional" />
             </div>
           ) : (
             teacher.profile_title && (
@@ -303,7 +348,89 @@ const TeacherProfile = () => {
             )
           )}
 
-          {/* Content grid */}
+          {/* Experience & Education */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+            {/* Experiences */}
+            <div className="rounded-xl border border-border bg-card p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Briefcase className="h-4 w-4 text-primary" />
+                <h3 className="font-display font-semibold">Experiência Profissional</h3>
+              </div>
+              {isEditing ? (
+                <div className="space-y-3">
+                  {draft.experiences.map((exp, i) => (
+                    <div key={i} className="rounded-md border border-border p-3 space-y-2">
+                      <div className="flex justify-end">
+                        <Button size="sm" variant="ghost" onClick={() => setDraft((d) => ({ ...d, experiences: d.experiences.filter((_, j) => j !== i) }))}>
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                      <Input placeholder="Cargo / Função" maxLength={120} value={exp.role} onChange={(e) => updateExp(i, "role", e.target.value)} />
+                      <Input placeholder="Empresa / Instituição" maxLength={120} value={exp.org} onChange={(e) => updateExp(i, "org", e.target.value)} />
+                      <Input placeholder="Período (ex.: 2018 - 2022)" maxLength={60} value={exp.period || ""} onChange={(e) => updateExp(i, "period", e.target.value)} />
+                    </div>
+                  ))}
+                  <Button size="sm" variant="outline" onClick={() => setDraft((d) => ({ ...d, experiences: [...d.experiences, { role: "", org: "", period: "" }] }))}>
+                    <Plus className="h-3.5 w-3.5" /> Adicionar experiência
+                  </Button>
+                </div>
+              ) : teacher.experiences.length === 0 ? (
+                <p className="text-xs text-muted-foreground italic">Nenhuma experiência informada.</p>
+              ) : (
+                <ul className="space-y-3">
+                  {teacher.experiences.map((exp, i) => (
+                    <li key={i} className="text-sm">
+                      <p className="font-medium">{exp.role}</p>
+                      <p className="text-muted-foreground text-xs">
+                        {exp.org}{exp.period ? ` · ${exp.period}` : ""}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            {/* Education */}
+            <div className="rounded-xl border border-border bg-card p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <GraduationCap className="h-4 w-4 text-primary" />
+                <h3 className="font-display font-semibold">Formação Acadêmica</h3>
+              </div>
+              {isEditing ? (
+                <div className="space-y-3">
+                  {draft.education.map((ed, i) => (
+                    <div key={i} className="rounded-md border border-border p-3 space-y-2">
+                      <div className="flex justify-end">
+                        <Button size="sm" variant="ghost" onClick={() => setDraft((d) => ({ ...d, education: d.education.filter((_, j) => j !== i) }))}>
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                      <Input placeholder="Curso / Titulação" maxLength={120} value={ed.course} onChange={(e) => updateEdu(i, "course", e.target.value)} />
+                      <Input placeholder="Instituição" maxLength={120} value={ed.institution} onChange={(e) => updateEdu(i, "institution", e.target.value)} />
+                      <Input placeholder="Ano de conclusão" maxLength={20} value={ed.year || ""} onChange={(e) => updateEdu(i, "year", e.target.value)} />
+                    </div>
+                  ))}
+                  <Button size="sm" variant="outline" onClick={() => setDraft((d) => ({ ...d, education: [...d.education, { course: "", institution: "", year: "" }] }))}>
+                    <Plus className="h-3.5 w-3.5" /> Adicionar formação
+                  </Button>
+                </div>
+              ) : teacher.education.length === 0 ? (
+                <p className="text-xs text-muted-foreground italic">Nenhuma formação informada.</p>
+              ) : (
+                <ul className="space-y-3">
+                  {teacher.education.map((ed, i) => (
+                    <li key={i} className="text-sm">
+                      <p className="font-medium">{ed.course}</p>
+                      <p className="text-muted-foreground text-xs">
+                        {ed.institution}{ed.year ? ` · ${ed.year}` : ""}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+
           <div className="mb-4">
             <h2 className="font-display text-lg font-semibold mb-4">Conteúdos do Professor</h2>
           </div>

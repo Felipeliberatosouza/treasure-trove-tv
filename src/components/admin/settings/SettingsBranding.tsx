@@ -19,11 +19,25 @@ const SettingsBranding = () => {
     background_color: "#09090f", slogan_color: "#6b7280",
     button_text_color: "#ffffff",
     use_text_logo: false,
+    primary_button_bg: "#6366f1",
+    primary_button_text: "#ffffff",
+    secondary_button_bg: "#1f2937",
+    secondary_button_text: "#ffffff",
   });
   const [saving, setSaving] = useState(false);
   const [applyToEmails, setApplyToEmails] = useState(false);
 
-  useEffect(() => { if (data) setForm(data); }, [data]);
+  useEffect(() => {
+    if (!data) return;
+    // Backfill legacy installs that don't yet have the 4 explicit button colors.
+    setForm({
+      ...data,
+      primary_button_bg: data.primary_button_bg || data.primary_color || "#6366f1",
+      primary_button_text: data.primary_button_text || data.button_text_color || "#ffffff",
+      secondary_button_bg: data.secondary_button_bg || data.secondary_color || "#1f2937",
+      secondary_button_text: data.secondary_button_text || data.button_text_color || "#ffffff",
+    });
+  }, [data]);
 
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -42,8 +56,8 @@ const SettingsBranding = () => {
         logo_url: form.logo_url || null,
         use_uploaded_logo: !!form.logo_url,
         heading_color: form.secondary_color,
-        button_color: form.primary_color,
-        button_text_color: form.button_text_color || "#ffffff",
+        button_color: form.primary_button_bg || form.primary_color,
+        button_text_color: form.primary_button_text || form.button_text_color || "#ffffff",
         link_color: form.primary_color,
         text_color: form.background_color,
         slogan_color: form.slogan_color,

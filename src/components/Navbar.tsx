@@ -27,6 +27,7 @@ type AlertKey =
   | "adminPendingContent"
   | "adminPendingDoubts"
   | "adminExpiringSubscriptions"
+  | "adminPendingProfileChanges"
   | "studentAnsweredDoubts"
   | "studentScheduledToday";
 
@@ -75,6 +76,7 @@ const teacherMenuItems: MenuItem[] = [
 const adminMenuItems: MenuItem[] = [
   { label: "Aprovação de Conteúdos", href: "/dashboard/admin?tab=content", alertKey: "adminPendingContent" },
   { label: "Aprovação de Dúvidas", href: "/dashboard/admin?tab=doubts", alertKey: "adminPendingDoubts" },
+  { label: "Aprovação de Páginas de Professores", href: "/dashboard/admin?tab=profile-approvals", alertKey: "adminPendingProfileChanges" },
   { label: "Pagamento de Professores", href: "/dashboard/admin?tab=compensation" },
   { label: "Vencimento de Assinaturas", href: "/dashboard/admin?tab=subscriptions", alertKey: "adminExpiringSubscriptions" },
   { label: "Monitoramento de E-mails", href: "/dashboard/admin?tab=emails" },
@@ -158,6 +160,8 @@ const Navbar = () => {
         return adminAlerts.pendingDoubts;
       case "adminExpiringSubscriptions":
         return adminAlerts.expiringSubscriptions;
+      case "adminPendingProfileChanges":
+        return adminAlerts.pendingProfileChanges;
       case "studentAnsweredDoubts":
         return studentAlerts.answeredDoubts;
       case "studentScheduledToday":

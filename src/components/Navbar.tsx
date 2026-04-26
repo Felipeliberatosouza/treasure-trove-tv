@@ -187,25 +187,26 @@ const Navbar = () => {
       className="fixed top-0 z-50 w-full border-b border-border/50 bg-background/80 backdrop-blur-xl"
     >
       <div className="flex items-center justify-between gap-3 px-4 py-3 md:px-12 lg:px-20">
-        <Link to="/" className="flex items-center gap-2 leading-none min-w-0">
+        <Link to="/" className="relative flex items-center leading-none shrink-0">
           {branding?.logo_url ? (
             <img
               ref={logoRef}
               src={branding.logo_url}
               alt={branding.platform_name || "Logo"}
-              className="h-10 md:h-12 max-w-[220px] object-contain block shrink-0"
+              className="h-12 md:h-14 max-w-[260px] object-contain block"
               onLoad={(e) => setLogoWidth((e.target as HTMLImageElement).getBoundingClientRect().width)}
             />
           ) : (
-            <span className="font-display text-xl font-bold text-gradient shrink-0">
+            <span className="font-display text-xl font-bold text-gradient">
               {branding?.platform_name || "Revisão Fácil"}
             </span>
           )}
           {slogan && (
             <span
-              className="hidden sm:inline leading-none whitespace-nowrap overflow-hidden text-ellipsis"
+              className="absolute left-1/2 -translate-x-1/2 -bottom-3 leading-none text-center whitespace-nowrap overflow-hidden pointer-events-none"
               style={{
-                fontSize: "12px",
+                width: logoWidth > 0 ? `${logoWidth}px` : undefined,
+                fontSize: `${sloganFontSize}px`,
                 color: branding?.slogan_color || "hsl(var(--muted-foreground))",
               }}
             >

@@ -5,7 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { SpellCheckedInput, SpellCheckedTextarea } from "@/components/ui/spellchecked-input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
-import { Upload, X, Image as ImageIcon, Video, Camera, DollarSign, CheckCircle2, AlertCircle, Sparkles, Loader2 } from "lucide-react";
+import { Upload, X, Image as ImageIcon, Video, Camera, CheckCircle2, AlertCircle, Sparkles, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -1094,7 +1094,7 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
           const cfg = resourcePrices.find((r) => r.resource_type === "revisoes");
           return (
             <div className="mt-2 flex items-center gap-2">
-              <DollarSign className="h-3.5 w-3.5 text-muted-foreground" />
+              <span className="text-xs font-semibold text-accent-foreground shrink-0">R$</span>
               <Input
                 type="number"
                 step="0.01"
@@ -1102,7 +1102,7 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
                 placeholder={cfg ? `Sugerido R$ ${cfg.price.toFixed(2)} · mín. R$ ${cfg.min_price.toFixed(2)}` : "Preço (R$)"}
                 value={priceRevisoes}
                 onChange={(e) => setPriceRevisoes(e.target.value)}
-                className="bg-secondary text-accent-foreground placeholder:text-accent-foreground/60 text-xs h-9 max-w-[220px]"
+                className="bg-white text-black placeholder:text-black/50 text-xs h-9 max-w-[220px]"
               />
               {cfg && (
                 <span className="text-[11px] text-muted-foreground">

@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Plus, Trash2, DollarSign, FileText, ClipboardList, Trophy, StickyNote, Info, Sparkles, Loader2 } from "lucide-react";
+import { Plus, Trash2, FileText, ClipboardList, Trophy, StickyNote, Info, Sparkles, Loader2 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export interface QuizQuestion {
@@ -46,7 +46,7 @@ const PriceHeader = ({ label, offered, setOffered, price, setPrice, cfg }: Price
     </div>
     {offered && (
       <div className="flex items-center gap-2">
-        <DollarSign className="h-3.5 w-3.5 text-accent-foreground shrink-0" />
+        <span className="text-xs font-semibold text-accent-foreground shrink-0">R$</span>
         <Input
           type="number"
           step="0.01"
@@ -54,7 +54,7 @@ const PriceHeader = ({ label, offered, setOffered, price, setPrice, cfg }: Price
           placeholder={cfg ? `Sugerido R$ ${cfg.price.toFixed(2)} · mín. R$ ${cfg.min_price.toFixed(2)}` : "Preço (R$)"}
           value={price}
           onChange={(e) => setPrice(e.target.value)}
-          className="bg-secondary text-accent-foreground placeholder:text-accent-foreground/60 text-xs h-9 max-w-[200px]"
+          className="bg-white text-black placeholder:text-black/50 text-xs h-9 max-w-[200px]"
         />
         {cfg && (
           <span className="text-[11px] text-accent-foreground">

@@ -89,7 +89,7 @@ export function buildEmailLogoHtml({
 
   const sloganRow = cleanSlogan
     ? `<tr><td style="padding:0;text-align:center;">` +
-      `<div style="width:100%;margin-top:-12px;color:#6b7280;` +
+      `<div style="width:100%;margin-top:-22px;color:#6b7280;` +
       `font-size:${sloganFontSize.toFixed(1)}px;line-height:1;` +
       `white-space:nowrap;overflow:hidden;">` +
       `${escapeHtml(cleanSlogan)}</div></td></tr>`

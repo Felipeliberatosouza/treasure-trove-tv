@@ -358,6 +358,48 @@ const TeacherProfile = () => {
             )
           )}
 
+          <div className="mb-4">
+            <h2 className="font-display text-lg font-semibold mb-4">Conteúdos do Professor</h2>
+          </div>
+
+          {content.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-8">Nenhum conteúdo publicado ainda.</p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-10">
+              {content.map((item) => (
+                <Link
+                  key={item.id}
+                  to={`/video/${item.id}`}
+                  className="group rounded-xl border border-border bg-secondary/30 overflow-hidden hover:border-primary/30 transition-colors"
+                >
+                  <div className="aspect-video bg-muted relative overflow-hidden">
+                    {item.thumbnail_url ? (
+                      <img src={item.thumbnail_url} alt={item.title} className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                    ) : (
+                      <div className="h-full w-full flex items-center justify-center">
+                        <Video className="h-8 w-8 text-muted-foreground/40" />
+                      </div>
+                    )}
+                    <span className="absolute top-2 right-2 text-[10px] bg-background/80 text-foreground rounded px-1.5 py-0.5 font-medium">
+                      {item.type === "lesson" ? "Aula" : "Resolução"}
+                    </span>
+                  </div>
+                  <div className="p-3 space-y-1">
+                    <h3 className="text-sm font-semibold line-clamp-2 group-hover:text-primary transition-colors">{item.title}</h3>
+                    {item.description && <p className="text-xs text-muted-foreground line-clamp-2">{item.description}</p>}
+                    {item.areas && item.areas.length > 0 && (
+                      <div className="flex flex-wrap gap-1 pt-1">
+                        {item.areas.slice(0, 2).map((a) => (
+                          <span key={a} className="text-[10px] bg-muted text-muted-foreground rounded px-1.5 py-0.5">{a}</span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+
           {/* Experience & Education */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
             {/* Experiences */}
@@ -441,47 +483,6 @@ const TeacherProfile = () => {
             </div>
           </div>
 
-          <div className="mb-4">
-            <h2 className="font-display text-lg font-semibold mb-4">Conteúdos do Professor</h2>
-          </div>
-
-          {content.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-8">Nenhum conteúdo publicado ainda.</p>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {content.map((item) => (
-                <Link
-                  key={item.id}
-                  to={`/video/${item.id}`}
-                  className="group rounded-xl border border-border bg-secondary/30 overflow-hidden hover:border-primary/30 transition-colors"
-                >
-                  <div className="aspect-video bg-muted relative overflow-hidden">
-                    {item.thumbnail_url ? (
-                      <img src={item.thumbnail_url} alt={item.title} className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                    ) : (
-                      <div className="h-full w-full flex items-center justify-center">
-                        <Video className="h-8 w-8 text-muted-foreground/40" />
-                      </div>
-                    )}
-                    <span className="absolute top-2 right-2 text-[10px] bg-background/80 text-foreground rounded px-1.5 py-0.5 font-medium">
-                      {item.type === "lesson" ? "Aula" : "Resolução"}
-                    </span>
-                  </div>
-                  <div className="p-3 space-y-1">
-                    <h3 className="text-sm font-semibold line-clamp-2 group-hover:text-primary transition-colors">{item.title}</h3>
-                    {item.description && <p className="text-xs text-muted-foreground line-clamp-2">{item.description}</p>}
-                    {item.areas && item.areas.length > 0 && (
-                      <div className="flex flex-wrap gap-1 pt-1">
-                        {item.areas.slice(0, 2).map((a) => (
-                          <span key={a} className="text-[10px] bg-muted text-muted-foreground rounded px-1.5 py-0.5">{a}</span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </Link>
-              ))}
-            </div>
-          )}
         </div>
       </div>
 

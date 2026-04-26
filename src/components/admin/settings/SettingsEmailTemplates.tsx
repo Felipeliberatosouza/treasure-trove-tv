@@ -26,6 +26,7 @@ interface EmailTemplate {
   link_color: string;
   heading_color: string;
   button_color: string;
+  slogan_color: string;
   font_family: string;
   use_uploaded_logo: boolean;
   coupon_enabled: boolean;
@@ -289,6 +290,7 @@ const SettingsEmailTemplates = () => {
         link_color: active.link_color,
         heading_color: active.heading_color,
         button_color: active.button_color,
+        slogan_color: active.slogan_color,
         font_family: active.font_family,
         use_uploaded_logo: active.use_uploaded_logo,
         coupon_enabled: active.coupon_enabled,
@@ -319,6 +321,7 @@ const SettingsEmailTemplates = () => {
       link_color: active.link_color,
       heading_color: active.heading_color,
       button_color: active.button_color,
+      slogan_color: active.slogan_color,
       font_family: active.font_family,
       logo_url: active.logo_url,
       use_uploaded_logo: active.use_uploaded_logo,
@@ -421,6 +424,7 @@ const SettingsEmailTemplates = () => {
     const textColor = active.text_color || "#333333";
     const headingColor = active.heading_color || "#dc2626";
     const buttonColor = active.button_color || "#6366f1";
+    const sloganColor = active.slogan_color || "#6b7280";
     const fontFamily = active.font_family || "Arial, sans-serif";
 
     const platformName = brandingData?.platform_name || "Revisão Fácil";
@@ -436,6 +440,7 @@ const SettingsEmailTemplates = () => {
       platformName,
       slogan: brandingData?.slogan,
       headingColor,
+      sloganColor,
       logoNaturalWidth: dims?.width,
       logoNaturalHeight: dims?.height,
     });
@@ -1109,18 +1114,25 @@ const SettingsEmailTemplates = () => {
                     className="flex-1 text-xs"
                     maxLength={7}
                   />
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              className="mt-2"
-              disabled={applyingAll}
-              onClick={handleApplyStyleToAll}
-            >
-              <Copy className="h-4 w-4 mr-1" />
-              {applyingAll ? "Aplicando..." : "Aplicar este estilo a todos os templates"}
-            </Button>
-          </div>
+                </div>
+              </div>
+              <div>
+                <Label className="text-xs">Cor do Slogan</Label>
+                <div className="flex gap-2 items-center">
+                  <input
+                    type="color"
+                    value={active.slogan_color || "#6b7280"}
+                    onChange={(e) => updateField("slogan_color", e.target.value)}
+                    className="w-8 h-8 rounded border border-border cursor-pointer"
+                  />
+                  <Input
+                    value={active.slogan_color || "#6b7280"}
+                    onChange={(e) => updateField("slogan_color", e.target.value)}
+                    className="flex-1 text-xs"
+                    maxLength={7}
+                  />
+                </div>
+              </div>
               <div>
                 <Label className="text-xs">Fonte</Label>
                 <Select
@@ -1140,6 +1152,16 @@ const SettingsEmailTemplates = () => {
                 </Select>
               </div>
             </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="mt-2"
+              disabled={applyingAll}
+              onClick={handleApplyStyleToAll}
+            >
+              <Copy className="h-4 w-4 mr-1" />
+              {applyingAll ? "Aplicando..." : "Aplicar este estilo a todos os templates"}
+            </Button>
           </div>
 
           {/* Subject */}

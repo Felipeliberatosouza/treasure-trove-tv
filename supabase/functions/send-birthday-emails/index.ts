@@ -265,6 +265,7 @@ Deno.serve(async (req: Request) => {
             platformName,
             slogan: brandingData.slogan,
             headingColor: '#dc2626',
+            sloganColor: tpl.slogan_color || brandingData.slogan_color || '#6b7280',
             logoNaturalWidth: birthdayLogoDims?.width,
             logoNaturalHeight: birthdayLogoDims?.height,
           })

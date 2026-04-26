@@ -18,6 +18,7 @@ const SettingsBranding = () => {
     primary_color: "#6366f1", secondary_color: "#8b5cf6", accent_color: "#f59e0b",
     background_color: "#09090f", slogan_color: "#6b7280",
     button_text_color: "#ffffff",
+    use_text_logo: false,
   });
   const [saving, setSaving] = useState(false);
   const [applyToEmails, setApplyToEmails] = useState(false);

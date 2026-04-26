@@ -23,6 +23,18 @@ export interface BrandingSettings {
   secondary_button_bg: string;
   /** Text color rendered on top of secondary CTAs. */
   secondary_button_text: string;
+  /** Background color of single-line text fields (Input). */
+  input_bg?: string;
+  /** Foreground/text color of single-line text fields (Input). */
+  input_text?: string;
+  /** Border color of single-line text fields (Input). */
+  input_border?: string;
+  /** Background color of multi-line text areas (Textarea / observation boxes). */
+  textarea_bg?: string;
+  /** Foreground/text color of multi-line text areas. */
+  textarea_text?: string;
+  /** Border color of multi-line text areas. */
+  textarea_border?: string;
 }
 
 export interface ContactSettings {

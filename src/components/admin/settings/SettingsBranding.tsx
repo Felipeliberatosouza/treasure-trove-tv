@@ -163,6 +163,26 @@ const SettingsBranding = () => {
             <Input value={form.background_color} onChange={(e) => setForm({ ...form, background_color: e.target.value })} className="flex-1" />
           </div>
         </div>
+        <div>
+          <Label>Cor do Texto dos Botões</Label>
+          <div className="flex items-center gap-2">
+            <input
+              type="color"
+              value={form.button_text_color || "#ffffff"}
+              onChange={(e) => setForm({ ...form, button_text_color: e.target.value })}
+              className="w-10 h-10 rounded cursor-pointer border-0"
+            />
+            <Input
+              value={form.button_text_color || "#ffffff"}
+              onChange={(e) => setForm({ ...form, button_text_color: e.target.value })}
+              className="flex-1"
+              maxLength={7}
+            />
+          </div>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Cor da fonte exibida sobre os botões (CTAs) na plataforma e nos e-mails.
+          </p>
+        </div>
       </div>
       <div className="flex items-start gap-3 rounded-lg border border-border bg-muted/30 p-3">
         <Switch

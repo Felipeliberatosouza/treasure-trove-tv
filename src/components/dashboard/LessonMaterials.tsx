@@ -209,7 +209,7 @@ export const SimuladoMaterial = ({ offered, setOffered, price, setPrice, questio
                     maxLength={questionMax}
                     onChange={(e) => updateQuestion(qi, { question: e.target.value })}
                     rows={2}
-                    className="bg-background text-sm"
+                    className="bg-secondary text-accent-foreground placeholder:text-accent-foreground/60 text-sm"
                     placeholder="Pergunta"
                   />
                   <p className="text-[10px] text-accent-foreground text-right">{q.question.length}/{questionMax}</p>
@@ -235,7 +235,7 @@ export const SimuladoMaterial = ({ offered, setOffered, price, setPrice, questio
                       value={opt}
                       maxLength={optionMax}
                       onChange={(e) => updateOption(qi, oi, e.target.value)}
-                      className="bg-background text-xs h-8"
+                      className="bg-secondary text-accent-foreground placeholder:text-accent-foreground/60 text-xs h-8"
                       placeholder={`Alternativa ${String.fromCharCode(65 + oi)}`}
                     />
                     {q.options.length > minOptions && (
@@ -317,7 +317,7 @@ export const TopQuestionsMaterial = ({ offered, setOffered, price, setPrice, que
                       maxLength={questionMax}
                       onChange={(e) => update(qi, { question: e.target.value })}
                       rows={2}
-                      className="bg-background text-sm"
+                      className="bg-secondary text-accent-foreground placeholder:text-accent-foreground/60 text-sm"
                       placeholder="Pergunta aberta"
                     />
                     <p className="text-[10px] text-accent-foreground text-right">{q.question.length}/{questionMax}</p>
@@ -328,7 +328,7 @@ export const TopQuestionsMaterial = ({ offered, setOffered, price, setPrice, que
                       maxLength={answerMax}
                       onChange={(e) => update(qi, { answer: e.target.value })}
                       rows={2}
-                      className="bg-background text-sm"
+                      className="bg-secondary text-accent-foreground placeholder:text-accent-foreground/60 text-sm"
                       placeholder="Resposta textual"
                     />
                     <p className="text-[10px] text-accent-foreground text-right">{q.answer.length}/{answerMax}</p>

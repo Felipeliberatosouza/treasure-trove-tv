@@ -3,7 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { Video, Star, ArrowLeft, Eye, Pencil, Save, X, Upload, Loader2, Plus, Trash2, Briefcase, GraduationCap, Clock } from "lucide-react";
+import { Video, Star, ArrowLeft, Eye, Pencil, Save, X, Upload, Loader2, Plus, Trash2, Briefcase, GraduationCap, Clock, GripVertical, ArrowUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -24,6 +24,7 @@ interface TeacherData {
   user_id: string;
   experiences: Experience[];
   education: Education[];
+  content_order: string[];
 }
 
 interface ContentItem {
@@ -43,6 +44,7 @@ const emptyDraft = {
   avatar_url: "",
   experiences: [] as Experience[],
   education: [] as Education[],
+  content_order: [] as string[],
 };
 
 const TeacherProfile = () => {
@@ -61,6 +63,10 @@ const TeacherProfile = () => {
   const [draft, setDraft] = useState({ ...emptyDraft });
   const [hasPending, setHasPending] = useState(false);
   const [pendingReason, setPendingReason] = useState<string | null>(null);
+  const [reordering, setReordering] = useState(false);
+  const [orderDraft, setOrderDraft] = useState<string[]>([]);
+  const [savingOrder, setSavingOrder] = useState(false);
+  const [dragId, setDragId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!slug) return;
@@ -68,7 +74,7 @@ const TeacherProfile = () => {
       setLoading(true);
       const { data: profile } = await supabase
         .from("profiles")
-        .select("name, avatar_url, bio, expertise_area, profile_title, user_id, experiences, education")
+        .select("name, avatar_url, bio, expertise_area, profile_title, user_id, experiences, education, content_order")
         .eq("slug", slug)
         .maybeSingle();
 
@@ -80,7 +86,8 @@ const TeacherProfile = () => {
 
       const experiences = Array.isArray(profile.experiences) ? (profile.experiences as unknown as Experience[]) : [];
       const education = Array.isArray(profile.education) ? (profile.education as unknown as Education[]) : [];
-      const teacherData: TeacherData = { ...profile, experiences, education };
+      const content_order = Array.isArray((profile as any).content_order) ? ((profile as any).content_order as string[]) : [];
+      const teacherData: TeacherData = { ...profile, experiences, education, content_order };
       setTeacher(teacherData);
       setDraft({
         name: profile.name || "",
@@ -90,6 +97,7 @@ const TeacherProfile = () => {
         avatar_url: profile.avatar_url || "",
         experiences,
         education,
+        content_order,
       });
 
       // pending approval check (visible only to owner)
@@ -120,7 +128,14 @@ const TeacherProfile = () => {
       const lessons: ContentItem[] = (lessonsRes.data || []).map((l) => ({ ...l, type: "lesson" as const }));
       const exams: ContentItem[] = (examsRes.data || []).map((e) => ({ ...e, type: "exam_solution" as const }));
       const allContent = [...lessons, ...exams];
-      setContent(allContent);
+      // Apply persisted order if available; unknown items go to the end
+      const orderMap = new Map(content_order.map((id, idx) => [id, idx]));
+      const ordered = [...allContent].sort((a, b) => {
+        const ai = orderMap.has(a.id) ? (orderMap.get(a.id) as number) : Number.MAX_SAFE_INTEGER;
+        const bi = orderMap.has(b.id) ? (orderMap.get(b.id) as number) : Number.MAX_SAFE_INTEGER;
+        return ai - bi;
+      });
+      setContent(ordered);
 
       const contentIds = allContent.map((c) => c.id);
       if (contentIds.length > 0) {
@@ -170,6 +185,69 @@ const TeacherProfile = () => {
   const isOwner = !!user && user.id === teacher.user_id;
   // Hard guard: edição só existe se for o dono. Caso contrário, qualquer estado de edição é forçado a falso.
   const editing = isOwner && isEditing;
+
+  const startReorder = () => {
+    if (!isOwner) return;
+    setOrderDraft(content.map((c) => c.id));
+    setReordering(true);
+  };
+
+  const cancelReorder = () => {
+    setReordering(false);
+    setOrderDraft([]);
+  };
+
+  const handleDragStart = (id: string) => setDragId(id);
+  const handleDragOver = (e: React.DragEvent, overId: string) => {
+    e.preventDefault();
+    if (!dragId || dragId === overId) return;
+    setOrderDraft((curr) => {
+      const from = curr.indexOf(dragId);
+      const to = curr.indexOf(overId);
+      if (from < 0 || to < 0) return curr;
+      const next = [...curr];
+      const [moved] = next.splice(from, 1);
+      next.splice(to, 0, moved);
+      return next;
+    });
+  };
+  const handleDragEnd = () => setDragId(null);
+
+  const moveItem = (id: string, dir: -1 | 1) => {
+    setOrderDraft((curr) => {
+      const i = curr.indexOf(id);
+      const j = i + dir;
+      if (i < 0 || j < 0 || j >= curr.length) return curr;
+      const next = [...curr];
+      [next[i], next[j]] = [next[j], next[i]];
+      return next;
+    });
+  };
+
+  const saveOrder = async () => {
+    if (!user || !isOwner) {
+      toast({ title: "Ação não permitida", variant: "destructive" });
+      return;
+    }
+    setSavingOrder(true);
+    const { error } = await supabase.from("teacher_profile_change_requests").insert({
+      teacher_id: user.id,
+      proposed: { content_order: orderDraft },
+      status: "pending",
+    } as never);
+    setSavingOrder(false);
+    if (error) {
+      toast({ title: "Erro ao enviar", description: error.message, variant: "destructive" });
+      return;
+    }
+    setHasPending(true);
+    setReordering(false);
+    toast({ title: "Nova ordem enviada para aprovação", description: "O administrador irá revisar antes de publicar." });
+  };
+
+  const reorderedContent = reordering
+    ? orderDraft.map((id) => content.find((c) => c.id === id)).filter(Boolean) as ContentItem[]
+    : content;
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -235,6 +313,7 @@ const TeacherProfile = () => {
       avatar_url: teacher.avatar_url || "",
       experiences: teacher.experiences,
       education: teacher.education,
+      content_order: teacher.content_order,
     });
     setIsEditing(false);
   };
@@ -358,15 +437,74 @@ const TeacherProfile = () => {
             )
           )}
 
-          <div className="mb-4">
-            <h2 className="font-display text-lg font-semibold mb-4">Conteúdos do Professor</h2>
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+            <h2 className="font-display text-lg font-semibold">Conteúdos do Professor</h2>
+            {isOwner && content.length > 1 && (
+              !reordering ? (
+                <Button size="sm" variant="outline" onClick={startReorder} disabled={hasPending}>
+                  <ArrowUpDown className="h-3.5 w-3.5" /> Reordenar
+                </Button>
+              ) : (
+                <div className="flex gap-2">
+                  <Button size="sm" variant="ghost" onClick={cancelReorder} disabled={savingOrder}>
+                    <X className="h-3.5 w-3.5" /> Cancelar
+                  </Button>
+                  <Button size="sm" onClick={saveOrder} disabled={savingOrder}>
+                    {savingOrder ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+                    Enviar para aprovação
+                  </Button>
+                </div>
+              )
+            )}
           </div>
+          {reordering && (
+            <p className="text-xs text-muted-foreground mb-3">
+              Arraste os cartões para reordenar (ou use as setas). A nova ordem só será publicada após aprovação do administrador.
+            </p>
+          )}
 
-          {content.length === 0 ? (
+          {reorderedContent.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-8">Nenhum conteúdo publicado ainda.</p>
+          ) : reordering ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-10">
+              {reorderedContent.map((item, idx) => (
+                <div
+                  key={item.id}
+                  draggable
+                  onDragStart={() => handleDragStart(item.id)}
+                  onDragOver={(e) => handleDragOver(e, item.id)}
+                  onDragEnd={handleDragEnd}
+                  className={`rounded-xl border-2 border-dashed bg-secondary/30 overflow-hidden cursor-move transition-opacity ${dragId === item.id ? "opacity-40 border-primary" : "border-border"}`}
+                >
+                  <div className="aspect-video bg-muted relative overflow-hidden">
+                    {item.thumbnail_url ? (
+                      <img src={item.thumbnail_url} alt={item.title} className="h-full w-full object-cover" />
+                    ) : (
+                      <div className="h-full w-full flex items-center justify-center">
+                        <Video className="h-8 w-8 text-muted-foreground/40" />
+                      </div>
+                    )}
+                    <span className="absolute top-2 left-2 text-[10px] bg-primary text-primary-foreground rounded px-1.5 py-0.5 font-bold">
+                      #{idx + 1}
+                    </span>
+                    <span className="absolute top-2 right-2 text-[10px] bg-background/80 text-foreground rounded px-1.5 py-0.5 font-medium">
+                      {item.type === "lesson" ? "Aula" : "Resolução"}
+                    </span>
+                  </div>
+                  <div className="p-3 flex items-center gap-2">
+                    <GripVertical className="h-4 w-4 text-muted-foreground shrink-0" />
+                    <h3 className="text-sm font-semibold line-clamp-1 flex-1">{item.title}</h3>
+                    <div className="flex flex-col gap-0.5">
+                      <button type="button" onClick={() => moveItem(item.id, -1)} disabled={idx === 0} className="text-xs px-1.5 py-0.5 rounded border border-border hover:bg-muted disabled:opacity-30">↑</button>
+                      <button type="button" onClick={() => moveItem(item.id, 1)} disabled={idx === reorderedContent.length - 1} className="text-xs px-1.5 py-0.5 rounded border border-border hover:bg-muted disabled:opacity-30">↓</button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-10">
-              {content.map((item) => (
+              {reorderedContent.map((item) => (
                 <Link
                   key={item.id}
                   to={`/video/${item.id}`}

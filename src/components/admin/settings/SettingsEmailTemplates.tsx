@@ -131,6 +131,30 @@ const SettingsEmailTemplates = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { data: contactData } = usePlatformSettings("contact");
   const { data: brandingData } = usePlatformSettings("branding");
+  // Cache de dimensões intrínsecas das logos (por URL). Usado pelo preview
+  // para calcular o tamanho de fonte do slogan IGUAL ao das edge functions:
+  // a partir da largura REAL renderizada da logo (height fixo × proporção).
+  const logoDimsRef = useRef<Map<string, { width: number; height: number }>>(new Map());
+  const [logoDimsTick, setLogoDimsTick] = useState(0);
+
+  const ensureLogoDims = (url: string) => {
+    if (!url || logoDimsRef.current.has(url) || typeof Image === "undefined") return;
+    const img = new Image();
+    img.onload = () => {
+      if (img.naturalWidth > 0 && img.naturalHeight > 0) {
+        logoDimsRef.current.set(url, {
+          width: img.naturalWidth,
+          height: img.naturalHeight,
+        });
+        setLogoDimsTick((n) => n + 1);
+      }
+    };
+    img.onerror = () => {
+      // Marca como tentado para não refetchar em loop. null = sem dimensões.
+      logoDimsRef.current.set(url, { width: 0, height: 0 });
+    };
+    img.src = url;
+  };
 
   const fetchTemplates = async () => {
     setLoading(true);
@@ -154,6 +178,14 @@ const SettingsEmailTemplates = () => {
   };
 
   useEffect(() => { fetchTemplates(); }, []);
+
+  // Pré-carrega dimensões das logos sempre que o template ativo ou o branding
+  // muda — assim o preview mostra o slogan já com o cálculo correto.
+  useEffect(() => {
+    const active = templates.find((t) => t.template_key === activeKey);
+    const url = active?.logo_url || brandingData?.logo_url || "";
+    if (url) ensureLogoDims(url);
+  }, [activeKey, templates, brandingData?.logo_url]);
 
   const active = templates.find((t) => t.template_key === activeKey);
 

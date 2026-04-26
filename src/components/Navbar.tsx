@@ -63,19 +63,12 @@ const loggedMenuItems: MenuItem[] = [
 ];
 
 const teacherMenuItems: MenuItem[] = [
-  { label: "Minhas Revisões: Gravar Nova Aula", href: "/dashboard/teacher?tab=lessons" },
+  { label: "Gravar Nova Aula", href: "/dashboard/teacher?tab=lessons" },
+  { label: "Editar Conteúdos Publicados", href: "/dashboard/teacher?tab=lessons" },
+  { label: "Gerar Post para Divulgação das Minhas Aulas", href: "/dashboard/teacher?tab=sales-boost" },
   { label: "Responder Dúvidas de Alunos", href: "/dashboard/teacher?tab=doubts", alertKey: "doubts" },
-  {
-    label: "Aula Particular: Acesse Aulas/ Atualize Agenda",
-    children: [
-      { label: "Acessar Aulas", href: "/minhas-aulas-agendadas", alertKey: "scheduledToday" },
-      { label: "Atualizar Agenda", href: "/dashboard/teacher?tab=agenda", alertKey: "agendaOutdated" },
-    ],
-  },
-  { label: "Meus Resumos", href: "/meus-resumos" },
-  { label: "Meus Simulados", href: "/meus-simulados" },
-  { label: "Minhas Top Questões de Provas", href: "/minhas-top-questoes" },
-  { label: "Minhas Colinhas", href: "/minhas-colinhas" },
+  { label: "Acessar Aula Particular Agendada", href: "/minhas-aulas-agendadas", alertKey: "scheduledToday" },
+  { label: "Atualizar Agenda", href: "/dashboard/teacher?tab=agenda", alertKey: "agendaOutdated" },
 ];
 
 const adminMenuItems: MenuItem[] = [

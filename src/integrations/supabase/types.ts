@@ -477,6 +477,7 @@ export type Database = {
           always_send: boolean
           body_html: string
           button_color: string
+          button_text_color: string
           coupon_code: string
           coupon_enabled: boolean
           coupon_expires_at: string | null
@@ -503,6 +504,7 @@ export type Database = {
           always_send?: boolean
           body_html?: string
           button_color?: string
+          button_text_color?: string
           coupon_code?: string
           coupon_enabled?: boolean
           coupon_expires_at?: string | null
@@ -529,6 +531,7 @@ export type Database = {
           always_send?: boolean
           body_html?: string
           button_color?: string
+          button_text_color?: string
           coupon_code?: string
           coupon_enabled?: boolean
           coupon_expires_at?: string | null

@@ -913,12 +913,12 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
       <div>
         <label className="text-sm text-muted-foreground mb-1 block">Tipo de aula *</label>
         <Select value={videoType} onValueChange={setVideoType}>
-          <SelectTrigger className="bg-secondary text-black data-[placeholder]:text-black [&_svg]:text-black [&>span]:text-black">
+          <SelectTrigger className="bg-secondary text-accent-foreground data-[placeholder]:text-accent-foreground [&_svg]:text-accent-foreground [&>span]:text-accent-foreground">
             <SelectValue placeholder="Selecione o tipo" />
           </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="revisao">Revisão</SelectItem>
-            <SelectItem value="resolucao_prova">Resolução de Questões de Prova</SelectItem>
+          <SelectContent className="bg-secondary text-accent-foreground">
+            <SelectItem className="text-accent-foreground" value="revisao">Revisão</SelectItem>
+            <SelectItem className="text-accent-foreground" value="resolucao_prova">Resolução de Questões de Prova</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -930,7 +930,7 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
           value={title}
           maxLength={TITLE_MAX}
           onChange={(e) => setTitle(e.target.value)}
-          className="bg-secondary text-black placeholder:text-black/50"
+          className="bg-secondary text-accent-foreground placeholder:text-accent-foreground/60"
           placeholder="Ex: Revisão de Direito Constitucional"
         />
         <p className="text-[11px] text-muted-foreground text-right mt-0.5">
@@ -970,7 +970,7 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
           value={description}
           maxLength={DESCRIPTION_MAX}
           onChange={(e) => setDescription(e.target.value)}
-          className="bg-secondary text-black placeholder:text-black/50"
+          className="bg-secondary text-accent-foreground placeholder:text-accent-foreground/60"
           rows={3}
           placeholder="Resumo curto sobre o que será abordado"
         />

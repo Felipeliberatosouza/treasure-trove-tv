@@ -187,7 +187,7 @@ const Navbar = () => {
       className="fixed top-0 z-50 w-full border-b border-border/50 bg-background/80 backdrop-blur-xl"
     >
       <div className="flex items-center justify-between px-6 py-3 md:px-12 lg:px-20">
-        <Link to="/" className="flex flex-col items-center gap-0 leading-none">
+        <Link to="/" className="relative flex flex-col items-center gap-0 leading-none">
           {branding?.logo_url ? (
             <img
               ref={logoRef}
@@ -203,7 +203,7 @@ const Navbar = () => {
           )}
           {slogan && (
             <span
-              className="-mt-5 md:-mt-6 leading-none text-center whitespace-nowrap overflow-hidden"
+              className="absolute left-1/2 -translate-x-1/2 bottom-0 translate-y-[60%] leading-none text-center whitespace-nowrap overflow-hidden pointer-events-none"
               style={{
                 width: logoWidth > 0 ? `${logoWidth}px` : undefined,
                 fontSize: `${sloganFontSize}px`,

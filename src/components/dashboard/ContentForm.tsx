@@ -913,7 +913,7 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
       <div>
         <label className="text-sm text-muted-foreground mb-1 block">Tipo de aula *</label>
         <Select value={videoType} onValueChange={setVideoType}>
-          <SelectTrigger className="bg-secondary">
+          <SelectTrigger className="bg-secondary text-black [&_svg]:text-black">
             <SelectValue placeholder="Selecione o tipo" />
           </SelectTrigger>
           <SelectContent>
@@ -930,7 +930,7 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
           value={title}
           maxLength={TITLE_MAX}
           onChange={(e) => setTitle(e.target.value)}
-          className="bg-secondary"
+          className="bg-secondary text-black placeholder:text-black/50"
           placeholder="Ex: Revisão de Direito Constitucional"
         />
         <p className="text-[11px] text-muted-foreground text-right mt-0.5">
@@ -970,7 +970,7 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
           value={description}
           maxLength={DESCRIPTION_MAX}
           onChange={(e) => setDescription(e.target.value)}
-          className="bg-secondary"
+          className="bg-secondary text-black placeholder:text-black/50"
           rows={3}
           placeholder="Resumo curto sobre o que será abordado"
         />
@@ -990,7 +990,7 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
             type="file"
             accept="image/*"
             onChange={(e) => setThumbnailFile(e.target.files?.[0] || null)}
-            className="bg-secondary text-xs"
+            className="bg-secondary text-black text-xs file:text-black"
           />
           {thumbnailFile && (
             <button type="button" onClick={() => setThumbnailFile(null)} className="text-muted-foreground hover:text-destructive">
@@ -1011,7 +1011,7 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
             type="file"
             accept="image/*"
             onChange={(e) => setCarouselFile(e.target.files?.[0] || null)}
-            className="bg-secondary text-xs"
+            className="bg-secondary text-black text-xs file:text-black"
           />
           {carouselFile && (
             <button type="button" onClick={() => setCarouselFile(null)} className="text-muted-foreground hover:text-destructive">
@@ -1069,7 +1069,7 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
                 type="file"
                 accept="video/*"
                 onChange={(e) => setVideoFile(e.target.files?.[0] || null)}
-                className="bg-secondary text-xs"
+                className="bg-secondary text-black text-xs file:text-black"
               />
               {videoFile && (
                 <button type="button" onClick={() => setVideoFile(null)} className="text-muted-foreground hover:text-destructive">
@@ -1102,7 +1102,7 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
                 placeholder={cfg ? `Sugerido R$ ${cfg.price.toFixed(2)} · mín. R$ ${cfg.min_price.toFixed(2)}` : "Preço (R$)"}
                 value={priceRevisoes}
                 onChange={(e) => setPriceRevisoes(e.target.value)}
-                className="bg-secondary text-xs h-9 max-w-[220px]"
+                className="bg-secondary text-black placeholder:text-black/50 text-xs h-9 max-w-[220px]"
               />
               {cfg && (
                 <span className="text-[11px] text-muted-foreground">

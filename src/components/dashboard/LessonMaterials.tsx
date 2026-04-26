@@ -119,7 +119,7 @@ export const ResumoMaterial = ({ offered, setOffered, price, setPrice, text, set
           maxLength={textMax}
           onChange={(e) => setText(e.target.value)}
           rows={4}
-          className="bg-secondary text-sm"
+          className="bg-secondary text-black placeholder:text-black/50 text-sm"
           placeholder={`Resumo da aula em até ${textMax} caracteres`}
         />
         <p className="text-[11px] text-muted-foreground mt-1 text-right">{text.length}/{textMax}</p>
@@ -409,7 +409,7 @@ export const ColinhaMaterial = ({ offered, setOffered, price, setPrice, bullets,
                 value={b}
                 maxLength={bulletMax}
                 onChange={(e) => update(i, e.target.value)}
-                className="bg-secondary text-xs h-9"
+            className="bg-secondary text-black placeholder:text-black/50 text-xs h-9"
                 placeholder={`Bullet ${i + 1}`}
               />
               {bullets.length > minBullets && (

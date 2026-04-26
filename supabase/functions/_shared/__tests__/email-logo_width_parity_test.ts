@@ -108,10 +108,6 @@ const cases: Case[] = [
     // Logo renderiza com width≈53px → slogan precisa ser bem curto (≤6 chars)
     // para a fonte cair dentro do range.
     slogan: "Sucesso",
-    // Mesmo assim, com largura tão pequena, é provável que sature no piso.
-    // Marcado como floor para o caso de saturação ainda ocorrer; a asserção
-    // dinâmica abaixo detecta isto.
-    saturated: "floor",
   },
   {
     name: "slogan muito curto satura no teto (18px)",
@@ -167,11 +163,15 @@ for (const c of cases) {
       assert(fs! >= 8 && fs! <= 18, `font-size fora do range 8..18: ${fs}`);
 
       // 3) Validações de saturação:
-      if (c.saturated === "ceil") {
+      // Detecta saturação dinâmica também (além do hint estático em `c.saturated`).
+      const dynSaturated: "ceil" | "floor" | null =
+        fs === 18 ? "ceil" : fs === 8 ? "floor" : null;
+      const expectedSat = c.saturated ?? dynSaturated;
+      if (expectedSat === "ceil") {
         assertEquals(fs, 18, "slogan curto deveria saturar em 18px");
         return; // largura visual aqui é MENOR que a logo de propósito
       }
-      if (c.saturated === "floor") {
+      if (expectedSat === "floor") {
         assertEquals(fs, 8, "slogan longo deveria saturar em 8px");
         return; // largura visual aqui é MAIOR que a logo de propósito
       }

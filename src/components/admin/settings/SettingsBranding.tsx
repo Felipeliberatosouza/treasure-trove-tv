@@ -17,6 +17,7 @@ const SettingsBranding = () => {
     platform_name: "", slogan: "", logo_url: "",
     primary_color: "#6366f1", secondary_color: "#8b5cf6", accent_color: "#f59e0b",
     background_color: "#09090f", slogan_color: "#6b7280",
+    button_text_color: "#ffffff",
   });
   const [saving, setSaving] = useState(false);
   const [applyToEmails, setApplyToEmails] = useState(false);
@@ -41,6 +42,7 @@ const SettingsBranding = () => {
         use_uploaded_logo: !!form.logo_url,
         heading_color: form.secondary_color,
         button_color: form.primary_color,
+        button_text_color: form.button_text_color || "#ffffff",
         link_color: form.primary_color,
         text_color: form.background_color,
         slogan_color: form.slogan_color,

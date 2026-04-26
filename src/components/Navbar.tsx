@@ -234,20 +234,13 @@ const Navbar = () => {
         <div className="hidden items-center gap-5 md:flex">
           {menuItems.map((item) => {
             if (item.children && item.children.length > 0) {
-              const parentHas = itemHasAlert(item);
               return (
                 <div key={item.label} className="relative group">
                   <button
                     type="button"
-                    className="relative text-sm text-muted-foreground transition-colors hover:text-foreground whitespace-nowrap"
+                    className="text-sm text-muted-foreground transition-colors hover:text-foreground whitespace-nowrap"
                   >
                     {item.label}
-                    {parentHas && (
-                      <span
-                        aria-label="Pendência"
-                        className="absolute -top-1 -right-2 h-2 w-2 rounded-full bg-destructive ring-2 ring-background"
-                      />
-                    )}
                   </button>
                   <div className="absolute left-0 top-full pt-2 hidden group-hover:block z-50">
                     <div className="min-w-[220px] rounded-md border border-border bg-background shadow-lg py-1">
@@ -374,14 +367,7 @@ const Navbar = () => {
               if (item.children && item.children.length > 0) {
                 return (
                   <div key={item.label} className="flex flex-col gap-2">
-                    <span className="inline-flex items-center gap-2 text-sm font-medium text-foreground">
-                      {item.label}
-                      {itemHasAlert(item) && (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-destructive/15 px-2 py-0.5 text-[10px] font-semibold text-destructive">
-                          ● Pendência
-                        </span>
-                      )}
-                    </span>
+                    <span className="text-sm font-medium text-foreground">{item.label}</span>
                     <div className="flex flex-col gap-2 pl-3 border-l border-border">
                       {item.children.map((child) => (
                         <Link

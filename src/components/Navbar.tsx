@@ -234,13 +234,20 @@ const Navbar = () => {
         <div className="hidden items-center gap-5 md:flex">
           {menuItems.map((item) => {
             if (item.children && item.children.length > 0) {
+              const parentHas = itemHasAlert(item);
               return (
                 <div key={item.label} className="relative group">
                   <button
                     type="button"
-                    className="text-sm text-muted-foreground transition-colors hover:text-foreground whitespace-nowrap"
+                    className="relative text-sm text-muted-foreground transition-colors hover:text-foreground whitespace-nowrap"
                   >
                     {item.label}
+                    {parentHas && (
+                      <span
+                        aria-label="Pendência"
+                        className="absolute -top-1 -right-2 h-2 w-2 rounded-full bg-destructive ring-2 ring-background"
+                      />
+                    )}
                   </button>
                   <div className="absolute left-0 top-full pt-2 hidden group-hover:block z-50">
                     <div className="min-w-[220px] rounded-md border border-border bg-background shadow-lg py-1">
@@ -248,9 +255,14 @@ const Navbar = () => {
                         <Link
                           key={child.label}
                           to={child.href}
-                          className="block px-3 py-2 text-sm text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+                          className="flex items-center justify-between gap-2 px-3 py-2 text-sm text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
                         >
-                          {child.label}
+                          <span>{child.label}</span>
+                          {alertActive(child.alertKey) && (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-destructive/15 px-2 py-0.5 text-[10px] font-semibold text-destructive">
+                              ● Pendência
+                            </span>
+                          )}
                         </Link>
                       ))}
                     </div>
@@ -259,13 +271,23 @@ const Navbar = () => {
               );
             }
             const href = item.href ?? "#";
+            const hasAlert = alertActive(item.alertKey);
+            const className =
+              "relative inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground whitespace-nowrap";
+            const alertBadge = hasAlert ? (
+              <span className="inline-flex items-center gap-1 rounded-full bg-destructive/15 px-2 py-0.5 text-[10px] font-semibold text-destructive">
+                ● Pendência
+              </span>
+            ) : null;
             return href.startsWith("#") ? (
-              <a key={item.label} href={href} className="text-sm text-muted-foreground transition-colors hover:text-foreground whitespace-nowrap">
+              <a key={item.label} href={href} className={className}>
                 {item.label}
+                {alertBadge}
               </a>
             ) : (
-              <Link key={item.label} to={href} className="text-sm text-muted-foreground transition-colors hover:text-foreground whitespace-nowrap">
+              <Link key={item.label} to={href} className={className}>
                 {item.label}
+                {alertBadge}
               </Link>
             );
           })}

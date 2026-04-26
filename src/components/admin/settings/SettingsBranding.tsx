@@ -23,6 +23,12 @@ const SettingsBranding = () => {
     primary_button_text: "#ffffff",
     secondary_button_bg: "#1f2937",
     secondary_button_text: "#ffffff",
+    input_bg: "#0f172a",
+    input_text: "#ffffff",
+    input_border: "#334155",
+    textarea_bg: "#0f172a",
+    textarea_text: "#ffffff",
+    textarea_border: "#334155",
   });
   const [saving, setSaving] = useState(false);
   const [applyToEmails, setApplyToEmails] = useState(false);
@@ -36,6 +42,12 @@ const SettingsBranding = () => {
       primary_button_text: data.primary_button_text || data.button_text_color || "#ffffff",
       secondary_button_bg: data.secondary_button_bg || data.secondary_color || "#1f2937",
       secondary_button_text: data.secondary_button_text || data.button_text_color || "#ffffff",
+      input_bg: data.input_bg || "#0f172a",
+      input_text: data.input_text || "#ffffff",
+      input_border: data.input_border || "#334155",
+      textarea_bg: data.textarea_bg || data.input_bg || "#0f172a",
+      textarea_text: data.textarea_text || data.input_text || "#ffffff",
+      textarea_border: data.textarea_border || data.input_border || "#334155",
     });
   }, [data]);
 

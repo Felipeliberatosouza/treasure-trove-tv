@@ -1190,6 +1190,7 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
         setQuestions={setQuizQuestions}
         cfg={cfgFor("simulados")}
         onGenerate={() => generateMaterialWithAi("simulado")}
+        onGenerateOne={(existing) => generateMaterialItem<QuizQuestion>("simulado", existing)}
         generating={aiGenerating === "simulado"}
         canGenerate={canGenerateAi}
         questionMax={pc.simulados.question_max}
@@ -1207,6 +1208,7 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
         setQuestions={setTopQuestions}
         cfg={cfgFor("top_questoes")}
         onGenerate={() => generateMaterialWithAi("top_questoes")}
+        onGenerateOne={(existing) => generateMaterialItem<TopQuestion>("top_questoes", existing)}
         generating={aiGenerating === "top_questoes"}
         canGenerate={canGenerateAi}
         questionMax={pc.top_questoes.question_max}
@@ -1223,6 +1225,7 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
         setBullets={setBullets}
         cfg={cfgFor("colinhas")}
         onGenerate={() => generateMaterialWithAi("colinha")}
+        onGenerateOne={(existing) => generateMaterialItem<string>("colinha", existing)}
         generating={aiGenerating === "colinha"}
         canGenerate={canGenerateAi}
         bulletMax={pc.colinhas.bullet_max}

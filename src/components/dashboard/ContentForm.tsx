@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { SpellCheckedInput, SpellCheckedTextarea } from "@/components/ui/spellchecked-input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
@@ -1144,22 +1145,27 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
         {(videoFile || editData?.video_url) && (() => {
           const cfg = resourcePrices.find((r) => r.resource_type === "revisoes");
           return (
-            <div className="mt-2 flex items-center gap-2">
-              <span className="text-xs font-semibold text-accent-foreground shrink-0">R$</span>
-              <Input
-                type="number"
-                step="0.01"
-                min={cfg?.min_price || 0}
-                placeholder={cfg ? `Sugerido R$ ${cfg.price.toFixed(2)} · mín. R$ ${cfg.min_price.toFixed(2)}` : "Preço (R$)"}
-                value={priceRevisoes}
-                onChange={(e) => setPriceRevisoes(e.target.value)}
-                className="bg-white text-black placeholder:text-black/50 text-xs h-9 max-w-[220px]"
-              />
-              {cfg && (
-                <span className="text-[11px] text-muted-foreground">
-                  você recebe {100 - (cfg.platform_percentage || 0)}%
-                </span>
-              )}
+            <div className="mt-3 space-y-1">
+              <Label className="text-xs font-semibold text-accent-foreground">
+                Preço da revisão <span className="text-destructive">*</span>
+              </Label>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-xs font-semibold text-accent-foreground shrink-0">R$</span>
+                <Input
+                  type="number"
+                  step="0.01"
+                  min={cfg?.min_price || 0}
+                  placeholder={cfg ? `Sugerido R$ ${cfg.price.toFixed(2)} · mín. R$ ${cfg.min_price.toFixed(2)}` : "Preço (R$)"}
+                  value={priceRevisoes}
+                  onChange={(e) => setPriceRevisoes(e.target.value)}
+                  className="bg-white text-black placeholder:text-black/50 text-xs h-9 max-w-[260px]"
+                />
+                {cfg && (
+                  <span className="text-[11px] text-muted-foreground">
+                    você recebe {100 - (cfg.platform_percentage || 0)}%
+                  </span>
+                )}
+              </div>
             </div>
           );
         })()}

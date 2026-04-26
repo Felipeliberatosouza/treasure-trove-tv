@@ -186,14 +186,14 @@ const Navbar = () => {
       animate={{ opacity: 1, y: 0 }}
       className="fixed top-0 z-50 w-full border-b border-border/50 bg-background/80 backdrop-blur-xl"
     >
-      <div className="flex items-center justify-between px-6 py-3 md:px-12 lg:px-20">
-        <Link to="/" className="relative flex flex-col items-center gap-0 leading-none">
+      <div className="flex items-center justify-between gap-3 px-4 py-3 md:px-12 lg:px-20">
+        <Link to="/" className="relative flex items-center leading-none shrink-0">
           {branding?.logo_url ? (
             <img
               ref={logoRef}
               src={branding.logo_url}
               alt={branding.platform_name || "Logo"}
-              className="h-16 md:h-20 max-w-[340px] object-contain block"
+              className="h-12 md:h-14 max-w-[260px] object-contain block"
               onLoad={(e) => setLogoWidth((e.target as HTMLImageElement).getBoundingClientRect().width)}
             />
           ) : (
@@ -203,7 +203,7 @@ const Navbar = () => {
           )}
           {slogan && (
             <span
-              className="absolute left-1/2 -translate-x-1/2 bottom-1 leading-none text-center whitespace-nowrap overflow-hidden pointer-events-none"
+              className="absolute left-1/2 -translate-x-1/2 -bottom-3 leading-none text-center whitespace-nowrap overflow-hidden pointer-events-none"
               style={{
                 width: logoWidth > 0 ? `${logoWidth}px` : undefined,
                 fontSize: `${sloganFontSize}px`,

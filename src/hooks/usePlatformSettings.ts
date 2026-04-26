@@ -225,6 +225,31 @@ export interface PrivacyPolicySettings {
   }[];
 }
 
+export interface FooterSettings {
+  /** Use {platform_name} as a placeholder to insert the platform name. */
+  copyright: string;
+  about_label: string;
+  about_url: string;
+  terms_label: string;
+  terms_url: string;
+  privacy_label: string;
+  privacy_url: string;
+  contact_label: string;
+  contact_url: string;
+}
+
+export const DEFAULT_FOOTER_SETTINGS: FooterSettings = {
+  copyright: "© 2026 {platform_name}. Todos os direitos reservados.",
+  about_label: "Sobre",
+  about_url: "/sobre",
+  terms_label: "Termos",
+  terms_url: "/termos",
+  privacy_label: "Privacidade",
+  privacy_url: "/privacidade",
+  contact_label: "Contato",
+  contact_url: "/contato",
+};
+
 type SettingsMap = {
   branding: BrandingSettings;
   contact: ContactSettings;
@@ -248,6 +273,7 @@ type SettingsMap = {
   twilio_config: TwilioConfigSettings;
   retention_coupon: RetentionCouponSettings;
   aula_particular_config: AulaParticularConfigSettings;
+  footer: FooterSettings;
 };
 
 export interface TwilioConfigSettings {

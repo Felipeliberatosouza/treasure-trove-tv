@@ -320,6 +320,103 @@ const SettingsBranding = () => {
           </div>
         </div>
       </div>
+
+      {/* Form fields */}
+      <div className="space-y-3 rounded-lg border border-border p-4">
+        <div>
+          <h3 className="text-sm font-semibold">Campos de digitação</h3>
+          <p className="text-xs text-muted-foreground">
+            Aplicado a todos os campos de uma linha (nome, e-mail, busca, etc.) em toda a plataforma.
+          </p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          {([
+            ["input_bg", "Cor de fundo", "#0f172a"],
+            ["input_text", "Cor do texto", "#ffffff"],
+            ["input_border", "Cor da borda", "#334155"],
+          ] as const).map(([k, label, fallback]) => (
+            <div key={k}>
+              <Label className="text-xs">{label}</Label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={(form[k] as string) || fallback}
+                  onChange={(e) => setForm({ ...form, [k]: e.target.value })}
+                  className="w-9 h-9 rounded cursor-pointer border-0"
+                />
+                <Input
+                  value={(form[k] as string) || fallback}
+                  onChange={(e) => setForm({ ...form, [k]: e.target.value })}
+                  className="flex-1 text-xs"
+                  maxLength={7}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+        <div>
+          <p className="text-xs text-muted-foreground mb-2">Pré-visualização</p>
+          <input
+            type="text"
+            placeholder="Digite algo..."
+            className="w-full rounded-md px-3 py-2 text-sm outline-none"
+            style={{
+              background: form.input_bg || "#0f172a",
+              color: form.input_text || "#ffffff",
+              border: `1px solid ${form.input_border || "#334155"}`,
+            }}
+          />
+        </div>
+      </div>
+
+      {/* Textareas */}
+      <div className="space-y-3 rounded-lg border border-border p-4">
+        <div>
+          <h3 className="text-sm font-semibold">Caixas de texto</h3>
+          <p className="text-xs text-muted-foreground">
+            Aplicado a todas as caixas de texto longas (observações, descrições, comentários, mensagens) em toda a plataforma.
+          </p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          {([
+            ["textarea_bg", "Cor de fundo", "#0f172a"],
+            ["textarea_text", "Cor do texto", "#ffffff"],
+            ["textarea_border", "Cor da borda", "#334155"],
+          ] as const).map(([k, label, fallback]) => (
+            <div key={k}>
+              <Label className="text-xs">{label}</Label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={(form[k] as string) || fallback}
+                  onChange={(e) => setForm({ ...form, [k]: e.target.value })}
+                  className="w-9 h-9 rounded cursor-pointer border-0"
+                />
+                <Input
+                  value={(form[k] as string) || fallback}
+                  onChange={(e) => setForm({ ...form, [k]: e.target.value })}
+                  className="flex-1 text-xs"
+                  maxLength={7}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+        <div>
+          <p className="text-xs text-muted-foreground mb-2">Pré-visualização</p>
+          <textarea
+            placeholder="Escreva uma observação..."
+            rows={3}
+            className="w-full rounded-md px-3 py-2 text-sm outline-none"
+            style={{
+              background: form.textarea_bg || "#0f172a",
+              color: form.textarea_text || "#ffffff",
+              border: `1px solid ${form.textarea_border || "#334155"}`,
+            }}
+          />
+        </div>
+      </div>
+
       <div className="flex items-start gap-3 rounded-lg border border-border bg-muted/30 p-3">
         <Switch
           id="apply-to-emails"

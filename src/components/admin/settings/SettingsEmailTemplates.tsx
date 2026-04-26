@@ -424,6 +424,7 @@ const SettingsEmailTemplates = () => {
     const textColor = active.text_color || "#333333";
     const headingColor = active.heading_color || "#dc2626";
     const buttonColor = active.button_color || "#6366f1";
+    const sloganColor = active.slogan_color || "#6b7280";
     const fontFamily = active.font_family || "Arial, sans-serif";
 
     const platformName = brandingData?.platform_name || "Revisão Fácil";
@@ -439,6 +440,7 @@ const SettingsEmailTemplates = () => {
       platformName,
       slogan: brandingData?.slogan,
       headingColor,
+      sloganColor,
       logoNaturalWidth: dims?.width,
       logoNaturalHeight: dims?.height,
     });

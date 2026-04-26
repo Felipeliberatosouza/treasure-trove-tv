@@ -128,7 +128,7 @@ const AdminProfileApprovalsTab = () => {
       toast({ title: "Erro", description: error.message, variant: "destructive" });
       return;
     }
-    await logAction("approve_profile_change", "teacher_profile_change_requests", req.id);
+    await logAction("approve_profile_change", { targetTable: "teacher_profile_change_requests", targetId: req.id });
     toast({ title: "Aprovado", description: "Página pública atualizada." });
     load();
   };
@@ -146,7 +146,7 @@ const AdminProfileApprovalsTab = () => {
       toast({ title: "Erro", description: error.message, variant: "destructive" });
       return;
     }
-    await logAction("reject_profile_change", "teacher_profile_change_requests", reject.id);
+    await logAction("reject_profile_change", { targetTable: "teacher_profile_change_requests", targetId: reject.id });
     toast({ title: "Rejeitado" });
     setReject(null);
     setReason("");

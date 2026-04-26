@@ -119,7 +119,7 @@ export const ResumoMaterial = ({ offered, setOffered, price, setPrice, text, set
           maxLength={textMax}
           onChange={(e) => setText(e.target.value)}
           rows={4}
-          className="bg-secondary text-black placeholder:text-black/50 text-sm"
+          className="bg-secondary text-accent-foreground placeholder:text-accent-foreground/60 text-sm"
           placeholder={`Resumo da aula em até ${textMax} caracteres`}
         />
         <p className="text-[11px] text-muted-foreground mt-1 text-right">{text.length}/{textMax}</p>
@@ -200,7 +200,7 @@ export const SimuladoMaterial = ({ offered, setOffered, price, setPrice, questio
             {onGenerate && " Use \"Gerar com IA\" para criar um rascunho a partir do título e descrição."}
           </p>
           {questions.map((q, qi) => (
-            <div key={qi} className="rounded-md border border-border/60 bg-secondary/30 p-3 space-y-2">
+            <div key={qi} className="rounded-md border border-border/60 bg-secondary/30 p-3 space-y-2 text-accent-foreground">
               <div className="flex items-start gap-2">
                 <span className="text-xs font-semibold text-primary shrink-0 mt-1">Q{qi + 1}</span>
                 <div className="flex-1">
@@ -409,7 +409,7 @@ export const ColinhaMaterial = ({ offered, setOffered, price, setPrice, bullets,
                 value={b}
                 maxLength={bulletMax}
                 onChange={(e) => update(i, e.target.value)}
-            className="bg-secondary text-black placeholder:text-black/50 text-xs h-9"
+                    className="bg-secondary text-accent-foreground placeholder:text-accent-foreground/60 text-xs h-9"
                 placeholder={`Bullet ${i + 1}`}
               />
               {bullets.length > minBullets && (

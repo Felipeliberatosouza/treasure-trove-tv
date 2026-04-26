@@ -913,7 +913,7 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
       <div>
         <label className="text-sm text-muted-foreground mb-1 block">Tipo de aula *</label>
         <Select value={videoType} onValueChange={setVideoType}>
-          <SelectTrigger className="bg-secondary text-black [&_svg]:text-black">
+          <SelectTrigger className="bg-secondary text-black data-[placeholder]:text-black [&_svg]:text-black [&>span]:text-black">
             <SelectValue placeholder="Selecione o tipo" />
           </SelectTrigger>
           <SelectContent>

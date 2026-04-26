@@ -105,3 +105,66 @@
     display: none;
   }
 }
+
+/*
+  Global readability guard for form fields.
+
+  Wherever an <input>, <textarea> or <select> is rendered with a light
+  utility background (bg-white / bg-gray-* / placeholder-on-light) but no
+  explicit text color, the text would otherwise inherit the dark theme
+  foreground and become invisible on a white field. The rules below force
+  a high-contrast foreground on light backgrounds and a light foreground
+  on dark theme tokens, but only when the author has not set their own
+  text-* utility (those win because of higher specificity from Tailwind's
+  inline class order — these rules use the same single-class specificity
+  but no !important, so any explicit `text-black`/`text-white` in the
+  component still applies).
+*/
+@layer base {
+  /* Light surfaces → dark ink */
+  input.bg-white,
+  textarea.bg-white,
+  select.bg-white,
+  input[class*="bg-gray-50"],
+  input[class*="bg-gray-100"],
+  input[class*="bg-gray-200"],
+  textarea[class*="bg-gray-50"],
+  textarea[class*="bg-gray-100"],
+  textarea[class*="bg-gray-200"],
+  select[class*="bg-gray-50"],
+  select[class*="bg-gray-100"],
+  select[class*="bg-gray-200"] {
+    color: #111827; /* gray-900 */
+  }
+  input.bg-white::placeholder,
+  textarea.bg-white::placeholder,
+  input[class*="bg-gray-50"]::placeholder,
+  input[class*="bg-gray-100"]::placeholder,
+  input[class*="bg-gray-200"]::placeholder,
+  textarea[class*="bg-gray-50"]::placeholder,
+  textarea[class*="bg-gray-100"]::placeholder,
+  textarea[class*="bg-gray-200"]::placeholder {
+    color: rgba(17, 24, 39, 0.55);
+  }
+
+  /* Dark theme surfaces → light ink */
+  input.bg-secondary,
+  textarea.bg-secondary,
+  select.bg-secondary,
+  input.bg-muted,
+  textarea.bg-muted,
+  select.bg-muted,
+  input.bg-card,
+  textarea.bg-card,
+  select.bg-card {
+    color: hsl(var(--foreground));
+  }
+  input.bg-secondary::placeholder,
+  textarea.bg-secondary::placeholder,
+  input.bg-muted::placeholder,
+  textarea.bg-muted::placeholder,
+  input.bg-card::placeholder,
+  textarea.bg-card::placeholder {
+    color: hsl(var(--muted-foreground));
+  }
+}

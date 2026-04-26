@@ -128,9 +128,20 @@ const Navbar = () => {
         ? teacherMenuItems
         : loggedMenuItems
     : publicMenuItems;
+  const teacherSlug = (profile as { slug?: string | null } | null)?.slug ?? "";
+  const resolvedBase = baseMenu
+    .map((item) => {
+      // Hide "Ver Minha Página Pública" until the teacher has a slug.
+      if (item.href === "__teacher_public_page__") {
+        if (!teacherSlug) return null;
+        return { ...item, href: `/${teacherSlug}` };
+      }
+      return item;
+    })
+    .filter(Boolean) as MenuItem[];
   const menuItems = user && role === "student" && hasActiveSubscription
-    ? [subscriberMenuItem, ...baseMenu]
-    : baseMenu;
+    ? [subscriberMenuItem, ...resolvedBase]
+    : resolvedBase;
 
   const alertActive = (key?: AlertKey) => {
     if (!key) return false;

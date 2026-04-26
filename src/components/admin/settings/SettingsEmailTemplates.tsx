@@ -393,12 +393,15 @@ const SettingsEmailTemplates = () => {
 
     const platformName = brandingData?.platform_name || "Revisão Fácil";
     const effectiveLogoUrl = active.logo_url || brandingData?.logo_url || "";
+    const dims = effectiveLogoUrl ? logoDimsRef.current.get(effectiveLogoUrl) : undefined;
     const logoHtml = buildEmailLogoHtml({
       logoUrl: effectiveLogoUrl,
       useUploadedLogo: !!active.use_uploaded_logo,
       platformName,
       slogan: brandingData?.slogan,
       headingColor,
+      logoNaturalWidth: dims?.width,
+      logoNaturalHeight: dims?.height,
     });
 
     const footerHtml = active.show_social_footer ? buildFooterHtml() : "";

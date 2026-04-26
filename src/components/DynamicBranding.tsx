@@ -37,14 +37,21 @@ const DynamicBranding = () => {
       accent_color?: string;
       background_color?: string;
       button_text_color?: string;
+      primary_button_bg?: string;
+      primary_button_text?: string;
+      secondary_button_bg?: string;
+      secondary_button_text?: string;
     } | undefined;
 
     if (!branding) return;
 
     const root = document.documentElement;
 
-    if (branding.primary_color) {
-      const hsl = hexToHSL(branding.primary_color);
+    // Primary button background overrides primary_color when explicitly set,
+    // so the global --primary token always matches the configured CTA color.
+    const primaryBg = branding.primary_button_bg || branding.primary_color;
+    if (primaryBg) {
+      const hsl = hexToHSL(primaryBg);
       if (hsl) {
         root.style.setProperty("--primary", hsl);
         root.style.setProperty("--ring", hsl);
@@ -53,8 +60,9 @@ const DynamicBranding = () => {
       }
     }
 
-    if (branding.secondary_color) {
-      const hsl = hexToHSL(branding.secondary_color);
+    const secondaryBg = branding.secondary_button_bg || branding.secondary_color;
+    if (secondaryBg) {
+      const hsl = hexToHSL(secondaryBg);
       if (hsl) {
         root.style.setProperty("--secondary", hsl);
         root.style.setProperty("--sidebar-accent", hsl);
@@ -76,11 +84,21 @@ const DynamicBranding = () => {
       }
     }
 
-    if (branding.button_text_color) {
-      const hsl = hexToHSL(branding.button_text_color);
+    const primaryFg = branding.primary_button_text || branding.button_text_color;
+    if (primaryFg) {
+      const hsl = hexToHSL(primaryFg);
       if (hsl) {
         root.style.setProperty("--primary-foreground", hsl);
         root.style.setProperty("--sidebar-primary-foreground", hsl);
+      }
+    }
+
+    const secondaryFg = branding.secondary_button_text || branding.button_text_color;
+    if (secondaryFg) {
+      const hsl = hexToHSL(secondaryFg);
+      if (hsl) {
+        root.style.setProperty("--secondary-foreground", hsl);
+        root.style.setProperty("--sidebar-accent-foreground", hsl);
       }
     }
   }, [settings, loading]);

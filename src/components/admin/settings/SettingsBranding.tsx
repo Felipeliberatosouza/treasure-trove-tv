@@ -19,11 +19,25 @@ const SettingsBranding = () => {
     background_color: "#09090f", slogan_color: "#6b7280",
     button_text_color: "#ffffff",
     use_text_logo: false,
+    primary_button_bg: "#6366f1",
+    primary_button_text: "#ffffff",
+    secondary_button_bg: "#1f2937",
+    secondary_button_text: "#ffffff",
   });
   const [saving, setSaving] = useState(false);
   const [applyToEmails, setApplyToEmails] = useState(false);
 
-  useEffect(() => { if (data) setForm(data); }, [data]);
+  useEffect(() => {
+    if (!data) return;
+    // Backfill legacy installs that don't yet have the 4 explicit button colors.
+    setForm({
+      ...data,
+      primary_button_bg: data.primary_button_bg || data.primary_color || "#6366f1",
+      primary_button_text: data.primary_button_text || data.button_text_color || "#ffffff",
+      secondary_button_bg: data.secondary_button_bg || data.secondary_color || "#1f2937",
+      secondary_button_text: data.secondary_button_text || data.button_text_color || "#ffffff",
+    });
+  }, [data]);
 
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -42,8 +56,8 @@ const SettingsBranding = () => {
         logo_url: form.logo_url || null,
         use_uploaded_logo: !!form.logo_url,
         heading_color: form.secondary_color,
-        button_color: form.primary_color,
-        button_text_color: form.button_text_color || "#ffffff",
+        button_color: form.primary_button_bg || form.primary_color,
+        button_text_color: form.primary_button_text || form.button_text_color || "#ffffff",
         link_color: form.primary_color,
         text_color: form.background_color,
         slogan_color: form.slogan_color,
@@ -182,25 +196,116 @@ const SettingsBranding = () => {
             <Input value={form.background_color} onChange={(e) => setForm({ ...form, background_color: e.target.value })} className="flex-1" />
           </div>
         </div>
+      </div>
+
+      {/* Buttons */}
+      <div className="space-y-3 rounded-lg border border-border p-4">
         <div>
-          <Label>Cor do Texto dos Botões</Label>
-          <div className="flex items-center gap-2">
-            <input
-              type="color"
-              value={form.button_text_color || "#ffffff"}
-              onChange={(e) => setForm({ ...form, button_text_color: e.target.value })}
-              className="w-10 h-10 rounded cursor-pointer border-0"
-            />
-            <Input
-              value={form.button_text_color || "#ffffff"}
-              onChange={(e) => setForm({ ...form, button_text_color: e.target.value })}
-              className="flex-1"
-              maxLength={7}
-            />
-          </div>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Cor da fonte exibida sobre os botões (CTAs) na plataforma e nos e-mails.
+          <h3 className="text-sm font-semibold">Botões</h3>
+          <p className="text-xs text-muted-foreground">
+            Em telas com dois botões (ex.: "Confirmar" + "Cancelar"), o principal usa a cor primária e o secundário usa a alternativa, garantindo contraste visual.
           </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Primary */}
+          <div className="space-y-2 rounded-md border border-border p-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Botão principal</p>
+            <div>
+              <Label className="text-xs">Cor de fundo</Label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={form.primary_button_bg || "#6366f1"}
+                  onChange={(e) => setForm({ ...form, primary_button_bg: e.target.value })}
+                  className="w-9 h-9 rounded cursor-pointer border-0"
+                />
+                <Input
+                  value={form.primary_button_bg || "#6366f1"}
+                  onChange={(e) => setForm({ ...form, primary_button_bg: e.target.value })}
+                  className="flex-1 text-xs"
+                  maxLength={7}
+                />
+              </div>
+            </div>
+            <div>
+              <Label className="text-xs">Cor do texto</Label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={form.primary_button_text || "#ffffff"}
+                  onChange={(e) => setForm({ ...form, primary_button_text: e.target.value })}
+                  className="w-9 h-9 rounded cursor-pointer border-0"
+                />
+                <Input
+                  value={form.primary_button_text || "#ffffff"}
+                  onChange={(e) => setForm({ ...form, primary_button_text: e.target.value })}
+                  className="flex-1 text-xs"
+                  maxLength={7}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Secondary */}
+          <div className="space-y-2 rounded-md border border-border p-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Botão secundário</p>
+            <div>
+              <Label className="text-xs">Cor de fundo</Label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={form.secondary_button_bg || "#1f2937"}
+                  onChange={(e) => setForm({ ...form, secondary_button_bg: e.target.value })}
+                  className="w-9 h-9 rounded cursor-pointer border-0"
+                />
+                <Input
+                  value={form.secondary_button_bg || "#1f2937"}
+                  onChange={(e) => setForm({ ...form, secondary_button_bg: e.target.value })}
+                  className="flex-1 text-xs"
+                  maxLength={7}
+                />
+              </div>
+            </div>
+            <div>
+              <Label className="text-xs">Cor do texto</Label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={form.secondary_button_text || "#ffffff"}
+                  onChange={(e) => setForm({ ...form, secondary_button_text: e.target.value })}
+                  className="w-9 h-9 rounded cursor-pointer border-0"
+                />
+                <Input
+                  value={form.secondary_button_text || "#ffffff"}
+                  onChange={(e) => setForm({ ...form, secondary_button_text: e.target.value })}
+                  className="flex-1 text-xs"
+                  maxLength={7}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Preview */}
+        <div>
+          <p className="text-xs text-muted-foreground mb-2">Pré-visualização</p>
+          <div className="flex flex-wrap gap-2 rounded-md bg-muted/30 p-3">
+            <button
+              type="button"
+              className="rounded-md px-4 py-2 text-sm font-semibold shadow-sm"
+              style={{ background: form.primary_button_bg || "#6366f1", color: form.primary_button_text || "#ffffff" }}
+            >
+              Confirmar
+            </button>
+            <button
+              type="button"
+              className="rounded-md px-4 py-2 text-sm font-semibold shadow-sm"
+              style={{ background: form.secondary_button_bg || "#1f2937", color: form.secondary_button_text || "#ffffff" }}
+            >
+              Cancelar
+            </button>
+          </div>
         </div>
       </div>
       <div className="flex items-start gap-3 rounded-lg border border-border bg-muted/30 p-3">

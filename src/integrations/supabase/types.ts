@@ -1217,6 +1217,7 @@ export type Database = {
           avatar_url: string | null
           bio: string | null
           birth_date: string | null
+          content_order: Json
           cpf: string | null
           created_at: string
           education: Json
@@ -1244,6 +1245,7 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           birth_date?: string | null
+          content_order?: Json
           cpf?: string | null
           created_at?: string
           education?: Json
@@ -1271,6 +1273,7 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           birth_date?: string | null
+          content_order?: Json
           cpf?: string | null
           created_at?: string
           education?: Json

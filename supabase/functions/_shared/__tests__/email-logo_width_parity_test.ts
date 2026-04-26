@@ -239,7 +239,10 @@ Deno.test(
       logoNaturalHeight: 672,
     });
     const attr = extractLogoWidthAttr(html);
-    const styleM = html.match(/style="[^"]*\bwidth:(\d+)px/);
+    // Atenção: o style também tem `max-width:320px`. Precisamos do `width:Xpx`
+    // que não seja parte de `max-width`. Usamos lookbehind negativo via
+    // âncora explícita por `;` ou início do style="...".
+    const styleM = html.match(/style="[^"]*(?:^|;)width:(\d+)px/);
     assert(attr !== null, "esperava atributo width");
     assert(styleM, "esperava style:width:Xpx");
     assertEquals(

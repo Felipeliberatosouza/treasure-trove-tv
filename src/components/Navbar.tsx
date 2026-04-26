@@ -131,11 +131,6 @@ const Navbar = () => {
     if (key === "agendaOutdated") return teacherAlerts.agendaOutdated;
     return false;
   };
-  const itemHasAlert = (item: MenuItem) => {
-    if (alertActive(item.alertKey)) return true;
-    if (item.children?.some((c) => alertActive(c.alertKey))) return true;
-    return false;
-  };
 
   useEffect(() => {
     if (searchOpen && searchInputRef.current) {

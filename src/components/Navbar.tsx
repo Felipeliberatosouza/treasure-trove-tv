@@ -199,7 +199,7 @@ const Navbar = () => {
     >
       <div className="flex items-center justify-between gap-3 px-4 py-3 md:px-12 lg:px-20">
         <Link to="/" className="relative flex items-center leading-none shrink-0">
-          {branding?.logo_url ? (
+          {branding?.logo_url && !branding?.use_text_logo ? (
             <img
               ref={logoRef}
               src={branding.logo_url}

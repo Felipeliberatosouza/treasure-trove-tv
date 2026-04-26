@@ -48,7 +48,7 @@ Deno.serve(async (req: Request) => {
     // Templates
     const { data: tpls } = await supabase
       .from('email_templates')
-      .select('template_key, subject, body_html, logo_url, show_social_footer, heading_color, button_color, link_color, text_color, font_family, use_uploaded_logo')
+      .select('template_key, subject, body_html, logo_url, show_social_footer, heading_color, button_color, button_text_color, link_color, text_color, font_family, use_uploaded_logo')
       .in('template_key', ['reengagement_student', 'reengagement_teacher'])
     const tplStudent = tpls?.find((t) => t.template_key === 'reengagement_student')
     const tplTeacher = tpls?.find((t) => t.template_key === 'reengagement_teacher')

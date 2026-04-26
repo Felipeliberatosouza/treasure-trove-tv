@@ -266,7 +266,7 @@ Deno.serve(async (req: Request) => {
         }
 
         const studentLogoUrl = tplStudent.logo_url || brandingData.logo_url || ''
-        const logoHtml = buildLogoHtml(studentLogoUrl, !!tplStudent.use_uploaded_logo, tplStudent.heading_color || '#dc2626')
+        const logoHtml = await buildLogoHtml(studentLogoUrl, !!tplStudent.use_uploaded_logo, tplStudent.heading_color || '#dc2626')
 
         const baseBody = (tplStudent.body_html && tplStudent.body_html.trim().length > 0)
           ? tplStudent.body_html
@@ -473,7 +473,7 @@ Deno.serve(async (req: Request) => {
         `
 
         const teacherLogoUrl = tplTeacher.logo_url || brandingData.logo_url || ''
-        const logoHtml = buildLogoHtml(teacherLogoUrl, !!tplTeacher.use_uploaded_logo, tplTeacher.heading_color || '#0891b2')
+        const logoHtml = await buildLogoHtml(teacherLogoUrl, !!tplTeacher.use_uploaded_logo, tplTeacher.heading_color || '#0891b2')
 
         const baseBody = (tplTeacher.body_html && tplTeacher.body_html.trim().length > 0)
           ? tplTeacher.body_html

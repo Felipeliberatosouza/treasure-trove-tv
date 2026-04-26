@@ -1115,6 +1115,24 @@ const SettingsEmailTemplates = () => {
                     maxLength={7}
                   />
             </div>
+              </div>
+              <div>
+                <Label className="text-xs">Cor do Slogan</Label>
+                <div className="flex gap-2 items-center">
+                  <input
+                    type="color"
+                    value={active.slogan_color || "#6b7280"}
+                    onChange={(e) => updateField("slogan_color", e.target.value)}
+                    className="w-8 h-8 rounded border border-border cursor-pointer"
+                  />
+                  <Input
+                    value={active.slogan_color || "#6b7280"}
+                    onChange={(e) => updateField("slogan_color", e.target.value)}
+                    className="flex-1 text-xs"
+                    maxLength={7}
+                  />
+                </div>
+              </div>
             <Button
               variant="outline"
               size="sm"

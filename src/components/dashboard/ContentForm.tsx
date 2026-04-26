@@ -990,7 +990,7 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
             type="file"
             accept="image/*"
             onChange={(e) => setThumbnailFile(e.target.files?.[0] || null)}
-            className="bg-secondary text-black text-xs file:text-black"
+            className="bg-secondary text-accent-foreground text-xs file:text-accent-foreground"
           />
           {thumbnailFile && (
             <button type="button" onClick={() => setThumbnailFile(null)} className="text-muted-foreground hover:text-destructive">
@@ -1011,7 +1011,7 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
             type="file"
             accept="image/*"
             onChange={(e) => setCarouselFile(e.target.files?.[0] || null)}
-            className="bg-secondary text-black text-xs file:text-black"
+            className="bg-secondary text-accent-foreground text-xs file:text-accent-foreground"
           />
           {carouselFile && (
             <button type="button" onClick={() => setCarouselFile(null)} className="text-muted-foreground hover:text-destructive">
@@ -1069,7 +1069,7 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
                 type="file"
                 accept="video/*"
                 onChange={(e) => setVideoFile(e.target.files?.[0] || null)}
-                className="bg-secondary text-black text-xs file:text-black"
+                className="bg-secondary text-accent-foreground text-xs file:text-accent-foreground"
               />
               {videoFile && (
                 <button type="button" onClick={() => setVideoFile(null)} className="text-muted-foreground hover:text-destructive">
@@ -1102,7 +1102,7 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
                 placeholder={cfg ? `Sugerido R$ ${cfg.price.toFixed(2)} · mín. R$ ${cfg.min_price.toFixed(2)}` : "Preço (R$)"}
                 value={priceRevisoes}
                 onChange={(e) => setPriceRevisoes(e.target.value)}
-                className="bg-secondary text-black placeholder:text-black/50 text-xs h-9 max-w-[220px]"
+                className="bg-secondary text-accent-foreground placeholder:text-accent-foreground/60 text-xs h-9 max-w-[220px]"
               />
               {cfg && (
                 <span className="text-[11px] text-muted-foreground">

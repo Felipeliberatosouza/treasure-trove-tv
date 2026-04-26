@@ -140,6 +140,7 @@ interface SimuladoMaterialProps {
   setQuestions: (q: QuizQuestion[]) => void;
   cfg?: MaterialPriceInfo;
   onGenerate?: () => Promise<void> | void;
+  onGenerateOne?: (existing: QuizQuestion[]) => Promise<QuizQuestion | null>;
   generating?: boolean;
   canGenerate?: boolean;
   questionMax?: number;
@@ -148,7 +149,8 @@ interface SimuladoMaterialProps {
   minOptions?: number;
 }
 
-export const SimuladoMaterial = ({ offered, setOffered, price, setPrice, questions, setQuestions, cfg, onGenerate, generating, canGenerate, questionMax = 200, optionMax = 200, minQuestions = 5, minOptions = 3 }: SimuladoMaterialProps) => {
+export const SimuladoMaterial = ({ offered, setOffered, price, setPrice, questions, setQuestions, cfg, onGenerate, onGenerateOne, generating, canGenerate, questionMax = 200, optionMax = 200, minQuestions = 5, minOptions = 3 }: SimuladoMaterialProps) => {
+  const [addingOne, setAddingOne] = useState(false);
   const updateQuestion = (idx: number, patch: Partial<QuizQuestion>) => {
     setQuestions(questions.map((q, i) => (i === idx ? { ...q, ...patch } : q)));
   };
@@ -173,7 +175,19 @@ export const SimuladoMaterial = ({ offered, setOffered, price, setPrice, questio
       }),
     );
   };
-  const addQuestion = () => {
+  const addQuestion = async () => {
+    if (onGenerateOne && canGenerate !== false) {
+      setAddingOne(true);
+      try {
+        const created = await onGenerateOne(questions);
+        if (created) {
+          setQuestions([...questions, created]);
+          return;
+        }
+      } finally {
+        setAddingOne(false);
+      }
+    }
     setQuestions([...questions, { question: "", options: Array(minOptions).fill(""), correct_index: 0 }]);
   };
   const removeQuestion = (idx: number) => {
@@ -251,8 +265,16 @@ export const SimuladoMaterial = ({ offered, setOffered, price, setPrice, questio
               </div>
             </div>
           ))}
-          <Button type="button" size="sm" variant="outline" className="gap-1" onClick={addQuestion}>
-            <Plus className="h-3.5 w-3.5" /> Adicionar questão
+          <Button type="button" size="sm" variant="outline" className="gap-1" onClick={addQuestion} disabled={addingOne}>
+            {addingOne ? (
+              <>
+                <Loader2 className="h-3.5 w-3.5 animate-spin" /> Gerando com IA...
+              </>
+            ) : (
+              <>
+                <Plus className="h-3.5 w-3.5" /> Adicionar questão{onGenerateOne ? " (IA)" : ""}
+              </>
+            )}
           </Button>
         </div>
       )}

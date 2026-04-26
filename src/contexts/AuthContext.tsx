@@ -118,13 +118,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // Invoke with a single silent retry on transient 5xx / network errors
       let data: any = null;
       let error: any = null;
-      for (let attempt = 0; attempt < 2; attempt++) {
-        const res = await supabase.functions.invoke("check-subscription");
-        data = res.data;
-        error = res.error;
+      // Retry up to 3 times with exponential backoff for transient runtime
+      // errors (e.g. SUPABASE_EDGE_RUNTIME_ERROR / 503 during cold start).
+      for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+          const res = await supabase.functions.invoke("check-subscription");
+          data = res.data;
+          error = res.error;
+        } catch (invokeErr) {
+          // FunctionsHttpError can throw synchronously on 5xx — treat as transient
+          error = invokeErr;
+        }
         if (!error) break;
-        // Retry once after a short delay for transient runtime errors
-        await new Promise((r) => setTimeout(r, 800));
+        await new Promise((r) => setTimeout(r, 600 * Math.pow(2, attempt)));
       }
       if (error) {
         // Transient — log as warning, do not spam console errors

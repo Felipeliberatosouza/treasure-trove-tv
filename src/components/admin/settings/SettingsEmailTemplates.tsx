@@ -26,6 +26,7 @@ interface EmailTemplate {
   link_color: string;
   heading_color: string;
   button_color: string;
+  button_text_color: string;
   slogan_color: string;
   font_family: string;
   use_uploaded_logo: boolean;

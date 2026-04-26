@@ -38,7 +38,7 @@ function extractLogoWidthAttr(html: string): number | null {
   return m ? Number(m[1]) : null;
 }
 
-/** Lê o `font-size:Xpx` do slogan (div com `margin-top:-12px;color:#6b7280`). */
+/** Lê o `font-size:Xpx` do slogan (div com `margin-top:-22px;color:#6b7280`). */
 function extractSloganFontSize(html: string): number | null {
   // Procura DIVs com a assinatura visual do slogan.
   const re = /<div\s+style="[^"]*color:#6b7280;\s*font-size:([\d.]+)px[^"]*"[^>]*>/;

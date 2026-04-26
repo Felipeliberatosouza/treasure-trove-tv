@@ -80,6 +80,7 @@ Deno.serve(async (req: Request) => {
       logoUrl: string,
       useUploaded: boolean,
       headingColor: string,
+      sloganColor: string,
     ) => {
       const dims = useUploaded ? await getLogoDims(logoUrl) : null
       return buildEmailLogoHtml({
@@ -88,6 +89,7 @@ Deno.serve(async (req: Request) => {
         platformName,
         slogan: brandingData.slogan,
         headingColor,
+        sloganColor,
         logoNaturalWidth: dims?.width,
         logoNaturalHeight: dims?.height,
       })
@@ -266,7 +268,12 @@ Deno.serve(async (req: Request) => {
         }
 
         const studentLogoUrl = tplStudent.logo_url || brandingData.logo_url || ''
-        const logoHtml = await buildLogoHtml(studentLogoUrl, !!tplStudent.use_uploaded_logo, tplStudent.heading_color || '#dc2626')
+        const logoHtml = await buildLogoHtml(
+          studentLogoUrl,
+          !!tplStudent.use_uploaded_logo,
+          tplStudent.heading_color || '#dc2626',
+          tplStudent.slogan_color || brandingData.slogan_color || '#6b7280',
+        )
 
         const baseBody = (tplStudent.body_html && tplStudent.body_html.trim().length > 0)
           ? tplStudent.body_html
@@ -473,7 +480,12 @@ Deno.serve(async (req: Request) => {
         `
 
         const teacherLogoUrl = tplTeacher.logo_url || brandingData.logo_url || ''
-        const logoHtml = await buildLogoHtml(teacherLogoUrl, !!tplTeacher.use_uploaded_logo, tplTeacher.heading_color || '#0891b2')
+        const logoHtml = await buildLogoHtml(
+          teacherLogoUrl,
+          !!tplTeacher.use_uploaded_logo,
+          tplTeacher.heading_color || '#0891b2',
+          tplTeacher.slogan_color || brandingData.slogan_color || '#6b7280',
+        )
 
         const baseBody = (tplTeacher.body_html && tplTeacher.body_html.trim().length > 0)
           ? tplTeacher.body_html

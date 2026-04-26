@@ -36,9 +36,9 @@ interface PriceHeaderProps {
 const PriceHeader = ({ label, offered, setOffered, price, setPrice, cfg }: PriceHeaderProps) => (
   <div className="rounded-md border border-border/60 bg-secondary/40 p-3 mb-3">
     <div className="flex items-center justify-between gap-3 mb-2">
-      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{label}</p>
+        <p className="text-xs font-semibold uppercase tracking-wide text-accent-foreground">{label}</p>
       <div className="flex items-center gap-2">
-        <Label htmlFor={`offer-${label}`} className="text-xs text-muted-foreground">
+        <Label htmlFor={`offer-${label}`} className="text-xs text-accent-foreground">
           Oferecer este serviço
         </Label>
         <Switch id={`offer-${label}`} checked={offered} onCheckedChange={setOffered} />
@@ -46,7 +46,7 @@ const PriceHeader = ({ label, offered, setOffered, price, setPrice, cfg }: Price
     </div>
     {offered && (
       <div className="flex items-center gap-2">
-        <DollarSign className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+        <DollarSign className="h-3.5 w-3.5 text-accent-foreground shrink-0" />
         <Input
           type="number"
           step="0.01"
@@ -54,10 +54,10 @@ const PriceHeader = ({ label, offered, setOffered, price, setPrice, cfg }: Price
           placeholder={cfg ? `Sugerido R$ ${cfg.price.toFixed(2)} · mín. R$ ${cfg.min_price.toFixed(2)}` : "Preço (R$)"}
           value={price}
           onChange={(e) => setPrice(e.target.value)}
-          className="bg-background text-xs h-9 max-w-[200px]"
+          className="bg-secondary text-accent-foreground placeholder:text-accent-foreground/60 text-xs h-9 max-w-[200px]"
         />
         {cfg && (
-          <span className="text-[11px] text-muted-foreground">
+          <span className="text-[11px] text-accent-foreground">
             sugerido R$ {cfg.price.toFixed(2)} · você recebe {100 - (cfg.platform_percentage || 0)}%
           </span>
         )}
@@ -119,7 +119,7 @@ export const ResumoMaterial = ({ offered, setOffered, price, setPrice, text, set
           maxLength={textMax}
           onChange={(e) => setText(e.target.value)}
           rows={4}
-          className="bg-secondary text-black placeholder:text-black/50 text-sm"
+          className="bg-secondary text-accent-foreground placeholder:text-accent-foreground/60 text-sm"
           placeholder={`Resumo da aula em até ${textMax} caracteres`}
         />
         <p className="text-[11px] text-muted-foreground mt-1 text-right">{text.length}/{textMax}</p>
@@ -200,7 +200,7 @@ export const SimuladoMaterial = ({ offered, setOffered, price, setPrice, questio
             {onGenerate && " Use \"Gerar com IA\" para criar um rascunho a partir do título e descrição."}
           </p>
           {questions.map((q, qi) => (
-            <div key={qi} className="rounded-md border border-border/60 bg-secondary/30 p-3 space-y-2">
+            <div key={qi} className="rounded-md border border-border/60 bg-secondary/30 p-3 space-y-2 text-accent-foreground">
               <div className="flex items-start gap-2">
                 <span className="text-xs font-semibold text-primary shrink-0 mt-1">Q{qi + 1}</span>
                 <div className="flex-1">
@@ -209,10 +209,10 @@ export const SimuladoMaterial = ({ offered, setOffered, price, setPrice, questio
                     maxLength={questionMax}
                     onChange={(e) => updateQuestion(qi, { question: e.target.value })}
                     rows={2}
-                    className="bg-background text-sm"
+                    className="bg-secondary text-accent-foreground placeholder:text-accent-foreground/60 text-sm"
                     placeholder="Pergunta"
                   />
-                  <p className="text-[10px] text-muted-foreground text-right">{q.question.length}/{questionMax}</p>
+                  <p className="text-[10px] text-accent-foreground text-right">{q.question.length}/{questionMax}</p>
                 </div>
                 {questions.length > minQuestions && (
                   <Button type="button" size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => removeQuestion(qi)}>
@@ -235,7 +235,7 @@ export const SimuladoMaterial = ({ offered, setOffered, price, setPrice, questio
                       value={opt}
                       maxLength={optionMax}
                       onChange={(e) => updateOption(qi, oi, e.target.value)}
-                      className="bg-background text-xs h-8"
+                      className="bg-secondary text-accent-foreground placeholder:text-accent-foreground/60 text-xs h-8"
                       placeholder={`Alternativa ${String.fromCharCode(65 + oi)}`}
                     />
                     {q.options.length > minOptions && (
@@ -307,7 +307,7 @@ export const TopQuestionsMaterial = ({ offered, setOffered, price, setPrice, que
             Mínimo de {minQuestions} perguntas abertas com resposta textual. Pergunta: até {questionMax} caracteres · Resposta: até {answerMax} caracteres.
           </p>
           {questions.map((q, qi) => (
-            <div key={qi} className="rounded-md border border-border/60 bg-secondary/30 p-3 space-y-2">
+            <div key={qi} className="rounded-md border border-border/60 bg-secondary/30 p-3 space-y-2 text-accent-foreground">
               <div className="flex items-start gap-2">
                 <span className="text-xs font-semibold text-primary shrink-0 mt-1">Q{qi + 1}</span>
                 <div className="flex-1 space-y-1.5">
@@ -317,10 +317,10 @@ export const TopQuestionsMaterial = ({ offered, setOffered, price, setPrice, que
                       maxLength={questionMax}
                       onChange={(e) => update(qi, { question: e.target.value })}
                       rows={2}
-                      className="bg-background text-sm"
+                      className="bg-secondary text-accent-foreground placeholder:text-accent-foreground/60 text-sm"
                       placeholder="Pergunta aberta"
                     />
-                    <p className="text-[10px] text-muted-foreground text-right">{q.question.length}/{questionMax}</p>
+                    <p className="text-[10px] text-accent-foreground text-right">{q.question.length}/{questionMax}</p>
                   </div>
                   <div>
                     <SpellCheckedTextarea
@@ -328,10 +328,10 @@ export const TopQuestionsMaterial = ({ offered, setOffered, price, setPrice, que
                       maxLength={answerMax}
                       onChange={(e) => update(qi, { answer: e.target.value })}
                       rows={2}
-                      className="bg-background text-sm"
+                      className="bg-secondary text-accent-foreground placeholder:text-accent-foreground/60 text-sm"
                       placeholder="Resposta textual"
                     />
-                    <p className="text-[10px] text-muted-foreground text-right">{q.answer.length}/{answerMax}</p>
+                    <p className="text-[10px] text-accent-foreground text-right">{q.answer.length}/{answerMax}</p>
                   </div>
                 </div>
                 {questions.length > minQuestions && (
@@ -409,7 +409,7 @@ export const ColinhaMaterial = ({ offered, setOffered, price, setPrice, bullets,
                 value={b}
                 maxLength={bulletMax}
                 onChange={(e) => update(i, e.target.value)}
-            className="bg-secondary text-black placeholder:text-black/50 text-xs h-9"
+                    className="bg-secondary text-accent-foreground placeholder:text-accent-foreground/60 text-xs h-9"
                 placeholder={`Bullet ${i + 1}`}
               />
               {bullets.length > minBullets && (

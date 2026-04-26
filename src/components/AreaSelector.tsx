@@ -60,7 +60,7 @@ const AreaSelector = ({ selected, onChange, max = 3 }: AreaSelectorProps) => {
             placeholder="Buscar área..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-8 h-9 bg-secondary"
+            className="pl-8 h-9 bg-secondary text-accent-foreground placeholder:text-accent-foreground/60"
           />
         </div>
       )}

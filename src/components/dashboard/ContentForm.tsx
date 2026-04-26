@@ -913,12 +913,12 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
       <div>
         <label className="text-sm text-muted-foreground mb-1 block">Tipo de aula *</label>
         <Select value={videoType} onValueChange={setVideoType}>
-          <SelectTrigger className="bg-secondary text-black data-[placeholder]:text-black [&_svg]:text-black [&>span]:text-black">
+          <SelectTrigger className="bg-secondary text-accent-foreground data-[placeholder]:text-accent-foreground [&_svg]:text-accent-foreground [&>span]:text-accent-foreground">
             <SelectValue placeholder="Selecione o tipo" />
           </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="revisao">Revisão</SelectItem>
-            <SelectItem value="resolucao_prova">Resolução de Questões de Prova</SelectItem>
+          <SelectContent className="bg-secondary text-accent-foreground">
+            <SelectItem className="text-accent-foreground" value="revisao">Revisão</SelectItem>
+            <SelectItem className="text-accent-foreground" value="resolucao_prova">Resolução de Questões de Prova</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -930,7 +930,7 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
           value={title}
           maxLength={TITLE_MAX}
           onChange={(e) => setTitle(e.target.value)}
-          className="bg-secondary text-black placeholder:text-black/50"
+          className="bg-secondary text-accent-foreground placeholder:text-accent-foreground/60"
           placeholder="Ex: Revisão de Direito Constitucional"
         />
         <p className="text-[11px] text-muted-foreground text-right mt-0.5">
@@ -970,7 +970,7 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
           value={description}
           maxLength={DESCRIPTION_MAX}
           onChange={(e) => setDescription(e.target.value)}
-          className="bg-secondary text-black placeholder:text-black/50"
+          className="bg-secondary text-accent-foreground placeholder:text-accent-foreground/60"
           rows={3}
           placeholder="Resumo curto sobre o que será abordado"
         />
@@ -990,7 +990,7 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
             type="file"
             accept="image/*"
             onChange={(e) => setThumbnailFile(e.target.files?.[0] || null)}
-            className="bg-secondary text-black text-xs file:text-black"
+            className="bg-secondary text-accent-foreground text-xs file:text-accent-foreground"
           />
           {thumbnailFile && (
             <button type="button" onClick={() => setThumbnailFile(null)} className="text-muted-foreground hover:text-destructive">
@@ -1011,7 +1011,7 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
             type="file"
             accept="image/*"
             onChange={(e) => setCarouselFile(e.target.files?.[0] || null)}
-            className="bg-secondary text-black text-xs file:text-black"
+            className="bg-secondary text-accent-foreground text-xs file:text-accent-foreground"
           />
           {carouselFile && (
             <button type="button" onClick={() => setCarouselFile(null)} className="text-muted-foreground hover:text-destructive">
@@ -1069,7 +1069,7 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
                 type="file"
                 accept="video/*"
                 onChange={(e) => setVideoFile(e.target.files?.[0] || null)}
-                className="bg-secondary text-black text-xs file:text-black"
+                className="bg-secondary text-accent-foreground text-xs file:text-accent-foreground"
               />
               {videoFile && (
                 <button type="button" onClick={() => setVideoFile(null)} className="text-muted-foreground hover:text-destructive">
@@ -1102,7 +1102,7 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
                 placeholder={cfg ? `Sugerido R$ ${cfg.price.toFixed(2)} · mín. R$ ${cfg.min_price.toFixed(2)}` : "Preço (R$)"}
                 value={priceRevisoes}
                 onChange={(e) => setPriceRevisoes(e.target.value)}
-                className="bg-secondary text-black placeholder:text-black/50 text-xs h-9 max-w-[220px]"
+                className="bg-secondary text-accent-foreground placeholder:text-accent-foreground/60 text-xs h-9 max-w-[220px]"
               />
               {cfg && (
                 <span className="text-[11px] text-muted-foreground">

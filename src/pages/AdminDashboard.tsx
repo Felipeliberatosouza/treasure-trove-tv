@@ -26,6 +26,7 @@ import AdminCommitmentRefundsTab from "@/components/admin/AdminCommitmentRefunds
 import AdminCancellationsTab from "@/components/admin/AdminCancellationsTab";
 import AdminUsageHistoryTab from "@/components/admin/AdminUsageHistoryTab";
 import AdminSupportTicketsTab from "@/components/admin/AdminSupportTicketsTab";
+import AdminProfileApprovalsTab from "@/components/admin/AdminProfileApprovalsTab";
 
 const tabs = [
   { id: "overview", label: "Visão Geral", icon: LayoutDashboard },
@@ -47,6 +48,7 @@ const tabs = [
   // Hidden tabs (acessadas via menu hambúrguer / deep-link, não exibidas no menu lateral)
   { id: "content", label: "Aprovação de Conteúdos", icon: Video, hidden: true },
   { id: "doubts", label: "Aprovação de Dúvidas", icon: HelpCircle, hidden: true },
+  { id: "profile-approvals", label: "Aprovação de Páginas de Professores", icon: UserCog, hidden: true },
   { id: "payments", label: "Pagamento de Professores (legado)", icon: DollarSign, hidden: true },
   { id: "subscriptions", label: "Vencimento de Assinaturas", icon: CalendarClock, hidden: true },
   { id: "emails", label: "Monitoramento de E-mails", icon: Mail, hidden: true },
@@ -128,6 +130,7 @@ const AdminDashboard = () => {
             {activeTab === "audit" && <AdminAuditLogsTab />}
             {activeTab === "login-attempts" && <AdminLoginAttemptsTab />}
             {activeTab === "support-tickets" && <AdminSupportTicketsTab />}
+            {activeTab === "profile-approvals" && <AdminProfileApprovalsTab />}
             {activeTab === "settings" && <AdminSettingsTab />}
           </motion.div>
         </div>

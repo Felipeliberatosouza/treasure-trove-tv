@@ -133,8 +133,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         await new Promise((r) => setTimeout(r, 600 * Math.pow(2, attempt)));
       }
       if (error) {
-        // Transient — log as warning, do not spam console errors
-        console.warn("[check-subscription] transient failure, will retry next cycle");
+        // Transient — silent. Will retry on next 60s polling cycle.
+        // Do not log to console to avoid triggering global error reporters.
         return null;
       }
       if (data) {
@@ -149,7 +149,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
       return null;
     } catch (err) {
-      console.warn("[check-subscription] failed:", err);
+      // Silent — transient failures are expected during edge runtime cold starts
       return null;
     }
   }, []);

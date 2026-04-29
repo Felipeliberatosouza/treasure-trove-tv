@@ -423,12 +423,17 @@ const VideoRecorder = ({
   return (
     <div className="space-y-3">
       <div className="relative rounded-lg overflow-hidden bg-black aspect-video max-w-lg">
-        {/* Live camera feed */}
+        {/* Live camera feed (oculto: alimenta o canvas) */}
         <video
           ref={videoRef}
-          className={`w-full h-full object-cover ${state === "preview" || state === "processing" ? "hidden" : ""}`}
+          className="hidden"
           playsInline
           muted
+        />
+        {/* Canvas com filtros de luminosidade aplicados (também é o que é gravado) */}
+        <canvas
+          ref={liveCanvasRef}
+          className={`w-full h-full object-cover ${state === "preview" || state === "processing" ? "hidden" : ""}`}
         />
 
         {/* Preview of recorded video */}

@@ -701,7 +701,7 @@ const VideoRecorder = ({
                 size="sm"
                 variant="secondary"
                 className="h-7 px-2 text-xs gap-1"
-                onClick={applyAutoLight}
+                onClick={() => applyAutoLight(false)}
                 title="Sugere valores com base na iluminação atual da câmera"
               >
                 <Sparkles className="h-3 w-3" /> Auto

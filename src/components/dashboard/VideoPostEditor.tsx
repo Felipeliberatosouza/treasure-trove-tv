@@ -222,9 +222,72 @@ const VideoPostEditor = ({ sourceBlob, onCancel, onApply }: VideoPostEditorProps
     autoLightAdjustRef.current = { b, c: c_ };
   }, []);
 
+  // Carrega detector de rosto quando o modo auto for ativado
+  useEffect(() => {
+    if (zoomMode !== "auto") return;
+    if (faceDetectorRef.current) return;
+    let cancelled = false;
+    loadFaceDetector()
+      .then((FaceDetection) => {
+        if (cancelled) return;
+        const fd = new FaceDetection({
+          locateFile: (file: string) =>
+            `https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/${file}`,
+        });
+        fd.setOptions({ model: "short", minDetectionConfidence: 0.55 });
+        fd.onResults((results: any) => {
+          const dets = results?.detections;
+          if (dets && dets.length > 0) {
+            // Pega o rosto de maior área
+            let best = dets[0];
+            let bestArea = 0;
+            for (const d of dets) {
+              const bb = d.boundingBox;
+              const area = bb.width * bb.height;
+              if (area > bestArea) {
+                bestArea = area;
+                best = d;
+              }
+            }
+            const bb = best.boundingBox;
+            // MediaPipe retorna cx/cy normalizados (centro) e width/height normalizados
+            const cx = bb.xCenter ?? bb.x + bb.width / 2;
+            const cy = bb.yCenter ?? bb.y + bb.height / 2;
+            const size = Math.max(bb.width, bb.height);
+            lastFaceBoxRef.current = { cx, cy, size };
+            faceLossFramesRef.current = 0;
+            if (!autoTrackRef.current.hasFace) setFaceDetected(true);
+            autoTrackRef.current.hasFace = true;
+          } else {
+            faceLossFramesRef.current += 1;
+            if (faceLossFramesRef.current > 30) {
+              lastFaceBoxRef.current = null;
+              if (autoTrackRef.current.hasFace) setFaceDetected(false);
+              autoTrackRef.current.hasFace = false;
+            }
+          }
+        });
+        faceDetectorRef.current = fd;
+      })
+      .catch(() => {
+        toast.error("Não foi possível carregar o detector de rosto. Usando zoom centralizado.");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [zoomMode]);
+
   // Interpola keyframes para o tempo atual
   const interpolateZoom = useCallback(
     (t: number): { scale: number; cx: number; cy: number } => {
+      if (zoomMode === "auto") {
+        // Usa o tracking suavizado calculado no renderFrame
+        return {
+          scale: autoTrackRef.current.scale,
+          cx: autoTrackRef.current.cx,
+          cy: autoTrackRef.current.cy,
+        };
+      }
       if (zoomMode !== "manual" || keyframes.length === 0) {
         return { scale: 1, cx: 0.5, cy: 0.5 };
       }

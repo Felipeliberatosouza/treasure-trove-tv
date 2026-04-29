@@ -19,6 +19,8 @@ import {
   Loader2,
   X,
   Check,
+  Crosshair,
+  RefreshCcw,
 } from "lucide-react";
 
 /**
@@ -124,6 +126,11 @@ const VideoPostEditor = ({ sourceBlob, onCancel, onApply }: VideoPostEditorProps
   const [faceDetected, setFaceDetected] = useState(false);
   // Suavização: 0 = muito suave/lento, 100 = responde imediatamente
   const [autoSmoothing, setAutoSmoothing] = useState(40);
+  // Calibração de enquadramento
+  // faceTargetSize: tamanho desejado do rosto em relação à altura do quadro (0.15..0.6)
+  // faceMargin: margem extra ao redor do rosto (0..50%) — quanto maior, mais "ar" ao redor
+  const [faceTargetSize, setFaceTargetSize] = useState(35); // %
+  const [faceMargin, setFaceMargin] = useState(20); // %
   // Refs para o loop (sem causar re-render)
   const autoTrackRef = useRef({ cx: 0.5, cy: 0.5, scale: 1, hasFace: false });
   const faceDetectorRef = useRef<any>(null);
@@ -133,6 +140,32 @@ const VideoPostEditor = ({ sourceBlob, onCancel, onApply }: VideoPostEditorProps
   useEffect(() => { autoIntensityRef.current = autoZoomIntensity; }, [autoZoomIntensity]);
   const autoSmoothingRef = useRef(40);
   useEffect(() => { autoSmoothingRef.current = autoSmoothing; }, [autoSmoothing]);
+  const faceTargetSizeRef = useRef(35);
+  useEffect(() => { faceTargetSizeRef.current = faceTargetSize; }, [faceTargetSize]);
+  const faceMarginRef = useRef(20);
+  useEffect(() => { faceMarginRef.current = faceMargin; }, [faceMargin]);
+
+  // Calibra usando o rosto detectado no frame atual: define o tamanho-alvo
+  // como o tamanho atualmente medido, para que o enquadramento "desejado"
+  // corresponda à distância em que o professor está agora.
+  const calibrateFraming = () => {
+    const fb = lastFaceBoxRef.current;
+    if (!fb) {
+      toast.error("Nenhum rosto detectado. Posicione-se em frente à câmera e tente novamente.");
+      return;
+    }
+    const detectedPct = Math.round(Math.max(0.15, Math.min(0.6, fb.size)) * 100);
+    setFaceTargetSize(detectedPct);
+    toast.success(`Enquadramento calibrado · rosto-alvo ${detectedPct}%`, {
+      description: "O zoom automático passará a manter este tamanho de rosto.",
+    });
+  };
+
+  const resetFramingCalibration = () => {
+    setFaceTargetSize(35);
+    setFaceMargin(20);
+    toast.info("Calibração de enquadramento redefinida.");
+  };
 
   // Auto-light cache
   const autoLightAdjustRef = useRef<{ b: number; c: number } | null>(null);
@@ -361,9 +394,12 @@ const VideoPostEditor = ({ sourceBlob, onCancel, onApply }: VideoPostEditorProps
       const intensity = autoIntensityRef.current / 100; // 0..1
       if (lastFaceBoxRef.current) {
         const fb = lastFaceBoxRef.current;
-        // Zoom alvo: rosto pequeno => mais zoom. Tamanho do rosto ideal ~ 0.35 da altura
-        const targetSize = 0.35;
-        const ratio = targetSize / Math.max(0.05, fb.size);
+        // Zoom alvo: rosto pequeno => mais zoom.
+        // Tamanho do rosto ideal e margem são configuráveis (calibração).
+        const targetSize = faceTargetSizeRef.current / 100; // 0.15..0.60
+        // Margem reduz o zoom efetivo, deixando "ar" ao redor do rosto.
+        const marginFactor = 1 + faceMarginRef.current / 100; // 1.0..1.5
+        const ratio = targetSize / (Math.max(0.05, fb.size) * marginFactor);
         // Limitado por intensidade
         const maxScale = 1 + intensity * 1.5; // até 2.5x
         const targetScale = Math.max(1, Math.min(maxScale, ratio));
@@ -925,6 +961,75 @@ const VideoPostEditor = ({ sourceBlob, onCancel, onApply }: VideoPostEditorProps
                   <p className="text-[10px] text-muted-foreground">
                     0% = movimento bem lento (cinematográfico) · 100% = acompanha o rosto instantaneamente.
                   </p>
+                </div>
+                <div className="rounded-md border border-dashed border-border bg-muted/30 p-2 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs font-medium flex items-center gap-1">
+                      <Crosshair className="h-3.5 w-3.5 text-primary" />
+                      Calibração de enquadramento
+                    </Label>
+                    <span className="text-[10px] text-muted-foreground">
+                      detectado: {lastFaceBoxRef.current ? `${Math.round(lastFaceBoxRef.current.size * 100)}%` : "—"}
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground">
+                    Ajuste o tamanho ideal do rosto e a margem ao redor para melhorar o rastreamento em diferentes distâncias da câmera.
+                  </p>
+                  <div className="space-y-1">
+                    <Label className="text-[11px]">
+                      Tamanho mínimo do rosto: {faceTargetSize}%{" "}
+                      <span className="text-muted-foreground">
+                        ({faceTargetSize < 25 ? "longe" : faceTargetSize < 40 ? "médio" : "perto"})
+                      </span>
+                    </Label>
+                    <Slider
+                      value={[faceTargetSize]}
+                      min={15}
+                      max={60}
+                      step={1}
+                      onValueChange={([v]) => setFaceTargetSize(v)}
+                    />
+                    <p className="text-[10px] text-muted-foreground">
+                      Quanto maior, mais o sistema aproxima até o rosto preencher esse % da altura do quadro.
+                    </p>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-[11px]">
+                      Margem ao redor: {faceMargin}%{" "}
+                      <span className="text-muted-foreground">
+                        ({faceMargin < 10 ? "justo" : faceMargin < 30 ? "equilibrado" : "amplo"})
+                      </span>
+                    </Label>
+                    <Slider
+                      value={[faceMargin]}
+                      min={0}
+                      max={50}
+                      step={1}
+                      onValueChange={([v]) => setFaceMargin(v)}
+                    />
+                    <p className="text-[10px] text-muted-foreground">
+                      Espaço extra ao redor do rosto para evitar enquadramentos apertados demais.
+                    </p>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      className="flex-1 h-7 text-xs gap-1"
+                      onClick={calibrateFraming}
+                    >
+                      <Crosshair className="h-3 w-3" /> Calibrar com rosto atual
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-7 text-xs gap-1"
+                      onClick={resetFramingCalibration}
+                      title="Restaurar valores padrão"
+                    >
+                      <RefreshCcw className="h-3 w-3" />
+                    </Button>
+                  </div>
                 </div>
                 <div className="text-[10px] text-muted-foreground space-y-0.5 pt-1 border-t">
                   <p>• O detector encontra seu rosto a cada frame e ajusta centro + nível de zoom em tempo real.</p>

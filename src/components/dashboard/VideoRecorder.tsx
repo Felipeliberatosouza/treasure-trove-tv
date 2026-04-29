@@ -719,6 +719,41 @@ const VideoRecorder = ({
           <p className="text-[10px] text-muted-foreground">
             Use <strong>Auto</strong> para sugerir valores conforme a iluminação detectada, ou ajuste manualmente. Tudo é gravado no vídeo final.
           </p>
+          <div className="rounded-md border border-dashed border-border bg-muted/30 p-2 space-y-2">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-3.5 w-3.5 text-primary" />
+                <Label htmlFor="auto-cont" className="text-xs font-medium cursor-pointer">
+                  Auto contínuo
+                </Label>
+                {autoContinuous && (
+                  <span className="inline-flex items-center gap-1 text-[10px] text-primary">
+                    <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+                    ativo
+                  </span>
+                )}
+              </div>
+              <Switch
+                id="auto-cont"
+                checked={autoContinuous}
+                onCheckedChange={setAutoContinuous}
+              />
+            </div>
+            <p className="text-[10px] text-muted-foreground">
+              Reanalisa a iluminação a cada poucos segundos e ajusta automaticamente os valores enquanto você grava.
+            </p>
+            <div className="space-y-1">
+              <Label className="text-[10px]">Intervalo: {autoIntervalSec}s</Label>
+              <Slider
+                value={[autoIntervalSec]}
+                min={2}
+                max={20}
+                step={1}
+                onValueChange={([v]) => setAutoIntervalSec(v)}
+                disabled={!autoContinuous}
+              />
+            </div>
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
             <div className="space-y-1">
               <Label className="text-xs">Brilho: {brightness}%</Label>

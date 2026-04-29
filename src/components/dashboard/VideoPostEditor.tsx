@@ -367,14 +367,14 @@ const VideoPostEditor = ({ sourceBlob, onCancel, onApply }: VideoPostEditorProps
         // Limitado por intensidade
         const maxScale = 1 + intensity * 1.5; // até 2.5x
         const targetScale = Math.max(1, Math.min(maxScale, ratio));
-        // Suavização (lerp com fator baixo)
-        const lerp = 0.08;
+        // Suavização configurável: 0% => 0.02 (muito suave), 100% => 0.4 (rápido)
+        const lerp = 0.02 + (autoSmoothingRef.current / 100) * 0.38;
         autoTrackRef.current.scale += (targetScale - autoTrackRef.current.scale) * lerp;
         autoTrackRef.current.cx += (fb.cx - autoTrackRef.current.cx) * lerp;
         autoTrackRef.current.cy += (fb.cy - autoTrackRef.current.cy) * lerp;
       } else {
-        // Sem rosto: volta para enquadramento neutro suavemente
-        const lerp = 0.05;
+        // Sem rosto: volta para enquadramento neutro (sempre suave, ~ metade do lerp ativo)
+        const lerp = 0.02 + (autoSmoothingRef.current / 100) * 0.18;
         autoTrackRef.current.scale += (1 - autoTrackRef.current.scale) * lerp;
         autoTrackRef.current.cx += (0.5 - autoTrackRef.current.cx) * lerp;
         autoTrackRef.current.cy += (0.5 - autoTrackRef.current.cy) * lerp;

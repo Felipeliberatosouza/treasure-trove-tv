@@ -120,6 +120,15 @@ const VideoPostEditor = ({ sourceBlob, onCancel, onApply }: VideoPostEditorProps
   const [currentScale, setCurrentScale] = useState(1);
   const [currentCx, setCurrentCx] = useState(0.5);
   const [currentCy, setCurrentCy] = useState(0.5);
+  const [autoZoomIntensity, setAutoZoomIntensity] = useState(60); // 0..100
+  const [faceDetected, setFaceDetected] = useState(false);
+  // Refs para o loop (sem causar re-render)
+  const autoTrackRef = useRef({ cx: 0.5, cy: 0.5, scale: 1, hasFace: false });
+  const faceDetectorRef = useRef<any>(null);
+  const lastFaceBoxRef = useRef<{ cx: number; cy: number; size: number } | null>(null);
+  const faceLossFramesRef = useRef(0);
+  const autoIntensityRef = useRef(60);
+  useEffect(() => { autoIntensityRef.current = autoZoomIntensity; }, [autoZoomIntensity]);
 
   // Auto-light cache
   const autoLightAdjustRef = useRef<{ b: number; c: number } | null>(null);

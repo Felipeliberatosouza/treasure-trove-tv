@@ -568,6 +568,46 @@ const VideoRecorder = ({
         )}
       </div>
 
+      {/* Painel de luminosidade ao vivo (visível antes/durante a gravação) */}
+      {(state === "idle" || state === "countdown" || state === "recording") && (
+        <div className="rounded-lg border bg-card p-3 max-w-lg space-y-2">
+          <div className="flex items-center justify-between">
+            <h4 className="text-sm font-semibold flex items-center gap-1">
+              <Sun className="h-4 w-4 text-primary" /> Ajuste de luminosidade ao vivo
+            </h4>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-7 px-2 text-xs gap-1"
+              onClick={resetLightAdjustments}
+            >
+              <RefreshCcw className="h-3 w-3" /> Redefinir
+            </Button>
+          </div>
+          <p className="text-[10px] text-muted-foreground">
+            Os ajustes serão aplicados ao vídeo gravado, sem precisar editar depois.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+            <div className="space-y-1">
+              <Label className="text-xs">Brilho: {brightness}%</Label>
+              <Slider value={[brightness]} min={50} max={150} step={1} onValueChange={([v]) => setBrightness(v)} />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Exposição: {exposure > 0 ? `+${exposure}` : exposure}</Label>
+              <Slider value={[exposure]} min={-50} max={50} step={1} onValueChange={([v]) => setExposure(v)} />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Contraste: {contrast}%</Label>
+              <Slider value={[contrast]} min={50} max={150} step={1} onValueChange={([v]) => setContrast(v)} />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Saturação: {saturation}%</Label>
+              <Slider value={[saturation]} min={0} max={200} step={1} onValueChange={([v]) => setSaturation(v)} />
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Editor pós-gravação (efeitos: zoom, fundo, luz, beauty) */}
       {isEditing && recordedBlob && (
         <div className="rounded-lg border bg-card p-3 mt-2">

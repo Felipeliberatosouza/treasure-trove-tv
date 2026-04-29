@@ -908,6 +908,24 @@ const VideoPostEditor = ({ sourceBlob, onCancel, onApply }: VideoPostEditorProps
                     0% = sem zoom · 100% = aproximação máxima (até 2,5x).
                   </p>
                 </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">
+                    Suavização: {autoSmoothing}%{" "}
+                    <span className="text-muted-foreground">
+                      ({autoSmoothing < 25 ? "muito suave" : autoSmoothing < 60 ? "equilibrado" : autoSmoothing < 85 ? "responsivo" : "imediato"})
+                    </span>
+                  </Label>
+                  <Slider
+                    value={[autoSmoothing]}
+                    min={0}
+                    max={100}
+                    step={5}
+                    onValueChange={([v]) => setAutoSmoothing(v)}
+                  />
+                  <p className="text-[10px] text-muted-foreground">
+                    0% = movimento bem lento (cinematográfico) · 100% = acompanha o rosto instantaneamente.
+                  </p>
+                </div>
                 <div className="text-[10px] text-muted-foreground space-y-0.5 pt-1 border-t">
                   <p>• O detector encontra seu rosto a cada frame e ajusta centro + nível de zoom em tempo real.</p>
                   <p>• Quando o rosto sai do quadro, o enquadramento volta suavemente ao normal.</p>

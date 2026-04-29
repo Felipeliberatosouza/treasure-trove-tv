@@ -69,6 +69,12 @@ const VideoRecorder = ({
   const [contrast, setContrast] = useState(100);
   const [saturation, setSaturation] = useState(100);
   const [exposure, setExposure] = useState(0); // -50..+50 (gamma-like)
+  // Auto contínuo: reanalisa periodicamente a iluminação durante a gravação
+  const [autoContinuous, setAutoContinuous] = useState(false);
+  const [autoIntervalSec, setAutoIntervalSec] = useState(5);
+  const autoLightIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const autoIntervalSecRef = useRef(5);
+  useEffect(() => { autoIntervalSecRef.current = autoIntervalSec; }, [autoIntervalSec]);
   // Ref espelha o estado para o loop de render acessar sem re-criar callback
   const filterRef = useRef({ b: 100, c: 100, s: 100, e: 0 });
   useEffect(() => {
@@ -95,10 +101,10 @@ const VideoRecorder = ({
    *  - Calcula luminância média (Y) e desvio padrão como proxy de contraste.
    *  - Calcula saturação média (HSV-ish) para detectar imagem "lavada".
    */
-  const applyAutoLight = () => {
+  const applyAutoLight = (silent = false) => {
     const v = videoRef.current;
     if (!v || !v.videoWidth) {
-      toast.error("Aguarde a câmera carregar para usar o modo automático.");
+      if (!silent) toast.error("Aguarde a câmera carregar para usar o modo automático.");
       return;
     }
     const tmp = document.createElement("canvas");
@@ -169,11 +175,39 @@ const VideoRecorder = ({
     else if (meanY > 180) condicao = "ambiente muito claro";
     else if (stdY < 35) condicao = "imagem com pouco contraste";
 
-    toast.success(`Auto aplicado · ${condicao}`, {
-      description: `Brilho ${bSuggest}% · Exposição ${eSuggest > 0 ? "+" : ""}${eSuggest} · Contraste ${cSuggest}% · Saturação ${sSuggest}%`,
-      duration: 4500,
-    });
+    if (!silent) {
+      toast.success(`Auto aplicado · ${condicao}`, {
+        description: `Brilho ${bSuggest}% · Exposição ${eSuggest > 0 ? "+" : ""}${eSuggest} · Contraste ${cSuggest}% · Saturação ${sSuggest}%`,
+        duration: 4500,
+      });
+    }
   };
+
+  // Liga/desliga o ciclo de Auto contínuo. Faz uma análise imediata
+  // e depois reanalisa a cada N segundos enquanto estiver ativo.
+  useEffect(() => {
+    if (autoLightIntervalRef.current) {
+      clearInterval(autoLightIntervalRef.current);
+      autoLightIntervalRef.current = null;
+    }
+    if (!autoContinuous) return;
+    // análise imediata silenciosa
+    applyAutoLight(true);
+    autoLightIntervalRef.current = setInterval(() => {
+      applyAutoLight(true);
+    }, Math.max(1, autoIntervalSecRef.current) * 1000);
+    return () => {
+      if (autoLightIntervalRef.current) {
+        clearInterval(autoLightIntervalRef.current);
+        autoLightIntervalRef.current = null;
+      }
+    };
+  }, [autoContinuous, autoIntervalSec]);
+
+  // Garante limpeza ao desmontar
+  useEffect(() => () => {
+    if (autoLightIntervalRef.current) clearInterval(autoLightIntervalRef.current);
+  }, []);
 
   const maxSeconds = maxMinutes * 60;
   const needsProcessing =

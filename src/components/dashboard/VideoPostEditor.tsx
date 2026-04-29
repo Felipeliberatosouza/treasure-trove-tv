@@ -146,6 +146,60 @@ const VideoPostEditor = ({ sourceBlob, onCancel, onApply }: VideoPostEditorProps
   const faceMarginRef = useRef(20);
   useEffect(() => { faceMarginRef.current = faceMargin; }, [faceMargin]);
 
+  // Persistência por usuário das preferências de calibração de enquadramento.
+  // Carrega ao montar a partir do localStorage (chave por user_id) e
+  // sincroniza automaticamente sempre que o usuário ajustar os valores.
+  const calibrationUserKeyRef = useRef<string | null>(null);
+  const calibrationLoadedRef = useRef(false);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data } = await supabase.auth.getUser();
+        const uid = data.user?.id ?? "anon";
+        if (cancelled) return;
+        const key = `videoEditor.faceCalibration.${uid}`;
+        calibrationUserKeyRef.current = key;
+        const raw = localStorage.getItem(key);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (typeof parsed?.faceTargetSize === "number") {
+            setFaceTargetSize(Math.max(15, Math.min(60, parsed.faceTargetSize)));
+          }
+          if (typeof parsed?.faceMargin === "number") {
+            setFaceMargin(Math.max(0, Math.min(50, parsed.faceMargin)));
+          }
+        }
+      } catch {
+        // ignora — segue com defaults
+      } finally {
+        calibrationLoadedRef.current = true;
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Salva (debounced) sempre que faceTargetSize/faceMargin mudarem,
+  // mas só depois do load inicial para não sobrescrever com defaults.
+  useEffect(() => {
+    if (!calibrationLoadedRef.current) return;
+    const key = calibrationUserKeyRef.current;
+    if (!key) return;
+    const t = setTimeout(() => {
+      try {
+        localStorage.setItem(
+          key,
+          JSON.stringify({ faceTargetSize, faceMargin, savedAt: Date.now() })
+        );
+      } catch {
+        // quota/privado — ignora silenciosamente
+      }
+    }, 400);
+    return () => clearTimeout(t);
+  }, [faceTargetSize, faceMargin]);
+
   // Calibra usando o rosto detectado no frame atual: define o tamanho-alvo
   // como o tamanho atualmente medido, para que o enquadramento "desejado"
   // corresponda à distância em que o professor está agora.

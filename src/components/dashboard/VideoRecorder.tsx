@@ -100,6 +100,7 @@ const VideoRecorder = ({
   const cleanup = useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current);
     if (countdownRef.current) clearInterval(countdownRef.current);
+    if (liveAnimRef.current) cancelAnimationFrame(liveAnimRef.current);
     if (mediaRecorderRef.current?.state === "recording") {
       mediaRecorderRef.current.stop();
     }

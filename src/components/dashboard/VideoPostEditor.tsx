@@ -6,6 +6,7 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Wand2,
   ZoomIn,
@@ -144,6 +145,60 @@ const VideoPostEditor = ({ sourceBlob, onCancel, onApply }: VideoPostEditorProps
   useEffect(() => { faceTargetSizeRef.current = faceTargetSize; }, [faceTargetSize]);
   const faceMarginRef = useRef(20);
   useEffect(() => { faceMarginRef.current = faceMargin; }, [faceMargin]);
+
+  // Persistência por usuário das preferências de calibração de enquadramento.
+  // Carrega ao montar a partir do localStorage (chave por user_id) e
+  // sincroniza automaticamente sempre que o usuário ajustar os valores.
+  const calibrationUserKeyRef = useRef<string | null>(null);
+  const calibrationLoadedRef = useRef(false);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data } = await supabase.auth.getUser();
+        const uid = data.user?.id ?? "anon";
+        if (cancelled) return;
+        const key = `videoEditor.faceCalibration.${uid}`;
+        calibrationUserKeyRef.current = key;
+        const raw = localStorage.getItem(key);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (typeof parsed?.faceTargetSize === "number") {
+            setFaceTargetSize(Math.max(15, Math.min(60, parsed.faceTargetSize)));
+          }
+          if (typeof parsed?.faceMargin === "number") {
+            setFaceMargin(Math.max(0, Math.min(50, parsed.faceMargin)));
+          }
+        }
+      } catch {
+        // ignora — segue com defaults
+      } finally {
+        calibrationLoadedRef.current = true;
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Salva (debounced) sempre que faceTargetSize/faceMargin mudarem,
+  // mas só depois do load inicial para não sobrescrever com defaults.
+  useEffect(() => {
+    if (!calibrationLoadedRef.current) return;
+    const key = calibrationUserKeyRef.current;
+    if (!key) return;
+    const t = setTimeout(() => {
+      try {
+        localStorage.setItem(
+          key,
+          JSON.stringify({ faceTargetSize, faceMargin, savedAt: Date.now() })
+        );
+      } catch {
+        // quota/privado — ignora silenciosamente
+      }
+    }, 400);
+    return () => clearTimeout(t);
+  }, [faceTargetSize, faceMargin]);
 
   // Calibra usando o rosto detectado no frame atual: define o tamanho-alvo
   // como o tamanho atualmente medido, para que o enquadramento "desejado"
@@ -973,7 +1028,8 @@ const VideoPostEditor = ({ sourceBlob, onCancel, onApply }: VideoPostEditorProps
                     </span>
                   </div>
                   <p className="text-[10px] text-muted-foreground">
-                    Ajuste o tamanho ideal do rosto e a margem ao redor para melhorar o rastreamento em diferentes distâncias da câmera.
+                    Ajuste o tamanho ideal do rosto e a margem ao redor para melhorar o rastreamento em diferentes distâncias da câmera.{" "}
+                    <span className="text-primary">Salvo automaticamente no seu perfil.</span>
                   </p>
                   <div className="space-y-1">
                     <Label className="text-[11px]">

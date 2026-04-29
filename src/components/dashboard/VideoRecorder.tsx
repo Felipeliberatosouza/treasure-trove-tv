@@ -1,7 +1,9 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Video, Square, RotateCcw, Check, X, Camera, Loader2, Wand2 } from "lucide-react";
+import { Video, Square, RotateCcw, Check, X, Camera, Loader2, Wand2, Sun, RefreshCcw } from "lucide-react";
+import { Slider } from "@/components/ui/slider";
+import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { compositeVideo, ImpactWord } from "@/utils/videoCompositor";
@@ -50,6 +52,8 @@ const VideoRecorder = ({
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const previewRef = useRef<HTMLVideoElement>(null);
+  const liveCanvasRef = useRef<HTMLCanvasElement>(null);
+  const liveAnimRef = useRef<number | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioRecorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -58,6 +62,31 @@ const VideoRecorder = ({
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const subtitlesVttRef = useRef<string>("");
+
+  // Ajustes ao vivo de imagem (gravados no vídeo final via canvas)
+  const [brightness, setBrightness] = useState(100);
+  const [contrast, setContrast] = useState(100);
+  const [saturation, setSaturation] = useState(100);
+  const [exposure, setExposure] = useState(0); // -50..+50 (gamma-like)
+  // Ref espelha o estado para o loop de render acessar sem re-criar callback
+  const filterRef = useRef({ b: 100, c: 100, s: 100, e: 0 });
+  useEffect(() => {
+    filterRef.current = { b: brightness, c: contrast, s: saturation, e: exposure };
+  }, [brightness, contrast, saturation, exposure]);
+
+  const buildLiveFilter = () => {
+    const { b, c, s, e } = filterRef.current;
+    // Exposure: leve ajuste extra de brilho (multiplicativo)
+    const expFactor = 100 + e; // -50..+50 -> 50..150
+    return `brightness(${(b * expFactor) / 100}%) contrast(${c}%) saturate(${s}%)`;
+  };
+
+  const resetLightAdjustments = () => {
+    setBrightness(100);
+    setContrast(100);
+    setSaturation(100);
+    setExposure(0);
+  };
 
   const maxSeconds = maxMinutes * 60;
   const needsProcessing =
@@ -71,6 +100,7 @@ const VideoRecorder = ({
   const cleanup = useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current);
     if (countdownRef.current) clearInterval(countdownRef.current);
+    if (liveAnimRef.current) cancelAnimationFrame(liveAnimRef.current);
     if (mediaRecorderRef.current?.state === "recording") {
       mediaRecorderRef.current.stop();
     }
@@ -95,10 +125,31 @@ const VideoRecorder = ({
         videoRef.current.muted = true;
         await videoRef.current.play();
       }
+      startLiveRender();
       setState("idle");
     } catch {
       setError("Não foi possível acessar a câmera. Verifique as permissões do navegador.");
     }
+  };
+
+  // Loop de render do canvas ao vivo aplicando os filtros
+  const startLiveRender = () => {
+    if (liveAnimRef.current) cancelAnimationFrame(liveAnimRef.current);
+    const tick = () => {
+      const v = videoRef.current;
+      const c = liveCanvasRef.current;
+      if (v && c && v.videoWidth) {
+        if (c.width !== v.videoWidth) c.width = v.videoWidth;
+        if (c.height !== v.videoHeight) c.height = v.videoHeight;
+        const ctx = c.getContext("2d");
+        if (ctx) {
+          ctx.filter = buildLiveFilter();
+          ctx.drawImage(v, 0, 0, c.width, c.height);
+        }
+      }
+      liveAnimRef.current = requestAnimationFrame(tick);
+    };
+    liveAnimRef.current = requestAnimationFrame(tick);
   };
 
   const startCountdown = () => {
@@ -117,7 +168,7 @@ const VideoRecorder = ({
   };
 
   const startRecording = () => {
-    if (!streamRef.current) return;
+    if (!streamRef.current || !liveCanvasRef.current) return;
     chunksRef.current = [];
     audioChunksRef.current = [];
 
@@ -125,8 +176,12 @@ const VideoRecorder = ({
       ? "video/webm;codecs=vp9,opus"
       : "video/webm";
 
-    // Main video recorder
-    const recorder = new MediaRecorder(streamRef.current, { mimeType });
+    // Captura o stream do canvas (com filtros ao vivo) + áudio do microfone
+    const canvasStream = liveCanvasRef.current.captureStream(30);
+    streamRef.current.getAudioTracks().forEach((t) => canvasStream.addTrack(t));
+
+    // Main video recorder (canvas com luminosidade aplicada)
+    const recorder = new MediaRecorder(canvasStream, { mimeType });
     recorder.ondataavailable = (e) => {
       if (e.data.size > 0) chunksRef.current.push(e.data);
     };
@@ -368,12 +423,17 @@ const VideoRecorder = ({
   return (
     <div className="space-y-3">
       <div className="relative rounded-lg overflow-hidden bg-black aspect-video max-w-lg">
-        {/* Live camera feed */}
+        {/* Live camera feed (oculto: alimenta o canvas) */}
         <video
           ref={videoRef}
-          className={`w-full h-full object-cover ${state === "preview" || state === "processing" ? "hidden" : ""}`}
+          className="hidden"
           playsInline
           muted
+        />
+        {/* Canvas com filtros de luminosidade aplicados (também é o que é gravado) */}
+        <canvas
+          ref={liveCanvasRef}
+          className={`w-full h-full object-cover ${state === "preview" || state === "processing" ? "hidden" : ""}`}
         />
 
         {/* Preview of recorded video */}
@@ -507,6 +567,46 @@ const VideoRecorder = ({
           </>
         )}
       </div>
+
+      {/* Painel de luminosidade ao vivo (visível antes/durante a gravação) */}
+      {(state === "idle" || state === "countdown" || state === "recording") && (
+        <div className="rounded-lg border bg-card p-3 max-w-lg space-y-2">
+          <div className="flex items-center justify-between">
+            <h4 className="text-sm font-semibold flex items-center gap-1">
+              <Sun className="h-4 w-4 text-primary" /> Ajuste de luminosidade ao vivo
+            </h4>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-7 px-2 text-xs gap-1"
+              onClick={resetLightAdjustments}
+            >
+              <RefreshCcw className="h-3 w-3" /> Redefinir
+            </Button>
+          </div>
+          <p className="text-[10px] text-muted-foreground">
+            Os ajustes serão aplicados ao vídeo gravado, sem precisar editar depois.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+            <div className="space-y-1">
+              <Label className="text-xs">Brilho: {brightness}%</Label>
+              <Slider value={[brightness]} min={50} max={150} step={1} onValueChange={([v]) => setBrightness(v)} />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Exposição: {exposure > 0 ? `+${exposure}` : exposure}</Label>
+              <Slider value={[exposure]} min={-50} max={50} step={1} onValueChange={([v]) => setExposure(v)} />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Contraste: {contrast}%</Label>
+              <Slider value={[contrast]} min={50} max={150} step={1} onValueChange={([v]) => setContrast(v)} />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Saturação: {saturation}%</Label>
+              <Slider value={[saturation]} min={0} max={200} step={1} onValueChange={([v]) => setSaturation(v)} />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Editor pós-gravação (efeitos: zoom, fundo, luz, beauty) */}
       {isEditing && recordedBlob && (

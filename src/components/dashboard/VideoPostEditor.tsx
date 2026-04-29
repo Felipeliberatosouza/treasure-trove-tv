@@ -875,10 +875,38 @@ const VideoPostEditor = ({ sourceBlob, onCancel, onApply }: VideoPostEditorProps
             )}
 
             {zoomMode === "auto" && (
-              <p className="text-xs text-muted-foreground">
-                O zoom acompanha automaticamente a área central do vídeo. Útil quando você se move pouco. Para
-                controle preciso, use o modo Manual.
-              </p>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs">Status do rosto</Label>
+                  <span
+                    className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
+                      faceDetected
+                        ? "bg-primary/15 text-primary"
+                        : "bg-muted text-muted-foreground"
+                    }`}
+                  >
+                    {faceDetected ? "● Rastreando rosto" : "○ Procurando rosto..."}
+                  </span>
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Intensidade do zoom: {autoZoomIntensity}%</Label>
+                  <Slider
+                    value={[autoZoomIntensity]}
+                    min={0}
+                    max={100}
+                    step={5}
+                    onValueChange={([v]) => setAutoZoomIntensity(v)}
+                  />
+                  <p className="text-[10px] text-muted-foreground">
+                    0% = sem zoom · 100% = aproximação máxima (até 2,5x).
+                  </p>
+                </div>
+                <div className="text-[10px] text-muted-foreground space-y-0.5 pt-1 border-t">
+                  <p>• O detector encontra seu rosto a cada frame e ajusta centro + nível de zoom em tempo real.</p>
+                  <p>• Quando o rosto sai do quadro, o enquadramento volta suavemente ao normal.</p>
+                  <p>• Reproduza o vídeo para ver o rastreamento em ação. Os ajustes serão aplicados na exportação.</p>
+                </div>
+              </div>
             )}
           </TabsContent>
         </Tabs>

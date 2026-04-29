@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Video, Square, RotateCcw, Check, X, Camera, Loader2, Wand2, Sun, RefreshCcw } from "lucide-react";
+import { Video, Square, RotateCcw, Check, X, Camera, Loader2, Wand2, Sun, RefreshCcw, Sparkles } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
@@ -86,6 +86,92 @@ const VideoRecorder = ({
     setContrast(100);
     setSaturation(100);
     setExposure(0);
+  };
+
+  /**
+   * Auto-luminosidade: amostra o frame atual da câmera para sugerir
+   * brilho, contraste, exposição e saturação adequados à iluminação.
+   *  - Calcula luminância média (Y) e desvio padrão como proxy de contraste.
+   *  - Calcula saturação média (HSV-ish) para detectar imagem "lavada".
+   */
+  const applyAutoLight = () => {
+    const v = videoRef.current;
+    if (!v || !v.videoWidth) {
+      toast.error("Aguarde a câmera carregar para usar o modo automático.");
+      return;
+    }
+    const tmp = document.createElement("canvas");
+    tmp.width = 96;
+    tmp.height = 54;
+    const tctx = tmp.getContext("2d");
+    if (!tctx) return;
+    // Desenha o frame ATUAL bruto (sem filtros) para análise objetiva
+    tctx.filter = "none";
+    tctx.drawImage(v, 0, 0, tmp.width, tmp.height);
+    const data = tctx.getImageData(0, 0, tmp.width, tmp.height).data;
+
+    let sumY = 0;
+    let sumY2 = 0;
+    let sumSat = 0;
+    const n = data.length / 4;
+    for (let i = 0; i < data.length; i += 4) {
+      const r = data[i];
+      const g = data[i + 1];
+      const b = data[i + 2];
+      // Luminância Rec.709
+      const y = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+      sumY += y;
+      sumY2 += y * y;
+      const max = Math.max(r, g, b);
+      const min = Math.min(r, g, b);
+      sumSat += max === 0 ? 0 : (max - min) / max; // 0..1
+    }
+    const meanY = sumY / n; // 0..255
+    const variance = Math.max(0, sumY2 / n - meanY * meanY);
+    const stdY = Math.sqrt(variance); // 0..~127
+    const meanSat = sumSat / n; // 0..1
+
+    // Heurísticas — alvo: meanY ~ 130, stdY ~ 55, meanSat ~ 0.35
+    const TARGET_Y = 130;
+    const TARGET_STD = 55;
+    const TARGET_SAT = 0.35;
+
+    // Brilho: compensa proporcionalmente o quão escuro/claro está
+    const yDelta = TARGET_Y - meanY; // negativo = imagem clara demais
+    let bSuggest = 100 + yDelta * 0.35;
+    bSuggest = Math.max(70, Math.min(140, Math.round(bSuggest)));
+
+    // Exposição extra para casos extremos (muito escuro ou muito claro)
+    let eSuggest = 0;
+    if (meanY < 70) eSuggest = Math.round((70 - meanY) * 0.4);
+    else if (meanY > 190) eSuggest = -Math.round((meanY - 190) * 0.4);
+    eSuggest = Math.max(-40, Math.min(40, eSuggest));
+
+    // Contraste: aumenta quando a imagem está "chapada" (stdY baixo)
+    const stdDelta = TARGET_STD - stdY;
+    let cSuggest = 100 + stdDelta * 0.6;
+    cSuggest = Math.max(85, Math.min(135, Math.round(cSuggest)));
+
+    // Saturação: leve correção quando a imagem está dessaturada
+    const satDelta = TARGET_SAT - meanSat;
+    let sSuggest = 100 + satDelta * 80; // satDelta ~ -0.3..+0.3
+    sSuggest = Math.max(85, Math.min(140, Math.round(sSuggest)));
+
+    setBrightness(bSuggest);
+    setExposure(eSuggest);
+    setContrast(cSuggest);
+    setSaturation(sSuggest);
+
+    let condicao = "iluminação adequada";
+    if (meanY < 80) condicao = "ambiente muito escuro";
+    else if (meanY < 110) condicao = "ambiente pouco iluminado";
+    else if (meanY > 180) condicao = "ambiente muito claro";
+    else if (stdY < 35) condicao = "imagem com pouco contraste";
+
+    toast.success(`Auto aplicado · ${condicao}`, {
+      description: `Brilho ${bSuggest}% · Exposição ${eSuggest > 0 ? "+" : ""}${eSuggest} · Contraste ${cSuggest}% · Saturação ${sSuggest}%`,
+      duration: 4500,
+    });
   };
 
   const maxSeconds = maxMinutes * 60;

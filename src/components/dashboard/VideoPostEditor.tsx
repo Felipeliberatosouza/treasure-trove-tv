@@ -497,6 +497,9 @@ const VideoPostEditor = ({ sourceBlob, onCancel, onApply }: VideoPostEditorProps
       if (segmenterRef.current?.close) {
         try { segmenterRef.current.close(); } catch { /* noop */ }
       }
+      if (faceDetectorRef.current?.close) {
+        try { faceDetectorRef.current.close(); } catch { /* noop */ }
+      }
     };
   }, [sourceUrl]);
 

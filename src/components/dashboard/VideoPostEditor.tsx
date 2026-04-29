@@ -124,6 +124,11 @@ const VideoPostEditor = ({ sourceBlob, onCancel, onApply }: VideoPostEditorProps
   const [faceDetected, setFaceDetected] = useState(false);
   // Suavização: 0 = muito suave/lento, 100 = responde imediatamente
   const [autoSmoothing, setAutoSmoothing] = useState(40);
+  // Calibração de enquadramento
+  // faceTargetSize: tamanho desejado do rosto em relação à altura do quadro (0.15..0.6)
+  // faceMargin: margem extra ao redor do rosto (0..50%) — quanto maior, mais "ar" ao redor
+  const [faceTargetSize, setFaceTargetSize] = useState(35); // %
+  const [faceMargin, setFaceMargin] = useState(20); // %
   // Refs para o loop (sem causar re-render)
   const autoTrackRef = useRef({ cx: 0.5, cy: 0.5, scale: 1, hasFace: false });
   const faceDetectorRef = useRef<any>(null);
@@ -133,6 +138,10 @@ const VideoPostEditor = ({ sourceBlob, onCancel, onApply }: VideoPostEditorProps
   useEffect(() => { autoIntensityRef.current = autoZoomIntensity; }, [autoZoomIntensity]);
   const autoSmoothingRef = useRef(40);
   useEffect(() => { autoSmoothingRef.current = autoSmoothing; }, [autoSmoothing]);
+  const faceTargetSizeRef = useRef(35);
+  useEffect(() => { faceTargetSizeRef.current = faceTargetSize; }, [faceTargetSize]);
+  const faceMarginRef = useRef(20);
+  useEffect(() => { faceMarginRef.current = faceMargin; }, [faceMargin]);
 
   // Auto-light cache
   const autoLightAdjustRef = useRef<{ b: number; c: number } | null>(null);

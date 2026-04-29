@@ -122,6 +122,8 @@ const VideoPostEditor = ({ sourceBlob, onCancel, onApply }: VideoPostEditorProps
   const [currentCy, setCurrentCy] = useState(0.5);
   const [autoZoomIntensity, setAutoZoomIntensity] = useState(60); // 0..100
   const [faceDetected, setFaceDetected] = useState(false);
+  // Suavização: 0 = muito suave/lento, 100 = responde imediatamente
+  const [autoSmoothing, setAutoSmoothing] = useState(40);
   // Refs para o loop (sem causar re-render)
   const autoTrackRef = useRef({ cx: 0.5, cy: 0.5, scale: 1, hasFace: false });
   const faceDetectorRef = useRef<any>(null);
@@ -129,6 +131,8 @@ const VideoPostEditor = ({ sourceBlob, onCancel, onApply }: VideoPostEditorProps
   const faceLossFramesRef = useRef(0);
   const autoIntensityRef = useRef(60);
   useEffect(() => { autoIntensityRef.current = autoZoomIntensity; }, [autoZoomIntensity]);
+  const autoSmoothingRef = useRef(40);
+  useEffect(() => { autoSmoothingRef.current = autoSmoothing; }, [autoSmoothing]);
 
   // Auto-light cache
   const autoLightAdjustRef = useRef<{ b: number; c: number } | null>(null);

@@ -1,11 +1,12 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Video, Square, RotateCcw, Check, X, Camera, Loader2 } from "lucide-react";
+import { Video, Square, RotateCcw, Check, X, Camera, Loader2, Wand2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { compositeVideo, ImpactWord } from "@/utils/videoCompositor";
 import { shiftVtt } from "@/utils/vttSync";
+import VideoPostEditor from "@/components/dashboard/VideoPostEditor";
 
 interface VideoRecorderProps {
   maxMinutes: number;
@@ -45,6 +46,7 @@ const VideoRecorder = ({
   const [error, setError] = useState("");
   const [processingStep, setProcessingStep] = useState("");
   const [processingProgress, setProcessingProgress] = useState(0);
+  const [isEditing, setIsEditing] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const previewRef = useRef<HTMLVideoElement>(null);
@@ -488,6 +490,14 @@ const VideoRecorder = ({
             <Button size="sm" onClick={approve} className="gap-1">
               <Check className="h-4 w-4" /> Aprovar Vídeo
             </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setIsEditing(true)}
+              className="gap-1"
+            >
+              <Wand2 className="h-4 w-4" /> Editar vídeo
+            </Button>
             <Button size="sm" variant="secondary" onClick={reRecord} className="gap-1">
               <RotateCcw className="h-4 w-4" /> Regravar
             </Button>
@@ -497,6 +507,27 @@ const VideoRecorder = ({
           </>
         )}
       </div>
+
+      {/* Editor pós-gravação (efeitos: zoom, fundo, luz, beauty) */}
+      {isEditing && recordedBlob && (
+        <div className="rounded-lg border bg-card p-3 mt-2">
+          <h4 className="text-sm font-semibold mb-2 flex items-center gap-1">
+            <Wand2 className="h-4 w-4 text-primary" /> Editor de vídeo
+          </h4>
+          <VideoPostEditor
+            sourceBlob={recordedBlob}
+            onCancel={() => setIsEditing(false)}
+            onApply={(editedBlob) => {
+              setRecordedBlob(editedBlob);
+              if (previewRef.current) {
+                previewRef.current.src = URL.createObjectURL(editedBlob);
+              }
+              setIsEditing(false);
+              toast.success("Edição aplicada! Confira o preview e aprove.");
+            }}
+          />
+        </div>
+      )}
 
       <div className="text-xs text-muted-foreground space-y-0.5">
         <p>Tempo máximo de gravação: {maxMinutes} minuto{maxMinutes > 1 ? "s" : ""}</p>

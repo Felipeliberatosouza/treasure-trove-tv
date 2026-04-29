@@ -122,6 +122,8 @@ const VideoPostEditor = ({ sourceBlob, onCancel, onApply }: VideoPostEditorProps
   const [currentCy, setCurrentCy] = useState(0.5);
   const [autoZoomIntensity, setAutoZoomIntensity] = useState(60); // 0..100
   const [faceDetected, setFaceDetected] = useState(false);
+  // Suavização: 0 = muito suave/lento, 100 = responde imediatamente
+  const [autoSmoothing, setAutoSmoothing] = useState(40);
   // Refs para o loop (sem causar re-render)
   const autoTrackRef = useRef({ cx: 0.5, cy: 0.5, scale: 1, hasFace: false });
   const faceDetectorRef = useRef<any>(null);
@@ -129,6 +131,8 @@ const VideoPostEditor = ({ sourceBlob, onCancel, onApply }: VideoPostEditorProps
   const faceLossFramesRef = useRef(0);
   const autoIntensityRef = useRef(60);
   useEffect(() => { autoIntensityRef.current = autoZoomIntensity; }, [autoZoomIntensity]);
+  const autoSmoothingRef = useRef(40);
+  useEffect(() => { autoSmoothingRef.current = autoSmoothing; }, [autoSmoothing]);
 
   // Auto-light cache
   const autoLightAdjustRef = useRef<{ b: number; c: number } | null>(null);
@@ -363,14 +367,14 @@ const VideoPostEditor = ({ sourceBlob, onCancel, onApply }: VideoPostEditorProps
         // Limitado por intensidade
         const maxScale = 1 + intensity * 1.5; // até 2.5x
         const targetScale = Math.max(1, Math.min(maxScale, ratio));
-        // Suavização (lerp com fator baixo)
-        const lerp = 0.08;
+        // Suavização configurável: 0% => 0.02 (muito suave), 100% => 0.4 (rápido)
+        const lerp = 0.02 + (autoSmoothingRef.current / 100) * 0.38;
         autoTrackRef.current.scale += (targetScale - autoTrackRef.current.scale) * lerp;
         autoTrackRef.current.cx += (fb.cx - autoTrackRef.current.cx) * lerp;
         autoTrackRef.current.cy += (fb.cy - autoTrackRef.current.cy) * lerp;
       } else {
-        // Sem rosto: volta para enquadramento neutro suavemente
-        const lerp = 0.05;
+        // Sem rosto: volta para enquadramento neutro (sempre suave, ~ metade do lerp ativo)
+        const lerp = 0.02 + (autoSmoothingRef.current / 100) * 0.18;
         autoTrackRef.current.scale += (1 - autoTrackRef.current.scale) * lerp;
         autoTrackRef.current.cx += (0.5 - autoTrackRef.current.cx) * lerp;
         autoTrackRef.current.cy += (0.5 - autoTrackRef.current.cy) * lerp;
@@ -902,6 +906,24 @@ const VideoPostEditor = ({ sourceBlob, onCancel, onApply }: VideoPostEditorProps
                   />
                   <p className="text-[10px] text-muted-foreground">
                     0% = sem zoom · 100% = aproximação máxima (até 2,5x).
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">
+                    Suavização: {autoSmoothing}%{" "}
+                    <span className="text-muted-foreground">
+                      ({autoSmoothing < 25 ? "muito suave" : autoSmoothing < 60 ? "equilibrado" : autoSmoothing < 85 ? "responsivo" : "imediato"})
+                    </span>
+                  </Label>
+                  <Slider
+                    value={[autoSmoothing]}
+                    min={0}
+                    max={100}
+                    step={5}
+                    onValueChange={([v]) => setAutoSmoothing(v)}
+                  />
+                  <p className="text-[10px] text-muted-foreground">
+                    0% = movimento bem lento (cinematográfico) · 100% = acompanha o rosto instantaneamente.
                   </p>
                 </div>
                 <div className="text-[10px] text-muted-foreground space-y-0.5 pt-1 border-t">

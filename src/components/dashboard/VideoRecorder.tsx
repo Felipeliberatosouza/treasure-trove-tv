@@ -4,6 +4,7 @@ import { Progress } from "@/components/ui/progress";
 import { Video, Square, RotateCcw, Check, X, Camera, Loader2, Wand2, Sun, RefreshCcw, Sparkles } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { compositeVideo, ImpactWord } from "@/utils/videoCompositor";

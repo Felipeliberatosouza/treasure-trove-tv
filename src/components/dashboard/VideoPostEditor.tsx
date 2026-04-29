@@ -370,9 +370,12 @@ const VideoPostEditor = ({ sourceBlob, onCancel, onApply }: VideoPostEditorProps
       const intensity = autoIntensityRef.current / 100; // 0..1
       if (lastFaceBoxRef.current) {
         const fb = lastFaceBoxRef.current;
-        // Zoom alvo: rosto pequeno => mais zoom. Tamanho do rosto ideal ~ 0.35 da altura
-        const targetSize = 0.35;
-        const ratio = targetSize / Math.max(0.05, fb.size);
+        // Zoom alvo: rosto pequeno => mais zoom.
+        // Tamanho do rosto ideal e margem são configuráveis (calibração).
+        const targetSize = faceTargetSizeRef.current / 100; // 0.15..0.60
+        // Margem reduz o zoom efetivo, deixando "ar" ao redor do rosto.
+        const marginFactor = 1 + faceMarginRef.current / 100; // 1.0..1.5
+        const ratio = targetSize / (Math.max(0.05, fb.size) * marginFactor);
         // Limitado por intensidade
         const maxScale = 1 + intensity * 1.5; // até 2.5x
         const targetScale = Math.max(1, Math.min(maxScale, ratio));

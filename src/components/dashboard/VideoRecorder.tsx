@@ -661,17 +661,28 @@ const VideoRecorder = ({
             <h4 className="text-sm font-semibold flex items-center gap-1">
               <Sun className="h-4 w-4 text-primary" /> Ajuste de luminosidade ao vivo
             </h4>
-            <Button
-              size="sm"
-              variant="ghost"
-              className="h-7 px-2 text-xs gap-1"
-              onClick={resetLightAdjustments}
-            >
-              <RefreshCcw className="h-3 w-3" /> Redefinir
-            </Button>
+            <div className="flex gap-1">
+              <Button
+                size="sm"
+                variant="secondary"
+                className="h-7 px-2 text-xs gap-1"
+                onClick={applyAutoLight}
+                title="Sugere valores com base na iluminação atual da câmera"
+              >
+                <Sparkles className="h-3 w-3" /> Auto
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-7 px-2 text-xs gap-1"
+                onClick={resetLightAdjustments}
+              >
+                <RefreshCcw className="h-3 w-3" /> Redefinir
+              </Button>
+            </div>
           </div>
           <p className="text-[10px] text-muted-foreground">
-            Os ajustes serão aplicados ao vídeo gravado, sem precisar editar depois.
+            Use <strong>Auto</strong> para sugerir valores conforme a iluminação detectada, ou ajuste manualmente. Tudo é gravado no vídeo final.
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
             <div className="space-y-1">

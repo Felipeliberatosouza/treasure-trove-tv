@@ -143,6 +143,28 @@ const VideoPostEditor = ({ sourceBlob, onCancel, onApply }: VideoPostEditorProps
   const faceMarginRef = useRef(20);
   useEffect(() => { faceMarginRef.current = faceMargin; }, [faceMargin]);
 
+  // Calibra usando o rosto detectado no frame atual: define o tamanho-alvo
+  // como o tamanho atualmente medido, para que o enquadramento "desejado"
+  // corresponda à distância em que o professor está agora.
+  const calibrateFraming = () => {
+    const fb = lastFaceBoxRef.current;
+    if (!fb) {
+      toast.error("Nenhum rosto detectado. Posicione-se em frente à câmera e tente novamente.");
+      return;
+    }
+    const detectedPct = Math.round(Math.max(0.15, Math.min(0.6, fb.size)) * 100);
+    setFaceTargetSize(detectedPct);
+    toast.success(`Enquadramento calibrado · rosto-alvo ${detectedPct}%`, {
+      description: "O zoom automático passará a manter este tamanho de rosto.",
+    });
+  };
+
+  const resetFramingCalibration = () => {
+    setFaceTargetSize(35);
+    setFaceMargin(20);
+    toast.info("Calibração de enquadramento redefinida.");
+  };
+
   // Auto-light cache
   const autoLightAdjustRef = useRef<{ b: number; c: number } | null>(null);
 

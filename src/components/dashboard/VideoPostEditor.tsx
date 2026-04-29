@@ -74,6 +74,23 @@ const loadSegmenter = (): Promise<any> => {
   return segmenterPromise;
 };
 
+// Carrega MediaPipe Face Detection por CDN
+let faceDetectorPromise: Promise<any> | null = null;
+const loadFaceDetector = (): Promise<any> => {
+  if (faceDetectorPromise) return faceDetectorPromise;
+  faceDetectorPromise = new Promise((resolve, reject) => {
+    const w = window as any;
+    if (w.FaceDetection) return resolve(w.FaceDetection);
+    const script = document.createElement("script");
+    script.src = "https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/face_detection.js";
+    script.crossOrigin = "anonymous";
+    script.onload = () => resolve((window as any).FaceDetection);
+    script.onerror = () => reject(new Error("Falha ao carregar detector de rosto"));
+    document.head.appendChild(script);
+  });
+  return faceDetectorPromise;
+};
+
 const VideoPostEditor = ({ sourceBlob, onCancel, onApply }: VideoPostEditorProps) => {
   const sourceUrl = useMemo(() => URL.createObjectURL(sourceBlob), [sourceBlob]);
   const videoRef = useRef<HTMLVideoElement>(null);

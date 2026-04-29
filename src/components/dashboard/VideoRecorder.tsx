@@ -1,7 +1,9 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Video, Square, RotateCcw, Check, X, Camera, Loader2, Wand2 } from "lucide-react";
+import { Video, Square, RotateCcw, Check, X, Camera, Loader2, Wand2, Sun, RefreshCcw } from "lucide-react";
+import { Slider } from "@/components/ui/slider";
+import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { compositeVideo, ImpactWord } from "@/utils/videoCompositor";
@@ -50,6 +52,8 @@ const VideoRecorder = ({
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const previewRef = useRef<HTMLVideoElement>(null);
+  const liveCanvasRef = useRef<HTMLCanvasElement>(null);
+  const liveAnimRef = useRef<number | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioRecorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -58,6 +62,31 @@ const VideoRecorder = ({
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const subtitlesVttRef = useRef<string>("");
+
+  // Ajustes ao vivo de imagem (gravados no vídeo final via canvas)
+  const [brightness, setBrightness] = useState(100);
+  const [contrast, setContrast] = useState(100);
+  const [saturation, setSaturation] = useState(100);
+  const [exposure, setExposure] = useState(0); // -50..+50 (gamma-like)
+  // Ref espelha o estado para o loop de render acessar sem re-criar callback
+  const filterRef = useRef({ b: 100, c: 100, s: 100, e: 0 });
+  useEffect(() => {
+    filterRef.current = { b: brightness, c: contrast, s: saturation, e: exposure };
+  }, [brightness, contrast, saturation, exposure]);
+
+  const buildLiveFilter = () => {
+    const { b, c, s, e } = filterRef.current;
+    // Exposure: leve ajuste extra de brilho (multiplicativo)
+    const expFactor = 100 + e; // -50..+50 -> 50..150
+    return `brightness(${(b * expFactor) / 100}%) contrast(${c}%) saturate(${s}%)`;
+  };
+
+  const resetLightAdjustments = () => {
+    setBrightness(100);
+    setContrast(100);
+    setSaturation(100);
+    setExposure(0);
+  };
 
   const maxSeconds = maxMinutes * 60;
   const needsProcessing =
@@ -95,10 +124,31 @@ const VideoRecorder = ({
         videoRef.current.muted = true;
         await videoRef.current.play();
       }
+      startLiveRender();
       setState("idle");
     } catch {
       setError("Não foi possível acessar a câmera. Verifique as permissões do navegador.");
     }
+  };
+
+  // Loop de render do canvas ao vivo aplicando os filtros
+  const startLiveRender = () => {
+    if (liveAnimRef.current) cancelAnimationFrame(liveAnimRef.current);
+    const tick = () => {
+      const v = videoRef.current;
+      const c = liveCanvasRef.current;
+      if (v && c && v.videoWidth) {
+        if (c.width !== v.videoWidth) c.width = v.videoWidth;
+        if (c.height !== v.videoHeight) c.height = v.videoHeight;
+        const ctx = c.getContext("2d");
+        if (ctx) {
+          ctx.filter = buildLiveFilter();
+          ctx.drawImage(v, 0, 0, c.width, c.height);
+        }
+      }
+      liveAnimRef.current = requestAnimationFrame(tick);
+    };
+    liveAnimRef.current = requestAnimationFrame(tick);
   };
 
   const startCountdown = () => {
@@ -117,7 +167,7 @@ const VideoRecorder = ({
   };
 
   const startRecording = () => {
-    if (!streamRef.current) return;
+    if (!streamRef.current || !liveCanvasRef.current) return;
     chunksRef.current = [];
     audioChunksRef.current = [];
 
@@ -125,8 +175,12 @@ const VideoRecorder = ({
       ? "video/webm;codecs=vp9,opus"
       : "video/webm";
 
-    // Main video recorder
-    const recorder = new MediaRecorder(streamRef.current, { mimeType });
+    // Captura o stream do canvas (com filtros ao vivo) + áudio do microfone
+    const canvasStream = liveCanvasRef.current.captureStream(30);
+    streamRef.current.getAudioTracks().forEach((t) => canvasStream.addTrack(t));
+
+    // Main video recorder (canvas com luminosidade aplicada)
+    const recorder = new MediaRecorder(canvasStream, { mimeType });
     recorder.ondataavailable = (e) => {
       if (e.data.size > 0) chunksRef.current.push(e.data);
     };

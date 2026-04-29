@@ -74,6 +74,23 @@ const loadSegmenter = (): Promise<any> => {
   return segmenterPromise;
 };
 
+// Carrega MediaPipe Face Detection por CDN
+let faceDetectorPromise: Promise<any> | null = null;
+const loadFaceDetector = (): Promise<any> => {
+  if (faceDetectorPromise) return faceDetectorPromise;
+  faceDetectorPromise = new Promise((resolve, reject) => {
+    const w = window as any;
+    if (w.FaceDetection) return resolve(w.FaceDetection);
+    const script = document.createElement("script");
+    script.src = "https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/face_detection.js";
+    script.crossOrigin = "anonymous";
+    script.onload = () => resolve((window as any).FaceDetection);
+    script.onerror = () => reject(new Error("Falha ao carregar detector de rosto"));
+    document.head.appendChild(script);
+  });
+  return faceDetectorPromise;
+};
+
 const VideoPostEditor = ({ sourceBlob, onCancel, onApply }: VideoPostEditorProps) => {
   const sourceUrl = useMemo(() => URL.createObjectURL(sourceBlob), [sourceBlob]);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -103,6 +120,15 @@ const VideoPostEditor = ({ sourceBlob, onCancel, onApply }: VideoPostEditorProps
   const [currentScale, setCurrentScale] = useState(1);
   const [currentCx, setCurrentCx] = useState(0.5);
   const [currentCy, setCurrentCy] = useState(0.5);
+  const [autoZoomIntensity, setAutoZoomIntensity] = useState(60); // 0..100
+  const [faceDetected, setFaceDetected] = useState(false);
+  // Refs para o loop (sem causar re-render)
+  const autoTrackRef = useRef({ cx: 0.5, cy: 0.5, scale: 1, hasFace: false });
+  const faceDetectorRef = useRef<any>(null);
+  const lastFaceBoxRef = useRef<{ cx: number; cy: number; size: number } | null>(null);
+  const faceLossFramesRef = useRef(0);
+  const autoIntensityRef = useRef(60);
+  useEffect(() => { autoIntensityRef.current = autoZoomIntensity; }, [autoZoomIntensity]);
 
   // Auto-light cache
   const autoLightAdjustRef = useRef<{ b: number; c: number } | null>(null);
@@ -196,9 +222,72 @@ const VideoPostEditor = ({ sourceBlob, onCancel, onApply }: VideoPostEditorProps
     autoLightAdjustRef.current = { b, c: c_ };
   }, []);
 
+  // Carrega detector de rosto quando o modo auto for ativado
+  useEffect(() => {
+    if (zoomMode !== "auto") return;
+    if (faceDetectorRef.current) return;
+    let cancelled = false;
+    loadFaceDetector()
+      .then((FaceDetection) => {
+        if (cancelled) return;
+        const fd = new FaceDetection({
+          locateFile: (file: string) =>
+            `https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/${file}`,
+        });
+        fd.setOptions({ model: "short", minDetectionConfidence: 0.55 });
+        fd.onResults((results: any) => {
+          const dets = results?.detections;
+          if (dets && dets.length > 0) {
+            // Pega o rosto de maior área
+            let best = dets[0];
+            let bestArea = 0;
+            for (const d of dets) {
+              const bb = d.boundingBox;
+              const area = bb.width * bb.height;
+              if (area > bestArea) {
+                bestArea = area;
+                best = d;
+              }
+            }
+            const bb = best.boundingBox;
+            // MediaPipe retorna cx/cy normalizados (centro) e width/height normalizados
+            const cx = bb.xCenter ?? bb.x + bb.width / 2;
+            const cy = bb.yCenter ?? bb.y + bb.height / 2;
+            const size = Math.max(bb.width, bb.height);
+            lastFaceBoxRef.current = { cx, cy, size };
+            faceLossFramesRef.current = 0;
+            if (!autoTrackRef.current.hasFace) setFaceDetected(true);
+            autoTrackRef.current.hasFace = true;
+          } else {
+            faceLossFramesRef.current += 1;
+            if (faceLossFramesRef.current > 30) {
+              lastFaceBoxRef.current = null;
+              if (autoTrackRef.current.hasFace) setFaceDetected(false);
+              autoTrackRef.current.hasFace = false;
+            }
+          }
+        });
+        faceDetectorRef.current = fd;
+      })
+      .catch(() => {
+        toast.error("Não foi possível carregar o detector de rosto. Usando zoom centralizado.");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [zoomMode]);
+
   // Interpola keyframes para o tempo atual
   const interpolateZoom = useCallback(
     (t: number): { scale: number; cx: number; cy: number } => {
+      if (zoomMode === "auto") {
+        // Usa o tracking suavizado calculado no renderFrame
+        return {
+          scale: autoTrackRef.current.scale,
+          cx: autoTrackRef.current.cx,
+          cy: autoTrackRef.current.cy,
+        };
+      }
       if (zoomMode !== "manual" || keyframes.length === 0) {
         return { scale: 1, cx: 0.5, cy: 0.5 };
       }
@@ -253,6 +342,46 @@ const VideoPostEditor = ({ sourceBlob, onCancel, onApply }: VideoPostEditorProps
     const ctx = c.getContext("2d")!;
 
     setCurrentTime(v.currentTime);
+
+    // Detecção de rosto (modo auto): roda a cada frame quando playing
+    if (zoomMode === "auto" && faceDetectorRef.current && !v.paused) {
+      try {
+        await faceDetectorRef.current.send({ image: v });
+      } catch {
+        // ignora
+      }
+    }
+
+    // Atualiza tracking suavizado para o modo auto
+    if (zoomMode === "auto") {
+      const intensity = autoIntensityRef.current / 100; // 0..1
+      if (lastFaceBoxRef.current) {
+        const fb = lastFaceBoxRef.current;
+        // Zoom alvo: rosto pequeno => mais zoom. Tamanho do rosto ideal ~ 0.35 da altura
+        const targetSize = 0.35;
+        const ratio = targetSize / Math.max(0.05, fb.size);
+        // Limitado por intensidade
+        const maxScale = 1 + intensity * 1.5; // até 2.5x
+        const targetScale = Math.max(1, Math.min(maxScale, ratio));
+        // Suavização (lerp com fator baixo)
+        const lerp = 0.08;
+        autoTrackRef.current.scale += (targetScale - autoTrackRef.current.scale) * lerp;
+        autoTrackRef.current.cx += (fb.cx - autoTrackRef.current.cx) * lerp;
+        autoTrackRef.current.cy += (fb.cy - autoTrackRef.current.cy) * lerp;
+      } else {
+        // Sem rosto: volta para enquadramento neutro suavemente
+        const lerp = 0.05;
+        autoTrackRef.current.scale += (1 - autoTrackRef.current.scale) * lerp;
+        autoTrackRef.current.cx += (0.5 - autoTrackRef.current.cx) * lerp;
+        autoTrackRef.current.cy += (0.5 - autoTrackRef.current.cy) * lerp;
+      }
+    } else {
+      // Reset rápido se não estiver em auto
+      autoTrackRef.current.scale = 1;
+      autoTrackRef.current.cx = 0.5;
+      autoTrackRef.current.cy = 0.5;
+    }
+
     const z = interpolateZoom(v.currentTime);
     setCurrentScale(z.scale);
     setCurrentCx(z.cx);
@@ -367,6 +496,9 @@ const VideoPostEditor = ({ sourceBlob, onCancel, onApply }: VideoPostEditorProps
       URL.revokeObjectURL(sourceUrl);
       if (segmenterRef.current?.close) {
         try { segmenterRef.current.close(); } catch { /* noop */ }
+      }
+      if (faceDetectorRef.current?.close) {
+        try { faceDetectorRef.current.close(); } catch { /* noop */ }
       }
     };
   }, [sourceUrl]);
@@ -746,10 +878,38 @@ const VideoPostEditor = ({ sourceBlob, onCancel, onApply }: VideoPostEditorProps
             )}
 
             {zoomMode === "auto" && (
-              <p className="text-xs text-muted-foreground">
-                O zoom acompanha automaticamente a área central do vídeo. Útil quando você se move pouco. Para
-                controle preciso, use o modo Manual.
-              </p>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs">Status do rosto</Label>
+                  <span
+                    className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
+                      faceDetected
+                        ? "bg-primary/15 text-primary"
+                        : "bg-muted text-muted-foreground"
+                    }`}
+                  >
+                    {faceDetected ? "● Rastreando rosto" : "○ Procurando rosto..."}
+                  </span>
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Intensidade do zoom: {autoZoomIntensity}%</Label>
+                  <Slider
+                    value={[autoZoomIntensity]}
+                    min={0}
+                    max={100}
+                    step={5}
+                    onValueChange={([v]) => setAutoZoomIntensity(v)}
+                  />
+                  <p className="text-[10px] text-muted-foreground">
+                    0% = sem zoom · 100% = aproximação máxima (até 2,5x).
+                  </p>
+                </div>
+                <div className="text-[10px] text-muted-foreground space-y-0.5 pt-1 border-t">
+                  <p>• O detector encontra seu rosto a cada frame e ajusta centro + nível de zoom em tempo real.</p>
+                  <p>• Quando o rosto sai do quadro, o enquadramento volta suavemente ao normal.</p>
+                  <p>• Reproduza o vídeo para ver o rastreamento em ação. Os ajustes serão aplicados na exportação.</p>
+                </div>
+              </div>
             )}
           </TabsContent>
         </Tabs>

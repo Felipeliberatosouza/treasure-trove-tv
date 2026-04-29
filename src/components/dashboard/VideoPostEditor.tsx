@@ -1028,7 +1028,8 @@ const VideoPostEditor = ({ sourceBlob, onCancel, onApply }: VideoPostEditorProps
                     </span>
                   </div>
                   <p className="text-[10px] text-muted-foreground">
-                    Ajuste o tamanho ideal do rosto e a margem ao redor para melhorar o rastreamento em diferentes distâncias da câmera.
+                    Ajuste o tamanho ideal do rosto e a margem ao redor para melhorar o rastreamento em diferentes distâncias da câmera.{" "}
+                    <span className="text-primary">Salvo automaticamente no seu perfil.</span>
                   </p>
                   <div className="space-y-1">
                     <Label className="text-[11px]">

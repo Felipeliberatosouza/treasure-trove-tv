@@ -342,6 +342,46 @@ const VideoPostEditor = ({ sourceBlob, onCancel, onApply }: VideoPostEditorProps
     const ctx = c.getContext("2d")!;
 
     setCurrentTime(v.currentTime);
+
+    // Detecção de rosto (modo auto): roda a cada frame quando playing
+    if (zoomMode === "auto" && faceDetectorRef.current && !v.paused) {
+      try {
+        await faceDetectorRef.current.send({ image: v });
+      } catch {
+        // ignora
+      }
+    }
+
+    // Atualiza tracking suavizado para o modo auto
+    if (zoomMode === "auto") {
+      const intensity = autoIntensityRef.current / 100; // 0..1
+      if (lastFaceBoxRef.current) {
+        const fb = lastFaceBoxRef.current;
+        // Zoom alvo: rosto pequeno => mais zoom. Tamanho do rosto ideal ~ 0.35 da altura
+        const targetSize = 0.35;
+        const ratio = targetSize / Math.max(0.05, fb.size);
+        // Limitado por intensidade
+        const maxScale = 1 + intensity * 1.5; // até 2.5x
+        const targetScale = Math.max(1, Math.min(maxScale, ratio));
+        // Suavização (lerp com fator baixo)
+        const lerp = 0.08;
+        autoTrackRef.current.scale += (targetScale - autoTrackRef.current.scale) * lerp;
+        autoTrackRef.current.cx += (fb.cx - autoTrackRef.current.cx) * lerp;
+        autoTrackRef.current.cy += (fb.cy - autoTrackRef.current.cy) * lerp;
+      } else {
+        // Sem rosto: volta para enquadramento neutro suavemente
+        const lerp = 0.05;
+        autoTrackRef.current.scale += (1 - autoTrackRef.current.scale) * lerp;
+        autoTrackRef.current.cx += (0.5 - autoTrackRef.current.cx) * lerp;
+        autoTrackRef.current.cy += (0.5 - autoTrackRef.current.cy) * lerp;
+      }
+    } else {
+      // Reset rápido se não estiver em auto
+      autoTrackRef.current.scale = 1;
+      autoTrackRef.current.cx = 0.5;
+      autoTrackRef.current.cy = 0.5;
+    }
+
     const z = interpolateZoom(v.currentTime);
     setCurrentScale(z.scale);
     setCurrentCx(z.cx);

@@ -4,6 +4,7 @@ import { Progress } from "@/components/ui/progress";
 import { Video, Square, RotateCcw, Check, X, Camera, Loader2, Wand2, Sun, RefreshCcw, Sparkles } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { compositeVideo, ImpactWord } from "@/utils/videoCompositor";
@@ -68,6 +69,12 @@ const VideoRecorder = ({
   const [contrast, setContrast] = useState(100);
   const [saturation, setSaturation] = useState(100);
   const [exposure, setExposure] = useState(0); // -50..+50 (gamma-like)
+  // Auto contínuo: reanalisa periodicamente a iluminação durante a gravação
+  const [autoContinuous, setAutoContinuous] = useState(false);
+  const [autoIntervalSec, setAutoIntervalSec] = useState(5);
+  const autoLightIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const autoIntervalSecRef = useRef(5);
+  useEffect(() => { autoIntervalSecRef.current = autoIntervalSec; }, [autoIntervalSec]);
   // Ref espelha o estado para o loop de render acessar sem re-criar callback
   const filterRef = useRef({ b: 100, c: 100, s: 100, e: 0 });
   useEffect(() => {
@@ -94,10 +101,10 @@ const VideoRecorder = ({
    *  - Calcula luminância média (Y) e desvio padrão como proxy de contraste.
    *  - Calcula saturação média (HSV-ish) para detectar imagem "lavada".
    */
-  const applyAutoLight = () => {
+  const applyAutoLight = (silent = false) => {
     const v = videoRef.current;
     if (!v || !v.videoWidth) {
-      toast.error("Aguarde a câmera carregar para usar o modo automático.");
+      if (!silent) toast.error("Aguarde a câmera carregar para usar o modo automático.");
       return;
     }
     const tmp = document.createElement("canvas");
@@ -168,11 +175,39 @@ const VideoRecorder = ({
     else if (meanY > 180) condicao = "ambiente muito claro";
     else if (stdY < 35) condicao = "imagem com pouco contraste";
 
-    toast.success(`Auto aplicado · ${condicao}`, {
-      description: `Brilho ${bSuggest}% · Exposição ${eSuggest > 0 ? "+" : ""}${eSuggest} · Contraste ${cSuggest}% · Saturação ${sSuggest}%`,
-      duration: 4500,
-    });
+    if (!silent) {
+      toast.success(`Auto aplicado · ${condicao}`, {
+        description: `Brilho ${bSuggest}% · Exposição ${eSuggest > 0 ? "+" : ""}${eSuggest} · Contraste ${cSuggest}% · Saturação ${sSuggest}%`,
+        duration: 4500,
+      });
+    }
   };
+
+  // Liga/desliga o ciclo de Auto contínuo. Faz uma análise imediata
+  // e depois reanalisa a cada N segundos enquanto estiver ativo.
+  useEffect(() => {
+    if (autoLightIntervalRef.current) {
+      clearInterval(autoLightIntervalRef.current);
+      autoLightIntervalRef.current = null;
+    }
+    if (!autoContinuous) return;
+    // análise imediata silenciosa
+    applyAutoLight(true);
+    autoLightIntervalRef.current = setInterval(() => {
+      applyAutoLight(true);
+    }, Math.max(1, autoIntervalSecRef.current) * 1000);
+    return () => {
+      if (autoLightIntervalRef.current) {
+        clearInterval(autoLightIntervalRef.current);
+        autoLightIntervalRef.current = null;
+      }
+    };
+  }, [autoContinuous, autoIntervalSec]);
+
+  // Garante limpeza ao desmontar
+  useEffect(() => () => {
+    if (autoLightIntervalRef.current) clearInterval(autoLightIntervalRef.current);
+  }, []);
 
   const maxSeconds = maxMinutes * 60;
   const needsProcessing =
@@ -666,7 +701,7 @@ const VideoRecorder = ({
                 size="sm"
                 variant="secondary"
                 className="h-7 px-2 text-xs gap-1"
-                onClick={applyAutoLight}
+                onClick={() => applyAutoLight(false)}
                 title="Sugere valores com base na iluminação atual da câmera"
               >
                 <Sparkles className="h-3 w-3" /> Auto
@@ -684,6 +719,41 @@ const VideoRecorder = ({
           <p className="text-[10px] text-muted-foreground">
             Use <strong>Auto</strong> para sugerir valores conforme a iluminação detectada, ou ajuste manualmente. Tudo é gravado no vídeo final.
           </p>
+          <div className="rounded-md border border-dashed border-border bg-muted/30 p-2 space-y-2">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-3.5 w-3.5 text-primary" />
+                <Label htmlFor="auto-cont" className="text-xs font-medium cursor-pointer">
+                  Auto contínuo
+                </Label>
+                {autoContinuous && (
+                  <span className="inline-flex items-center gap-1 text-[10px] text-primary">
+                    <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+                    ativo
+                  </span>
+                )}
+              </div>
+              <Switch
+                id="auto-cont"
+                checked={autoContinuous}
+                onCheckedChange={setAutoContinuous}
+              />
+            </div>
+            <p className="text-[10px] text-muted-foreground">
+              Reanalisa a iluminação a cada poucos segundos e ajusta automaticamente os valores enquanto você grava.
+            </p>
+            <div className="space-y-1">
+              <Label className="text-[10px]">Intervalo: {autoIntervalSec}s</Label>
+              <Slider
+                value={[autoIntervalSec]}
+                min={2}
+                max={20}
+                step={1}
+                onValueChange={([v]) => setAutoIntervalSec(v)}
+                disabled={!autoContinuous}
+              />
+            </div>
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
             <div className="space-y-1">
               <Label className="text-xs">Brilho: {brightness}%</Label>

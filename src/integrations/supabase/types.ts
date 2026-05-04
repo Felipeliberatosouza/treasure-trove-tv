@@ -1103,7 +1103,9 @@ export type Database = {
           code: string
           created_at: string
           expires_at: string
+          failed_attempts: number
           id: string
+          invalidated: boolean
           phone: string
           user_id: string
           verified: boolean
@@ -1113,7 +1115,9 @@ export type Database = {
           code: string
           created_at?: string
           expires_at?: string
+          failed_attempts?: number
           id?: string
+          invalidated?: boolean
           phone: string
           user_id: string
           verified?: boolean
@@ -1123,7 +1127,9 @@ export type Database = {
           code?: string
           created_at?: string
           expires_at?: string
+          failed_attempts?: number
           id?: string
+          invalidated?: boolean
           phone?: string
           user_id?: string
           verified?: boolean
@@ -2758,7 +2764,48 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      teacher_profiles_public: {
+        Row: {
+          areas: string[] | null
+          avatar_url: string | null
+          bio: string | null
+          content_order: Json | null
+          education: Json | null
+          experiences: Json | null
+          expertise_area: string | null
+          name: string | null
+          profile_title: string | null
+          slug: string | null
+          user_id: string | null
+        }
+        Insert: {
+          areas?: string[] | null
+          avatar_url?: string | null
+          bio?: string | null
+          content_order?: Json | null
+          education?: Json | null
+          experiences?: Json | null
+          expertise_area?: string | null
+          name?: string | null
+          profile_title?: string | null
+          slug?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          areas?: string[] | null
+          avatar_url?: string | null
+          bio?: string | null
+          content_order?: Json | null
+          education?: Json | null
+          experiences?: Json | null
+          expertise_area?: string | null
+          name?: string | null
+          profile_title?: string | null
+          slug?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       add_business_days: {

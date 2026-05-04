@@ -26,6 +26,17 @@ serve(async (req) => {
   try {
     logStep("Function started");
 
+    // Require cron-secret header (compared against platform_settings.cron_secret)
+    const cronHeader = req.headers.get("x-cron-secret") || "";
+    const { data: secretRow } = await supabase
+      .from("platform_settings").select("value").eq("key", "cron_secret").maybeSingle();
+    const expected = (secretRow?.value as any)?.token || "";
+    if (!expected || cronHeader !== expected) {
+      return new Response(JSON.stringify({ error: "Não autorizado" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const now = new Date();
     const reminderDays = [7, 3, 1]; // Send reminders 7, 3, and 1 day(s) before expiry
 

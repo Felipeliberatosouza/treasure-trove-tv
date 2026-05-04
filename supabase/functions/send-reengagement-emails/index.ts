@@ -32,6 +32,17 @@ Deno.serve(async (req: Request) => {
     const supabase = createClient(supabaseUrl, serviceRoleKey)
     const loginLink = supabaseUrl.replace('.supabase.co', '.lovable.app')
 
+    // Require cron-secret
+    const cronHeader = req.headers.get('x-cron-secret') || ''
+    const { data: secretRow } = await supabase
+      .from('platform_settings').select('value').eq('key', 'cron_secret').maybeSingle()
+    const expected = (secretRow?.value as any)?.token || ''
+    if (!expected || cronHeader !== expected) {
+      return new Response(JSON.stringify({ error: 'Não autorizado' }), {
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
     // Config
     const { data: cfgRow } = await supabase
       .from('platform_settings')

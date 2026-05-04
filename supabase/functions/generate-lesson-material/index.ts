@@ -1,4 +1,5 @@
 // Generate draft lesson material (simulado / top_questoes / colinha) using Lovable AI Gateway.
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -207,6 +208,36 @@ const SINGLE_SYSTEM_PROMPTS: Record<Exclude<MaterialKind, "description">, string
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   try {
+    // Require authenticated teacher or admin
+    const authHeader = req.headers.get("Authorization") || "";
+    if (!authHeader.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Não autenticado" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const userClient = createClient(supabaseUrl, anonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const { data: ud } = await userClient.auth.getUser();
+    const uid = ud?.user?.id;
+    if (!uid) {
+      return new Response(JSON.stringify({ error: "Não autenticado" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const adminClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    const [{ data: isTeacher }, { data: isAdmin }] = await Promise.all([
+      adminClient.rpc("has_role", { _user_id: uid, _role: "teacher" }),
+      adminClient.rpc("has_role", { _user_id: uid, _role: "admin" }),
+    ]);
+    if (!isTeacher && !isAdmin) {
+      return new Response(JSON.stringify({ error: "Apenas professores" }), {
+        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const body = (await req.json()) as RequestBody;
     if (!body?.kind || !body?.title) {
       return new Response(JSON.stringify({ error: "kind e title são obrigatórios" }), {
@@ -214,6 +245,12 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    // Truncate user-supplied strings to limit prompt-injection surface
+    const trunc = (s: unknown, n: number) => String(s ?? "").slice(0, n);
+    body.title = trunc(body.title, 300);
+    body.description = trunc(body.description, 2000);
+    body.area = trunc(body.area, 100);
+    body.transcript = trunc(body.transcript, 20000);
     const isSingle = body.mode === "single" && body.kind !== "description";
     const tool = isSingle
       ? SINGLE_TOOL_BY_KIND[body.kind as Exclude<MaterialKind, "description">]

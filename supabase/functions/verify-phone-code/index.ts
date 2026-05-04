@@ -37,14 +37,35 @@ Deno.serve(async (req) => {
       .from("phone_verifications")
       .select("*")
       .eq("phone", e164Phone)
-      .eq("code", code)
       .eq("verified", false)
+      .eq("invalidated", false)
       .gte("expires_at", new Date().toISOString())
       .order("created_at", { ascending: false })
       .limit(1)
       .single();
 
     if (!verification) {
+      return respond({ ok: false, error: "Código inválido ou expirado" });
+    }
+
+    // Brute-force protection: cap at 5 attempts per code, then invalidate.
+    if ((verification.failed_attempts ?? 0) >= 5) {
+      await supabase
+        .from("phone_verifications")
+        .update({ invalidated: true })
+        .eq("id", verification.id);
+      return respond({ ok: false, error: "Muitas tentativas. Solicite um novo código." });
+    }
+
+    if (verification.code !== code) {
+      const next = (verification.failed_attempts ?? 0) + 1;
+      await supabase
+        .from("phone_verifications")
+        .update({
+          failed_attempts: next,
+          invalidated: next >= 5,
+        })
+        .eq("id", verification.id);
       return respond({ ok: false, error: "Código inválido ou expirado" });
     }
 

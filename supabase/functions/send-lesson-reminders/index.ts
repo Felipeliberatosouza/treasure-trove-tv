@@ -124,6 +124,17 @@ Deno.serve(async (req) => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+    // Require cron-secret
+    const cronHeader = req.headers.get("x-cron-secret") || "";
+    const { data: secretRow } = await supabase
+      .from("platform_settings").select("value").eq("key", "cron_secret").maybeSingle();
+    const expected = (secretRow?.value as any)?.token || "";
+    if (!expected || cronHeader !== expected) {
+      return new Response(JSON.stringify({ error: "Não autorizado" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     const TWILIO_API_KEY = Deno.env.get("TWILIO_API_KEY");
     if (!LOVABLE_API_KEY || !TWILIO_API_KEY) {

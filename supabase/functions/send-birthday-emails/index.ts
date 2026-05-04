@@ -16,6 +16,17 @@ Deno.serve(async (req: Request) => {
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const supabase = createClient(supabaseUrl, serviceRoleKey)
 
+    // Require cron-secret
+    const cronHeader = req.headers.get('x-cron-secret') || ''
+    const { data: secretRow } = await supabase
+      .from('platform_settings').select('value').eq('key', 'cron_secret').maybeSingle()
+    const expected = (secretRow?.value as any)?.token || ''
+    if (!expected || cronHeader !== expected) {
+      return new Response(JSON.stringify({ error: 'Não autorizado' }), {
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
     const today = new Date()
     const month = today.getMonth() + 1
     const day = today.getDate()

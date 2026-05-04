@@ -31,8 +31,46 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     // deno-lint-ignore no-explicit-any
     const supabase: any = createClient(supabaseUrl, serviceKey);
+
+    // Authn/Authz: cron secret OR admin JWT
+    const cronHeader = req.headers.get("x-cron-secret") || "";
+    let isAuthorized = false;
+    if (cronHeader) {
+      const { data: row } = await supabase
+        .from("platform_settings")
+        .select("value")
+        .eq("key", "cron_secret")
+        .maybeSingle();
+      const expected = (row?.value as any)?.token || "";
+      if (expected && cronHeader === expected) isAuthorized = true;
+    }
+    if (!isAuthorized) {
+      const authHeader = req.headers.get("Authorization") || "";
+      if (!authHeader.startsWith("Bearer ")) {
+        return new Response(JSON.stringify({ error: "Não autorizado" }), {
+          status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const userClient = createClient(supabaseUrl, anonKey, {
+        global: { headers: { Authorization: authHeader } },
+      });
+      const { data: ud } = await userClient.auth.getUser();
+      const uid = ud?.user?.id;
+      if (!uid) {
+        return new Response(JSON.stringify({ error: "Não autenticado" }), {
+          status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const { data: isAdmin } = await supabase.rpc("has_role", { _user_id: uid, _role: "admin" });
+      if (!isAdmin) {
+        return new Response(JSON.stringify({ error: "Apenas administradores" }), {
+          status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
 
     let body: { period_start?: string; period_end?: string; force?: boolean } = {};
     try { body = await req.json(); } catch { /* sem body */ }

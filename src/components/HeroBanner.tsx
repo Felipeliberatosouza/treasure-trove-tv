@@ -52,7 +52,7 @@ const SlideView = ({
         <div className="absolute inset-0 bg-gradient-to-r from-background/80 via-transparent to-transparent" />
       </div>
 
-      <div className="relative z-10 flex h-full items-end pt-28 pb-20 px-6 md:px-12 lg:px-20">
+      <div className="relative z-10 flex min-h-[85vh] items-end pt-28 pb-20 px-6 md:px-12 lg:px-20">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}

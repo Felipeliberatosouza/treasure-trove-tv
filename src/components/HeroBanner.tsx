@@ -57,15 +57,15 @@ const SlideView = ({
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
-          className="max-w-2xl lg:max-w-4xl xl:max-w-5xl space-y-5"
+          className="max-w-2xl lg:max-w-5xl xl:max-w-6xl 2xl:max-w-7xl space-y-5"
         >
           <span className="inline-block rounded-full bg-primary/20 px-4 py-1 text-sm font-medium text-primary">
             {badge}
           </span>
-          <h1 className="font-display text-3xl font-bold leading-tight md:text-5xl lg:text-6xl xl:text-7xl break-words">
+          <h1 className="font-display text-3xl font-bold leading-tight md:text-4xl lg:text-5xl xl:text-6xl 2xl:text-7xl break-words hyphens-auto">
             {title}
           </h1>
-          <p className="text-sm text-muted-foreground md:text-base lg:text-lg xl:text-xl max-w-lg lg:max-w-2xl xl:max-w-3xl leading-relaxed">
+          <p className="text-sm text-muted-foreground md:text-base lg:text-lg xl:text-xl max-w-lg lg:max-w-3xl xl:max-w-4xl leading-relaxed break-words">
             {subtitle}
           </p>
           {featured && (

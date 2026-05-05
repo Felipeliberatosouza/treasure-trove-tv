@@ -52,7 +52,7 @@ const SlideView = ({
         <div className="absolute inset-0 bg-gradient-to-r from-background/80 via-transparent to-transparent" />
       </div>
 
-      <div className="relative z-10 flex min-h-[85vh] items-end pt-28 pb-20 px-6 md:px-12 lg:px-20">
+      <div className="relative z-10 flex min-h-[85vh] items-end pt-28 pb-24 px-6 md:px-12 lg:px-20">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
@@ -194,7 +194,7 @@ const HeroBanner = ({ onVideoClick, onExploreClick }: HeroBannerProps) => {
 
   return (
     <section
-      className="relative min-h-[85vh] w-full overflow-hidden"
+      className="relative w-full overflow-hidden"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
       onFocusCapture={() => setIsPaused(true)}

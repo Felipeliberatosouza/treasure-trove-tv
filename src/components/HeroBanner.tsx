@@ -194,7 +194,7 @@ const HeroBanner = ({ onVideoClick, onExploreClick }: HeroBannerProps) => {
 
   return (
     <section
-      className="relative w-full overflow-hidden"
+      className="relative min-h-[85vh] w-full overflow-hidden"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
       onFocusCapture={() => setIsPaused(true)}
@@ -209,7 +209,7 @@ const HeroBanner = ({ onVideoClick, onExploreClick }: HeroBannerProps) => {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.6 }}
-          className="absolute inset-0"
+          className="relative"
         >
           <SlideView
             onPrimary={handlePrimary}

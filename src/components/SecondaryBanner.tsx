@@ -157,18 +157,18 @@ const SecondaryBanner = () => {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -12 }}
           transition={{ duration: 0.4 }}
-          className="relative z-10 flex flex-col items-center justify-center text-center px-6 gap-4 max-w-3xl lg:max-w-5xl xl:max-w-6xl 2xl:max-w-7xl mx-auto"
+          className="relative z-10 flex flex-col items-center justify-center text-center px-6 gap-4 w-full max-w-3xl lg:max-w-5xl xl:max-w-6xl 2xl:max-w-7xl mx-auto min-w-0"
         >
           <span className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${s.badge}`}>
             {active.badge}
           </span>
           {slide.title && (
-            <h2 className={`text-3xl md:text-4xl lg:text-5xl xl:text-5xl 2xl:text-6xl font-display font-bold break-words hyphens-auto ${s.title}`}>
+            <h2 className={`w-full text-3xl md:text-4xl lg:text-5xl xl:text-5xl 2xl:text-6xl font-display font-bold break-words hyphens-auto [overflow-wrap:anywhere] ${s.title}`}>
               {slide.title}
             </h2>
           )}
           {slide.subtitle && (
-            <p className={`text-lg md:text-xl lg:text-2xl max-w-2xl lg:max-w-4xl xl:max-w-5xl break-words ${s.subtitle}`}>
+            <p className={`w-full text-lg md:text-xl lg:text-2xl max-w-2xl lg:max-w-4xl xl:max-w-5xl break-words hyphens-auto [overflow-wrap:anywhere] ${s.subtitle}`}>
               {slide.subtitle}
             </p>
           )}

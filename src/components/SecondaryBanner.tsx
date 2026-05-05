@@ -157,18 +157,18 @@ const SecondaryBanner = () => {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -12 }}
           transition={{ duration: 0.4 }}
-          className="relative z-10 flex flex-col items-center justify-center text-center px-6 gap-4 max-w-3xl mx-auto"
+          className="relative z-10 flex flex-col items-center justify-center text-center px-6 gap-4 max-w-3xl lg:max-w-5xl xl:max-w-6xl mx-auto"
         >
           <span className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${s.badge}`}>
             {active.badge}
           </span>
           {slide.title && (
-            <h2 className={`text-3xl md:text-4xl font-display font-bold ${s.title}`}>
+            <h2 className={`text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-display font-bold break-words ${s.title}`}>
               {slide.title}
             </h2>
           )}
           {slide.subtitle && (
-            <p className={`text-lg md:text-xl max-w-2xl ${s.subtitle}`}>
+            <p className={`text-lg md:text-xl lg:text-2xl max-w-2xl lg:max-w-4xl ${s.subtitle}`}>
               {slide.subtitle}
             </p>
           )}

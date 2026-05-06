@@ -68,6 +68,7 @@ const StudentContentSections = ({
   const [loading, setLoading] = useState(true);
   const [watchedIds, setWatchedIds] = useState<Set<string>>(new Set());
   const [ratings, setRatings] = useState<Record<string, { average: number; count: number }>>({});
+  const [continueWatching, setContinueWatching] = useState<Array<Video & { _progress: number }>>([]);
 
   const studentAreas = useMemo<string[]>(
     () => ((profile as any)?.areas as string[] | undefined) ?? [],
@@ -174,8 +175,13 @@ const StudentContentSections = ({
       });
 
       const watched = new Set<string>();
+      const progressMap = new Map<string, number>();
       ((watchedRes.data as any[]) || []).forEach((v) => {
-        if ((v.watch_percentage || 0) >= 70) watched.add(v.content_id);
+        const p = v.watch_percentage || 0;
+        if (p >= 70) watched.add(v.content_id);
+        // Track in-progress: started but not effectively finished
+        const prev = progressMap.get(v.content_id) || 0;
+        if (p > prev) progressMap.set(v.content_id, p);
       });
 
       const sortBy = (a: any, b: any) => {
@@ -191,6 +197,16 @@ const StudentContentSections = ({
       lessonsRows.sort(sortBy);
       examsRows.sort(sortBy);
 
+      // Build "Continue watching": items with progress between 5% and 95%
+      const allRows = [...lessonsRows, ...examsRows];
+      const inProgress = allRows
+        .map((r) => ({ row: r, progress: progressMap.get(r.id) || 0 }))
+        .filter(({ progress }) => progress >= 5 && progress < 95)
+        .sort((a, b) => b.progress - a.progress)
+        .slice(0, 30)
+        .map(({ row, progress }) => ({ ...mapToVideo(row), _progress: progress }));
+
+      setContinueWatching(inProgress);
       setRatings(ratingsMap);
       setWatchedIds(watched);
       setLessons(lessonsRows.map(mapToVideo));
@@ -229,6 +245,17 @@ const StudentContentSections = ({
             </Link>
           </div>
         </div>
+      )}
+
+      {continueWatching.length > 0 && (
+        <Section
+          title="Continuar assistindo"
+          videos={continueWatching}
+          onVideoClick={onVideoClick}
+          ratings={ratings}
+          watchedIds={watchedIds}
+          emptyText=""
+        />
       )}
 
       <Section

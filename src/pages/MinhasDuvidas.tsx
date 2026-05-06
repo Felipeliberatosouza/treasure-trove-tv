@@ -287,8 +287,21 @@ const MinhasDuvidas = () => {
                 return (
                   <li
                     key={d.id}
-                    className="rounded-xl border border-border bg-card p-4 space-y-3"
+                    className={`rounded-xl border bg-card p-4 space-y-3 transition-all ${
+                      newIds.has(d.id)
+                        ? "border-primary ring-2 ring-primary/40 shadow-[0_0_0_4px_hsl(var(--primary)/0.15)]"
+                        : "border-border"
+                    }`}
                   >
+                    {newIds.has(d.id) && (
+                      <div className="flex items-center gap-2 text-xs font-medium text-primary">
+                        <span className="relative flex h-2 w-2">
+                          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
+                          <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
+                        </span>
+                        Nova atualização nesta dúvida
+                      </div>
+                    )}
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0 flex-1">
                         <p className="text-xs text-muted-foreground">
@@ -328,7 +341,10 @@ const MinhasDuvidas = () => {
                       <div className="border-t border-border pt-3 space-y-3">
                         <button
                           type="button"
-                          onClick={() => setOpenId(open ? null : d.id)}
+                          onClick={() => {
+                            setOpenId(open ? null : d.id);
+                            clearNew(d.id);
+                          }}
                           className="text-xs font-medium text-primary hover:underline inline-flex items-center gap-1"
                         >
                           <MessageSquare className="h-3.5 w-3.5" />

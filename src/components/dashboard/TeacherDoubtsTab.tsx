@@ -8,8 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { HelpCircle, Send, Clock, AlertTriangle, CheckCircle, Loader2, Filter } from "lucide-react";
+import { HelpCircle, Send, Clock, AlertTriangle, CheckCircle, Loader2, Filter, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
+import DoubtThreadDialog from "@/components/doubts/DoubtThreadDialog";
 
 type DoubtFilter = "all" | "pending" | "awaiting_approval" | "answered";
 
@@ -40,6 +41,8 @@ const TeacherDoubtsTab = () => {
   const [answerModal, setAnswerModal] = useState<Doubt | null>(null);
   const [answerText, setAnswerText] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [threadDoubt, setThreadDoubt] = useState<Doubt | null>(null);
+  const [pendingMsgs, setPendingMsgs] = useState<Record<string, number>>({});
   const { data: deadlineData } = usePlatformSettings("doubt_response_deadline_days");
   const deadlineDays = typeof deadlineData === "number" ? deadlineData : 3;
 
@@ -88,6 +91,24 @@ const TeacherDoubtsTab = () => {
       student_name: profileMap.get(d.student_id) || "Aluno",
       content_title: titleMap.get(d.content_id) || "Conteúdo",
     })));
+
+    if (data.length) {
+      const { data: msgs } = await supabase
+        .from("doubt_messages")
+        .select("doubt_id, status, message_kind, author_role")
+        .in("doubt_id", data.map(d => d.id));
+      const map: Record<string, number> = {};
+      (msgs || []).forEach((m: any) => {
+        // Highlight to teacher: questions approved by admin awaiting teacher reply
+        if (m.author_role === "student" && m.message_kind === "question" && m.status === "approved") {
+          map[m.doubt_id] = (map[m.doubt_id] || 0) + 1;
+        }
+      });
+      setPendingMsgs(map);
+    } else {
+      setPendingMsgs({});
+    }
+
     setLoading(false);
   };
 
@@ -227,15 +248,25 @@ const TeacherDoubtsTab = () => {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
-                      {doubt.status === "approved" ? (
-                        <Button size="sm" onClick={() => { setAnswerModal(doubt); setAnswerText(""); }}>
-                          <Send className="h-4 w-4 mr-1" /> Responder
+                      <div className="flex items-center justify-end gap-1 flex-wrap">
+                        {doubt.status === "approved" ? (
+                          <Button size="sm" onClick={() => { setAnswerModal(doubt); setAnswerText(""); }}>
+                            <Send className="h-4 w-4 mr-1" /> Responder
+                          </Button>
+                        ) : (
+                          <Button size="sm" variant="ghost" onClick={() => { setAnswerModal(doubt); setAnswerText(doubt.answer || ""); }}>
+                            Ver Resposta
+                          </Button>
+                        )}
+                        <Button size="sm" variant="ghost" onClick={() => setThreadDoubt(doubt)}>
+                          <MessageSquare className="h-4 w-4 mr-1" /> Conversa
+                          {pendingMsgs[doubt.id] > 0 && (
+                            <span className="ml-1 inline-flex items-center justify-center rounded-full bg-orange-500 text-white text-[10px] h-4 min-w-4 px-1">
+                              {pendingMsgs[doubt.id]}
+                            </span>
+                          )}
                         </Button>
-                      ) : (
-                        <Button size="sm" variant="ghost" onClick={() => { setAnswerModal(doubt); setAnswerText(doubt.answer || ""); }}>
-                          Ver Resposta
-                        </Button>
-                      )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 );
@@ -304,6 +335,14 @@ const TeacherDoubtsTab = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      <DoubtThreadDialog
+        role="teacher"
+        open={!!threadDoubt}
+        doubt={threadDoubt}
+        onClose={() => setThreadDoubt(null)}
+        onChanged={fetchDoubts}
+      />
     </div>
   );
 };

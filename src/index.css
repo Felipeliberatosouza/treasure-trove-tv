@@ -68,6 +68,24 @@
   body {
     @apply bg-background text-foreground font-body antialiased;
   }
+
+  /* Safety net: prevent any descendant from creating horizontal overflow
+     at the document level. Sections may still scroll internally if they
+     opt-in explicitly. */
+  html,
+  body {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  /* Media should never push the viewport wider than its container. */
+  img,
+  video,
+  canvas,
+  svg,
+  iframe {
+    max-width: 100%;
+  }
 }
 
 @layer utilities {

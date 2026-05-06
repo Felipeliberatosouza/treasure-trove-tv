@@ -68,6 +68,21 @@ const MinhasDuvidas = () => {
   const [openId, setOpenId] = useState<string | null>(null);
   const [reply, setReply] = useState<Record<string, string>>({});
   const [sendingId, setSendingId] = useState<string | null>(null);
+  const [newIds, setNewIds] = useState<Set<string>>(new Set());
+
+  const markNew = (id: string) =>
+    setNewIds((prev) => {
+      const n = new Set(prev);
+      n.add(id);
+      return n;
+    });
+  const clearNew = (id: string) =>
+    setNewIds((prev) => {
+      if (!prev.has(id)) return prev;
+      const n = new Set(prev);
+      n.delete(id);
+      return n;
+    });
 
   const fetchAll = async () => {
     setLoading(true);
@@ -139,15 +154,62 @@ const MinhasDuvidas = () => {
       .channel(`minhas-duvidas-${user.id}`)
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "student_doubts", filter: `student_id=eq.${user.id}` },
+        { event: "UPDATE", schema: "public", table: "student_doubts", filter: `student_id=eq.${user.id}` },
+        (payload: any) => {
+          const oldRow = payload.old || {};
+          const newRow = payload.new || {};
+          const id = newRow.id;
+          if (id && oldRow.status !== newRow.status) {
+            if (newRow.status === "answered") {
+              toast.success("Professor respondeu sua dúvida!", {
+                description: "Abra para ver a resposta.",
+              });
+              markNew(id);
+            } else if (newRow.status === "approved") {
+              toast.success("Sua dúvida foi aprovada e enviada ao professor.");
+            } else if (newRow.status === "rejected") {
+              toast.error("Sua dúvida foi rejeitada pela equipe.");
+            } else if (newRow.status === "pending_answer_approval") {
+              toast("Resposta do professor em revisão pela equipe.", {
+                description: "Você será notificado quando for liberada.",
+              });
+            }
+          }
+          fetchAll();
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "student_doubts", filter: `student_id=eq.${user.id}` },
         () => fetchAll()
       )
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "doubt_messages" },
         (payload: any) => {
-          const did = (payload.new?.doubt_id || payload.old?.doubt_id) as string | undefined;
-          if (did && doubts.some((d) => d.id === did)) fetchAll();
+          const newRow = payload.new || {};
+          const oldRow = payload.old || {};
+          const did = (newRow.doubt_id || oldRow.doubt_id) as string | undefined;
+          if (!did || !doubts.some((d) => d.id === did)) return;
+
+          // New approved teacher/admin message
+          if (
+            payload.eventType === "INSERT" &&
+            newRow.author_role !== "student" &&
+            newRow.status === "approved"
+          ) {
+            toast.success("Nova resposta disponível na sua dúvida.");
+            markNew(did);
+          } else if (
+            payload.eventType === "UPDATE" &&
+            oldRow.status !== newRow.status &&
+            newRow.status === "approved" &&
+            newRow.author_role !== "student"
+          ) {
+            toast.success("Nova resposta disponível na sua dúvida.");
+            markNew(did);
+          }
+          fetchAll();
         }
       )
       .subscribe();
@@ -225,8 +287,21 @@ const MinhasDuvidas = () => {
                 return (
                   <li
                     key={d.id}
-                    className="rounded-xl border border-border bg-card p-4 space-y-3"
+                    className={`rounded-xl border bg-card p-4 space-y-3 transition-all ${
+                      newIds.has(d.id)
+                        ? "border-primary ring-2 ring-primary/40 shadow-[0_0_0_4px_hsl(var(--primary)/0.15)]"
+                        : "border-border"
+                    }`}
                   >
+                    {newIds.has(d.id) && (
+                      <div className="flex items-center gap-2 text-xs font-medium text-primary">
+                        <span className="relative flex h-2 w-2">
+                          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
+                          <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
+                        </span>
+                        Nova atualização nesta dúvida
+                      </div>
+                    )}
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0 flex-1">
                         <p className="text-xs text-muted-foreground">
@@ -266,7 +341,10 @@ const MinhasDuvidas = () => {
                       <div className="border-t border-border pt-3 space-y-3">
                         <button
                           type="button"
-                          onClick={() => setOpenId(open ? null : d.id)}
+                          onClick={() => {
+                            setOpenId(open ? null : d.id);
+                            clearNew(d.id);
+                          }}
                           className="text-xs font-medium text-primary hover:underline inline-flex items-center gap-1"
                         >
                           <MessageSquare className="h-3.5 w-3.5" />

@@ -132,6 +132,31 @@ const MinhasDuvidas = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user.id]);
 
+  // Realtime: refresh when admin/teacher update doubts or new messages arrive
+  useEffect(() => {
+    if (!user?.id) return;
+    const channel = supabase
+      .channel(`minhas-duvidas-${user.id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "student_doubts", filter: `student_id=eq.${user.id}` },
+        () => fetchAll()
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "doubt_messages" },
+        (payload: any) => {
+          const did = (payload.new?.doubt_id || payload.old?.doubt_id) as string | undefined;
+          if (did && doubts.some((d) => d.id === did)) fetchAll();
+        }
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, doubts.map((d) => d.id).join(",")]);
+
   const handleReply = async (doubt: Doubt) => {
     const text = (reply[doubt.id] || "").trim();
     if (text.length < 10) {

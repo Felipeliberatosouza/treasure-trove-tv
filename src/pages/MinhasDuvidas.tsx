@@ -68,6 +68,21 @@ const MinhasDuvidas = () => {
   const [openId, setOpenId] = useState<string | null>(null);
   const [reply, setReply] = useState<Record<string, string>>({});
   const [sendingId, setSendingId] = useState<string | null>(null);
+  const [newIds, setNewIds] = useState<Set<string>>(new Set());
+
+  const markNew = (id: string) =>
+    setNewIds((prev) => {
+      const n = new Set(prev);
+      n.add(id);
+      return n;
+    });
+  const clearNew = (id: string) =>
+    setNewIds((prev) => {
+      if (!prev.has(id)) return prev;
+      const n = new Set(prev);
+      n.delete(id);
+      return n;
+    });
 
   const fetchAll = async () => {
     setLoading(true);
@@ -139,15 +154,62 @@ const MinhasDuvidas = () => {
       .channel(`minhas-duvidas-${user.id}`)
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "student_doubts", filter: `student_id=eq.${user.id}` },
+        { event: "UPDATE", schema: "public", table: "student_doubts", filter: `student_id=eq.${user.id}` },
+        (payload: any) => {
+          const oldRow = payload.old || {};
+          const newRow = payload.new || {};
+          const id = newRow.id;
+          if (id && oldRow.status !== newRow.status) {
+            if (newRow.status === "answered") {
+              toast.success("Professor respondeu sua dúvida!", {
+                description: "Abra para ver a resposta.",
+              });
+              markNew(id);
+            } else if (newRow.status === "approved") {
+              toast.success("Sua dúvida foi aprovada e enviada ao professor.");
+            } else if (newRow.status === "rejected") {
+              toast.error("Sua dúvida foi rejeitada pela equipe.");
+            } else if (newRow.status === "pending_answer_approval") {
+              toast("Resposta do professor em revisão pela equipe.", {
+                description: "Você será notificado quando for liberada.",
+              });
+            }
+          }
+          fetchAll();
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "student_doubts", filter: `student_id=eq.${user.id}` },
         () => fetchAll()
       )
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "doubt_messages" },
         (payload: any) => {
-          const did = (payload.new?.doubt_id || payload.old?.doubt_id) as string | undefined;
-          if (did && doubts.some((d) => d.id === did)) fetchAll();
+          const newRow = payload.new || {};
+          const oldRow = payload.old || {};
+          const did = (newRow.doubt_id || oldRow.doubt_id) as string | undefined;
+          if (!did || !doubts.some((d) => d.id === did)) return;
+
+          // New approved teacher/admin message
+          if (
+            payload.eventType === "INSERT" &&
+            newRow.author_role !== "student" &&
+            newRow.status === "approved"
+          ) {
+            toast.success("Nova resposta disponível na sua dúvida.");
+            markNew(did);
+          } else if (
+            payload.eventType === "UPDATE" &&
+            oldRow.status !== newRow.status &&
+            newRow.status === "approved" &&
+            newRow.author_role !== "student"
+          ) {
+            toast.success("Nova resposta disponível na sua dúvida.");
+            markNew(did);
+          }
+          fetchAll();
         }
       )
       .subscribe();

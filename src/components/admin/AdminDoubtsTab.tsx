@@ -10,6 +10,8 @@ import { useToast } from "@/hooks/use-toast";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import DoubtThreadDialog from "@/components/doubts/DoubtThreadDialog";
+import { MessageSquare } from "lucide-react";
 
 interface Doubt {
   id: string;
@@ -38,6 +40,8 @@ const AdminDoubtsTab = () => {
   const [deadlineDays, setDeadlineDays] = useState("3");
   const [savingDeadline, setSavingDeadline] = useState(false);
   const [viewAnswer, setViewAnswer] = useState<Doubt | null>(null);
+  const [threadDoubt, setThreadDoubt] = useState<Doubt | null>(null);
+  const [pendingMsgsByDoubt, setPendingMsgsByDoubt] = useState<Record<string, number>>({});
 
   useEffect(() => {
     if (deadlineData !== undefined && deadlineData !== null) {
@@ -76,6 +80,23 @@ const AdminDoubtsTab = () => {
       teacher_name: profileMap.get(d.teacher_id) || "Professor",
       content_title: titleMap.get(d.content_id) || "Conteúdo",
     })));
+
+    // Fetch pending thread messages count per doubt
+    if (doubtsData.length) {
+      const { data: msgs } = await supabase
+        .from("doubt_messages")
+        .select("doubt_id, status")
+        .in("doubt_id", doubtsData.map(d => d.id))
+        .eq("status", "pending_approval");
+      const map: Record<string, number> = {};
+      (msgs || []).forEach((m: any) => {
+        map[m.doubt_id] = (map[m.doubt_id] || 0) + 1;
+      });
+      setPendingMsgsByDoubt(map);
+    } else {
+      setPendingMsgsByDoubt({});
+    }
+
     setLoading(false);
   };
 
@@ -361,6 +382,19 @@ const AdminDoubtsTab = () => {
                           <Eye className="h-4 w-4 mr-1" /> Ver
                         </Button>
                       )}
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 relative"
+                        onClick={() => setThreadDoubt(doubt)}
+                      >
+                        <MessageSquare className="h-4 w-4 mr-1" /> Conversa
+                        {pendingMsgsByDoubt[doubt.id] > 0 && (
+                          <span className="ml-1 inline-flex items-center justify-center rounded-full bg-orange-500 text-white text-[10px] h-4 min-w-4 px-1">
+                            {pendingMsgsByDoubt[doubt.id]}
+                          </span>
+                        )}
+                      </Button>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -395,6 +429,14 @@ const AdminDoubtsTab = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      <DoubtThreadDialog
+        role="admin"
+        open={!!threadDoubt}
+        doubt={threadDoubt}
+        onClose={() => setThreadDoubt(null)}
+        onChanged={fetchDoubts}
+      />
     </div>
   );
 };

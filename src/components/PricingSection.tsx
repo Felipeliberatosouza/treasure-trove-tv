@@ -11,6 +11,7 @@ import CpfRequiredModal from "@/components/CpfRequiredModal";
 import { useCpfGuard } from "@/hooks/useCpfGuard";
 import { useActiveSubscription } from "@/hooks/useActiveSubscription";
 import PaymentSecurityBadge from "@/components/PaymentSecurityBadge";
+import { useDoubtLimits } from "@/hooks/useDoubtLimits";
 import type { EmbeddedCheckoutState } from "@/pages/Checkout";
 
 interface PlanData {
@@ -48,12 +49,16 @@ const SERVICE_LABELS: Record<string, string> = {
   service_aula_particular: "Aula Particular (50 min)",
 };
 
-const getEnabledServices = (plan: PlanData): string[] => {
+const getEnabledServices = (plan: PlanData, doubtLimitForPlan: number | null): string[] => {
   const services: string[] = [];
   for (const [key, label] of Object.entries(SERVICE_LABELS)) {
     if (plan[key as keyof PlanData]) {
       const qty = plan[`${key}_qty` as keyof PlanData] as number | undefined;
-      services.push(qty ? `${label}: ${qty}` : label);
+      let line = qty ? `${label}: ${qty}` : label;
+      if (key === "service_duvidas" && doubtLimitForPlan && doubtLimitForPlan > 0) {
+        line += ` (até ${doubtLimitForPlan} pergunta${doubtLimitForPlan === 1 ? "" : "s"} por dúvida)`;
+      }
+      services.push(line);
     }
   }
   return services;

@@ -28,6 +28,21 @@ const URL_COLUMN: Record<NonNullable<StudentContentSectionsProps["materialFilter
   colinha: "colinha_url",
 };
 
+/**
+ * Material type stored in `lesson_material_meta.material_type`.
+ * Note: the meta table uses singular "colinha", matching the CHECK constraint
+ * in the database — keep this aligned with the schema.
+ */
+const META_MATERIAL_TYPE: Record<
+  NonNullable<StudentContentSectionsProps["materialFilter"]>,
+  "resumo" | "simulado" | "top_questoes" | "colinha"
+> = {
+  resumo: "resumo",
+  simulado: "simulado",
+  top_questoes: "top_questoes",
+  colinha: "colinha",
+};
+
 const mapToVideo = (l: any): Video => ({
   id: l.id,
   title: l.title,
@@ -86,7 +101,27 @@ const StudentContentSections = ({
       ]);
 
       if (cancelled) return;
-      setLessons((lRes.data || []).map(mapToVideo));
+
+      let lessonsRows: any[] = lRes.data || [];
+
+      // For lessons, also enforce that the material is approved and currently
+      // offered via lesson_material_meta — the *_url column alone is not enough
+      // because a teacher may revoke the offering without clearing the URL.
+      if (materialFilter && lessonsRows.length > 0) {
+        const ids = lessonsRows.map((l) => l.id);
+        const { data: metas } = await supabase
+          .from("lesson_material_meta")
+          .select("lesson_id, offered, admin_approved")
+          .in("lesson_id", ids)
+          .eq("material_type", META_MATERIAL_TYPE[materialFilter])
+          .eq("offered", true)
+          .eq("admin_approved", true);
+        const allowed = new Set((metas || []).map((m: any) => m.lesson_id));
+        lessonsRows = lessonsRows.filter((l) => allowed.has(l.id));
+      }
+
+      if (cancelled) return;
+      setLessons(lessonsRows.map(mapToVideo));
       setExams((eRes.data || []).map(mapToVideo));
       setLoading(false);
     };

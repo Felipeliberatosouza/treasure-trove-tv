@@ -17,6 +17,7 @@ type DoubtFilter = "all" | "pending" | "awaiting_approval" | "answered";
 interface Doubt {
   id: string;
   student_id: string;
+  teacher_id: string;
   content_id: string;
   content_type: string;
   question: string;

@@ -186,11 +186,19 @@ const Section = ({
   onVideoClick: (id: string) => void;
   emptyText: string;
 }) => {
+  const count = videos.length;
+  const countLabel =
+    count === 0
+      ? "nenhum item"
+      : count === 1
+      ? "1 item disponível"
+      : `${count} itens disponíveis`;
+  const titleWithCount = `${title} (${countLabel})`;
   if (videos.length === 0) {
     return (
       <section className="space-y-4">
         <h2 className="font-display text-xl font-bold md:text-2xl px-6 md:px-12 lg:px-20">
-          {title}
+          {titleWithCount}
         </h2>
         <div className="mx-6 md:mx-12 lg:mx-20 rounded-xl border border-border bg-card p-8 text-center text-sm text-muted-foreground">
           {emptyText}
@@ -198,7 +206,7 @@ const Section = ({
       </section>
     );
   }
-  return <VideoCarousel title={title} videos={videos} onVideoClick={onVideoClick} />;
+  return <VideoCarousel title={titleWithCount} videos={videos} onVideoClick={onVideoClick} />;
 };
 
 export default StudentContentSections;

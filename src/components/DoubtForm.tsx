@@ -3,8 +3,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { HelpCircle, Send, Mail } from "lucide-react";
+import { HelpCircle, Send, Mail, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
+import { useDoubtLimits } from "@/hooks/useDoubtLimits";
 
 interface DoubtFormProps {
   contentId: string;
@@ -17,6 +18,10 @@ const DoubtForm = ({ contentId, contentType, teacherId }: DoubtFormProps) => {
   const [question, setQuestion] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const { limits } = useDoubtLimits();
+  // For now we only show the individual-purchase limit here. The actual
+  // limit applied to a thread is captured at creation time on the server.
+  const individualLimit = limits.individual_purchase;
 
   const handleSubmit = async () => {
     if (!user) {
@@ -76,6 +81,18 @@ const DoubtForm = ({ contentId, contentType, teacherId }: DoubtFormProps) => {
       <div className="flex items-center gap-2">
         <HelpCircle className="h-5 w-5 text-primary" />
         <h3 className="text-sm font-semibold">Enviar Dúvida ao Professor</h3>
+      </div>
+
+      <div className="flex items-start gap-2 rounded-lg bg-card/60 border border-border p-2.5 text-xs text-muted-foreground">
+        <MessageSquare className="h-3.5 w-3.5 shrink-0 mt-0.5 text-primary" />
+        <span>
+          Esta dúvida dá direito a até{" "}
+          <strong className="text-foreground">
+            {individualLimit} pergunta{individualLimit === 1 ? "" : "s"}
+          </strong>{" "}
+          (a inicial e réplicas sobre a resposta do professor). Assinantes podem ter um limite maior
+          conforme o plano contratado.
+        </span>
       </div>
 
       {submitted ? (

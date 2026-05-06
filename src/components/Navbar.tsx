@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
 import UserMenu from "@/components/UserMenu";
+import ContinueWatchingMenu from "@/components/student/ContinueWatchingMenu";
 import { useAllPlatformSettings } from "@/hooks/usePlatformSettings";
 import type { BrandingSettings } from "@/hooks/usePlatformSettings";
 import { supabase } from "@/integrations/supabase/client";
@@ -397,6 +398,9 @@ const Navbar = () => {
           className="border-t border-border bg-background px-6 py-4 md:hidden"
         >
           <div className="flex flex-col gap-3">
+            {user && role === "student" && (
+              <ContinueWatchingMenu onNavigate={() => setMobileOpen(false)} />
+            )}
             {menuItems.map((item) => {
               if (item.children && item.children.length > 0) {
                 return (

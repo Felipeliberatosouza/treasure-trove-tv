@@ -2908,6 +2908,13 @@ export type Database = {
       expire_old_cashback: { Args: never; Returns: number }
       generate_cashback_referral_code: { Args: never; Returns: string }
       get_cashback_config: { Args: never; Returns: Json }
+      get_content_view_counts: {
+        Args: { _content_type: string; _ids: string[] }
+        Returns: {
+          content_id: string
+          views_count: number
+        }[]
+      }
       get_teacher_monthly_target: {
         Args: { _teacher_id: string }
         Returns: number

@@ -66,6 +66,8 @@ const StudentContentSections = ({
   const [lessons, setLessons] = useState<Video[]>([]);
   const [exams, setExams] = useState<Video[]>([]);
   const [loading, setLoading] = useState(true);
+  const [watchedIds, setWatchedIds] = useState<Set<string>>(new Set());
+  const [ratings, setRatings] = useState<Record<string, { average: number; count: number }>>({});
 
   const studentAreas = useMemo<string[]>(
     () => ((profile as any)?.areas as string[] | undefined) ?? [],
@@ -85,8 +87,7 @@ const StudentContentSections = ({
           .select("*")
           .eq("published", true)
           .eq("admin_approved", true)
-          .order("created_at", { ascending: false })
-          .limit(30);
+          .limit(200);
         if (studentAreas.length > 0) q = q.overlaps("areas", studentAreas);
         if (materialFilter) {
           const col = URL_COLUMN[materialFilter];
@@ -103,6 +104,7 @@ const StudentContentSections = ({
       if (cancelled) return;
 
       let lessonsRows: any[] = lRes.data || [];
+      let examsRows: any[] = eRes.data || [];
 
       // For lessons, also enforce that the material is approved and currently
       // offered via lesson_material_meta — the *_url column alone is not enough
@@ -121,8 +123,78 @@ const StudentContentSections = ({
       }
 
       if (cancelled) return;
+
+      // Aggregated views, ratings & watched flags
+      const lessonIds = lessonsRows.map((l) => l.id);
+      const examIds = examsRows.map((e) => e.id);
+      const allIds = [...lessonIds, ...examIds];
+
+      const [lessonViewsRes, examViewsRes, ratingsRes, watchedRes] = await Promise.all([
+        lessonIds.length
+          ? supabase.rpc("get_content_view_counts", { _content_type: "lesson", _ids: lessonIds })
+          : Promise.resolve({ data: [] as any[] }),
+        examIds.length
+          ? supabase.rpc("get_content_view_counts", {
+              _content_type: "exam_solution",
+              _ids: examIds,
+            })
+          : Promise.resolve({ data: [] as any[] }),
+        allIds.length
+          ? supabase
+              .from("video_ratings")
+              .select("content_id, rating")
+              .in("content_id", allIds)
+          : Promise.resolve({ data: [] as any[] }),
+        allIds.length
+          ? supabase
+              .from("video_views")
+              .select("content_id, watch_percentage")
+              .eq("user_id", user.id)
+              .in("content_id", allIds)
+          : Promise.resolve({ data: [] as any[] }),
+      ]);
+
+      if (cancelled) return;
+
+      const viewsMap = new Map<string, number>();
+      ([...((lessonViewsRes as any).data || []), ...((examViewsRes as any).data || [])] as any[]).forEach(
+        (r) => viewsMap.set(r.content_id, r.views_count)
+      );
+
+      const ratingAgg: Record<string, { sum: number; count: number }> = {};
+      ((ratingsRes.data as any[]) || []).forEach((r) => {
+        const a = ratingAgg[r.content_id] || { sum: 0, count: 0 };
+        a.sum += r.rating;
+        a.count += 1;
+        ratingAgg[r.content_id] = a;
+      });
+      const ratingsMap: Record<string, { average: number; count: number }> = {};
+      Object.entries(ratingAgg).forEach(([id, a]) => {
+        ratingsMap[id] = { average: a.count > 0 ? a.sum / a.count : 0, count: a.count };
+      });
+
+      const watched = new Set<string>();
+      ((watchedRes.data as any[]) || []).forEach((v) => {
+        if ((v.watch_percentage || 0) >= 70) watched.add(v.content_id);
+      });
+
+      const sortBy = (a: any, b: any) => {
+        const va = viewsMap.get(a.id) || 0;
+        const vb = viewsMap.get(b.id) || 0;
+        if (vb !== va) return vb - va;
+        const ra = ratingsMap[a.id]?.average || 0;
+        const rb = ratingsMap[b.id]?.average || 0;
+        if (rb !== ra) return rb - ra;
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      };
+
+      lessonsRows.sort(sortBy);
+      examsRows.sort(sortBy);
+
+      setRatings(ratingsMap);
+      setWatchedIds(watched);
       setLessons(lessonsRows.map(mapToVideo));
-      setExams((eRes.data || []).map(mapToVideo));
+      setExams(examsRows.map(mapToVideo));
       setLoading(false);
     };
 
@@ -163,12 +235,16 @@ const StudentContentSections = ({
         title={lessonsLabel}
         videos={lessons}
         onVideoClick={onVideoClick}
+        ratings={ratings}
+        watchedIds={watchedIds}
         emptyText="Nenhum conteúdo encontrado para suas áreas de interesse."
       />
       <Section
         title={examsLabel}
         videos={exams}
         onVideoClick={onVideoClick}
+        ratings={ratings}
+        watchedIds={watchedIds}
         emptyText="Nenhuma resolução de prova encontrada para suas áreas de interesse."
       />
     </div>
@@ -179,11 +255,15 @@ const Section = ({
   title,
   videos,
   onVideoClick,
+  ratings,
+  watchedIds,
   emptyText,
 }: {
   title: string;
   videos: Video[];
   onVideoClick: (id: string) => void;
+  ratings?: Record<string, { average: number; count: number }>;
+  watchedIds?: Set<string>;
   emptyText: string;
 }) => {
   const count = videos.length;
@@ -206,7 +286,15 @@ const Section = ({
       </section>
     );
   }
-  return <VideoCarousel title={titleWithCount} videos={videos} onVideoClick={onVideoClick} />;
+  return (
+    <VideoCarousel
+      title={titleWithCount}
+      videos={videos}
+      onVideoClick={onVideoClick}
+      ratings={ratings}
+      watchedIds={watchedIds}
+    />
+  );
 };
 
 export default StudentContentSections;

@@ -5,13 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, CheckCircle, XCircle, HelpCircle, Clock, Eye } from "lucide-react";
+import { Search, CheckCircle, XCircle, HelpCircle, Clock, Eye, MessageSquare } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import DoubtThreadDialog from "@/components/doubts/DoubtThreadDialog";
-import { MessageSquare } from "lucide-react";
 
 interface Doubt {
   id: string;

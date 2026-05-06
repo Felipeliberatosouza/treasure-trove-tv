@@ -37,7 +37,6 @@ const mapToVideo = (l: any): Video => ({
   category: ((l.areas as string[]) || [])[0] || "",
   instructor: "",
   lessons: 1,
-  level: "Iniciante" as const,
   videoUrl: l.video_url || undefined,
 });
 
@@ -65,8 +64,8 @@ const StudentContentSections = ({
     const run = async () => {
       setLoading(true);
 
-      const buildQuery = (table: "lessons" | "exam_solutions") => {
-        let q = supabase
+      const buildQuery = (table: "lessons" | "exam_solutions"): any => {
+        let q: any = supabase
           .from(table)
           .select("*")
           .eq("published", true)

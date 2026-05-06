@@ -67,7 +67,7 @@ const StudentContentSections = ({
   const [exams, setExams] = useState<Video[]>([]);
   const [loading, setLoading] = useState(true);
   const [watchedIds, setWatchedIds] = useState<Set<string>>(new Set());
-  const [ratings, setRatings] = useState<Record<string, number>>({});
+  const [ratings, setRatings] = useState<Record<string, { average: number; count: number }>>({});
 
   const studentAreas = useMemo<string[]>(
     () => ((profile as any)?.areas as string[] | undefined) ?? [],
@@ -168,9 +168,9 @@ const StudentContentSections = ({
         a.count += 1;
         ratingAgg[r.content_id] = a;
       });
-      const ratingsMap: Record<string, number> = {};
+      const ratingsMap: Record<string, { average: number; count: number }> = {};
       Object.entries(ratingAgg).forEach(([id, a]) => {
-        ratingsMap[id] = a.count > 0 ? a.sum / a.count : 0;
+        ratingsMap[id] = { average: a.count > 0 ? a.sum / a.count : 0, count: a.count };
       });
 
       const watched = new Set<string>();
@@ -182,8 +182,8 @@ const StudentContentSections = ({
         const va = viewsMap.get(a.id) || 0;
         const vb = viewsMap.get(b.id) || 0;
         if (vb !== va) return vb - va;
-        const ra = ratingsMap[a.id] || 0;
-        const rb = ratingsMap[b.id] || 0;
+        const ra = ratingsMap[a.id]?.average || 0;
+        const rb = ratingsMap[b.id]?.average || 0;
         if (rb !== ra) return rb - ra;
         return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
       };
@@ -262,7 +262,7 @@ const Section = ({
   title: string;
   videos: Video[];
   onVideoClick: (id: string) => void;
-  ratings?: Record<string, number>;
+  ratings?: Record<string, { average: number; count: number }>;
   watchedIds?: Set<string>;
   emptyText: string;
 }) => {

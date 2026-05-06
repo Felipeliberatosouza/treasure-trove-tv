@@ -409,6 +409,53 @@ export type Database = {
         }
         Relationships: []
       }
+      doubt_messages: {
+        Row: {
+          author_id: string
+          author_role: string
+          body: string
+          created_at: string
+          doubt_id: string
+          id: string
+          message_kind: string
+          rejection_reason: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          author_id: string
+          author_role: string
+          body: string
+          created_at?: string
+          doubt_id: string
+          id?: string
+          message_kind: string
+          rejection_reason?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string
+          author_role?: string
+          body?: string
+          created_at?: string
+          doubt_id?: string
+          id?: string
+          message_kind?: string
+          rejection_reason?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "doubt_messages_doubt_id_fkey"
+            columns: ["doubt_id"]
+            isOneToOne: false
+            referencedRelation: "student_doubts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       email_send_log: {
         Row: {
           created_at: string
@@ -1695,7 +1742,9 @@ export type Database = {
           content_type: string
           created_at: string
           id: string
+          messages_limit: number
           question: string
+          questions_used: number
           status: string
           student_id: string
           teacher_id: string
@@ -1709,7 +1758,9 @@ export type Database = {
           content_type?: string
           created_at?: string
           id?: string
+          messages_limit?: number
           question: string
+          questions_used?: number
           status?: string
           student_id: string
           teacher_id: string
@@ -1723,7 +1774,9 @@ export type Database = {
           content_type?: string
           created_at?: string
           id?: string
+          messages_limit?: number
           question?: string
+          questions_used?: number
           status?: string
           student_id?: string
           teacher_id?: string
@@ -2825,6 +2878,7 @@ export type Database = {
         Args: { _end: string; _start: string; _teacher_id: string }
         Returns: number
       }
+      count_student_questions: { Args: { _doubt_id: string }; Returns: number }
       credit_cashback_purchase: {
         Args: {
           _purchase_amount: number

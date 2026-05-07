@@ -12,7 +12,13 @@ Deno.serve(async (req) => {
     const authHeader = req.headers.get("Authorization") ?? "";
     const userClient = createClient(url, anon, { global: { headers: { Authorization: authHeader } } });
     const { data: { user } } = await userClient.auth.getUser();
-    if (!user) return new Response(JSON.stringify({ error: "unauthenticated" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    if (!user) {
+      // Visitor / unauthenticated user: nothing to log, but don't blow up the UI.
+      return new Response(JSON.stringify({ ok: true, skipped: "unauthenticated" }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const { lesson_id, seconds_watched } = await req.json();
     const seconds = Math.max(0, Math.min(3600, Math.floor(Number(seconds_watched) || 0)));

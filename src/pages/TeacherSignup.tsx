@@ -258,7 +258,6 @@ const TeacherSignup = () => {
               max={new Date().toISOString().split("T")[0]}
             />
           </div>
-          <PhoneVerification phone={phone} onPhoneChange={setPhone} onVerified={() => setPhoneVerified(true)} verified={phoneVerified} />
           <div className="relative">
             <CreditCard className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <div className="pl-10">
@@ -307,6 +306,8 @@ const TeacherSignup = () => {
             onChange={(e) => setBio(e.target.value)}
             className="min-h-[100px] bg-secondary border-border"
           />
+
+          <PhoneVerification phone={phone} onPhoneChange={setPhone} onVerified={() => setPhoneVerified(true)} verified={phoneVerified} />
 
           <div className="space-y-3 pt-2">
             <div className="flex items-start gap-2">

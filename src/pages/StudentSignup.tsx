@@ -253,7 +253,6 @@ const StudentSignup = () => {
               max={new Date().toISOString().split("T")[0]}
             />
           </div>
-          <PhoneVerification phone={phone} onPhoneChange={setPhone} onVerified={() => setPhoneVerified(true)} verified={phoneVerified} />
           <div className="relative">
             <CreditCard className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <div className="pl-10">
@@ -296,6 +295,8 @@ const StudentSignup = () => {
             <label className="text-sm text-muted-foreground mb-1 block">Áreas de interesse (opcional)</label>
             <AreaSelector selected={selectedAreas} onChange={setSelectedAreas} max={3} />
           </div>
+
+          <PhoneVerification phone={phone} onPhoneChange={setPhone} onVerified={() => setPhoneVerified(true)} verified={phoneVerified} />
 
           <div className="space-y-3 pt-2">
             <div className="flex items-start gap-2">

@@ -26,10 +26,8 @@ const AdminCancellationsTab = () => {
           <button
             key={s.id}
             onClick={() => setActiveSection(s.id)}
-            className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs transition-colors ${
-              activeSection === s.id
-                ? "bg-primary text-primary-foreground font-medium"
-                : "bg-secondary text-muted-foreground hover:text-foreground"
+            className={`selection-chip flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs ${
+              activeSection === s.id ? "is-selected font-medium" : ""
             }`}
           >
             <s.icon className="h-3.5 w-3.5" />

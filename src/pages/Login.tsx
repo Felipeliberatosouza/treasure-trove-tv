@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Mail, Lock, Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import { useAllPlatformSettings, type BrandingSettings } from "@/hooks/usePlatfo
 
 const Login = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { settings } = useAllPlatformSettings();
   const branding = settings?.branding as BrandingSettings | undefined;
   const showLogoImage = !!branding?.logo_url && !branding?.use_text_logo;
@@ -25,6 +26,37 @@ const Login = () => {
   const [blockedMsg, setBlockedMsg] = useState(false);
   const [contentBlockUntil, setContentBlockUntil] = useState<string | null>(null);
   const [showMfaChallenge, setShowMfaChallenge] = useState(false);
+  const [unconfirmedEmail, setUnconfirmedEmail] = useState<string | null>(null);
+  const [resending, setResending] = useState(false);
+
+  useEffect(() => {
+    const checkEmail = searchParams.get("check_email");
+    if (checkEmail) {
+      setEmail(checkEmail);
+      setUnconfirmedEmail(checkEmail);
+    }
+  }, [searchParams]);
+
+  const resendConfirmation = async (target: string) => {
+    if (!target) return;
+    setResending(true);
+    try {
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email: target,
+        options: { emailRedirectTo: window.location.origin },
+      });
+      if (error) {
+        toast.error(translateAuthError(error.message));
+      } else {
+        toast.success("E-mail de confirmação reenviado! Verifique sua caixa de entrada.");
+      }
+    } catch (err: any) {
+      toast.error(err?.message || "Erro ao reenviar e-mail");
+    } finally {
+      setResending(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -90,7 +122,11 @@ const Login = () => {
     }
 
     if (error) {
-      toast.error(translateAuthError(error.message));
+      if (/email not confirmed/i.test(error.message)) {
+        setUnconfirmedEmail(email);
+      } else {
+        toast.error(translateAuthError(error.message));
+      }
       setLoading(false);
       return;
     }

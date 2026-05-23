@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import PhoneInput, { isValidBrazilianPhone } from "@/components/PhoneInput";
@@ -53,7 +53,7 @@ const PhoneVerification = ({ phone, onPhoneChange, onVerified, verified = false,
     return () => clearTimeout(timer);
   }, [sendCooldown]);
 
-  const sendCode = async () => {
+  const sendCode = useCallback(async () => {
     if (!isValidBrazilianPhone(phone)) {
       toast.error("Informe um celular válido com DDD (11 dígitos)");
       return;
@@ -87,9 +87,9 @@ const PhoneVerification = ({ phone, onPhoneChange, onVerified, verified = false,
     } finally {
       setSending(false);
     }
-  };
+  }, [phone, channel]);
 
-  const verifyCode = async () => {
+  const verifyCode = useCallback(async () => {
     if (code.length !== 6) {
       toast.error("Digite o código de 6 dígitos");
       return;
@@ -121,7 +121,17 @@ const PhoneVerification = ({ phone, onPhoneChange, onVerified, verified = false,
     } finally {
       setVerifying(false);
     }
-  };
+  }, [phone, code, onVerified]);
+
+  const handleChangeNumber = useCallback(() => {
+    setStep("input");
+    setCode("");
+    onPhoneChange("");
+  }, [onPhoneChange]);
+
+  const handleChannelChange = useCallback((newChannel: "sms" | "whatsapp") => {
+    setChannel(newChannel);
+  }, []);
 
   return (
     <div className={`space-y-3 ${className}`}>
@@ -138,14 +148,14 @@ const PhoneVerification = ({ phone, onPhoneChange, onVerified, verified = false,
       </div>
 
       {!isVerified && isValidBrazilianPhone(phone) && step === "input" && (
-        <div className="space-y-2">
+        <div className="space-y-2" key="input-step">
           <p className="text-xs text-muted-foreground">Enviar código de verificação via:</p>
           <div className="flex gap-2">
             <Button
               type="button"
               variant={channel === "sms" ? "default" : "outline"}
               size="sm"
-              onClick={() => setChannel("sms")}
+              onClick={() => handleChannelChange("sms")}
               className="flex-1 gap-1.5"
             >
               <Phone className="h-3.5 w-3.5" /> SMS
@@ -154,7 +164,7 @@ const PhoneVerification = ({ phone, onPhoneChange, onVerified, verified = false,
               type="button"
               variant={channel === "whatsapp" ? "default" : "outline"}
               size="sm"
-              onClick={() => setChannel("whatsapp")}
+              onClick={() => handleChannelChange("whatsapp")}
               className="flex-1 gap-1.5"
             >
               <MessageCircle className="h-3.5 w-3.5" /> WhatsApp
@@ -179,7 +189,7 @@ const PhoneVerification = ({ phone, onPhoneChange, onVerified, verified = false,
       )}
 
       {!isVerified && step === "code" && (
-        <div className="space-y-3">
+        <div className="space-y-3" key="code-step">
           <div className="flex items-center gap-2 rounded-md bg-primary/10 px-3 py-2 text-xs text-primary">
             <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
             Código enviado para o celular via {channel === "sms" ? "SMS" : "WhatsApp"}
@@ -211,7 +221,7 @@ const PhoneVerification = ({ phone, onPhoneChange, onVerified, verified = false,
           <div className="flex items-center justify-between">
             <button
               type="button"
-              onClick={() => { setStep("input"); setCode(""); }}
+              onClick={handleChangeNumber}
               className="text-xs text-muted-foreground hover:text-foreground"
             >
               ← Alterar número
@@ -229,7 +239,7 @@ const PhoneVerification = ({ phone, onPhoneChange, onVerified, verified = false,
                   type="button"
                   variant={channel === "sms" ? "default" : "outline"}
                   size="sm"
-                  onClick={() => setChannel("sms")}
+                  onClick={() => handleChannelChange("sms")}
                   className="flex-1 gap-1.5"
                 >
                   <Phone className="h-3.5 w-3.5" /> SMS
@@ -238,7 +248,7 @@ const PhoneVerification = ({ phone, onPhoneChange, onVerified, verified = false,
                   type="button"
                   variant={channel === "whatsapp" ? "default" : "outline"}
                   size="sm"
-                  onClick={() => setChannel("whatsapp")}
+                  onClick={() => handleChannelChange("whatsapp")}
                   className="flex-1 gap-1.5"
                 >
                   <MessageCircle className="h-3.5 w-3.5" /> WhatsApp

@@ -246,15 +246,12 @@ const StudentSignup = () => {
             />
           </div>
           <div className="relative">
-            <CalendarDays className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              type="text"
+            <CalendarDays className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground z-10" />
+            <DateInput
               placeholder="Data de Nascimento *"
               value={birthDate}
-              onFocus={(e) => (e.target.type = "date")}
-              onBlur={(e) => { if (!e.target.value) e.target.type = "text"; }}
-              onChange={(e) => setBirthDate(e.target.value)}
-              className="pl-10 bg-secondary border-border"
+              onChange={setBirthDate}
+              className="flex h-10 w-full rounded-md border border-input bg-secondary px-3 py-2 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm pl-10"
               max={new Date().toISOString().split("T")[0]}
             />
           </div>

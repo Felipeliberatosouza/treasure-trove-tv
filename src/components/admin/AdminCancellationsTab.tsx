@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { XCircle, FileText, Receipt, RefreshCcw } from "lucide-react";
+import { SelectionChip } from "@/components/ui/SelectionChip";
 import AdminCancellationReasonsTab from "./AdminCancellationReasonsTab";
 import AdminCancellationReceiptsTab from "./AdminCancellationReceiptsTab";
 import AdminCommitmentRefundsTab from "./AdminCommitmentRefundsTab";
@@ -23,16 +24,15 @@ const AdminCancellationsTab = () => {
 
       <div className="flex gap-2 flex-wrap mb-6">
         {sections.map((s) => (
-          <button
+          <SelectionChip
             key={s.id}
+            selected={activeSection === s.id}
             onClick={() => setActiveSection(s.id)}
-            className={`selection-chip flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs ${
-              activeSection === s.id ? "is-selected font-medium" : ""
-            }`}
+            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs"
           >
             <s.icon className="h-3.5 w-3.5" />
             {s.label}
-          </button>
+          </SelectionChip>
         ))}
       </div>
 

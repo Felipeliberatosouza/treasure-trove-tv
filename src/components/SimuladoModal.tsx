@@ -105,18 +105,15 @@ const SimuladoModal = ({ open, onClose, lessonId, lessonTitle }: SimuladoModalPr
                     {q.options.map((opt, oi) => {
                       const isSelected = selected === oi;
                       return (
-                        <button
-                          key={oi}
-                          type="button"
-                          onClick={() => handleAnswer(q.id, oi)}
-                          className={cn(
-                            "selection-chip w-full text-left rounded-md border p-3 text-sm",
-                            isSelected && "is-selected font-semibold",
-                          )}
-                        >
-                          <span className="font-semibold mr-2">{String.fromCharCode(65 + oi)}.</span>
-                          {opt}
-                        </button>
+                    <SelectionChip
+                      key={oi}
+                      selected={isSelected}
+                      onClick={() => handleAnswer(q.id, oi)}
+                      className="w-full text-left rounded-md border p-3 text-sm"
+                    >
+                      <span className="font-semibold mr-2">{String.fromCharCode(65 + oi)}.</span>
+                      {opt}
+                    </SelectionChip>
                       );
                     })}
                   </div>

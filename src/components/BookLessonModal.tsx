@@ -460,27 +460,26 @@ const BookLessonModal = ({
                       const isSelected =
                         selectedSlot && s.time.getTime() === selectedSlot.getTime();
                       return (
-                        <button
-                          key={s.time.toISOString()}
-                          type="button"
-                          disabled={s.disabled}
-                          onClick={() => setSelectedSlot(s.time)}
-                          className={cn(
-                            "selection-chip flex items-center justify-center gap-1 rounded-md border px-2 py-1.5 text-xs",
-                            s.disabled && "line-through",
-                            isSelected && "is-selected font-semibold"
-                          )}
-                          title={
-                            s.disabled
-                              ? s.reason === "ocupado"
-                                ? "Horário já reservado"
-                                : "Horário indisponível"
-                              : undefined
-                          }
-                        >
-                          <Clock className="h-3 w-3" />
-                          {format(s.time, "HH:mm")}
-                        </button>
+                      <SelectionChip
+                        key={s.time.toISOString()}
+                        disabled={s.disabled}
+                        selected={!!isSelected}
+                        onClick={() => setSelectedSlot(s.time)}
+                        className={cn(
+                          "flex items-center justify-center gap-1 rounded-md border px-2 py-1.5 text-xs",
+                          s.disabled && "line-through"
+                        )}
+                        title={
+                          s.disabled
+                            ? s.reason === "ocupado"
+                              ? "Horário já reservado"
+                              : "Horário indisponível"
+                            : undefined
+                        }
+                      >
+                        <Clock className="h-3 w-3" />
+                        {format(s.time, "HH:mm")}
+                      </SelectionChip>
                       );
                     })}
                   </div>

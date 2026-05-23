@@ -43,35 +43,33 @@ const StudentSignup = () => {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!name.trim() || !email.trim() || !password.trim() || !birthDate || !phone || !cpf) {
-      toast.error("Preencha todos os campos obrigatórios");
+  // Returns true if every field except phone verification is valid.
+  const preSignupValid = () => {
+    if (!name.trim() || !email.trim() || !password.trim() || !birthDate || !cpf) return false;
+    if (!isValidCPF(cpf)) return false;
+    if (validatePassword(password, birthDate)) return false;
+    if (password !== confirmPassword) return false;
+    if (!acceptsTerms) return false;
+    return true;
+  };
+
+  const reportPreSignupError = () => {
+    if (!name.trim() || !email.trim() || !password.trim() || !birthDate || !cpf) {
+      toast.error("Preencha todos os campos obrigatórios antes do celular");
       return;
     }
-    if (!isValidCPF(cpf)) {
-      toast.error("Informe um CPF válido");
-      return;
-    }
-    if (!acceptsTerms) {
-      toast.error("Você precisa aceitar os Termos de Uso para continuar");
-      return;
-    }
-    if (!isValidBrazilianPhone(phone)) {
-      toast.error("Informe um celular válido com DDD (11 dígitos)");
-      return;
-    }
-    if (!phoneVerified) {
-      toast.error("Verifique seu celular antes de continuar");
-      return;
-    }
+    if (!isValidCPF(cpf)) { toast.error("Informe um CPF válido"); return; }
     const pwdError = validatePassword(password, birthDate);
-    if (pwdError) {
-      toast.error(pwdError);
-      return;
-    }
-    if (password !== confirmPassword) {
-      toast.error("As senhas não coincidem");
+    if (pwdError) { toast.error(pwdError); return; }
+    if (password !== confirmPassword) { toast.error("As senhas não coincidem"); return; }
+    if (!acceptsTerms) { toast.error("Você precisa aceitar os Termos de Uso para continuar"); return; }
+  };
+
+  const performSignup = async (verifiedPhone: string) => {
+    if (loading) return;
+    if (!preSignupValid()) { reportPreSignupError(); return; }
+    if (!isValidBrazilianPhone(verifiedPhone)) {
+      toast.error("Informe um celular válido com DDD (11 dígitos)");
       return;
     }
 
@@ -80,7 +78,7 @@ const StudentSignup = () => {
       email,
       password,
       options: {
-        data: { name, role: "student", areas: selectedAreas, birth_date: birthDate, phone },
+        data: { name, role: "student", areas: selectedAreas, birth_date: birthDate, phone: verifiedPhone },
         emailRedirectTo: window.location.origin,
       },
     });
@@ -102,7 +100,7 @@ const StudentSignup = () => {
       if (signUpData?.user) {
         const updateData: any = { accepts_marketing: acceptsMarketing, cpf };
         if (selectedAreas.length > 0) updateData.areas = selectedAreas;
-        if (phone) updateData.phone = phone;
+        if (verifiedPhone) updateData.phone = verifiedPhone;
         await supabase.from("profiles").update(updateData).eq("user_id", signUpData.user.id);
       }
       // Send welcome email and notify admins
@@ -143,6 +141,12 @@ const StudentSignup = () => {
       navigate("/login");
     }
     setLoading(false);
+  };
+
+  const handlePhoneVerified = (verifiedPhone: string) => {
+    setPhoneVerified(true);
+    setPhone(verifiedPhone);
+    performSignup(verifiedPhone);
   };
 
   return (
@@ -204,7 +208,7 @@ const StudentSignup = () => {
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
           {/* Avatar upload */}
           <div className="flex justify-center">
             <button
@@ -296,8 +300,6 @@ const StudentSignup = () => {
             <AreaSelector selected={selectedAreas} onChange={setSelectedAreas} max={3} />
           </div>
 
-          <PhoneVerification phone={phone} onPhoneChange={setPhone} onVerified={() => setPhoneVerified(true)} verified={phoneVerified} />
-
           <div className="space-y-3 pt-2">
             <div className="flex items-start gap-2">
               <Checkbox
@@ -327,9 +329,21 @@ const StudentSignup = () => {
             </div>
           </div>
 
-          <Button className="w-full font-display font-semibold" size="lg" disabled={loading || !acceptsTerms}>
-            {loading ? "Criando..." : "Criar Conta de Aluno"}
-          </Button>
+          <div className="pt-2 border-t border-border">
+            <p className="text-xs text-muted-foreground mb-2">
+              Última etapa: verifique seu celular para concluir o cadastro automaticamente.
+            </p>
+            {preSignupValid() ? (
+              <PhoneVerification phone={phone} onPhoneChange={setPhone} onVerified={handlePhoneVerified} verified={phoneVerified} />
+            ) : (
+              <div className="rounded-md bg-secondary/50 border border-border px-3 py-3 text-xs text-muted-foreground text-center">
+                Preencha todos os campos acima e aceite os Termos para liberar a verificação do celular.
+              </div>
+            )}
+            {loading && (
+              <p className="text-center text-xs text-primary mt-3">Criando sua conta...</p>
+            )}
+          </div>
         </form>
 
         <p className="text-center text-sm text-muted-foreground">

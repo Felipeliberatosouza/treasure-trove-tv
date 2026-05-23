@@ -133,8 +133,8 @@ const TeacherSignup = () => {
           }
         }
       }
-      toast.success("Conta criada! Verifique seu e-mail para confirmar.");
-      navigate("/login");
+      toast.success("Conta criada! Enviamos um e-mail para você confirmar o cadastro.");
+      navigate(`/login?check_email=${encodeURIComponent(email)}`);
     }
     setLoading(false);
   };

@@ -466,12 +466,9 @@ const BookLessonModal = ({
                           disabled={s.disabled}
                           onClick={() => setSelectedSlot(s.time)}
                           className={cn(
-                            "flex items-center justify-center gap-1 rounded-md border px-2 py-1.5 text-xs transition-colors",
-                            s.disabled
-                              ? "cursor-not-allowed border-border bg-secondary/20 text-muted-foreground/50 line-through"
-                              : isSelected
-                              ? "border-primary bg-primary text-primary-foreground font-semibold"
-                              : "border-border bg-secondary/30 hover:border-primary/50 hover:bg-secondary/60"
+                            "selection-chip flex items-center justify-center gap-1 rounded-md border px-2 py-1.5 text-xs",
+                            s.disabled && "line-through",
+                            isSelected && "is-selected font-semibold"
                           )}
                           title={
                             s.disabled

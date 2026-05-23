@@ -22,6 +22,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { SelectionChip } from "@/components/ui/SelectionChip";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -757,30 +758,33 @@ const SalesBoostTab = () => {
                   const checked = selectedIds.includes(c.id);
                   const disabled = !checked && selectedIds.length >= MAX_SEL;
                   return (
-                    <label
+                    <SelectionChip
                       key={c.id}
-                      className={`selection-chip flex items-start gap-2 rounded-md border p-2 text-sm cursor-pointer ${
-                        checked ? "is-selected" : ""
-                      } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
+                      asChild
+                      selected={checked}
+                      disabled={disabled}
+                      className="flex items-start gap-2 rounded-md border p-2 text-sm cursor-pointer"
                     >
-                      <Checkbox
-                        checked={checked}
-                        disabled={disabled}
-                        onCheckedChange={() => toggleSelect(c.id)}
-                        className="mt-0.5"
-                      />
-                      <span className="flex-1 leading-snug">
-                        <span className="block">
-                          {c.video_type === "resolucao_questoes" ? "📝 " : "🎬 "}
-                          {c.title}
-                        </span>
-                        {c.has_top_questoes && (
-                          <span className="text-[10px] text-amber-600 dark:text-amber-400 font-medium">
-                            ⭐ Top Questões
+                      <label>
+                        <Checkbox
+                          checked={checked}
+                          disabled={disabled}
+                          onCheckedChange={() => toggleSelect(c.id)}
+                          className="mt-0.5"
+                        />
+                        <span className="flex-1 leading-snug">
+                          <span className="block">
+                            {c.video_type === "resolucao_questoes" ? "📝 " : "🎬 "}
+                            {c.title}
                           </span>
-                        )}
-                      </span>
-                    </label>
+                          {c.has_top_questoes && (
+                            <span className="text-[10px] text-amber-600 dark:text-amber-400 font-medium">
+                              ⭐ Top Questões
+                            </span>
+                          )}
+                        </span>
+                      </label>
+                    </SelectionChip>
                   );
                 })}
               </div>
@@ -863,14 +867,11 @@ const SalesBoostTab = () => {
                 const tpl = TEMPLATES[key];
                 const active = template === key;
                 return (
-                  <button
+                  <SelectionChip
                     key={key}
-                    type="button"
+                    selected={active}
                     onClick={() => setTemplate(key)}
-                    className={`selection-chip group rounded-lg border p-2 text-left ${
-                      active ? "is-selected ring-2 ring-primary/40" : ""
-                    }`}
-                    aria-pressed={active}
+                    className="group rounded-lg border p-2 text-left"
                   >
                     <div
                       className="h-16 w-full rounded-md mb-2 overflow-hidden flex"

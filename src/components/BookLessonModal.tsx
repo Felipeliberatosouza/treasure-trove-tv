@@ -18,6 +18,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { SelectionChip } from "@/components/ui/SelectionChip";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import {

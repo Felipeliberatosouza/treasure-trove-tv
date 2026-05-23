@@ -4,6 +4,7 @@ import ForensicWatermark from "@/components/ForensicWatermark";
 import { useContentProtection } from "@/hooks/useContentProtection";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { SelectionChip } from "@/components/ui/SelectionChip";
 import { supabase } from "@/integrations/supabase/client";
 import { CheckCircle2, XCircle, ClipboardList, ArrowLeft, ArrowRight, Trophy } from "lucide-react";
 import { cn } from "@/lib/utils";

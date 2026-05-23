@@ -357,7 +357,7 @@ const TeacherSignup = () => {
             {preSignupValid() ? (
               <PhoneVerification phone={phone} onPhoneChange={setPhone} onVerified={handlePhoneVerified} verified={phoneVerified} />
             ) : (
-              <div className="rounded-md bg-secondary/50 border border-border px-3 py-3 text-xs text-muted-foreground text-center">
+              <div className="rounded-md bg-secondary/50 border border-border px-3 py-3 text-xs text-black text-center">
                 Preencha todos os campos acima e aceite os Termos para liberar a verificação do celular.
               </div>
             )}

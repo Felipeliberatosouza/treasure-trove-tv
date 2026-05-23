@@ -16,8 +16,8 @@ interface VideoCarouselProps {
 const VideoCarousel = ({ title, videos, onVideoClick, ratings, showTrialBadge, watchedIds }: VideoCarouselProps) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const { data: branding } = usePlatformSettings("branding");
-  const navBg = (branding as any)?.banner_nav_bg as string | undefined;
-  const navIcon = (branding as any)?.banner_nav_icon as string | undefined;
+  const navBg = ((branding as any)?.banner_nav_bg as string | undefined) ?? "rgba(0,0,0,0.4)";
+  const navIcon = ((branding as any)?.banner_nav_icon as string | undefined) ?? "#ffffff";
 
   const scroll = (direction: "left" | "right") => {
     if (!scrollRef.current) return;
@@ -35,15 +35,15 @@ const VideoCarousel = ({ title, videos, onVideoClick, ratings, showTrialBadge, w
         <div className="flex gap-2">
           <button
             onClick={() => scroll("left")}
-            className="rounded-full bg-secondary p-2 transition-colors hover:opacity-80"
-            style={navBg ? { backgroundColor: navBg, color: navIcon } : undefined}
+            className="rounded-full p-2 transition-opacity hover:opacity-80"
+            style={{ backgroundColor: navBg, color: navIcon }}
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
           <button
             onClick={() => scroll("right")}
-            className="rounded-full bg-secondary p-2 transition-colors hover:opacity-80"
-            style={navBg ? { backgroundColor: navBg, color: navIcon } : undefined}
+            className="rounded-full p-2 transition-opacity hover:opacity-80"
+            style={{ backgroundColor: navBg, color: navIcon }}
           >
             <ChevronRight className="h-4 w-4" />
           </button>

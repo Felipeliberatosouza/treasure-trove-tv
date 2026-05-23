@@ -219,7 +219,7 @@ const Login = () => {
           ) : (
             <h1 className="font-display text-3xl font-bold text-gradient">{platformName}</h1>
           )}
-          <p className="text-sm text-muted-foreground">Entre para continuar revisando!</p>
+          <p className="text-sm text-muted-foreground">Entre para revisões e mandar bem na sua prova!</p>
         </div>
 
         <Button

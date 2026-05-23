@@ -15,7 +15,7 @@ interface VideoCarouselProps {
 
 const VideoCarousel = ({ title, videos, onVideoClick, ratings, showTrialBadge, watchedIds }: VideoCarouselProps) => {
   const scrollRef = useRef<HTMLDivElement>(null);
-  const { settings: branding } = usePlatformSettings("branding");
+  const { data: branding } = usePlatformSettings("branding");
   const navBg = (branding as any)?.banner_nav_bg as string | undefined;
   const navIcon = (branding as any)?.banner_nav_icon as string | undefined;
 

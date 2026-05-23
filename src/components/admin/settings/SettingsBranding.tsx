@@ -29,6 +29,10 @@ const SettingsBranding = () => {
     textarea_bg: "#0f172a",
     textarea_text: "#ffffff",
     textarea_border: "#334155",
+    banner_nav_bg: "rgba(0,0,0,0.4)",
+    banner_nav_icon: "#ffffff",
+    banner_nav_dot_active: "#6366f1",
+    banner_nav_dot_idle: "rgba(255,255,255,0.4)",
   });
   const [saving, setSaving] = useState(false);
   const [applyToEmails, setApplyToEmails] = useState(false);
@@ -48,6 +52,10 @@ const SettingsBranding = () => {
       textarea_bg: data.textarea_bg || data.input_bg || "#0f172a",
       textarea_text: data.textarea_text || data.input_text || "#ffffff",
       textarea_border: data.textarea_border || data.input_border || "#334155",
+      banner_nav_bg: data.banner_nav_bg || "rgba(0,0,0,0.4)",
+      banner_nav_icon: data.banner_nav_icon || "#ffffff",
+      banner_nav_dot_active: data.banner_nav_dot_active || data.primary_color || "#6366f1",
+      banner_nav_dot_idle: data.banner_nav_dot_idle || "rgba(255,255,255,0.4)",
     });
   }, [data]);
 

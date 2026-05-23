@@ -101,6 +101,11 @@ const HeroBanner = ({ onVideoClick, onExploreClick }: HeroBannerProps) => {
   const { data: visitorRaw } = usePlatformSettings("hero_banner");
   const { data: studentRaw } = usePlatformSettings("hero_banner_student");
   const { data: teacherRaw } = usePlatformSettings("hero_banner_teacher");
+  const { data: branding } = usePlatformSettings("branding");
+  const navBg = (branding as any)?.banner_nav_bg as string | undefined;
+  const navIcon = (branding as any)?.banner_nav_icon as string | undefined;
+  const dotActive = (branding as any)?.banner_nav_dot_active as string | undefined;
+  const dotIdle = (branding as any)?.banner_nav_dot_idle as string | undefined;
 
   const slides: FlatSlide[] = useMemo(() => {
     const visitor = normalizeHeroCarousel(visitorRaw);
@@ -230,6 +235,7 @@ const HeroBanner = ({ onVideoClick, onExploreClick }: HeroBannerProps) => {
             onClick={goPrev}
             aria-label="Banner anterior"
             className="absolute left-3 md:left-6 top-1/2 -translate-y-1/2 z-20 rounded-full bg-background/60 hover:bg-background/90 backdrop-blur p-2 md:p-3 text-foreground transition-colors"
+            style={navBg || navIcon ? { background: navBg, color: navIcon } : undefined}
           >
             <ChevronLeft className="h-5 w-5 md:h-6 md:w-6" />
           </button>
@@ -237,6 +243,7 @@ const HeroBanner = ({ onVideoClick, onExploreClick }: HeroBannerProps) => {
             onClick={goNext}
             aria-label="Próximo banner"
             className="absolute right-3 md:right-6 top-1/2 -translate-y-1/2 z-20 rounded-full bg-background/60 hover:bg-background/90 backdrop-blur p-2 md:p-3 text-foreground transition-colors"
+            style={navBg || navIcon ? { background: navBg, color: navIcon } : undefined}
           >
             <ChevronRight className="h-5 w-5 md:h-6 md:w-6" />
           </button>
@@ -249,6 +256,11 @@ const HeroBanner = ({ onVideoClick, onExploreClick }: HeroBannerProps) => {
                 className={`h-2 rounded-full transition-all ${
                   i === currentIndex ? "w-8 bg-primary" : "w-2 bg-foreground/30 hover:bg-foreground/50"
                 }`}
+                style={
+                  i === currentIndex
+                    ? dotActive ? { background: dotActive } : undefined
+                    : dotIdle ? { background: dotIdle } : undefined
+                }
               />
             ))}
           </div>

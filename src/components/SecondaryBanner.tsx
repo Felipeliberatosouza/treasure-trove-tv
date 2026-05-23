@@ -25,6 +25,11 @@ const SecondaryBanner = () => {
   const { data: visitorRaw } = usePlatformSettings("secondary_banner");
   const { data: studentRaw } = usePlatformSettings("secondary_banner_student");
   const { data: teacherRaw } = usePlatformSettings("secondary_banner_teacher");
+  const { data: branding } = usePlatformSettings("branding");
+  const navBg = (branding as any)?.banner_nav_bg as string | undefined;
+  const navIcon = (branding as any)?.banner_nav_icon as string | undefined;
+  const dotActive = (branding as any)?.banner_nav_dot_active as string | undefined;
+  const dotIdle = (branding as any)?.banner_nav_dot_idle as string | undefined;
 
   const slides: FlatSlide[] = useMemo(() => {
     const visitor = normalizeHeroCarousel(visitorRaw);
@@ -202,6 +207,7 @@ const SecondaryBanner = () => {
             onClick={goPrev}
             aria-label="Slide anterior"
             className={`absolute left-3 md:left-6 top-1/2 -translate-y-1/2 z-20 rounded-full backdrop-blur p-2 transition-colors ${s.nav}`}
+            style={navBg || navIcon ? { background: navBg, color: navIcon } : undefined}
           >
             <ChevronLeft className="h-5 w-5" />
           </button>
@@ -209,6 +215,7 @@ const SecondaryBanner = () => {
             onClick={goNext}
             aria-label="Próximo slide"
             className={`absolute right-3 md:right-6 top-1/2 -translate-y-1/2 z-20 rounded-full backdrop-blur p-2 transition-colors ${s.nav}`}
+            style={navBg || navIcon ? { background: navBg, color: navIcon } : undefined}
           >
             <ChevronRight className="h-5 w-5" />
           </button>
@@ -221,6 +228,11 @@ const SecondaryBanner = () => {
                 className={`h-2 rounded-full transition-all ${
                   i === currentIndex ? `w-8 ${s.dotActive}` : `w-2 ${s.dotIdle}`
                 }`}
+                style={
+                  i === currentIndex
+                    ? dotActive ? { background: dotActive } : undefined
+                    : dotIdle ? { background: dotIdle } : undefined
+                }
               />
             ))}
           </div>

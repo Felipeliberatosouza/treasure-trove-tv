@@ -103,7 +103,35 @@ Deno.serve(async (req) => {
     const twilioData = await twilioResp.json().catch(() => null);
     if (!twilioResp.ok) {
       console.error("Twilio error:", JSON.stringify(twilioData));
-      return respond({ ok: false, error: "Erro ao enviar código. Tente novamente." });
+      const twilioCode = twilioData?.code;
+      const twilioMsg = twilioData?.message ?? "";
+      let userMsg = "Erro ao enviar código. Tente novamente.";
+
+      if (channel === "whatsapp") {
+        // 63007: Channel not found / number not opted-in to sandbox
+        // 63015: Number not in sandbox participants
+        // 63016: Outside 24h window / no approved template
+        // 21608: Unverified number (trial accounts)
+        if (twilioCode === 63007 || twilioCode === 63015) {
+          userMsg =
+            "Este número ainda não está autorizado a receber mensagens do WhatsApp Sandbox. " +
+            "Envie 'join <código-do-sandbox>' para o número do WhatsApp configurado e tente novamente, " +
+            "ou utilize o envio por SMS.";
+        } else if (twilioCode === 63016) {
+          userMsg =
+            "Não foi possível enviar o WhatsApp (fora da janela de 24h e sem template aprovado). Use SMS.";
+        } else {
+          userMsg = `Não foi possível enviar pelo WhatsApp${twilioMsg ? `: ${twilioMsg}` : "."} Tente por SMS.`;
+        }
+      } else if (twilioCode === 21608) {
+        userMsg = "Este número não está verificado na conta Twilio (modo trial).";
+      }
+
+      return respond({
+        ok: false,
+        error: userMsg,
+        diagnostics: { twilioCode, twilioMessage: twilioMsg },
+      });
     }
 
     let userId = "00000000-0000-0000-0000-000000000000";

@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import CpfInput from "@/components/CpfInput";
 import { isValidCPF } from "@/lib/cpfValidator";
 import { supabase } from "@/integrations/supabase/client";
@@ -19,6 +20,7 @@ interface TeacherDataModalProps {
 const TeacherDataModal = ({ open, onClose, onComplete }: TeacherDataModalProps) => {
   const { user, profile, refreshProfile } = useAuth();
   const [cpf, setCpf] = useState((profile as any)?.cpf || "");
+  const [bio, setBio] = useState((profile as any)?.bio || "");
   const [address, setAddress] = useState((profile as any)?.address || "");
   const [pixKey, setPixKey] = useState((profile as any)?.pix_key || "");
   const [saving, setSaving] = useState(false);
@@ -27,6 +29,10 @@ const TeacherDataModal = ({ open, onClose, onComplete }: TeacherDataModalProps) 
     if (!user) return;
     if (!isValidCPF(cpf)) {
       toast.error("Informe um CPF válido");
+      return;
+    }
+    if (!bio.trim()) {
+      toast.error("Informe sua bio");
       return;
     }
     if (!address.trim()) {
@@ -41,7 +47,7 @@ const TeacherDataModal = ({ open, onClose, onComplete }: TeacherDataModalProps) 
     setSaving(true);
     const { error } = await supabase
       .from("profiles")
-      .update({ cpf, address: address.trim(), pix_key: pixKey.trim() } as any)
+      .update({ cpf, bio: bio.trim(), address: address.trim(), pix_key: pixKey.trim() } as any)
       .eq("user_id", user.id);
 
     if (error) {
@@ -73,6 +79,16 @@ const TeacherDataModal = ({ open, onClose, onComplete }: TeacherDataModalProps) 
           <div>
             <Label>CPF *</Label>
             <CpfInput value={cpf} onChange={setCpf} className="bg-secondary border-border" />
+          </div>
+
+          <div>
+            <Label>Bio *</Label>
+            <Textarea
+              value={bio}
+              onChange={(e) => setBio(e.target.value)}
+              placeholder="Conte sobre você e sua experiência"
+              className="min-h-[100px] bg-secondary border-border"
+            />
           </div>
 
           <div>

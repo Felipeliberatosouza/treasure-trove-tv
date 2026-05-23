@@ -2,6 +2,7 @@ import { useRef } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import VideoCard from "./VideoCard";
 import type { Video } from "@/data/courses";
+import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 
 interface VideoCarouselProps {
   title: string;
@@ -14,6 +15,9 @@ interface VideoCarouselProps {
 
 const VideoCarousel = ({ title, videos, onVideoClick, ratings, showTrialBadge, watchedIds }: VideoCarouselProps) => {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const { settings: branding } = usePlatformSettings("branding");
+  const navBg = (branding as any)?.banner_nav_bg as string | undefined;
+  const navIcon = (branding as any)?.banner_nav_icon as string | undefined;
 
   const scroll = (direction: "left" | "right") => {
     if (!scrollRef.current) return;
@@ -31,13 +35,15 @@ const VideoCarousel = ({ title, videos, onVideoClick, ratings, showTrialBadge, w
         <div className="flex gap-2">
           <button
             onClick={() => scroll("left")}
-            className="rounded-full bg-secondary p-2 transition-colors hover:bg-muted"
+            className="rounded-full bg-secondary p-2 transition-colors hover:opacity-80"
+            style={navBg ? { backgroundColor: navBg, color: navIcon } : undefined}
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
           <button
             onClick={() => scroll("right")}
-            className="rounded-full bg-secondary p-2 transition-colors hover:bg-muted"
+            className="rounded-full bg-secondary p-2 transition-colors hover:opacity-80"
+            style={navBg ? { backgroundColor: navBg, color: navIcon } : undefined}
           >
             <ChevronRight className="h-4 w-4" />
           </button>

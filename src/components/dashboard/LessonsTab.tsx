@@ -79,7 +79,7 @@ const LessonsTab = () => {
 
   const hasCompleteData = () => {
     const p = profile as any;
-    return p?.cpf && isValidCPF(p.cpf) && p?.address && p.address.trim() !== "" && p?.pix_key && p.pix_key.trim() !== "";
+    return p?.cpf && isValidCPF(p.cpf) && p?.bio && p.bio.trim() !== "" && p?.address && p.address.trim() !== "" && p?.pix_key && p.pix_key.trim() !== "";
   };
 
   const handleNewLesson = () => {

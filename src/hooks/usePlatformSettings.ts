@@ -23,6 +23,14 @@ export interface BrandingSettings {
   secondary_button_bg: string;
   /** Text color rendered on top of secondary CTAs. */
   secondary_button_text: string;
+  /** Background color of selection buttons (e.g. tag-style multi-choice chips) when idle. */
+  selection_button_bg?: string;
+  /** Text color of selection buttons when idle. */
+  selection_button_text?: string;
+  /** Background color of selection buttons when selected/active. */
+  selection_button_selected_bg?: string;
+  /** Text color of selection buttons when selected/active. */
+  selection_button_selected_text?: string;
   /** Background color of single-line text fields (Input). */
   input_bg?: string;
   /** Foreground/text color of single-line text fields (Input). */

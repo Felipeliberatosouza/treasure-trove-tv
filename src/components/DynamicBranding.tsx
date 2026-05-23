@@ -41,6 +41,10 @@ const DynamicBranding = () => {
       primary_button_text?: string;
       secondary_button_bg?: string;
       secondary_button_text?: string;
+      selection_button_bg?: string;
+      selection_button_text?: string;
+      selection_button_selected_bg?: string;
+      selection_button_selected_text?: string;
       input_bg?: string;
       input_text?: string;
       input_border?: string;
@@ -107,6 +111,17 @@ const DynamicBranding = () => {
         root.style.setProperty("--sidebar-accent-foreground", hsl);
       }
     }
+
+    // Selection buttons (multi-choice chips). Stored as raw colors so they can
+    // be consumed via `bg-[var(--selection-btn-bg)]` Tailwind arbitrary values.
+    const selBg = branding.selection_button_bg || branding.secondary_button_bg || "#000000";
+    const selFg = branding.selection_button_text || branding.secondary_button_text || "#ffffff";
+    const selActiveBg = branding.selection_button_selected_bg || branding.primary_button_bg || branding.primary_color || "#3b82f6";
+    const selActiveFg = branding.selection_button_selected_text || branding.primary_button_text || branding.button_text_color || "#ffffff";
+    root.style.setProperty("--selection-btn-bg", selBg);
+    root.style.setProperty("--selection-btn-text", selFg);
+    root.style.setProperty("--selection-btn-active-bg", selActiveBg);
+    root.style.setProperty("--selection-btn-active-text", selActiveFg);
 
     // Form fields & textareas — apply via global CSS rules so every shadcn
     // Input/Textarea picks them up automatically.

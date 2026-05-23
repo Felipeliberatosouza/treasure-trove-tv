@@ -77,8 +77,8 @@ const AreaSelector = ({ selected, onChange, max = 3 }: AreaSelectorProps) => {
                 variant="default"
                 className={`cursor-pointer transition-colors ${
                   isSelected
-                    ? "bg-blue-500 text-white hover:bg-blue-600"
-                    : "bg-black text-white hover:bg-neutral-800"
+                    ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                    : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
                 } ${!isSelected && selected.length >= max ? "opacity-40 cursor-not-allowed" : ""}`}
                 onClick={() => toggle(area.name)}
               >

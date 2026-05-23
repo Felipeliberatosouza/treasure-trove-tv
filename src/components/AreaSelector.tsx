@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { Search } from "lucide-react";
 import { useCourseAreas } from "@/hooks/useCourseAreas";
-import { Badge } from "@/components/ui/badge";
+import { SelectionChip } from "@/components/ui/SelectionChip";
 import { Input } from "@/components/ui/input";
 
 interface AreaSelectorProps {
@@ -72,16 +72,15 @@ const AreaSelector = ({ selected, onChange, max = 3 }: AreaSelectorProps) => {
           filteredAreas.map((area) => {
             const isSelected = selected.includes(area.name);
             return (
-              <Badge
+              <SelectionChip
                 key={area.id}
-                variant="default"
-                className={`selection-chip cursor-pointer ${
-                  isSelected ? "is-selected" : ""
-                } ${!isSelected && selected.length >= max ? "opacity-40 cursor-not-allowed" : ""}`}
+                selected={isSelected}
+                disabled={!isSelected && selected.length >= max}
                 onClick={() => toggle(area.name)}
+                className="cursor-pointer"
               >
                 {area.name}
-              </Badge>
+              </SelectionChip>
             );
           })
         )}

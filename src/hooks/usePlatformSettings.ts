@@ -35,6 +35,14 @@ export interface BrandingSettings {
   textarea_text?: string;
   /** Border color of multi-line text areas. */
   textarea_border?: string;
+  /** Background color of banner navigation buttons (prev/next arrows). */
+  banner_nav_bg?: string;
+  /** Icon (chevron) color inside banner navigation buttons. */
+  banner_nav_icon?: string;
+  /** Active pagination dot color below banners. */
+  banner_nav_dot_active?: string;
+  /** Idle pagination dot color below banners. */
+  banner_nav_dot_idle?: string;
 }
 
 export interface ContactSettings {

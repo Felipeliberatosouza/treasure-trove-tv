@@ -335,6 +335,34 @@ const Login = () => {
           </div>
         )}
 
+        {unconfirmedEmail && (
+          <div className="rounded-lg border border-primary/30 bg-primary/10 p-4 text-sm space-y-3">
+            <p className="font-semibold text-foreground">Confirme seu e-mail para ativar a conta</p>
+            <p className="text-muted-foreground">
+              Enviamos um link de confirmação para <strong>{unconfirmedEmail}</strong>. Clique no
+              link no e-mail para ativar seu cadastro. Não recebeu o e-mail? Deseja receber novamente?
+            </p>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                size="sm"
+                onClick={() => resendConfirmation(unconfirmedEmail)}
+                disabled={resending}
+              >
+                {resending ? "Enviando..." : "Reenviar e-mail"}
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setUnconfirmedEmail(null)}
+              >
+                Fechar
+              </Button>
+            </div>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="relative">
             <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />

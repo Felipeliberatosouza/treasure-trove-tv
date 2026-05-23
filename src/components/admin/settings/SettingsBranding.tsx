@@ -337,6 +337,120 @@ const SettingsBranding = () => {
         </div>
       </div>
 
+      {/* Selection buttons */}
+      <div className="space-y-3 rounded-lg border border-border p-4">
+        <div>
+          <h3 className="text-sm font-semibold">Botões de seleção</h3>
+          <p className="text-xs text-muted-foreground">
+            Aplicado a todos os botões de múltipla escolha do projeto (ex.: áreas de especialização), com cores distintas para o estado inativo e o estado selecionado.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Idle */}
+          <div className="space-y-2 rounded-md border border-border p-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Não selecionado</p>
+            <div>
+              <Label className="text-xs">Cor de fundo</Label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={form.selection_button_bg || "#000000"}
+                  onChange={(e) => setForm({ ...form, selection_button_bg: e.target.value })}
+                  className="w-9 h-9 rounded cursor-pointer border-0"
+                />
+                <Input
+                  value={form.selection_button_bg || "#000000"}
+                  onChange={(e) => setForm({ ...form, selection_button_bg: e.target.value })}
+                  className="flex-1 text-xs"
+                  maxLength={7}
+                />
+              </div>
+            </div>
+            <div>
+              <Label className="text-xs">Cor do texto</Label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={form.selection_button_text || "#ffffff"}
+                  onChange={(e) => setForm({ ...form, selection_button_text: e.target.value })}
+                  className="w-9 h-9 rounded cursor-pointer border-0"
+                />
+                <Input
+                  value={form.selection_button_text || "#ffffff"}
+                  onChange={(e) => setForm({ ...form, selection_button_text: e.target.value })}
+                  className="flex-1 text-xs"
+                  maxLength={7}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Selected */}
+          <div className="space-y-2 rounded-md border border-border p-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Selecionado</p>
+            <div>
+              <Label className="text-xs">Cor de fundo</Label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={form.selection_button_selected_bg || "#3b82f6"}
+                  onChange={(e) => setForm({ ...form, selection_button_selected_bg: e.target.value })}
+                  className="w-9 h-9 rounded cursor-pointer border-0"
+                />
+                <Input
+                  value={form.selection_button_selected_bg || "#3b82f6"}
+                  onChange={(e) => setForm({ ...form, selection_button_selected_bg: e.target.value })}
+                  className="flex-1 text-xs"
+                  maxLength={7}
+                />
+              </div>
+            </div>
+            <div>
+              <Label className="text-xs">Cor do texto</Label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={form.selection_button_selected_text || "#ffffff"}
+                  onChange={(e) => setForm({ ...form, selection_button_selected_text: e.target.value })}
+                  className="w-9 h-9 rounded cursor-pointer border-0"
+                />
+                <Input
+                  value={form.selection_button_selected_text || "#ffffff"}
+                  onChange={(e) => setForm({ ...form, selection_button_selected_text: e.target.value })}
+                  className="flex-1 text-xs"
+                  maxLength={7}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <p className="text-xs text-muted-foreground mb-2">Pré-visualização</p>
+          <div className="flex flex-wrap gap-2 rounded-md bg-muted/30 p-3">
+            <span
+              className="rounded-md px-3 py-1.5 text-xs font-medium"
+              style={{ background: form.selection_button_bg || "#000000", color: form.selection_button_text || "#ffffff" }}
+            >
+              Matemática
+            </span>
+            <span
+              className="rounded-md px-3 py-1.5 text-xs font-medium"
+              style={{ background: form.selection_button_selected_bg || "#3b82f6", color: form.selection_button_selected_text || "#ffffff" }}
+            >
+              Português (selecionado)
+            </span>
+            <span
+              className="rounded-md px-3 py-1.5 text-xs font-medium"
+              style={{ background: form.selection_button_bg || "#000000", color: form.selection_button_text || "#ffffff" }}
+            >
+              História
+            </span>
+          </div>
+        </div>
+      </div>
+
       {/* Form fields */}
       <div className="space-y-3 rounded-lg border border-border p-4">
         <div>

@@ -209,3 +209,32 @@
     color: hsl(var(--muted-foreground));
   }
 }
+
+/* ------------------------------------------------------------------
+   Selection chips — driven by admin "Botões de seleção" branding vars
+   (--selection-btn-bg / -text / -active-bg / -active-text).
+   Apply `.selection-chip` to any multi-choice option; toggle
+   `.is-selected` (or `data-selected="true"`) for the active state.
+------------------------------------------------------------------- */
+@layer components {
+  .selection-chip {
+    background: var(--selection-btn-bg, hsl(var(--secondary)));
+    color: var(--selection-btn-text, hsl(var(--secondary-foreground)));
+    border-color: transparent;
+    transition: opacity 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+  }
+  .selection-chip:hover:not(:disabled) {
+    opacity: 0.88;
+  }
+  .selection-chip.is-selected,
+  .selection-chip[data-selected="true"],
+  .selection-chip[aria-pressed="true"],
+  .selection-chip[data-state="on"] {
+    background: var(--selection-btn-active-bg, hsl(var(--primary)));
+    color: var(--selection-btn-active-text, hsl(var(--primary-foreground)));
+  }
+  .selection-chip:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}

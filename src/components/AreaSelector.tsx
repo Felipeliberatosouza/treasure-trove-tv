@@ -75,11 +75,17 @@ const AreaSelector = ({ selected, onChange, max = 3 }: AreaSelectorProps) => {
               <Badge
                 key={area.id}
                 variant="default"
-                className={`cursor-pointer transition-colors ${
-                  isSelected
-                    ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                    : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
-                } ${!isSelected && selected.length >= max ? "opacity-40 cursor-not-allowed" : ""}`}
+                className={`cursor-pointer transition-colors hover:opacity-90 ${
+                  !isSelected && selected.length >= max ? "opacity-40 cursor-not-allowed" : ""
+                }`}
+                style={{
+                  background: isSelected
+                    ? "var(--selection-btn-active-bg)"
+                    : "var(--selection-btn-bg)",
+                  color: isSelected
+                    ? "var(--selection-btn-active-text)"
+                    : "var(--selection-btn-text)",
+                }}
                 onClick={() => toggle(area.name)}
               >
                 {area.name}

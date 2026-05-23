@@ -759,8 +759,8 @@ const SalesBoostTab = () => {
                   return (
                     <label
                       key={c.id}
-                      className={`flex items-start gap-2 rounded-md border border-border p-2 text-sm cursor-pointer transition-colors ${
-                        checked ? "bg-primary/10 border-primary/40" : "hover:bg-muted/50"
+                      className={`selection-chip flex items-start gap-2 rounded-md border p-2 text-sm cursor-pointer ${
+                        checked ? "is-selected" : ""
                       } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
                     >
                       <Checkbox
@@ -867,10 +867,8 @@ const SalesBoostTab = () => {
                     key={key}
                     type="button"
                     onClick={() => setTemplate(key)}
-                    className={`group rounded-lg border p-2 text-left transition-all ${
-                      active
-                        ? "border-primary ring-2 ring-primary/40 bg-primary/5"
-                        : "border-border hover:border-primary/50"
+                    className={`selection-chip group rounded-lg border p-2 text-left ${
+                      active ? "is-selected ring-2 ring-primary/40" : ""
                     }`}
                     aria-pressed={active}
                   >

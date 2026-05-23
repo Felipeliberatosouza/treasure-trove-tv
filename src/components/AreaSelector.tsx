@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { Search } from "lucide-react";
 import { useCourseAreas } from "@/hooks/useCourseAreas";
-import { Badge } from "@/components/ui/badge";
+import { SelectionChip } from "@/components/ui/SelectionChip";
 import { Input } from "@/components/ui/input";
 
 interface AreaSelectorProps {

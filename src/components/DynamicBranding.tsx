@@ -26,6 +26,46 @@ function hexToHSL(hex: string): string | null {
   return `${Math.round(h * 360)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
 }
 
+/** Returns the relative luminance (0–1) of a hex color per WCAG. */
+function hexLuminance(hex: string): number | null {
+  const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  if (!m) return null;
+  const channel = (v: number) => {
+    const s = v / 255;
+    return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+  };
+  const r = channel(parseInt(m[1], 16));
+  const g = channel(parseInt(m[2], 16));
+  const b = channel(parseInt(m[3], 16));
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+function contrastRatio(hex1: string, hex2: string): number | null {
+  const l1 = hexLuminance(hex1);
+  const l2 = hexLuminance(hex2);
+  if (l1 == null || l2 == null) return null;
+  const lighter = Math.max(l1, l2);
+  const darker = Math.min(l1, l2);
+  return (lighter + 0.05) / (darker + 0.05);
+}
+
+/** Picks white or black for best contrast against the given bg hex. */
+function autoContrastText(bgHex: string): string {
+  const lum = hexLuminance(bgHex);
+  if (lum == null) return "#ffffff";
+  return lum > 0.5 ? "#000000" : "#ffffff";
+}
+
+/**
+ * Returns the configured text color when it has acceptable contrast (>= 4.5
+ * AA), otherwise auto-picks white/black against the background.
+ */
+function ensureContrast(bgHex: string, fgHex: string): string {
+  const ratio = contrastRatio(bgHex, fgHex);
+  if (ratio != null && ratio >= 4.5) return fgHex;
+  return autoContrastText(bgHex);
+}
+
 const DynamicBranding = () => {
   const { settings, loading } = useAllPlatformSettings();
 
@@ -115,9 +155,11 @@ const DynamicBranding = () => {
     // Selection buttons (multi-choice chips). Stored as raw colors so they can
     // be consumed via `bg-[var(--selection-btn-bg)]` Tailwind arbitrary values.
     const selBg = branding.selection_button_bg || branding.secondary_button_bg || "#000000";
-    const selFg = branding.selection_button_text || branding.secondary_button_text || "#ffffff";
+    const selFgRaw = branding.selection_button_text || branding.secondary_button_text || autoContrastText(selBg);
+    const selFg = ensureContrast(selBg, selFgRaw);
     const selActiveBg = branding.selection_button_selected_bg || branding.primary_button_bg || branding.primary_color || "#3b82f6";
-    const selActiveFg = branding.selection_button_selected_text || branding.primary_button_text || branding.button_text_color || "#ffffff";
+    const selActiveFgRaw = branding.selection_button_selected_text || branding.primary_button_text || branding.button_text_color || autoContrastText(selActiveBg);
+    const selActiveFg = ensureContrast(selActiveBg, selActiveFgRaw);
     root.style.setProperty("--selection-btn-bg", selBg);
     root.style.setProperty("--selection-btn-text", selFg);
     root.style.setProperty("--selection-btn-active-bg", selActiveBg);

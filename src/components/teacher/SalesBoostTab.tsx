@@ -891,7 +891,7 @@ const SalesBoostTab = () => {
                     <div className="text-[10px] text-muted-foreground leading-tight">
                       {tpl.description}
                     </div>
-                  </button>
+                  </SelectionChip>
                 );
               })}
             </div>

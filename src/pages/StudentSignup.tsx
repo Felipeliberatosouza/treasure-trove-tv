@@ -208,7 +208,7 @@ const StudentSignup = () => {
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
           {/* Avatar upload */}
           <div className="flex justify-center">
             <button

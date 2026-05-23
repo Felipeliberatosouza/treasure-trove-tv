@@ -218,17 +218,48 @@ const PhoneVerification = ({ phone, onPhoneChange, onVerified, verified = false,
             </button>
             {countdown > 0 || sendCooldown > 0 ? (
               <span className="text-xs text-muted-foreground">Reenviar em {Math.max(countdown, sendCooldown)}s</span>
-            ) : (
-              <button
+            ) : null}
+          </div>
+
+          {countdown <= 0 && sendCooldown <= 0 && (
+            <div className="space-y-2 rounded-md border border-border/60 p-3">
+              <p className="text-xs text-muted-foreground">Não recebeu? Reenviar via:</p>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant={channel === "sms" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setChannel("sms")}
+                  className="flex-1 gap-1.5"
+                >
+                  <Phone className="h-3.5 w-3.5" /> SMS
+                </Button>
+                <Button
+                  type="button"
+                  variant={channel === "whatsapp" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setChannel("whatsapp")}
+                  className="flex-1 gap-1.5"
+                >
+                  <MessageCircle className="h-3.5 w-3.5" /> WhatsApp
+                </Button>
+              </div>
+              <Button
                 type="button"
                 onClick={sendCode}
                 disabled={sending}
-                className="text-xs text-primary hover:underline inline-flex items-center gap-1"
+                size="sm"
+                variant="outline"
+                className="w-full gap-1.5"
               >
-                <RotateCcw className="h-3 w-3" /> Reenviar código
-              </button>
-            )}
-          </div>
+                {sending ? (
+                  <><Loader2 className="h-4 w-4 animate-spin mr-1" /> Enviando...</>
+                ) : (
+                  <><RotateCcw className="h-3.5 w-3.5" /> Reenviar código via {channel === "sms" ? "SMS" : "WhatsApp"}</>
+                )}
+              </Button>
+            </div>
+          )}
         </div>
       )}
     </div>

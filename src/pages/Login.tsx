@@ -401,18 +401,18 @@ const Login = () => {
           </div>
         </form>
 
-        <div className="space-y-3 text-center text-sm text-muted-foreground">
-          <p>
+        <div className="space-y-4 text-center">
+          <p className="text-lg font-bold text-foreground">
             Não tem uma conta?
           </p>
           <div className="flex gap-3 justify-center">
             <Link to="/signup/student">
-              <Button variant="secondary" size="sm" className="font-display">
+              <Button variant="default" size="sm" className="font-display">
                 Cadastrar como Aluno
               </Button>
             </Link>
             <Link to="/signup/teacher">
-              <Button variant="secondary" size="sm" className="font-display">
+              <Button variant="default" size="sm" className="font-display">
                 Cadastrar como Professor
               </Button>
             </Link>

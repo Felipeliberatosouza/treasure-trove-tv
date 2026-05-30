@@ -419,6 +419,11 @@ const Index = () => {
           <PricingSection />
         </div>
       )}
+      {!isTeacher && (
+        <div className="pb-12">
+          <BookLessonSection />
+        </div>
+      )}
       <SecondaryBanner />
       <Footer />
       <WhatsAppFloat />

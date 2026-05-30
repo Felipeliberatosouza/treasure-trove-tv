@@ -46,7 +46,7 @@ const publicMenuItems: MenuItem[] = [
   { label: "Simulados", href: "/simulados" },
   { label: "Top Questões de Provas", href: "/top-questoes" },
   { label: "Colinhas", href: "/colinhas" },
-  { label: "Agende uma Aula Particular", href: "/contato" },
+  { label: "Agende uma Aula Particular", href: "#agendar-aula" },
 ];
 
 const subscriberMenuItem: MenuItem = {

@@ -26,6 +26,8 @@ import {
   DEFAULT_AULA_PARTICULAR_CONFIG,
   type AulaParticularConfigSettings,
 } from "@/hooks/usePlatformSettings";
+import { useResourceLimit } from "@/hooks/useResourceLimit";
+import { Sparkles, Wallet } from "lucide-react";
 
 interface BookLessonModalProps {
   open: boolean;
@@ -84,6 +86,7 @@ const BookLessonModal = ({
 }: BookLessonModalProps) => {
   const { user } = useAuth();
   const { data: cfgData } = usePlatformSettings("aula_particular_config");
+  const { checkLimit, loaded: limitsLoaded, subscriptionId } = useResourceLimit();
   const cfg: AulaParticularConfigSettings = useMemo(
     () => ({
       ...DEFAULT_AULA_PARTICULAR_CONFIG,
@@ -100,6 +103,12 @@ const BookLessonModal = ({
   const [selectedSlot, setSelectedSlot] = useState<Date | null>(null);
   const [confirming, setConfirming] = useState(false);
   const [resourcePrice, setResourcePrice] = useState<number | null>(null);
+
+  const credit = useMemo(() => {
+    if (!user || !limitsLoaded) return null;
+    return checkLimit("aula_particular");
+  }, [user, limitsLoaded, checkLimit]);
+  const useCredit = !!credit?.hasSubscription && credit.allowed;
 
   // Load all teacher availability + bookings + price when modal opens
   useEffect(() => {
@@ -364,8 +373,8 @@ const BookLessonModal = ({
       status: "pending",
       content_id: contentId,
       content_type: contentType,
-      payment_type: "one_off",
-      price: resourcePrice ?? 0,
+      payment_type: useCredit ? "subscription" : "one_off",
+      price: useCredit ? 0 : (resourcePrice ?? 0),
     });
 
     if (error) {
@@ -374,7 +383,23 @@ const BookLessonModal = ({
       setConfirming(false);
       return;
     }
-    toast.success("Aula agendada! Aguarde a confirmação do professor.");
+
+    // Consome 1 crédito da assinatura quando aplicável.
+    if (useCredit && subscriptionId) {
+      await supabase.from("resource_usage").insert({
+        user_id: user.id,
+        subscription_id: subscriptionId,
+        resource_type: "aula_particular",
+        content_id: contentId,
+        content_type: contentType,
+      });
+    }
+
+    toast.success(
+      useCredit
+        ? "Aula agendada usando 1 crédito do seu plano. Aguarde a confirmação do professor."
+        : "Aula agendada! Aguarde a confirmação do professor.",
+    );
     setConfirming(false);
     onClose();
   };
@@ -410,6 +435,48 @@ const BookLessonModal = ({
           </div>
         ) : (
           <div className="space-y-4">
+            {credit && (
+              credit.hasSubscription && credit.allowed ? (
+                <div className="flex items-start gap-2 rounded-lg border border-primary/30 bg-primary/5 p-3 text-xs">
+                  <Sparkles className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                  <div>
+                    <div className="font-medium text-foreground">
+                      Você tem {credit.remaining} de {credit.total} aulas particulares no seu plano.
+                    </div>
+                    <p className="mt-0.5 text-muted-foreground">
+                      Esta reserva consumirá 1 crédito — sem cobrança adicional.
+                    </p>
+                  </div>
+                </div>
+              ) : credit.hasSubscription && !credit.allowed ? (
+                <div className="flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 text-xs">
+                  <Wallet className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
+                  <div>
+                    <div className="font-medium text-foreground">
+                      Você já usou todas as {credit.total} aulas particulares do plano.
+                    </div>
+                    <p className="mt-0.5 text-muted-foreground">
+                      Esta reserva será cobrada como aula avulsa
+                      {resourcePrice !== null && `: R$ ${resourcePrice.toFixed(2)}`}.
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-start gap-2 rounded-lg border border-border bg-secondary/30 p-3 text-xs">
+                  <Wallet className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                  <div>
+                    <div className="font-medium text-foreground">Aula avulsa</div>
+                    <p className="mt-0.5 text-muted-foreground">
+                      {resourcePrice !== null
+                        ? `Valor: R$ ${resourcePrice.toFixed(2)}.`
+                        : "Valor a combinar com o professor."}
+                      {" "}Assine um plano para ganhar créditos de aula particular.
+                    </p>
+                  </div>
+                </div>
+              )
+            )}
+
             <div>
               <label className="mb-1.5 block text-xs font-medium text-muted-foreground">
                 Escolha o dia

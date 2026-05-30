@@ -26,6 +26,8 @@ import {
   DEFAULT_AULA_PARTICULAR_CONFIG,
   type AulaParticularConfigSettings,
 } from "@/hooks/usePlatformSettings";
+import { useResourceLimit } from "@/hooks/useResourceLimit";
+import { Sparkles, Wallet } from "lucide-react";
 
 interface BookLessonModalProps {
   open: boolean;
@@ -84,6 +86,7 @@ const BookLessonModal = ({
 }: BookLessonModalProps) => {
   const { user } = useAuth();
   const { data: cfgData } = usePlatformSettings("aula_particular_config");
+  const { checkLimit, loaded: limitsLoaded, subscriptionId } = useResourceLimit();
   const cfg: AulaParticularConfigSettings = useMemo(
     () => ({
       ...DEFAULT_AULA_PARTICULAR_CONFIG,
@@ -100,6 +103,12 @@ const BookLessonModal = ({
   const [selectedSlot, setSelectedSlot] = useState<Date | null>(null);
   const [confirming, setConfirming] = useState(false);
   const [resourcePrice, setResourcePrice] = useState<number | null>(null);
+
+  const credit = useMemo(() => {
+    if (!user || !limitsLoaded) return null;
+    return checkLimit("aula_particular");
+  }, [user, limitsLoaded, checkLimit]);
+  const useCredit = !!credit?.hasSubscription && credit.allowed;
 
   // Load all teacher availability + bookings + price when modal opens
   useEffect(() => {
@@ -364,8 +373,8 @@ const BookLessonModal = ({
       status: "pending",
       content_id: contentId,
       content_type: contentType,
-      payment_type: "one_off",
-      price: resourcePrice ?? 0,
+      payment_type: useCredit ? "subscription" : "one_off",
+      price: useCredit ? 0 : (resourcePrice ?? 0),
     });
 
     if (error) {
@@ -374,7 +383,23 @@ const BookLessonModal = ({
       setConfirming(false);
       return;
     }
-    toast.success("Aula agendada! Aguarde a confirmação do professor.");
+
+    // Consome 1 crédito da assinatura quando aplicável.
+    if (useCredit && subscriptionId) {
+      await supabase.from("resource_usage").insert({
+        user_id: user.id,
+        subscription_id: subscriptionId,
+        resource_type: "aula_particular",
+        content_id: contentId,
+        content_type: contentType,
+      });
+    }
+
+    toast.success(
+      useCredit
+        ? "Aula agendada usando 1 crédito do seu plano. Aguarde a confirmação do professor."
+        : "Aula agendada! Aguarde a confirmação do professor.",
+    );
     setConfirming(false);
     onClose();
   };

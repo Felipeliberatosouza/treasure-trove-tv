@@ -244,18 +244,20 @@ const Login = () => {
         </Link>
 
         <div className="text-center space-y-2">
-          {showLogoImage ? (
-            <div className="flex justify-center">
-              <img
-                src={branding!.logo_url}
-                alt={platformName}
-                className="h-16 max-w-[280px] object-contain"
-              />
-            </div>
-          ) : (
-            <h1 className="font-display text-3xl font-bold text-gradient">{platformName}</h1>
-          )}
-          <p className="text-sm text-muted-foreground">Entre para revisões e mandar bem na sua prova!</p>
+          <Link to="/" className="inline-block">
+            {showLogoImage ? (
+              <div className="flex justify-center">
+                <img
+                  src={branding!.logo_url}
+                  alt={platformName}
+                  className="h-16 max-w-[280px] object-contain"
+                />
+              </div>
+            ) : (
+              <h1 className="font-display text-3xl font-bold text-gradient">{platformName}</h1>
+            )}
+          </Link>
+          <p className="text-sm text-muted-foreground">Acesse revisões e mande bem na sua prova!</p>
         </div>
 
         <Button

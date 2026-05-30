@@ -435,6 +435,48 @@ const BookLessonModal = ({
           </div>
         ) : (
           <div className="space-y-4">
+            {credit && (
+              credit.hasSubscription && credit.allowed ? (
+                <div className="flex items-start gap-2 rounded-lg border border-primary/30 bg-primary/5 p-3 text-xs">
+                  <Sparkles className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                  <div>
+                    <div className="font-medium text-foreground">
+                      Você tem {credit.remaining} de {credit.total} aulas particulares no seu plano.
+                    </div>
+                    <p className="mt-0.5 text-muted-foreground">
+                      Esta reserva consumirá 1 crédito — sem cobrança adicional.
+                    </p>
+                  </div>
+                </div>
+              ) : credit.hasSubscription && !credit.allowed ? (
+                <div className="flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 text-xs">
+                  <Wallet className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
+                  <div>
+                    <div className="font-medium text-foreground">
+                      Você já usou todas as {credit.total} aulas particulares do plano.
+                    </div>
+                    <p className="mt-0.5 text-muted-foreground">
+                      Esta reserva será cobrada como aula avulsa
+                      {resourcePrice !== null && `: R$ ${resourcePrice.toFixed(2)}`}.
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-start gap-2 rounded-lg border border-border bg-secondary/30 p-3 text-xs">
+                  <Wallet className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                  <div>
+                    <div className="font-medium text-foreground">Aula avulsa</div>
+                    <p className="mt-0.5 text-muted-foreground">
+                      {resourcePrice !== null
+                        ? `Valor: R$ ${resourcePrice.toFixed(2)}.`
+                        : "Valor a combinar com o professor."}
+                      {" "}Assine um plano para ganhar créditos de aula particular.
+                    </p>
+                  </div>
+                </div>
+              )
+            )}
+
             <div>
               <label className="mb-1.5 block text-xs font-medium text-muted-foreground">
                 Escolha o dia

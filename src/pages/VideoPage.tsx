@@ -279,19 +279,24 @@ const VideoPage = () => {
 
   const fetchProvaVotes = useCallback(async () => {
     if (!video) return;
-    const { data: votes } = await supabase
-      .from("prova_votes")
-      .select("vote, user_id")
-      .eq("content_id", video.id);
-    if (votes && votes.length > 0) {
-      const yesCount = votes.filter(v => v.vote === true).length;
-      setProvaVotePercent(Math.round((yesCount / votes.length) * 100));
-      if (user) {
-        const uv = votes.find(v => v.user_id === user.id);
-        setUserProvaVote(uv?.vote ?? null);
-      }
+    const { data: stats } = await supabase
+      .rpc("get_prova_vote_stats", { _content_id: video.id });
+    const row = Array.isArray(stats) ? stats[0] : stats;
+    const total = row?.total_count ?? 0;
+    if (total > 0) {
+      setProvaVotePercent(Math.round(((row?.yes_count ?? 0) / total) * 100));
     } else {
       setProvaVotePercent(null);
+    }
+    if (user) {
+      const { data: own } = await supabase
+        .from("prova_votes")
+        .select("vote")
+        .eq("content_id", video.id)
+        .eq("user_id", user.id)
+        .maybeSingle();
+      setUserProvaVote(own?.vote ?? null);
+    } else {
       setUserProvaVote(null);
     }
   }, [video, user]);

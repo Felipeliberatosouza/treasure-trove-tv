@@ -72,6 +72,23 @@ Deno.serve(async (req) => {
     })
   }
 
+  // Authorization: callers using the public anon key (role === 'anon') are
+  // restricted to a fixed allowlist of templates needed by pre-auth flows
+  // (signup, login alerts, contact form, password recovery). Service role
+  // and authenticated users may invoke any registered template.
+  const callerRole = (claimsData.claims as any)?.role || 'anon'
+  const PUBLIC_ANON_TEMPLATES = new Set<string>([
+    'contact-message',
+    'suspicious-login-admin-notify',
+    'password_recovery',
+    'welcome-student',
+    'welcome-teacher',
+    'new-student-admin-notify',
+    'new-teacher-admin-notify',
+    'payment-confirmation',
+    'doubt-sent-confirmation',
+  ])
+
   // Parse request body
   let templateName: string
   let recipientEmail: string
@@ -102,6 +119,16 @@ Deno.serve(async (req) => {
       JSON.stringify({ error: 'templateName is required' }),
       {
         status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    )
+  }
+
+  if (callerRole === 'anon' && !PUBLIC_ANON_TEMPLATES.has(templateName)) {
+    return new Response(
+      JSON.stringify({ error: 'Forbidden: template not available for anonymous callers' }),
+      {
+        status: 403,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
     )

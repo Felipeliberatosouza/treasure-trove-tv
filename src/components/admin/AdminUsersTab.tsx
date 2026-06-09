@@ -332,12 +332,22 @@ const AdminUsersTab = () => {
               if (!viewContract?.contract_text) return;
               const printWindow = window.open("", "_blank");
               if (!printWindow) return;
-              printWindow.document.write(`<html><head><title>Contrato - ${viewContract.name}</title>
+              const esc = (s: unknown) =>
+                String(s ?? "")
+                  .replace(/&/g, "&amp;")
+                  .replace(/</g, "&lt;")
+                  .replace(/>/g, "&gt;")
+                  .replace(/"/g, "&quot;")
+                  .replace(/'/g, "&#39;");
+              const bodyHtml = esc(viewContract.contract_text)
+                .replace(/\n/g, "<br/>")
+                .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+              printWindow.document.write(`<html><head><title>Contrato - ${esc(viewContract.name)}</title>
               <style>body { font-family: Georgia, serif; max-width: 700px; margin: 40px auto; padding: 20px; line-height: 1.6; font-size: 14px; }
               .signature { text-align: center; margin-top: 40px; border-top: 1px solid #ccc; padding-top: 20px; font-style: italic; font-size: 20px; }
               .meta { font-size: 11px; color: #666; margin-top: 10px; }</style></head>
-              <body><div>${viewContract.contract_text.replace(/\n/g, "<br/>").replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")}</div>
-              <div class="signature">${viewContract.contract_signature_name}<br/><span class="meta">CPF: ${viewContract.contract_signature_cpf}</span></div></body></html>`);
+              <body><div>${bodyHtml}</div>
+              <div class="signature">${esc(viewContract.contract_signature_name)}<br/><span class="meta">CPF: ${esc(viewContract.contract_signature_cpf)}</span></div></body></html>`);
               printWindow.document.close();
               setTimeout(() => printWindow.print(), 500);
             }}

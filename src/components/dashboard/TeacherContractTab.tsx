@@ -41,15 +41,27 @@ const TeacherContractTab = () => {
   const downloadPdf = (contract: Contract) => {
     const printWindow = window.open("", "_blank");
     if (!printWindow) return;
+    const esc = (s: unknown) =>
+      String(s ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    // Sanitize plain text first, then re-apply only the safe markdown-ish
+    // formatting the contract template uses (line breaks and **bold**).
+    const bodyHtml = esc(contract.contract_text)
+      .replace(/\n/g, "<br/>")
+      .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
     printWindow.document.write(`
       <html>
-      <head><title>Contrato - ${contract.signature_name}</title>
+      <head><title>Contrato - ${esc(contract.signature_name)}</title>
       <style>body { font-family: Georgia, serif; max-width: 700px; margin: 40px auto; padding: 20px; line-height: 1.6; font-size: 14px; }
       .signature { text-align: center; margin-top: 40px; border-top: 1px solid #ccc; padding-top: 20px; font-style: italic; font-size: 20px; }
       .meta { font-size: 11px; color: #666; margin-top: 10px; }</style></head>
       <body>
-        <div>${contract.contract_text.replace(/\n/g, "<br/>").replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")}</div>
-        <div class="signature">${contract.signature_name}<br/><span class="meta">CPF: ${contract.signature_cpf}</span></div>
+        <div>${bodyHtml}</div>
+        <div class="signature">${esc(contract.signature_name)}<br/><span class="meta">CPF: ${esc(contract.signature_cpf)}</span></div>
       </body></html>
     `);
     printWindow.document.close();

@@ -35,7 +35,7 @@ const StudentDoubtsTab = () => {
       if (!data) { setLoading(false); return; }
 
       const teacherIds = [...new Set(data.map(d => d.teacher_id))];
-      const { data: profiles } = await supabase.from("profiles").select("user_id, name").in("user_id", teacherIds);
+      const { data: profiles } = await supabase.from("teacher_profiles_public").select("user_id, name").in("user_id", teacherIds);
       const profileMap = new Map((profiles || []).map(p => [p.user_id, p.name]));
 
       const lessonIds = data.filter(d => d.content_type === "lesson").map(d => d.content_id);

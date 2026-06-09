@@ -155,7 +155,7 @@ const MinhasAulasAgendadas = () => {
     const teacherIds = Array.from(new Set(list.map((l) => l.teacher_id)));
     if (teacherIds.length > 0) {
       const { data: profs } = await supabase
-        .from("profiles")
+        .from("teacher_profiles_public")
         .select("user_id, name, avatar_url")
         .in("user_id", teacherIds);
       const map: Record<string, TeacherInfo> = {};

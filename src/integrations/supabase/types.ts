@@ -2915,6 +2915,13 @@ export type Database = {
           views_count: number
         }[]
       }
+      get_prova_vote_stats: {
+        Args: { _content_id: string }
+        Returns: {
+          total_count: number
+          yes_count: number
+        }[]
+      }
       get_teacher_monthly_target: {
         Args: { _teacher_id: string }
         Returns: number

@@ -55,7 +55,7 @@ const MaterialShowcase = ({ title, description, icon: Icon, materialType }: Mate
       let teacherMap = new Map<string, string>();
       if (teacherIds.length > 0) {
         const { data: profiles } = await supabase
-          .from("profiles")
+          .from("teacher_profiles_public")
           .select("user_id, name")
           .in("user_id", teacherIds);
         teacherMap = new Map((profiles || []).map((p) => [p.user_id, p.name]));

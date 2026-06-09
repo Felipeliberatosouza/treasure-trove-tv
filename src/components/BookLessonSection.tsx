@@ -68,7 +68,7 @@ const BookLessonSection = () => {
       let teacherMap: Record<string, { name: string | null; avatar_url: string | null }> = {};
       if (teacherIds.length > 0) {
         const { data: profs } = await supabase
-          .from("profiles")
+          .from("teacher_profiles_public")
           .select("user_id, name, avatar_url")
           .in("user_id", teacherIds);
         (profs || []).forEach((p) => {

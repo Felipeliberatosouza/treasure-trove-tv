@@ -268,7 +268,7 @@ const VideoPage = () => {
     if (!teacherId) return;
     const fetchProfile = async () => {
       const { data: profile } = await supabase
-        .from("profiles")
+        .from("teacher_profiles_public")
         .select("name, avatar_url, slug")
         .eq("user_id", teacherId)
         .maybeSingle();

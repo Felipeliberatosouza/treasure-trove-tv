@@ -75,7 +75,7 @@ const TeacherProfile = () => {
     const fetchTeacher = async () => {
       setLoading(true);
       const { data: profile } = await supabase
-        .from("profiles")
+        .from("teacher_profiles_public")
         .select("name, avatar_url, bio, expertise_area, profile_title, user_id, experiences, education, content_order")
         .eq("slug", slug)
         .maybeSingle();

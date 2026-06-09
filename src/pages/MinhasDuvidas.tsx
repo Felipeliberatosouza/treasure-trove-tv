@@ -99,7 +99,7 @@ const MinhasDuvidas = () => {
 
     const [profilesRes, lessonsRes, examsRes, msgsRes] = await Promise.all([
       teacherIds.length
-        ? supabase.from("profiles").select("user_id, name").in("user_id", teacherIds)
+        ? supabase.from("teacher_profiles_public").select("user_id, name").in("user_id", teacherIds)
         : Promise.resolve({ data: [] as any[] }),
       lessonIds.length
         ? supabase.from("lessons").select("id, title").in("id", lessonIds)

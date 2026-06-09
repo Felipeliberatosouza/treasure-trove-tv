@@ -124,6 +124,16 @@ Deno.serve(async (req) => {
     )
   }
 
+  if (callerRole === 'anon' && !PUBLIC_ANON_TEMPLATES.has(templateName)) {
+    return new Response(
+      JSON.stringify({ error: 'Forbidden: template not available for anonymous callers' }),
+      {
+        status: 403,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    )
+  }
+
   // 1. Look up template from registry (early — needed to resolve recipient)
   const template = TEMPLATES[templateName]
 

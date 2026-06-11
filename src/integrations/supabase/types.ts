@@ -2866,6 +2866,10 @@ export type Database = {
         Returns: string
       }
       add_student_role_to_self: { Args: never; Returns: boolean }
+      can_access_lesson_material: {
+        Args: { _lesson_id: string; _material_type: string }
+        Returns: boolean
+      }
       consume_cashback: {
         Args: {
           _requested_amount: number

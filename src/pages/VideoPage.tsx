@@ -527,7 +527,10 @@ const VideoPage = () => {
   const buyDisabled = buying || effectivePrice <= 0;
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col">
+    <div className="relative min-h-screen bg-background text-foreground flex flex-col">
+      {/* Marca d'água forense em nível de página — cobre toda a página de vídeo
+          com email + ID curto + timestamp do usuário. Não-interativa. */}
+      <ForensicWatermark variant="document" cols={3} rows={6} />
       <VLibrasWidget
         enabled={
           productConfig?.revisoes?.enable_libras ??

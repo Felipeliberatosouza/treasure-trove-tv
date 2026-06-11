@@ -23,6 +23,7 @@ import { useCpfGuard } from "@/hooks/useCpfGuard";
 import { useAutoInterestPromotion } from "@/hooks/useAutoInterestPromotion";
 import { startUnitCheckout } from "@/lib/payments";
 import VLibrasWidget from "@/components/VLibrasWidget";
+import ForensicWatermark from "@/components/ForensicWatermark";
 import SimuladoModal from "@/components/SimuladoModal";
 import MaterialViewerModal, { type MaterialKind } from "@/components/MaterialViewerModal";
 import AdminVideoModerationPanel from "@/components/admin/AdminVideoModerationPanel";

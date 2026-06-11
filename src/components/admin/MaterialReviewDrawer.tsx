@@ -12,6 +12,7 @@ import { useNavigate } from "react-router-dom";
 import SimuladoModal from "@/components/SimuladoModal";
 import ColinhaFlashcardModal from "@/components/ColinhaFlashcardModal";
 import { CoverWithWatermark } from "@/components/admin/WatermarkPreview";
+import ForensicWatermark from "@/components/ForensicWatermark";
 
 interface Props {
   open: boolean;
@@ -308,7 +309,7 @@ const MaterialReviewDrawer = ({ open, onClose, lessonId, lessonTitle, onChanged 
             <div className="mt-4 grid grid-cols-1 lg:grid-cols-[minmax(0,360px)_1fr] gap-4">
               {/* Coluna esquerda: vídeo + ações */}
               <div className="space-y-3">
-                <div className="rounded-lg overflow-hidden border border-border bg-muted">
+                <div className="relative rounded-lg overflow-hidden border border-border bg-muted">
                   {lesson?.video_url ? (
                     <video
                       src={lesson.video_url}
@@ -323,6 +324,7 @@ const MaterialReviewDrawer = ({ open, onClose, lessonId, lessonTitle, onChanged 
                       Sem vídeo
                     </div>
                   )}
+                  {lesson?.video_url && <ForensicWatermark variant="video" />}
                 </div>
                 {/* Capas para revisão (com prévia idêntica da marca d'água) */}
                 <div className="rounded-lg border border-border bg-card p-3 space-y-3">

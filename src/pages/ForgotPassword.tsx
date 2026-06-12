@@ -10,6 +10,11 @@ import { translateAuthError } from "@/lib/translateAuthError";
 import { useAllPlatformSettings, type BrandingSettings } from "@/hooks/usePlatformSettings";
 
 const ForgotPassword = () => {
+  const { settings } = useAllPlatformSettings();
+  const branding = settings?.branding as BrandingSettings | undefined;
+  const showLogoImage = !!branding?.logo_url && !branding?.use_text_logo;
+  const platformName = branding?.platform_name || "Revisão Fácil";
+
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);

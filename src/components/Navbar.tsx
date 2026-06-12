@@ -34,54 +34,56 @@ type AlertKey =
 
 type MenuItem = {
   label: string;
+  shortLabel?: string;
   href?: string;
   alertKey?: AlertKey;
-  children?: { label: string; href: string; alertKey?: AlertKey }[];
+  children?: { label: string; shortLabel?: string; href: string; alertKey?: AlertKey }[];
 };
 
 const publicMenuItems: MenuItem[] = [
-  { label: "Assine a Revisão Fácil", href: "#pricing" },
-  { label: "Revisões", href: "/revisoes" },
-  { label: "Resumos", href: "/resumos" },
-  { label: "Simulados", href: "/simulados" },
-  { label: "Top Questões de Provas", href: "/top-questoes" },
-  { label: "Colinhas", href: "/colinhas" },
-  { label: "Agende uma Aula Particular", href: "#agendar-aula" },
+  { label: "Assine a Revisão Fácil", shortLabel: "Assine", href: "#pricing" },
+  { label: "Revisões", shortLabel: "Revisões", href: "/revisoes" },
+  { label: "Resumos", shortLabel: "Resumos", href: "/resumos" },
+  { label: "Simulados", shortLabel: "Simulados", href: "/simulados" },
+  { label: "Top Questões de Provas", shortLabel: "Top Questões", href: "/top-questoes" },
+  { label: "Colinhas", shortLabel: "Colinhas", href: "/colinhas" },
+  { label: "Agende uma Aula Particular", shortLabel: "Aula Particular", href: "#agendar-aula" },
 ];
 
 const subscriberMenuItem: MenuItem = {
   label: "Minha Assinatura",
+  shortLabel: "Assinatura",
   href: "/dashboard/student?tab=subscription",
 };
 
 const loggedMenuItems: MenuItem[] = [
-  { label: "Minhas Revisões", href: "/minhas-revisoes" },
-  { label: "Meus Resumos", href: "/meus-resumos" },
-  { label: "Meus Simulados", href: "/meus-simulados" },
-  { label: "Minhas Top Questões de Provas", href: "/minhas-top-questoes" },
-  { label: "Minhas Colinhas", href: "/minhas-colinhas" },
-  { label: "Minhas Dúvidas", href: "/minhas-duvidas", alertKey: "studentAnsweredDoubts" },
-  { label: "Aula Particular: Agende/Acesse", href: "/minhas-aulas-agendadas", alertKey: "studentScheduledToday" },
+  { label: "Minhas Revisões", shortLabel: "Revisões", href: "/minhas-revisoes" },
+  { label: "Meus Resumos", shortLabel: "Resumos", href: "/meus-resumos" },
+  { label: "Meus Simulados", shortLabel: "Simulados", href: "/meus-simulados" },
+  { label: "Minhas Top Questões de Provas", shortLabel: "Top Questões", href: "/minhas-top-questoes" },
+  { label: "Minhas Colinhas", shortLabel: "Colinhas", href: "/minhas-colinhas" },
+  { label: "Minhas Dúvidas", shortLabel: "Dúvidas", href: "/minhas-duvidas", alertKey: "studentAnsweredDoubts" },
+  { label: "Aula Particular: Agende/Acesse", shortLabel: "Aula Particular", href: "/minhas-aulas-agendadas", alertKey: "studentScheduledToday" },
 ];
 
 const teacherMenuItems: MenuItem[] = [
-  { label: "Gravar Nova Aula", href: "/dashboard/teacher?tab=lessons" },
-  { label: "Editar Conteúdos Publicados", href: "/dashboard/teacher?tab=lessons" },
-  { label: "Gerar Post para Divulgação das Minhas Aulas", href: "/dashboard/teacher?tab=sales-boost" },
-  { label: "Responder Dúvidas de Alunos", href: "/dashboard/teacher?tab=doubts", alertKey: "doubts" },
-  { label: "Acessar Aula Particular Agendada", href: "/minhas-aulas-agendadas", alertKey: "scheduledToday" },
-  { label: "Atualizar Agenda", href: "/dashboard/teacher?tab=agenda", alertKey: "agendaOutdated" },
-  { label: "Ver Minha Página Pública", href: "__teacher_public_page__" },
+  { label: "Gravar Nova Aula", shortLabel: "Gravar", href: "/dashboard/teacher?tab=lessons" },
+  { label: "Editar Conteúdos Publicados", shortLabel: "Editar", href: "/dashboard/teacher?tab=lessons" },
+  { label: "Gerar Post para Divulgação das Minhas Aulas", shortLabel: "Posts", href: "/dashboard/teacher?tab=sales-boost" },
+  { label: "Responder Dúvidas de Alunos", shortLabel: "Dúvidas", href: "/dashboard/teacher?tab=doubts", alertKey: "doubts" },
+  { label: "Acessar Aula Particular Agendada", shortLabel: "Aula Particular", href: "/minhas-aulas-agendadas", alertKey: "scheduledToday" },
+  { label: "Atualizar Agenda", shortLabel: "Agenda", href: "/dashboard/teacher?tab=agenda", alertKey: "agendaOutdated" },
+  { label: "Ver Minha Página Pública", shortLabel: "Página Pública", href: "__teacher_public_page__" },
 ];
 
 const adminMenuItems: MenuItem[] = [
-  { label: "Aprovação de Conteúdos", href: "/dashboard/admin?tab=content", alertKey: "adminPendingContent" },
-  { label: "Aprovação de Dúvidas", href: "/dashboard/admin?tab=doubts", alertKey: "adminPendingDoubts" },
-  { label: "Aprovação de Páginas de Professores", href: "/dashboard/admin?tab=profile-approvals", alertKey: "adminPendingProfileChanges" },
-  { label: "Pagamento de Professores", href: "/dashboard/admin?tab=compensation" },
-  { label: "Vencimento de Assinaturas", href: "/dashboard/admin?tab=subscriptions", alertKey: "adminExpiringSubscriptions" },
-  { label: "Monitoramento de E-mails", href: "/dashboard/admin?tab=emails" },
-  { label: "Posts de Divulgação", href: "/dashboard/admin?tab=sales-posts" },
+  { label: "Aprovação de Conteúdos", shortLabel: "Ap. Conteúdos", href: "/dashboard/admin?tab=content", alertKey: "adminPendingContent" },
+  { label: "Aprovação de Dúvidas", shortLabel: "Ap. Dúvidas", href: "/dashboard/admin?tab=doubts", alertKey: "adminPendingDoubts" },
+  { label: "Aprovação de Páginas de Professores", shortLabel: "Ap. Páginas", href: "/dashboard/admin?tab=profile-approvals", alertKey: "adminPendingProfileChanges" },
+  { label: "Pagamento de Professores", shortLabel: "Pagamentos", href: "/dashboard/admin?tab=compensation" },
+  { label: "Vencimento de Assinaturas", shortLabel: "Vencimentos", href: "/dashboard/admin?tab=subscriptions", alertKey: "adminExpiringSubscriptions" },
+  { label: "Monitoramento de E-mails", shortLabel: "E-mails", href: "/dashboard/admin?tab=emails" },
+  { label: "Posts de Divulgação", shortLabel: "Posts", href: "/dashboard/admin?tab=sales-posts" },
 ];
 
 const Navbar = () => {
@@ -148,7 +150,7 @@ const Navbar = () => {
       : role === "teacher"
         ? "/dashboard/teacher"
         : "/dashboard/student";
-  const meuPainelItem: MenuItem = { label: "Meu Painel", href: dashboardPath };
+  const meuPainelItem: MenuItem = { label: "Meu Painel", shortLabel: "Painel", href: dashboardPath };
   let menuItems = user && role === "student" && hasActiveSubscription
     ? [subscriberMenuItem, ...resolvedBase]
     : resolvedBase;
@@ -299,17 +301,16 @@ const Navbar = () => {
           )}
         </Link>
 
-        {!user && (
-        <div className="hidden min-w-0 items-center gap-5 overflow-hidden xl:flex">
+        <div className="hidden min-w-0 flex-1 items-center justify-center gap-3 overflow-hidden lg:flex">
           {menuItems.map((item) => {
             if (item.children && item.children.length > 0) {
               return (
                 <div key={item.label} className="relative group">
                   <button
                     type="button"
-                    className="text-sm text-muted-foreground transition-colors hover:text-foreground whitespace-nowrap"
+                    className="text-xs text-muted-foreground transition-colors hover:text-foreground whitespace-nowrap"
                   >
-                    {item.label}
+                    {item.shortLabel ?? item.label}
                   </button>
                   <div className="absolute left-0 top-full pt-2 hidden group-hover:block z-50">
                     <div className="min-w-[220px] rounded-md border border-border bg-background shadow-lg py-1">
@@ -335,26 +336,28 @@ const Navbar = () => {
             const href = item.href ?? "#";
             const hasAlert = alertActive(item.alertKey);
             const className =
-              "relative inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground whitespace-nowrap";
+              "relative inline-flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-foreground whitespace-nowrap";
             const alertBadge = hasAlert ? (
-              <span className="inline-flex items-center gap-1 rounded-full bg-destructive/15 px-2 py-0.5 text-[10px] font-semibold text-destructive">
-                ● Pendência
-              </span>
+              <span
+                aria-label="Pendência"
+                title="Pendência"
+                className="inline-block h-1.5 w-1.5 rounded-full bg-destructive"
+              />
             ) : null;
+            const label = item.shortLabel ?? item.label;
             return href.startsWith("#") ? (
               <a key={item.label} href={href} className={className}>
-                {item.label}
+                {label}
                 {alertBadge}
               </a>
             ) : (
               <Link key={item.label} to={href} className={className}>
-                {item.label}
+                {label}
                 {alertBadge}
               </Link>
             );
           })}
         </div>
-        )}
 
         <div className="flex items-center gap-3">
           <div ref={searchContainerRef} className="relative">

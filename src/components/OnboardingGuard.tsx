@@ -80,7 +80,9 @@ const OnboardingGuard = () => {
     notifiedRef.current = true;
 
     toast.info(msg);
-    navigate(target, { replace: true });
+    // Não redireciona automaticamente: o usuário permanece na página atual
+    // (geralmente a home após o login) e pode acessar o painel pelo menu.
+    void target;
   }, [user, profile, role, loading, location.pathname, navigate]);
 
   return null;

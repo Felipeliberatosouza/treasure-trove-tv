@@ -201,6 +201,22 @@ const Navbar = () => {
   }, []);
 
   useEffect(() => {
+    if (!mobileOpen) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMobileOpen(false);
+    };
+    window.addEventListener("keydown", handleEscape);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleEscape);
+    };
+  }, [mobileOpen]);
+
+  useEffect(() => {
     if (searchQuery.trim().length < 2) {
       setSearchResults([]);
       return;
@@ -242,6 +258,7 @@ const Navbar = () => {
   };
 
   return (
+    <>
     <motion.nav
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -402,32 +419,47 @@ const Navbar = () => {
         </div>
       </div>
 
+    </motion.nav>
+    <AnimatePresence>
       {mobileOpen && (
         <motion.div
-          initial={{ opacity: 0, y: -8 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="absolute left-0 right-0 top-full z-40 max-h-[calc(100dvh-80px)] overflow-y-auto overscroll-contain border-t border-border bg-background px-6 py-4 pb-[calc(1rem+env(safe-area-inset-bottom))] xl:hidden"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[70] overflow-y-auto overscroll-contain bg-background/95 px-4 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-4 backdrop-blur-xl xl:hidden"
         >
-          <div className="flex flex-col gap-3">
+          <div className="sticky top-0 z-10 mx-auto mb-4 flex w-full max-w-5xl justify-end bg-background/95 py-2 backdrop-blur-xl">
+            <button
+              type="button"
+              className="rounded-full p-2 transition-colors hover:bg-secondary"
+              onClick={() => setMobileOpen(false)}
+              aria-label="Fechar menu"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+          <div className="mx-auto grid w-full max-w-5xl gap-3 md:grid-cols-2 lg:grid-cols-3">
             {user && role === "student" && (
-              <ContinueWatchingMenu onNavigate={() => setMobileOpen(false)} />
+              <div className="md:col-span-2 lg:col-span-3">
+                <ContinueWatchingMenu onNavigate={() => setMobileOpen(false)} />
+              </div>
             )}
             {menuItems.map((item) => {
               if (item.children && item.children.length > 0) {
                 return (
-                  <div key={item.label} className="flex flex-col gap-2">
+                  <div key={item.label} className="flex min-w-0 flex-col gap-2 rounded-md border border-border/60 bg-secondary/30 p-4">
                     <span className="text-sm font-medium text-foreground">{item.label}</span>
-                    <div className="flex flex-col gap-2 pl-3 border-l border-border">
+                    <div className="flex flex-col gap-2 border-l border-border pl-3">
                       {item.children.map((child) => (
                         <Link
                           key={child.label}
                           to={child.href}
-                          className="inline-flex items-center justify-between gap-2 text-sm text-muted-foreground hover:text-foreground"
+                          className="inline-flex min-h-10 min-w-0 items-center justify-between gap-2 rounded-md px-2 py-2 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
                           onClick={() => setMobileOpen(false)}
                         >
-                          <span>{child.label}</span>
+                          <span className="min-w-0 break-words">{child.label}</span>
                           {alertActive(child.alertKey) && (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-destructive/15 px-2 py-0.5 text-[10px] font-semibold text-destructive">
+                            <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-destructive/15 px-2 py-0.5 text-[10px] font-semibold text-destructive">
                               ● Pendência
                             </span>
                           )}
@@ -440,25 +472,26 @@ const Navbar = () => {
               const href = item.href ?? "#";
               const hasAlert = alertActive(item.alertKey);
               const alertBadge = hasAlert ? (
-                <span className="inline-flex items-center gap-1 rounded-full bg-destructive/15 px-2 py-0.5 text-[10px] font-semibold text-destructive">
+                <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-destructive/15 px-2 py-0.5 text-[10px] font-semibold text-destructive">
                   ● Pendência
                 </span>
               ) : null;
+              const menuLinkClassName = "inline-flex min-h-12 min-w-0 items-center justify-between gap-2 rounded-md border border-border/60 bg-secondary/30 px-4 py-3 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground";
               return href.startsWith("#") ? (
-                <a key={item.label} href={href} className="inline-flex items-center justify-between gap-2 text-sm text-muted-foreground" onClick={() => setMobileOpen(false)}>
-                  <span>{item.label}</span>
+                <a key={item.label} href={href} className={menuLinkClassName} onClick={() => setMobileOpen(false)}>
+                  <span className="min-w-0 break-words">{item.label}</span>
                   {alertBadge}
                 </a>
               ) : (
-                <Link key={item.label} to={href} className="inline-flex items-center justify-between gap-2 text-sm text-muted-foreground" onClick={() => setMobileOpen(false)}>
-                  <span>{item.label}</span>
+                <Link key={item.label} to={href} className={menuLinkClassName} onClick={() => setMobileOpen(false)}>
+                  <span className="min-w-0 break-words">{item.label}</span>
                   {alertBadge}
                 </Link>
               );
             })}
             {!user && (
               <Link to="/login" onClick={() => setMobileOpen(false)}>
-                <Button size="sm" className="gap-2 font-display w-full">
+                <Button size="sm" className="h-12 w-full gap-2 font-display">
                   <User className="h-4 w-4" /> Entrar
                 </Button>
               </Link>
@@ -466,7 +499,8 @@ const Navbar = () => {
           </div>
         </motion.div>
       )}
-    </motion.nav>
+    </AnimatePresence>
+    </>
   );
 };
 

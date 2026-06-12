@@ -313,7 +313,7 @@ const PersonalDataTab = () => {
             <div>
               <label className="text-sm text-muted-foreground mb-1 block">URL da sua página</label>
               <div className="flex items-center gap-1">
-                <span className="text-sm text-muted-foreground whitespace-nowrap">revisaofacil.com/</span>
+                <span className="text-sm text-muted-foreground whitespace-nowrap">revisaofacil.com.br/</span>
                 <div className="relative flex-1">
                   <Input
                     value={slug}

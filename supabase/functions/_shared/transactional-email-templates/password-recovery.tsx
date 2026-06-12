@@ -59,7 +59,7 @@ export const template = {
   displayName: 'Recuperação de Senha',
   previewData: {
     name: 'Maria',
-    recovery_link: 'https://revisaofacil.com/reset-password#access_token=...',
+    recovery_link: 'https://revisaofacil.com.br/reset-password#access_token=...',
     platform_name: SITE_NAME,
   },
 } satisfies TemplateEntry

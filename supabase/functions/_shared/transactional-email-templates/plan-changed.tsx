@@ -43,7 +43,7 @@ const PlanChangedEmail = ({
   newProRataAmount,
   balanceLabel,
   balanceType = 'charge',
-  dashboardLink = 'https://revisaofacil.com/dashboard/student',
+  dashboardLink = 'https://revisaofacil.com.br/dashboard/student',
   unsubscribeUrl,
 }: PlanChangedProps) => (
   <Html lang="pt-BR" dir="ltr">

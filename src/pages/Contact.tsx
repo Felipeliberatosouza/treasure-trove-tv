@@ -93,7 +93,7 @@ const Contact = () => {
     setForm({ name: "", email: "", subject: "", message: "" });
   };
 
-  const displayEmail = contact?.email || "contato@revisaofacil.com";
+  const displayEmail = contact?.email || "contato@revisaofacil.com.br";
   const displayPhone = contact?.phone;
   const displayAddress = contact?.address || "Brasil";
 

@@ -130,7 +130,7 @@ serve(async (req) => {
               days_remaining: String(days),
               expiry_date: expiryDate,
               subscription_status: "active",
-              renew_link: "https://revisaofacil.com/dashboard/student",
+              renew_link: "https://revisaofacil.com.br/dashboard/student",
             },
           }),
         });

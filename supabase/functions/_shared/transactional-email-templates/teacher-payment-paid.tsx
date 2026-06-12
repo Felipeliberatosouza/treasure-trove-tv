@@ -32,7 +32,7 @@ const TeacherPaymentPaidEmail = ({
   netAmount = '0,00',
   pixKey = '',
   notes = '',
-  statementLink = 'https://revisaofacil.com/dashboard/teacher?tab=sales',
+  statementLink = 'https://revisaofacil.com.br/dashboard/teacher?tab=sales',
   unsubscribeUrl,
 }: TeacherPaymentPaidProps) => (
   <Html lang="pt-BR" dir="ltr">

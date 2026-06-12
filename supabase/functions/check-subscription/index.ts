@@ -294,7 +294,7 @@ serve(async (req) => {
                 planName: planData?.name || "Plano",
                 expiryDate: expiryDateStr,
                 reason: "expirada",
-                renewLink: "https://revisaofacil.com/#pricing",
+                renewLink: "https://revisaofacil.com.br/#pricing",
                 receiptUrl,
               },
             }),

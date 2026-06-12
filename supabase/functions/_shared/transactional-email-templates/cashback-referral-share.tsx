@@ -89,10 +89,10 @@ export const template = {
   previewData: {
     name: 'Maria',
     referralCode: 'A7F9K2X3',
-    referralLink: 'https://revisaofacil.com/signup-aluno?ref=A7F9K2X3',
+    referralLink: 'https://revisaofacil.com.br/signup-aluno?ref=A7F9K2X3',
     referralPercent: 10,
     shareText:
-      'Estou estudando na Revisão Fácil e curtindo demais! Use meu link e ganhe acesso: https://revisaofacil.com/signup-aluno?ref=A7F9K2X3',
+      'Estou estudando na Revisão Fácil e curtindo demais! Use meu link e ganhe acesso: https://revisaofacil.com.br/signup-aluno?ref=A7F9K2X3',
   },
 } satisfies TemplateEntry
 

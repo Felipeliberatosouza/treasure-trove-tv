@@ -27,7 +27,7 @@ const PasswordRecoveryEmail = ({ name, recovery_link, platform_name }: PasswordR
             Recebemos uma solicitação para redefinir a senha da sua conta na <strong>{platform}</strong>.
           </Text>
           <Text style={text}>
-            Clique no botão abaixo para criar uma nova senha. Este link expira em 1 hora.
+            Clique no botão abaixo para criar uma nova senha. Este link expira em <strong>30 minutos</strong>.
           </Text>
           <Container style={{ textAlign: 'center', margin: '24px 0' }}>
             <Button href={link} style={button}>

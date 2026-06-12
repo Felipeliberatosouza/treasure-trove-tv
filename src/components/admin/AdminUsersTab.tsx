@@ -147,7 +147,9 @@ const AdminUsersTab = () => {
   const handleSendReset = async (user: UserWithRole) => {
     if (!confirm(`Enviar link de redefinição de senha para "${user.name}" (${user.email})?`)) return;
     const redirectTo = `${window.location.origin}/reset-password`;
-    const { error } = await supabase.auth.resetPasswordForEmail(user.email, { redirectTo });
+    const { error } = await supabase.functions.invoke("send-password-recovery", {
+      body: { email: user.email, redirect_to: redirectTo },
+    });
     if (error) {
       toast({ title: "Erro", description: "Não foi possível enviar o link.", variant: "destructive" });
     } else {

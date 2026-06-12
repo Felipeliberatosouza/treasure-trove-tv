@@ -54,7 +54,7 @@ const formatBR = (iso: string) => {
 const buildMessage = (r: Recipient) => {
   const when = formatBR(r.scheduledAt);
   if (r.recipientType === "student") {
-    return `Revisão Fácil: Olá, ${r.name.split(" ")[0]}! Lembrete: sua aula particular "${r.lessonTitle}" começa em ${r.reminderHours}h (${when}). Acesse: https://revisaofacil.com.br/minhas-aulas-agendadas`;
+    return `Revisão Fácil: Olá, ${r.name.split(" ")[0]}! Lembrete: sua aula particular "${r.lessonTitle}" começa em ${r.reminderHours}h (${when}). Acesse: https://revisaofacil.com.br.br/minhas-aulas-agendadas`;
   }
   return `Revisão Fácil: Olá, Prof. ${r.name.split(" ")[0]}! Lembrete: sua aula "${r.lessonTitle}" com o aluno começa em ${r.reminderHours}h (${when}).`;
 };

@@ -282,7 +282,7 @@ serve(async (req) => {
               planName,
               expiryDate,
               reason,
-              renewLink: "https://revisaofacil.com/#pricing",
+              renewLink: "https://revisaofacil.com.br/#pricing",
               receiptUrl,
             },
           }),

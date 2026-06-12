@@ -22,7 +22,7 @@ const PaymentConfirmationEmail = ({
   planName = 'Plano',
   amount = '—',
   paymentDate = '',
-  dashboardLink = 'https://revisaofacil.com/dashboard/student',
+  dashboardLink = 'https://revisaofacil.com.br/dashboard/student',
   unsubscribeUrl,
 }: PaymentConfirmationProps) => (
   <Html lang="pt-BR" dir="ltr">
@@ -66,7 +66,7 @@ export const template = {
     planName: 'Plano Trimestral',
     amount: '89,90',
     paymentDate: '12/04/2026',
-    dashboardLink: 'https://revisaofacil.com/dashboard/student',
+    dashboardLink: 'https://revisaofacil.com.br/dashboard/student',
   },
 } satisfies TemplateEntry
 

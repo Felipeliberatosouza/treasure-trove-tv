@@ -66,13 +66,13 @@ const EmailSecurityNotification = () => {
             <p className="text-sm text-muted-foreground leading-relaxed">
               Estamos verificando os motivos de você ter recebido este e-mail sem solicitar.
               Pedimos que considere trocar sua senha de acesso na plataforma{" "}
-              <a href="https://revisaofacil.com" className="text-primary font-medium hover:underline">
+              <a href="https://revisaofacil.com.br" className="text-primary font-medium hover:underline">
                 {platformName}
               </a>
               , por motivos de segurança.
             </p>
             <a
-              href="https://revisaofacil.com/reset-password"
+              href="https://revisaofacil.com.br/reset-password"
               className="inline-block mt-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity"
             >
               Trocar minha senha

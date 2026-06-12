@@ -414,7 +414,7 @@ const SettingsEmailTemplates = () => {
     return `
       <div style="margin-top:24px;padding-top:16px;border-top:1px solid #e5e7eb;font-size:11px;color:${textColor};line-height:1.6;">
         <p style="margin:0;">
-          Este e-mail foi enviado por <a href="https://revisaofacil.com" style="color:${linkColor};text-decoration:none;font-weight:600;">${platformName}</a> para atender ao seu pedido de: <strong>${subject}</strong>.
+          Este e-mail foi enviado por <a href="https://revisaofacil.com.br" style="color:${linkColor};text-decoration:none;font-weight:600;">${platformName}</a> para atender ao seu pedido de: <strong>${subject}</strong>.
           Se você não fez esse pedido, pedimos desculpas. Neste caso, por favor clique em: 
           <a href="${securityUrl}" style="color:${linkColor};text-decoration:underline;">eu não solicitei esse e-mail.</a>
         </p>
@@ -735,7 +735,7 @@ const SettingsEmailTemplates = () => {
               <Mail className="h-4 w-4" /> Caixa de Saída
             </h4>
             <p className="text-xs text-muted-foreground">
-              Configure de qual endereço este e-mail será enviado. Deixe em branco para usar o remetente padrão da plataforma (<code className="font-mono">noreply@notify.revisaofacil.com</code>).
+              Configure de qual endereço este e-mail será enviado. Deixe em branco para usar o remetente padrão da plataforma (<code className="font-mono">noreply@notify.revisaofacil.com.br</code>).
               <br />
               <strong>Atenção:</strong> o domínio do e-mail deve estar verificado no servidor de e-mail. E-mails de domínios não verificados podem falhar no envio.
             </p>
@@ -755,7 +755,7 @@ const SettingsEmailTemplates = () => {
                   type="email"
                   value={active.from_email || ""}
                   onChange={(e) => updateField("from_email", e.target.value.toLowerCase().trim())}
-                  placeholder="Ex: suporte@notify.revisaofacil.com"
+                  placeholder="Ex: suporte@notify.revisaofacil.com.br"
                   maxLength={150}
                 />
                 {active.from_email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(active.from_email) && (

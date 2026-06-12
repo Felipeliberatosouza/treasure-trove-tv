@@ -422,10 +422,12 @@ Deno.serve(async (req) => {
   // 5.2 Resolve sender (From: header) — admin-configured per template_key
   // Falls back to platform default (SITE_NAME <noreply@FROM_DOMAIN>) when not set.
   let fromHeader = `${SITE_NAME} <noreply@${FROM_DOMAIN}>`
+  // Resolved subject can also be overridden per template_key from the admin panel.
+  let finalSubject = resolvedSubject
   try {
     const { data: tplSender } = await supabase
       .from('email_templates')
-      .select('from_email, from_name')
+      .select('from_email, from_name, subject')
       .eq('template_key', templateName)
       .maybeSingle()
     const customEmail = (tplSender?.from_email || '').trim()
@@ -435,6 +437,14 @@ Deno.serve(async (req) => {
       fromHeader = `${name} <${customEmail}>`
     } else if (customName) {
       fromHeader = `${customName} <noreply@${FROM_DOMAIN}>`
+    }
+    const customSubject = (tplSender?.subject || '').trim()
+    if (customSubject) {
+      // Substitui placeholders simples {{key}} a partir de templateData
+      finalSubject = customSubject.replace(/\{\{\s*([\w.]+)\s*\}\}/g, (_m, k) => {
+        const v = (templateData as any)?.[k]
+        return v === undefined || v === null ? '' : String(v)
+      })
     }
   } catch (e) {
     console.error('Custom sender lookup failed (non-fatal)', e)
@@ -458,7 +468,7 @@ Deno.serve(async (req) => {
       to: effectiveRecipient,
       from: fromHeader,
       sender_domain: SENDER_DOMAIN,
-      subject: resolvedSubject,
+      subject: finalSubject,
       html,
       text: plainText,
       purpose: 'transactional',

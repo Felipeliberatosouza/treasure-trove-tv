@@ -55,6 +55,19 @@ const ForgotPassword = () => {
         </Link>
 
         <div className="text-center space-y-2">
+          <Link to="/" className="inline-block">
+            {showLogoImage ? (
+              <div className="flex justify-center">
+                <img
+                  src={branding!.logo_url}
+                  alt={platformName}
+                  className="h-16 max-w-[280px] object-contain"
+                />
+              </div>
+            ) : (
+              <h1 className="font-display text-3xl font-bold text-gradient">{platformName}</h1>
+            )}
+          </Link>
           <h1 className="font-display text-2xl font-bold">Recuperar Senha</h1>
           <p className="text-sm text-muted-foreground">
             Informe seu e-mail para receber o link de redefinição

@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { translateAuthError } from "@/lib/translateAuthError";
+import { useAllPlatformSettings, type BrandingSettings } from "@/hooks/usePlatformSettings";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");

@@ -8,9 +8,15 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { translateAuthError } from "@/lib/translateAuthError";
+import { Link } from "react-router-dom";
+import { useAllPlatformSettings, type BrandingSettings } from "@/hooks/usePlatformSettings";
 
 const ResetPassword = () => {
   const navigate = useNavigate();
+  const { settings } = useAllPlatformSettings();
+  const branding = settings?.branding as BrandingSettings | undefined;
+  const showLogoImage = !!branding?.logo_url && !branding?.use_text_logo;
+  const platformName = branding?.platform_name || "Revisão Fácil";
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -73,6 +79,19 @@ const ResetPassword = () => {
           animate={{ opacity: 1, scale: 1 }}
           className="w-full max-w-md text-center space-y-4"
         >
+          <Link to="/" className="inline-block">
+            {showLogoImage ? (
+              <div className="flex justify-center">
+                <img
+                  src={branding!.logo_url}
+                  alt={platformName}
+                  className="h-16 max-w-[280px] object-contain"
+                />
+              </div>
+            ) : (
+              <h1 className="font-display text-3xl font-bold text-gradient">{platformName}</h1>
+            )}
+          </Link>
           <CheckCircle className="mx-auto h-16 w-16 text-green-500" />
           <h1 className="font-display text-2xl font-bold">Senha Redefinida!</h1>
           <p className="text-sm text-muted-foreground">
@@ -91,6 +110,19 @@ const ResetPassword = () => {
         className="w-full max-w-md space-y-8"
       >
         <div className="text-center space-y-2">
+          <Link to="/" className="inline-block">
+            {showLogoImage ? (
+              <div className="flex justify-center">
+                <img
+                  src={branding!.logo_url}
+                  alt={platformName}
+                  className="h-16 max-w-[280px] object-contain"
+                />
+              </div>
+            ) : (
+              <h1 className="font-display text-3xl font-bold text-gradient">{platformName}</h1>
+            )}
+          </Link>
           <h1 className="font-display text-2xl font-bold">Redefinir Senha</h1>
           <p className="text-sm text-muted-foreground">
             Digite sua nova senha abaixo

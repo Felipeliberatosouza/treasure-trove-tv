@@ -276,7 +276,7 @@ const Navbar = () => {
           )}
         </Link>
 
-        <div className="hidden items-center gap-5 md:flex">
+        <div className="hidden items-center gap-5 xl:flex">
           {menuItems.map((item) => {
             if (item.children && item.children.length > 0) {
               return (
@@ -393,8 +393,9 @@ const Navbar = () => {
           )}
 
           <button
-            className="rounded-full p-2 md:hidden"
+            className="rounded-full p-2 xl:hidden"
             onClick={() => setMobileOpen(!mobileOpen)}
+            aria-label={mobileOpen ? "Fechar menu" : "Abrir menu"}
           >
             {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
@@ -403,9 +404,9 @@ const Navbar = () => {
 
       {mobileOpen && (
         <motion.div
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: "auto" }}
-          className="border-t border-border bg-background px-6 py-4 md:hidden max-h-[80vh] overflow-y-auto"
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="fixed inset-x-0 bottom-0 top-[72px] z-40 overflow-y-auto overscroll-contain border-t border-border bg-background px-6 py-4 pb-[calc(1rem+env(safe-area-inset-bottom))] md:top-[80px] xl:hidden"
         >
           <div className="flex flex-col gap-3">
             {user && role === "student" && (

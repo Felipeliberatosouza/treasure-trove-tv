@@ -36,6 +36,9 @@ const AdminUsersTab = () => {
   const [filterRole, setFilterRole] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
   const [viewContract, setViewContract] = useState<UserWithRole | null>(null);
+  const [pwdUser, setPwdUser] = useState<UserWithRole | null>(null);
+  const [newPwd, setNewPwd] = useState("");
+  const [savingPwd, setSavingPwd] = useState(false);
   const { toast } = useToast();
 
   const fetchUsers = async () => {
@@ -141,6 +144,38 @@ const AdminUsersTab = () => {
     }
   };
 
+  const handleSendReset = async (user: UserWithRole) => {
+    if (!confirm(`Enviar link de redefinição de senha para "${user.name}" (${user.email})?`)) return;
+    const redirectTo = `${window.location.origin}/reset-password`;
+    const { error } = await supabase.auth.resetPasswordForEmail(user.email, { redirectTo });
+    if (error) {
+      toast({ title: "Erro", description: "Não foi possível enviar o link.", variant: "destructive" });
+    } else {
+      await logAction("password_reset_link_sent", { targetTable: "auth.users", targetId: user.user_id, metadata: { email: user.email } });
+      toast({ title: "Enviado", description: `Link de redefinição enviado para ${user.email}.` });
+    }
+  };
+
+  const handleSavePassword = async () => {
+    if (!pwdUser) return;
+    if (newPwd.length < 6) {
+      toast({ title: "Senha curta", description: "A senha deve ter pelo menos 6 caracteres.", variant: "destructive" });
+      return;
+    }
+    setSavingPwd(true);
+    const { data, error } = await supabase.functions.invoke("admin-set-user-password", {
+      body: { user_id: pwdUser.user_id, new_password: newPwd },
+    });
+    setSavingPwd(false);
+    if (error || (data && (data as any).error)) {
+      toast({ title: "Erro", description: (data as any)?.error || "Não foi possível alterar a senha.", variant: "destructive" });
+      return;
+    }
+    toast({ title: "Senha atualizada", description: `Nova senha definida para "${pwdUser.name}". Informe ao usuário com segurança.` });
+    setPwdUser(null);
+    setNewPwd("");
+  };
+
   const filtered = users.filter((u) => {
     const matchSearch = u.name.toLowerCase().includes(search.toLowerCase()) || u.email.toLowerCase().includes(search.toLowerCase());
     const matchRole = filterRole === "all" || u.role === filterRole;
@@ -216,7 +251,7 @@ const AdminUsersTab = () => {
                 <TableRow key={u.user_id} className={!u.active ? "opacity-60" : ""}>
                   <TableCell className="font-mono text-sm">{u.referral_code || "—"}</TableCell>
                   <TableCell className="font-medium">{u.name}</TableCell>
-                  <TableCell className="text-muted-foreground">{maskEmail(u.email)}</TableCell>
+                  <TableCell className="text-muted-foreground break-all">{u.email}</TableCell>
                   <TableCell>{roleBadge(u.role)}</TableCell>
                   <TableCell>
                     {u.active ? (
@@ -267,6 +302,24 @@ const AdminUsersTab = () => {
                           <MailCheck className="h-4 w-4" />
                         </Button>
                       )}
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-8 w-8"
+                        onClick={() => handleSendReset(u)}
+                        title="Enviar link de redefinição de senha"
+                      >
+                        <Send className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-8 w-8"
+                        onClick={() => { setPwdUser(u); setNewPwd(""); }}
+                        title="Definir nova senha"
+                      >
+                        <KeyRound className="h-4 w-4" />
+                      </Button>
                       <Button
                         size="sm"
                         variant="ghost"

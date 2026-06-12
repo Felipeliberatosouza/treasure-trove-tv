@@ -406,7 +406,7 @@ const Navbar = () => {
         <motion.div
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
-          className="fixed inset-x-0 bottom-0 top-[72px] z-40 overflow-y-auto overscroll-contain border-t border-border bg-background px-6 py-4 pb-[calc(1rem+env(safe-area-inset-bottom))] md:top-[80px] xl:hidden"
+          className="absolute left-0 right-0 top-full z-40 max-h-[calc(100dvh-80px)] overflow-y-auto overscroll-contain border-t border-border bg-background px-6 py-4 pb-[calc(1rem+env(safe-area-inset-bottom))] xl:hidden"
         >
           <div className="flex flex-col gap-3">
             {user && role === "student" && (

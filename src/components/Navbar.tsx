@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, User, Menu, X } from "lucide-react";
+import { Search, User, Menu, X, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
@@ -93,7 +93,7 @@ const Navbar = () => {
   const searchInputRef = useRef<HTMLInputElement>(null);
   const searchContainerRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
-  const { user, role, profile } = useAuth();
+  const { user, role, profile, signOut } = useAuth();
   const { settings } = useAllPlatformSettings();
   const branding = settings.branding as BrandingSettings | undefined;
   const logoRef = useRef<HTMLImageElement | null>(null);
@@ -257,6 +257,12 @@ const Navbar = () => {
     setSearchResults([]);
   };
 
+  const handleSignOut = async () => {
+    setMobileOpen(false);
+    await signOut();
+    navigate("/");
+  };
+
   return (
     <>
     <motion.nav
@@ -410,7 +416,7 @@ const Navbar = () => {
           )}
 
           <button
-            className="rounded-full p-2 xl:hidden"
+            className="rounded-full p-2 transition-colors hover:bg-secondary"
             onClick={() => setMobileOpen(!mobileOpen)}
             aria-label={mobileOpen ? "Fechar menu" : "Abrir menu"}
           >
@@ -426,9 +432,10 @@ const Navbar = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[70] overflow-y-auto overscroll-contain bg-background/95 px-4 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-4 backdrop-blur-xl xl:hidden"
+          className="fixed inset-0 z-[9999] flex flex-col bg-background/95 backdrop-blur-xl"
         >
-          <div className="sticky top-0 z-10 mx-auto mb-4 flex w-full max-w-5xl justify-end bg-background/95 py-2 backdrop-blur-xl">
+          <div className="flex shrink-0 items-center justify-between border-b border-border/60 px-4 py-3 md:px-8">
+            <span className="font-display text-lg font-semibold text-foreground">Menu</span>
             <button
               type="button"
               className="rounded-full p-2 transition-colors hover:bg-secondary"
@@ -438,7 +445,8 @@ const Navbar = () => {
               <X className="h-5 w-5" />
             </button>
           </div>
-          <div className="mx-auto grid w-full max-w-5xl gap-3 md:grid-cols-2 lg:grid-cols-3">
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 md:px-8">
+          <div className="mx-auto flex w-full max-w-3xl flex-col gap-3">
             {user && role === "student" && (
               <div className="md:col-span-2 lg:col-span-3">
                 <ContinueWatchingMenu onNavigate={() => setMobileOpen(false)} />
@@ -496,6 +504,17 @@ const Navbar = () => {
                 </Button>
               </Link>
             )}
+            {user && (
+              <button
+                type="button"
+                onClick={handleSignOut}
+                className="inline-flex min-h-12 w-full items-center justify-between gap-2 rounded-md border border-border/60 bg-secondary/30 px-4 py-3 text-sm font-medium text-foreground transition-colors hover:bg-secondary"
+              >
+                <span>Sair</span>
+                <LogOut className="h-4 w-4" />
+              </button>
+            )}
+          </div>
           </div>
         </motion.div>
       )}

@@ -38,7 +38,7 @@ Deno.serve(async (req) => {
 
     // Audit log
     await adminClient.from("audit_logs").insert({
-      actor_id: caller.id,
+      user_id: caller.id,
       action: "admin_set_user_password",
       target_table: "auth.users",
       target_id: user_id,

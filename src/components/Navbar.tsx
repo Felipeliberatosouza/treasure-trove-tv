@@ -426,8 +426,18 @@ const Navbar = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-40 overflow-y-auto overscroll-contain bg-background/95 px-4 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-24 backdrop-blur-xl xl:hidden"
+          className="fixed inset-0 z-[70] overflow-y-auto overscroll-contain bg-background/95 px-4 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-4 backdrop-blur-xl xl:hidden"
         >
+          <div className="sticky top-0 z-10 mx-auto mb-4 flex w-full max-w-5xl justify-end bg-background/95 py-2 backdrop-blur-xl">
+            <button
+              type="button"
+              className="rounded-full p-2 transition-colors hover:bg-secondary"
+              onClick={() => setMobileOpen(false)}
+              aria-label="Fechar menu"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
           <div className="mx-auto grid w-full max-w-5xl gap-3 md:grid-cols-2 lg:grid-cols-3">
             {user && role === "student" && (
               <div className="md:col-span-2 lg:col-span-3">

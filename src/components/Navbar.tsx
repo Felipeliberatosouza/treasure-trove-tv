@@ -299,7 +299,8 @@ const Navbar = () => {
           )}
         </Link>
 
-        <div className="hidden items-center gap-5 xl:flex">
+        {!user && (
+        <div className="hidden min-w-0 items-center gap-5 overflow-hidden xl:flex">
           {menuItems.map((item) => {
             if (item.children && item.children.length > 0) {
               return (
@@ -353,6 +354,7 @@ const Navbar = () => {
             );
           })}
         </div>
+        )}
 
         <div className="flex items-center gap-3">
           <div ref={searchContainerRef} className="relative">
@@ -416,11 +418,12 @@ const Navbar = () => {
           )}
 
           <button
-            className="rounded-full p-2 transition-colors hover:bg-secondary"
+            className="inline-flex items-center gap-2 rounded-full px-3 py-2 transition-colors hover:bg-secondary"
             onClick={() => setMobileOpen(!mobileOpen)}
             aria-label={mobileOpen ? "Fechar menu" : "Abrir menu"}
           >
             {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            <span className="hidden text-sm font-medium text-foreground sm:inline">Menu</span>
           </button>
         </div>
       </div>

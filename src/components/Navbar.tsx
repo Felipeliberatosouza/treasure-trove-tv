@@ -150,7 +150,7 @@ const Navbar = () => {
       : role === "teacher"
         ? "/dashboard/teacher"
         : "/dashboard/student";
-  const meuPainelItem: MenuItem = { label: "Meu Painel", href: dashboardPath };
+  const meuPainelItem: MenuItem = { label: "Meu Painel", shortLabel: "Painel", href: dashboardPath };
   let menuItems = user && role === "student" && hasActiveSubscription
     ? [subscriberMenuItem, ...resolvedBase]
     : resolvedBase;
@@ -301,17 +301,16 @@ const Navbar = () => {
           )}
         </Link>
 
-        {!user && (
-        <div className="hidden min-w-0 items-center gap-5 overflow-hidden xl:flex">
+        <div className="hidden min-w-0 flex-1 items-center justify-center gap-3 overflow-hidden lg:flex">
           {menuItems.map((item) => {
             if (item.children && item.children.length > 0) {
               return (
                 <div key={item.label} className="relative group">
                   <button
                     type="button"
-                    className="text-sm text-muted-foreground transition-colors hover:text-foreground whitespace-nowrap"
+                    className="text-xs text-muted-foreground transition-colors hover:text-foreground whitespace-nowrap"
                   >
-                    {item.label}
+                    {item.shortLabel ?? item.label}
                   </button>
                   <div className="absolute left-0 top-full pt-2 hidden group-hover:block z-50">
                     <div className="min-w-[220px] rounded-md border border-border bg-background shadow-lg py-1">
@@ -337,26 +336,28 @@ const Navbar = () => {
             const href = item.href ?? "#";
             const hasAlert = alertActive(item.alertKey);
             const className =
-              "relative inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground whitespace-nowrap";
+              "relative inline-flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-foreground whitespace-nowrap";
             const alertBadge = hasAlert ? (
-              <span className="inline-flex items-center gap-1 rounded-full bg-destructive/15 px-2 py-0.5 text-[10px] font-semibold text-destructive">
-                ● Pendência
-              </span>
+              <span
+                aria-label="Pendência"
+                title="Pendência"
+                className="inline-block h-1.5 w-1.5 rounded-full bg-destructive"
+              />
             ) : null;
+            const label = item.shortLabel ?? item.label;
             return href.startsWith("#") ? (
               <a key={item.label} href={href} className={className}>
-                {item.label}
+                {label}
                 {alertBadge}
               </a>
             ) : (
               <Link key={item.label} to={href} className={className}>
-                {item.label}
+                {label}
                 {alertBadge}
               </Link>
             );
           })}
         </div>
-        )}
 
         <div className="flex items-center gap-3">
           <div ref={searchContainerRef} className="relative">

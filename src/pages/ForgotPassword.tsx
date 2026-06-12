@@ -56,14 +56,14 @@ const ForgotPassword = () => {
         </div>
 
         {sent ? (
-          <div className="rounded-lg border border-black bg-black p-6 text-center space-y-3">
-            <p className="text-sm text-white">
+          <div className="rounded-lg border border-primary/40 bg-black p-6 text-center space-y-3 shadow-lg">
+            <p className="text-sm font-medium text-white">
               Enviamos um link de redefinição para <strong>{email}</strong>.
             </p>
-            <p className="text-xs text-white/80">
+            <p className="text-xs font-medium text-white">
               Verifique sua caixa de entrada e spam. O link expira em 30 minutos.
             </p>
-            <Button variant="outline" onClick={() => setSent(false)} className="mt-2">
+            <Button variant="outline" onClick={() => setSent(false)} className="mt-2 border-white bg-black text-white hover:bg-white hover:text-black">
               Enviar novamente
             </Button>
           </div>

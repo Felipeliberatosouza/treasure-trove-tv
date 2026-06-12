@@ -458,14 +458,14 @@ const Navbar = () => {
             {menuItems.map((item) => {
               if (item.children && item.children.length > 0) {
                 return (
-                  <div key={item.label} className="flex min-w-0 flex-col gap-2 rounded-md border border-border/60 bg-secondary/30 p-4">
-                    <span className="text-sm font-medium text-foreground">{item.label}</span>
+                  <div key={item.label} className="flex min-w-0 flex-col gap-2 rounded-md border border-border/60 bg-secondary/40 p-4">
+                    <span className="text-sm font-semibold text-foreground">{item.label}</span>
                     <div className="flex flex-col gap-2 border-l border-border pl-3">
                       {item.children.map((child) => (
                         <Link
                           key={child.label}
                           to={child.href}
-                          className="inline-flex min-h-10 min-w-0 items-center justify-between gap-2 rounded-md px-2 py-2 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                          className="inline-flex min-h-10 min-w-0 items-center justify-between gap-2 rounded-md bg-secondary px-3 py-2 text-sm font-medium text-secondary-foreground transition-colors hover:bg-secondary/80"
                           onClick={() => setMobileOpen(false)}
                         >
                           <span className="min-w-0 break-words">{child.label}</span>
@@ -487,7 +487,7 @@ const Navbar = () => {
                   ● Pendência
                 </span>
               ) : null;
-              const menuLinkClassName = "inline-flex min-h-12 min-w-0 items-center justify-between gap-2 rounded-md border border-border/60 bg-secondary/30 px-4 py-3 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground";
+              const menuLinkClassName = "inline-flex min-h-12 min-w-0 items-center justify-between gap-2 rounded-md bg-secondary px-4 py-3 text-sm font-medium text-secondary-foreground transition-colors hover:bg-secondary/80";
               return href.startsWith("#") ? (
                 <a key={item.label} href={href} className={menuLinkClassName} onClick={() => setMobileOpen(false)}>
                   <span className="min-w-0 break-words">{item.label}</span>
@@ -511,7 +511,7 @@ const Navbar = () => {
               <button
                 type="button"
                 onClick={handleSignOut}
-                className="inline-flex min-h-12 w-full items-center justify-between gap-2 rounded-md border border-border/60 bg-secondary/30 px-4 py-3 text-sm font-medium text-foreground transition-colors hover:bg-secondary"
+                className="inline-flex min-h-12 w-full items-center justify-between gap-2 rounded-md bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
               >
                 <span>Sair</span>
                 <LogOut className="h-4 w-4" />

@@ -7,8 +7,14 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { translateAuthError } from "@/lib/translateAuthError";
+import { useAllPlatformSettings, type BrandingSettings } from "@/hooks/usePlatformSettings";
 
 const ForgotPassword = () => {
+  const { settings } = useAllPlatformSettings();
+  const branding = settings?.branding as BrandingSettings | undefined;
+  const showLogoImage = !!branding?.logo_url && !branding?.use_text_logo;
+  const platformName = branding?.platform_name || "Revisão Fácil";
+
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
@@ -49,6 +55,19 @@ const ForgotPassword = () => {
         </Link>
 
         <div className="text-center space-y-2">
+          <Link to="/" className="inline-block">
+            {showLogoImage ? (
+              <div className="flex justify-center">
+                <img
+                  src={branding!.logo_url}
+                  alt={platformName}
+                  className="h-16 max-w-[280px] object-contain"
+                />
+              </div>
+            ) : (
+              <h1 className="font-display text-3xl font-bold text-gradient">{platformName}</h1>
+            )}
+          </Link>
           <h1 className="font-display text-2xl font-bold">Recuperar Senha</h1>
           <p className="text-sm text-muted-foreground">
             Informe seu e-mail para receber o link de redefinição

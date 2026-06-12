@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { maskEmail, maskCPF, maskPhone } from "@/lib/maskData";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -8,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Search, Trash2, UserCog, UserCheck, UserX, FileSignature, Eye, Download, Mail, MailCheck } from "lucide-react";
+import { Search, Trash2, UserCog, UserCheck, UserX, FileSignature, Eye, Download, MailCheck, KeyRound, Send } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuditLog } from "@/hooks/useAuditLog";
 
@@ -37,6 +36,9 @@ const AdminUsersTab = () => {
   const [filterRole, setFilterRole] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
   const [viewContract, setViewContract] = useState<UserWithRole | null>(null);
+  const [pwdUser, setPwdUser] = useState<UserWithRole | null>(null);
+  const [newPwd, setNewPwd] = useState("");
+  const [savingPwd, setSavingPwd] = useState(false);
   const { toast } = useToast();
 
   const fetchUsers = async () => {
@@ -142,6 +144,38 @@ const AdminUsersTab = () => {
     }
   };
 
+  const handleSendReset = async (user: UserWithRole) => {
+    if (!confirm(`Enviar link de redefinição de senha para "${user.name}" (${user.email})?`)) return;
+    const redirectTo = `${window.location.origin}/reset-password`;
+    const { error } = await supabase.auth.resetPasswordForEmail(user.email, { redirectTo });
+    if (error) {
+      toast({ title: "Erro", description: "Não foi possível enviar o link.", variant: "destructive" });
+    } else {
+      await logAction("password_reset_link_sent", { targetTable: "auth.users", targetId: user.user_id, metadata: { email: user.email } });
+      toast({ title: "Enviado", description: `Link de redefinição enviado para ${user.email}.` });
+    }
+  };
+
+  const handleSavePassword = async () => {
+    if (!pwdUser) return;
+    if (newPwd.length < 6) {
+      toast({ title: "Senha curta", description: "A senha deve ter pelo menos 6 caracteres.", variant: "destructive" });
+      return;
+    }
+    setSavingPwd(true);
+    const { data, error } = await supabase.functions.invoke("admin-set-user-password", {
+      body: { user_id: pwdUser.user_id, new_password: newPwd },
+    });
+    setSavingPwd(false);
+    if (error || (data && (data as any).error)) {
+      toast({ title: "Erro", description: (data as any)?.error || "Não foi possível alterar a senha.", variant: "destructive" });
+      return;
+    }
+    toast({ title: "Senha atualizada", description: `Nova senha definida para "${pwdUser.name}". Informe ao usuário com segurança.` });
+    setPwdUser(null);
+    setNewPwd("");
+  };
+
   const filtered = users.filter((u) => {
     const matchSearch = u.name.toLowerCase().includes(search.toLowerCase()) || u.email.toLowerCase().includes(search.toLowerCase());
     const matchRole = filterRole === "all" || u.role === filterRole;
@@ -217,7 +251,7 @@ const AdminUsersTab = () => {
                 <TableRow key={u.user_id} className={!u.active ? "opacity-60" : ""}>
                   <TableCell className="font-mono text-sm">{u.referral_code || "—"}</TableCell>
                   <TableCell className="font-medium">{u.name}</TableCell>
-                  <TableCell className="text-muted-foreground">{maskEmail(u.email)}</TableCell>
+                  <TableCell className="text-muted-foreground break-all">{u.email}</TableCell>
                   <TableCell>{roleBadge(u.role)}</TableCell>
                   <TableCell>
                     {u.active ? (
@@ -268,6 +302,24 @@ const AdminUsersTab = () => {
                           <MailCheck className="h-4 w-4" />
                         </Button>
                       )}
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-8 w-8"
+                        onClick={() => handleSendReset(u)}
+                        title="Enviar link de redefinição de senha"
+                      >
+                        <Send className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-8 w-8"
+                        onClick={() => { setPwdUser(u); setNewPwd(""); }}
+                        title="Definir nova senha"
+                      >
+                        <KeyRound className="h-4 w-4" />
+                      </Button>
                       <Button
                         size="sm"
                         variant="ghost"
@@ -354,6 +406,34 @@ const AdminUsersTab = () => {
           >
             <Download className="h-4 w-4" /> Download PDF
           </Button>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!pwdUser} onOpenChange={(o) => { if (!o) { setPwdUser(null); setNewPwd(""); } }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="font-display flex items-center gap-2">
+              <KeyRound className="h-5 w-5" /> Definir nova senha
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Usuário: <span className="font-medium text-foreground">{pwdUser?.name}</span> ({pwdUser?.email})
+            </p>
+            <Input
+              type="text"
+              placeholder="Nova senha (mín. 6 caracteres)"
+              value={newPwd}
+              onChange={(e) => setNewPwd(e.target.value)}
+            />
+            <p className="text-xs text-muted-foreground">
+              A ação será registrada na auditoria. Informe a nova senha ao usuário por um canal seguro e oriente-o a alterá-la em seguida.
+            </p>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => { setPwdUser(null); setNewPwd(""); }} disabled={savingPwd}>Cancelar</Button>
+              <Button onClick={handleSavePassword} disabled={savingPwd}>{savingPwd ? "Salvando..." : "Salvar nova senha"}</Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

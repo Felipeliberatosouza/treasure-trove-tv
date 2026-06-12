@@ -59,24 +59,26 @@ Deno.serve(async (req) => {
     )
   }
 
-  // Verify the caller's JWT
-  const authClient = createClient(supabaseUrl, Deno.env.get('SUPABASE_ANON_KEY')!, {
-    global: { headers: { Authorization: authHeader } },
-  })
+  // Verify the caller. Service-role calls (server-to-server / edge functions
+  // invoking this function) bypass JWT verification. Otherwise validate the
+  // user's JWT via getClaims and infer the role from the claims payload.
   const token = authHeader.replace('Bearer ', '')
-  const { data: claimsData, error: claimsError } = await authClient.auth.getClaims(token)
-  if (claimsError || !claimsData?.claims) {
-    return new Response(JSON.stringify({ error: 'Invalid token' }), {
-      status: 401,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  let callerRole = 'anon'
+  if (token === supabaseServiceKey) {
+    callerRole = 'service_role'
+  } else {
+    const authClient = createClient(supabaseUrl, Deno.env.get('SUPABASE_ANON_KEY')!, {
+      global: { headers: { Authorization: authHeader } },
     })
+    const { data: claimsData, error: claimsError } = await authClient.auth.getClaims(token)
+    if (claimsError || !claimsData?.claims) {
+      return new Response(JSON.stringify({ error: 'Invalid token' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+    callerRole = (claimsData.claims as any)?.role || 'anon'
   }
-
-  // Authorization: callers using the public anon key (role === 'anon') are
-  // restricted to a fixed allowlist of templates needed by pre-auth flows
-  // (signup, login alerts, contact form, password recovery). Service role
-  // and authenticated users may invoke any registered template.
-  const callerRole = (claimsData.claims as any)?.role || 'anon'
   const PUBLIC_ANON_TEMPLATES = new Set<string>([
     'contact-message',
     'suspicious-login-admin-notify',

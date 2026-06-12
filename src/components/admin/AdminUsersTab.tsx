@@ -408,6 +408,34 @@ const AdminUsersTab = () => {
           </Button>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={!!pwdUser} onOpenChange={(o) => { if (!o) { setPwdUser(null); setNewPwd(""); } }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="font-display flex items-center gap-2">
+              <KeyRound className="h-5 w-5" /> Definir nova senha
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Usuário: <span className="font-medium text-foreground">{pwdUser?.name}</span> ({pwdUser?.email})
+            </p>
+            <Input
+              type="text"
+              placeholder="Nova senha (mín. 6 caracteres)"
+              value={newPwd}
+              onChange={(e) => setNewPwd(e.target.value)}
+            />
+            <p className="text-xs text-muted-foreground">
+              A ação será registrada na auditoria. Informe a nova senha ao usuário por um canal seguro e oriente-o a alterá-la em seguida.
+            </p>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => { setPwdUser(null); setNewPwd(""); }} disabled={savingPwd}>Cancelar</Button>
+              <Button onClick={handleSavePassword} disabled={savingPwd}>{savingPwd ? "Salvando..." : "Salvar nova senha"}</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

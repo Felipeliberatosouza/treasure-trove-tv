@@ -142,9 +142,19 @@ const Navbar = () => {
       return item;
     })
     .filter(Boolean) as MenuItem[];
-  const menuItems = user && role === "student" && hasActiveSubscription
+  const dashboardPath =
+    role === "admin"
+      ? "/dashboard/admin"
+      : role === "teacher"
+        ? "/dashboard/teacher"
+        : "/dashboard/student";
+  const meuPainelItem: MenuItem = { label: "Meu Painel", href: dashboardPath };
+  let menuItems = user && role === "student" && hasActiveSubscription
     ? [subscriberMenuItem, ...resolvedBase]
     : resolvedBase;
+  if (user) {
+    menuItems = [meuPainelItem, ...menuItems];
+  }
 
   const alertActive = (key?: AlertKey) => {
     if (!key) return false;
@@ -395,7 +405,7 @@ const Navbar = () => {
         <motion.div
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: "auto" }}
-          className="border-t border-border bg-background px-6 py-4 md:hidden"
+          className="border-t border-border bg-background px-6 py-4 md:hidden max-h-[80vh] overflow-y-auto"
         >
           <div className="flex flex-col gap-3">
             {user && role === "student" && (

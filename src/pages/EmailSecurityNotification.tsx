@@ -24,14 +24,20 @@ const EmailSecurityNotification = () => {
         return;
       }
 
-      const { error } = await supabase.from("security_notifications").insert({
-        email,
-        template_key: templateKey,
-        subject,
-        user_agent: navigator.userAgent,
-      });
+      const { data, error } = await supabase.functions.invoke(
+        "report-security-notification",
+        {
+          body: {
+            email,
+            template_key: templateKey,
+            subject,
+            user_agent: navigator.userAgent,
+          },
+        },
+      );
 
-      setStatus(error ? "error" : "success");
+      const ok = !error && (data as { ok?: boolean } | null)?.ok === true;
+      setStatus(ok ? "success" : "error");
     };
 
     report();

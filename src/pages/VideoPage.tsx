@@ -662,6 +662,7 @@ const VideoPage = () => {
                 previewLimit={previewLimit}
                 onPreviewLimitReached={handlePreviewLimitReached}
                 logoUrl={branding?.logo_url}
+                previewVttUrl={previewVttUrl || undefined}
               />
             ) : (
               <div className="relative aspect-video w-full cursor-pointer" onClick={handleReplayVideo}>

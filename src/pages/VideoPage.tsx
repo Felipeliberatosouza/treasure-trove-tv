@@ -83,7 +83,6 @@ const VideoPage = () => {
   const resolveVideoPlaybackUrl = useCallback(async (storedVideoUrl?: string | null) => {
     if (!storedVideoUrl) return undefined;
     // Usa o cache compartilhado (populado por prefetch nos cards).
-    const { getSignedVideoUrl } = await import("@/lib/signedUrlCache");
     const url = await getSignedVideoUrl(storedVideoUrl);
     return url || undefined;
   }, []);

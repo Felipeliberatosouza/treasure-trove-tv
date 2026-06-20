@@ -42,13 +42,8 @@ export function useFreeTrial() {
   /** Start a free trial for the current user using admin-configured settings */
   const startTrial = useCallback(async () => {
     if (!user || !trialSettings?.enabled) return false;
-    const { error } = await supabase.from("free_trials").insert({
-      user_id: user.id,
-      trial_type: trialSettings.trial_type,
-      trial_days: trialSettings.trial_days,
-      trial_videos: trialSettings.trial_videos,
-    });
-    if (error) {
+    const { data, error } = await supabase.rpc("start_free_trial" as any);
+    if (error || data !== true) {
       console.error("Error starting trial", error);
       return false;
     }
@@ -59,10 +54,7 @@ export function useFreeTrial() {
   /** Increment videos_watched counter. Call after any content is accessed during trial (revisões, resumos, simulados, top questões, colinhas). */
   const recordContentAccess = useCallback(async () => {
     if (!user || !trialRow) return;
-    await supabase
-      .from("free_trials")
-      .update({ videos_watched: (trialRow.videos_watched || 0) + 1 })
-      .eq("user_id", user.id);
+    await supabase.rpc("record_free_trial_content_access" as any);
     await fetchTrial();
   }, [user, trialRow, fetchTrial]);
 

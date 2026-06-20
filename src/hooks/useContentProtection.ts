@@ -195,8 +195,17 @@ export function useContentProtection(opts: ContentProtectionOptions) {
     // Detecção heurística de DevTools (diferença de viewport vs window).
     let devtoolsOpen = false;
     let devtoolsTimer: ReturnType<typeof setInterval> | null = null;
-    if (detectDevtools) {
-      const THRESHOLD = 160;
+    // Em dispositivos móveis/tablets a diferença entre outerWidth/innerWidth
+    // (barra de URL, gestos, zoom, devicePixelRatio alto) gera falso-positivo
+    // de "DevTools abertas". Desabilita a heurística nesses casos.
+    const isTouchDevice =
+      typeof window !== "undefined" &&
+      ("ontouchstart" in window ||
+        (navigator.maxTouchPoints ?? 0) > 0 ||
+        window.matchMedia?.("(pointer: coarse)").matches ||
+        window.innerWidth < 1024);
+    if (detectDevtools && !isTouchDevice) {
+      const THRESHOLD = 200;
       devtoolsTimer = setInterval(() => {
         const widthDiff = window.outerWidth - window.innerWidth;
         const heightDiff = window.outerHeight - window.innerHeight;

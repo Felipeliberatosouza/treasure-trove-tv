@@ -12,17 +12,24 @@ const ScrollToTop = () => {
   useEffect(() => {
     if (hash) {
       const id = hash.replace(/^#/, "");
-      // Retry briefly to wait for content to mount/render.
-      let tries = 0;
-      const tryScroll = () => {
+      // Retry briefly while the page mounts AND re-scroll a few times after
+      // it's found, since async content above can shift the section's
+      // position after the first scroll.
+      let mountTries = 0;
+      let settleTries = 0;
+      const settle = () => {
         const el = document.getElementById(id);
-        if (el) {
-          el.scrollIntoView({ behavior: "smooth", block: "start" });
+        if (el) el.scrollIntoView({ behavior: "auto", block: "start" });
+        if (settleTries++ < 8) setTimeout(settle, 150);
+      };
+      const waitForMount = () => {
+        if (document.getElementById(id)) {
+          settle();
           return;
         }
-        if (tries++ < 20) setTimeout(tryScroll, 100);
+        if (mountTries++ < 30) setTimeout(waitForMount, 100);
       };
-      tryScroll();
+      waitForMount();
       return;
     }
     window.scrollTo({ top: 0, left: 0 });

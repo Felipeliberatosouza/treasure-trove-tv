@@ -65,26 +65,11 @@ export function useContentProtection(opts: ContentProtectionOptions) {
     detectDevtools = true,
     onDevtoolsDetected,
     logThrottleMs = 30_000,
-    enforceDebounceMs = 60_000,
   } = opts;
   const lastLogged = useRef<Record<string, number>>({});
-  const lastEnforce = useRef(0);
 
   useEffect(() => {
     if (!enabled) return;
-
-    const enforce = async () => {
-      const now = Date.now();
-      if (now - lastEnforce.current < enforceDebounceMs) return;
-      lastEnforce.current = now;
-      try {
-        // A edge function lê o JWT do header e decide pelo próprio user_id.
-        await supabase.functions.invoke("enforce-content-protection", { body: {} });
-      } catch (err) {
-        // Silencioso: se a função falhar não queremos quebrar a UI.
-        console.warn("[content-protection] enforce call failed", err);
-      }
-    };
 
     const log = async (event: string, metadata: Record<string, unknown> = {}) => {
       const now = Date.now();

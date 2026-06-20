@@ -1,6 +1,8 @@
 import { motion } from "framer-motion";
 import { Play, Clock, BookOpen, Star, Gift, CheckCircle } from "lucide-react";
 import type { Video } from "@/data/courses";
+import { prefetchSignedUrlForContent } from "@/lib/signedUrlCache";
+import { useEffect, useRef } from "react";
 
 interface VideoCardProps {
   video: Video;
@@ -12,13 +14,39 @@ interface VideoCardProps {
 }
 
 const VideoCard = ({ video, index, onClick, rating, showTrialBadge, watched }: VideoCardProps) => {
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  // Prefetch ao entrar no viewport: gera a URL assinada em background para
+  // reduzir o TTFB caso o usuário clique no card.
+  useEffect(() => {
+    const el = rootRef.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    const obs = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          prefetchSignedUrlForContent(video.id);
+          obs.disconnect();
+        }
+      },
+      { rootMargin: "200px" },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [video.id]);
+
+  const handlePrefetch = () => prefetchSignedUrlForContent(video.id);
+
   return (
     <motion.div
+      ref={rootRef}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: index * 0.08 }}
       className="group relative min-w-[240px] cursor-pointer md:min-w-[280px]"
       onClick={() => onClick(video.id)}
+      onMouseEnter={handlePrefetch}
+      onFocus={handlePrefetch}
+      tabIndex={0}
     >
       <div className="card-shine overflow-hidden rounded-lg bg-card transition-all duration-300 group-hover:ring-1 group-hover:ring-primary/40 group-hover:scale-[1.03]">
         <div className="relative aspect-video overflow-hidden">

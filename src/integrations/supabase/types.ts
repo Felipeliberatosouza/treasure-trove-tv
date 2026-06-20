@@ -639,6 +639,9 @@ export type Database = {
           duvidas_url: string | null
           id: string
           platform_percentage: number | null
+          preview_sprite_url: string | null
+          preview_status: string
+          preview_vtt_url: string | null
           price: number | null
           price_colinhas: number | null
           price_resumos: number | null
@@ -667,6 +670,9 @@ export type Database = {
           duvidas_url?: string | null
           id?: string
           platform_percentage?: number | null
+          preview_sprite_url?: string | null
+          preview_status?: string
+          preview_vtt_url?: string | null
           price?: number | null
           price_colinhas?: number | null
           price_resumos?: number | null
@@ -695,6 +701,9 @@ export type Database = {
           duvidas_url?: string | null
           id?: string
           platform_percentage?: number | null
+          preview_sprite_url?: string | null
+          preview_status?: string
+          preview_vtt_url?: string | null
           price?: number | null
           price_colinhas?: number | null
           price_resumos?: number | null
@@ -991,6 +1000,9 @@ export type Database = {
           duvidas_url: string | null
           id: string
           platform_percentage: number | null
+          preview_sprite_url: string | null
+          preview_status: string
+          preview_vtt_url: string | null
           price: number | null
           price_colinhas: number | null
           price_resumos: number | null
@@ -1019,6 +1031,9 @@ export type Database = {
           duvidas_url?: string | null
           id?: string
           platform_percentage?: number | null
+          preview_sprite_url?: string | null
+          preview_status?: string
+          preview_vtt_url?: string | null
           price?: number | null
           price_colinhas?: number | null
           price_resumos?: number | null
@@ -1047,6 +1062,9 @@ export type Database = {
           duvidas_url?: string | null
           id?: string
           platform_percentage?: number | null
+          preview_sprite_url?: string | null
+          preview_status?: string
+          preview_vtt_url?: string | null
           price?: number | null
           price_colinhas?: number | null
           price_resumos?: number | null

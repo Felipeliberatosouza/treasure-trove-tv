@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Star, Play, ShoppingCart, Zap, Clock, BookOpen, Gift, AlertTriangle, Lock, ArrowLeft, FileText, ClipboardList, Trophy, StickyNote, HelpCircle, CalendarCheck, ThumbsUp, ThumbsDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { getSignedVideoUrl } from "@/lib/signedUrlCache";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFreeTrial } from "@/hooks/useFreeTrial";
 import { usePlatformSettings, type VideoPricingSettings, DEFAULT_PRODUCT_CONFIG } from "@/hooks/usePlatformSettings";
@@ -76,29 +77,15 @@ const VideoPage = () => {
   const [isSimuladoOpen, setIsSimuladoOpen] = useState(false);
   const [isBookLessonOpen, setIsBookLessonOpen] = useState(false);
   const [materialModal, setMaterialModal] = useState<MaterialKind | null>(null);
+  const [previewVttUrl, setPreviewVttUrl] = useState<string | null>(null);
   const { availability: materials } = useLessonMaterials(id || null);
   const { block: activeBlock, loading: blockLoading } = useActiveBlock();
 
   const resolveVideoPlaybackUrl = useCallback(async (storedVideoUrl?: string | null) => {
     if (!storedVideoUrl) return undefined;
-
-    const marker = "/videos/";
-    const markerIndex = storedVideoUrl.indexOf(marker);
-    const storagePath = markerIndex >= 0
-      ? decodeURIComponent(storedVideoUrl.slice(markerIndex + marker.length).split("?")[0])
-      : storedVideoUrl.replace(/^\/+/, "");
-
-    if (!storagePath) return storedVideoUrl || undefined;
-
-    const { data, error } = await supabase.storage
-      .from("videos")
-      .createSignedUrl(storagePath, 60 * 60);
-
-    if (error || !data?.signedUrl) {
-      return /^https?:\/\//.test(storedVideoUrl) ? storedVideoUrl : undefined;
-    }
-
-    return data.signedUrl;
+    // Usa o cache compartilhado (populado por prefetch nos cards).
+    const url = await getSignedVideoUrl(storedVideoUrl);
+    return url || undefined;
   }, []);
 
   // Fetch video from DB if not found in static data
@@ -116,6 +103,7 @@ const VideoPage = () => {
       if (lesson) {
         const lessonVideoUrl = await resolveVideoPlaybackUrl(lesson.video_url);
         setRawVideoUrl(lesson.video_url || null);
+        setPreviewVttUrl((lesson as any).preview_vtt_url || null);
         setDbVideo({
           id: lesson.id,
           title: lesson.title,
@@ -143,6 +131,7 @@ const VideoPage = () => {
       if (exam) {
         const examVideoUrl = await resolveVideoPlaybackUrl(exam.video_url);
         setRawVideoUrl(exam.video_url || null);
+        setPreviewVttUrl((exam as any).preview_vtt_url || null);
         setDbVideo({
           id: exam.id,
           title: exam.title,
@@ -673,6 +662,7 @@ const VideoPage = () => {
                 previewLimit={previewLimit}
                 onPreviewLimitReached={handlePreviewLimitReached}
                 logoUrl={branding?.logo_url}
+                previewVttUrl={previewVttUrl || undefined}
               />
             ) : (
               <div className="relative aspect-video w-full cursor-pointer" onClick={handleReplayVideo}>

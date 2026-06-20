@@ -6,6 +6,7 @@ import { Play, Pause, Volume2, VolumeX, Maximize, RotateCcw, Subtitles } from "l
 import { Button } from "@/components/ui/button";
 import ForensicWatermark from "@/components/ForensicWatermark";
 import { useContentProtection } from "@/hooks/useContentProtection";
+import { fetchAndParseThumbVtt, type ParsedThumbVtt } from "@/lib/videoPreviewSprite";
 
 interface VideoPlayerProps {
   videoUrl: string;
@@ -18,6 +19,7 @@ interface VideoPlayerProps {
   onPreviewLimitReached?: () => void;
   logoUrl?: string;
   subtitlesVttUrl?: string;
+  previewVttUrl?: string;
 }
 
 const VideoPlayer = ({
@@ -31,6 +33,7 @@ const VideoPlayer = ({
   onPreviewLimitReached,
   logoUrl,
   subtitlesVttUrl,
+  previewVttUrl,
 }: VideoPlayerProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -50,6 +53,28 @@ const VideoPlayer = ({
   // Acumulador de segundos assistidos para o Pool de remuneração
   const watchAccumulatorSec = useRef(0);
   const lastTimestampRef = useRef<number | null>(null);
+
+  // Hover-seek preview (sprite WebVTT)
+  const [thumbData, setThumbData] = useState<ParsedThumbVtt | null>(null);
+  const [hoverPreview, setHoverPreview] = useState<
+    | { left: number; time: number; cue: ParsedThumbVtt["cues"][number] }
+    | null
+  >(null);
+  const seekBarRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!previewVttUrl) {
+      setThumbData(null);
+      return;
+    }
+    let cancelled = false;
+    fetchAndParseThumbVtt(previewVttUrl).then((parsed) => {
+      if (!cancelled) setThumbData(parsed);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [previewVttUrl]);
 
   const flushWatchSeconds = useCallback(async () => {
     if (!user) return;
@@ -164,6 +189,19 @@ const VideoPlayer = ({
     video.currentTime = pos * duration;
   };
 
+  const updateHoverPreview = (clientX: number) => {
+    const bar = seekBarRef.current;
+    if (!bar || !thumbData || !duration) return;
+    const rect = bar.getBoundingClientRect();
+    const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+    const time = ratio * duration;
+    const cue =
+      thumbData.cues.find((c) => time >= c.start && time < c.end) ||
+      thumbData.cues[thumbData.cues.length - 1];
+    if (!cue) return;
+    setHoverPreview({ left: ratio * rect.width, time, cue });
+  };
+
   const toggleMute = () => {
     const video = videoRef.current;
     if (!video) return;
@@ -215,6 +253,7 @@ const VideoPlayer = ({
         src={videoUrl}
         poster={poster}
         className="h-full w-full object-contain"
+        preload="metadata"
         onTimeUpdate={handleTimeUpdate}
         onLoadedMetadata={handleLoadedMetadata}
         onPlay={() => setIsPlaying(true)}
@@ -267,8 +306,11 @@ const VideoPlayer = ({
       >
         {/* Seek bar */}
         <div
+          ref={seekBarRef}
           className="relative mb-2 h-1.5 w-full cursor-pointer rounded-full bg-muted-foreground/30 group/seek"
           onClick={handleSeek}
+          onMouseMove={(e) => updateHoverPreview(e.clientX)}
+          onMouseLeave={() => setHoverPreview(null)}
         >
           <div
             className="absolute left-0 top-0 h-full rounded-full bg-primary transition-all"
@@ -278,6 +320,27 @@ const VideoPlayer = ({
             className="absolute top-1/2 -translate-y-1/2 h-3 w-3 rounded-full bg-primary shadow-md transition-all"
             style={{ left: `${percentage}%`, transform: `translate(-50%, -50%)` }}
           />
+
+          {hoverPreview && thumbData && (
+            <div
+              className="pointer-events-none absolute bottom-4 z-20 flex -translate-x-1/2 flex-col items-center"
+              style={{ left: `${hoverPreview.left}px` }}
+            >
+              <div
+                className="rounded-md border border-white/20 shadow-lg"
+                style={{
+                  width: `${hoverPreview.cue.w}px`,
+                  height: `${hoverPreview.cue.h}px`,
+                  backgroundImage: `url(${thumbData.spriteUrl})`,
+                  backgroundPosition: `-${hoverPreview.cue.x}px -${hoverPreview.cue.y}px`,
+                  backgroundRepeat: "no-repeat",
+                }}
+              />
+              <span className="mt-1 rounded bg-black/80 px-1.5 py-0.5 text-[10px] font-mono text-white">
+                {formatTime(hoverPreview.time)}
+              </span>
+            </div>
+          )}
         </div>
 
         <div className="flex items-center justify-between">

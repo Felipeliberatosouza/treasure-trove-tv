@@ -16,6 +16,7 @@ import { usePlatformSettings, DEFAULT_PRODUCT_CONFIG } from "@/hooks/usePlatform
 import { compositeVideo, type ImpactWord, type WatermarkStatus } from "@/utils/videoCompositor";
 import { shiftVtt } from "@/utils/vttSync";
 import { generateDefaultCover } from "@/utils/coverGenerator";
+import { generateAndUploadPreviewSprite } from "@/lib/videoPreviewSprite";
 import {
   ResumoMaterial,
   SimuladoMaterial,
@@ -924,6 +925,17 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
           : "Sua aula foi enviada para aprovação da Revisão Fácil! Se estiver de acordo com as regras da plataforma, será publicada em até 3 dias úteis. Você receberá um e-mail com a confirmação da publicação ou com orientações sobre eventuais ajustes necessários.",
         { duration: editData?.id ? 5000 : 12000 },
       );
+
+      // Gera o sprite de pré-visualização em background — não bloqueia o
+      // envio do form. Só roda quando há um arquivo de vídeo nesta submissão.
+      if (videoFile && lessonId) {
+        void generateAndUploadPreviewSprite({
+          videoFile,
+          contentId: lessonId,
+          table,
+        });
+      }
+
       onSaved();
     } catch (err: any) {
       toast.error(err.message || "Erro ao salvar");

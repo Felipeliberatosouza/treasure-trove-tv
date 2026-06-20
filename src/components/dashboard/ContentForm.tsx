@@ -928,7 +928,7 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
 
       // Gera o sprite de pré-visualização em background — não bloqueia o
       // envio do form. Só roda quando há um arquivo de vídeo nesta submissão.
-      if (videoFile && lessonId && (table === "lessons" || table === "exam_solutions")) {
+      if (videoFile && lessonId) {
         void generateAndUploadPreviewSprite({
           videoFile,
           contentId: lessonId,

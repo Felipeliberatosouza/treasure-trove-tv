@@ -23,6 +23,12 @@ const ScrollToTop = () => {
       let lastTop = Number.NaN;
       let lastDocHeight = Number.NaN;
       let stableCount = 0;
+      let cachedOffset = Number.NaN;
+      let rafId = 0;
+      let realignScheduled = false;
+      const prefersReducedMotion =
+        typeof window.matchMedia === "function" &&
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
       const getHeaderOffset = () => {
         const header =
@@ -33,10 +39,14 @@ const ScrollToTop = () => {
         return (header?.getBoundingClientRect().height ?? 0) + gap;
       };
 
-      const align = (el: HTMLElement) => {
-        const offset = getHeaderOffset();
-        const top = el.getBoundingClientRect().top + window.scrollY - offset;
-        window.scrollTo({ top: Math.max(0, top), left: 0, behavior: "auto" });
+      const align = (el: HTMLElement, behavior: ScrollBehavior = "auto") => {
+        // Reuse cached offset during the stabilisation loop to avoid
+        // forced layout reads on every tick.
+        if (Number.isNaN(cachedOffset)) cachedOffset = getHeaderOffset();
+        const top = el.getBoundingClientRect().top + window.scrollY - cachedOffset;
+        const target = Math.max(0, top);
+        if (Math.abs(window.scrollY - target) < 1) return;
+        window.scrollTo({ top: target, left: 0, behavior });
       };
 
       const tick = () => {
@@ -53,7 +63,9 @@ const ScrollToTop = () => {
         const docHeight = document.documentElement.scrollHeight;
 
         // Re-align every tick so the target stays in view as layout shifts.
-        align(el);
+        // Use instant scroll during stabilisation to avoid stacking smooth
+        // animations and producing jank.
+        align(el, "auto");
 
         if (top === lastTop && docHeight === lastDocHeight) {
           stableCount += 1;
@@ -63,27 +75,46 @@ const ScrollToTop = () => {
           lastDocHeight = docHeight;
         }
 
-        if (stableCount >= STABLE_FRAMES) return; // layout settled
+        if (stableCount >= STABLE_FRAMES) {
+          // Layout settled — refresh offset and animate the final landing
+          // for a smooth visual handoff.
+          cachedOffset = getHeaderOffset();
+          align(el, prefersReducedMotion ? "auto" : "smooth");
+          return;
+        }
         if (elapsed < MAX_WAIT_MS) setTimeout(tick, TICK_MS);
       };
 
       const realign = () => {
-        const el = document.getElementById(id);
-        if (el && !cancelled) align(el);
+        if (cancelled || realignScheduled) return;
+        realignScheduled = true;
+        rafId = window.requestAnimationFrame(() => {
+          realignScheduled = false;
+          if (cancelled) return;
+          const el = document.getElementById(id);
+          if (!el) return;
+          // Invalidate cached offset so the new viewport size is measured.
+          cachedOffset = getHeaderOffset();
+          align(el, prefersReducedMotion ? "auto" : "smooth");
+        });
       };
 
       tick();
 
-      window.addEventListener("resize", realign);
-      window.addEventListener("orientationchange", realign);
+      window.addEventListener("resize", realign, { passive: true });
+      window.addEventListener("orientationchange", realign, { passive: true });
 
       return () => {
         cancelled = true;
+        if (rafId) window.cancelAnimationFrame(rafId);
         window.removeEventListener("resize", realign);
         window.removeEventListener("orientationchange", realign);
       };
     }
-    window.scrollTo({ top: 0, left: 0 });
+    const reduced =
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    window.scrollTo({ top: 0, left: 0, behavior: reduced ? "auto" : "smooth" });
   }, [pathname, hash]);
 
   return null;

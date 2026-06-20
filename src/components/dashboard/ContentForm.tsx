@@ -16,6 +16,7 @@ import { usePlatformSettings, DEFAULT_PRODUCT_CONFIG } from "@/hooks/usePlatform
 import { compositeVideo, type ImpactWord, type WatermarkStatus } from "@/utils/videoCompositor";
 import { shiftVtt } from "@/utils/vttSync";
 import { generateDefaultCover } from "@/utils/coverGenerator";
+import { generateAndUploadPreviewSprite } from "@/lib/videoPreviewSprite";
 import {
   ResumoMaterial,
   SimuladoMaterial,

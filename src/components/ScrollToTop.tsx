@@ -24,8 +24,19 @@ const ScrollToTop = () => {
       let lastDocHeight = Number.NaN;
       let stableCount = 0;
 
+      const getHeaderOffset = () => {
+        const header =
+          document.querySelector<HTMLElement>("[data-fixed-header]") ||
+          document.querySelector<HTMLElement>("header.fixed, nav.fixed");
+        // Small visual gap so the section title isn't flush against the header.
+        const gap = 8;
+        return (header?.getBoundingClientRect().height ?? 0) + gap;
+      };
+
       const align = (el: HTMLElement) => {
-        el.scrollIntoView({ behavior: "auto", block: "start" });
+        const offset = getHeaderOffset();
+        const top = el.getBoundingClientRect().top + window.scrollY - offset;
+        window.scrollTo({ top: Math.max(0, top), left: 0, behavior: "auto" });
       };
 
       const tick = () => {

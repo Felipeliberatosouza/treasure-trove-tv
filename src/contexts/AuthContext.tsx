@@ -107,10 +107,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setAllRoles([]);
       setUser(null);
       setSession(null);
-      return;
+      return false;
     }
     
     setProfile(data ?? null);
+    return true;
   };
 
   const checkSubscription = useCallback(async () => {
@@ -183,36 +184,45 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [user, allRoles]);
 
   useEffect(() => {
+    let cancelled = false;
+
+    const loadAuthState = async (nextSession: Session | null) => {
+      setLoading(true);
+      setSession(nextSession);
+      setUser(nextSession?.user ?? null);
+
+      if (!nextSession?.user) {
+        setRole(null);
+        setAllRoles([]);
+        setProfile(null);
+        setSubscription(defaultSubscription);
+        if (!cancelled) setLoading(false);
+        return;
+      }
+
+      const profileActive = await fetchProfile(nextSession.user.id);
+      if (cancelled || !profileActive) {
+        if (!cancelled) setLoading(false);
+        return;
+      }
+      await fetchRole(nextSession.user.id);
+      if (!cancelled) setLoading(false);
+    };
+
     const { data: { subscription: authSub } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        if (session?.user) {
-          setTimeout(() => {
-            fetchRole(session.user.id);
-            fetchProfile(session.user.id);
-          }, 0);
-        } else {
-          setRole(null);
-          setAllRoles([]);
-          setProfile(null);
-          setSubscription(defaultSubscription);
-        }
-        setLoading(false);
+      (_event, session) => {
+        void loadAuthState(session);
       }
     );
 
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        fetchRole(session.user.id);
-        fetchProfile(session.user.id);
-      }
-      setLoading(false);
+      void loadAuthState(session);
     });
 
-    return () => authSub.unsubscribe();
+    return () => {
+      cancelled = true;
+      authSub.unsubscribe();
+    };
   }, []);
 
   useEffect(() => {

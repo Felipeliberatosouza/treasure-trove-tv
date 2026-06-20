@@ -3,8 +3,10 @@ import { useLocation } from "react-router-dom";
 
 /**
  * Forces the window to scroll to the top whenever the route changes.
- * Without this, React Router preserves the previous scroll position,
- * which makes pages like /checkout appear mid-scroll on mobile.
+ * When the URL has a hash, scroll to the target element and keep
+ * re-aligning it until its position stabilises — this compensates for
+ * async sections above (e.g. PricingSection) that mount after the first
+ * scroll and would otherwise push the target out of view.
  */
 const ScrollToTop = () => {
   const { pathname, hash } = useLocation();
@@ -12,25 +14,52 @@ const ScrollToTop = () => {
   useEffect(() => {
     if (hash) {
       const id = hash.replace(/^#/, "");
-      // Retry briefly while the page mounts AND re-scroll a few times after
-      // it's found, since async content above can shift the section's
-      // position after the first scroll.
-      let mountTries = 0;
-      let settleTries = 0;
-      const settle = () => {
-        const el = document.getElementById(id);
-        if (el) el.scrollIntoView({ behavior: "auto", block: "start" });
-        if (settleTries++ < 8) setTimeout(settle, 150);
+      let cancelled = false;
+      const start = performance.now();
+      const MAX_WAIT_MS = 6000; // total budget
+      const STABLE_FRAMES = 6; // ~6 RAF + 120ms ticks of unchanged height/top
+      const TICK_MS = 120;
+
+      let lastTop = Number.NaN;
+      let lastDocHeight = Number.NaN;
+      let stableCount = 0;
+
+      const align = (el: HTMLElement) => {
+        el.scrollIntoView({ behavior: "auto", block: "start" });
       };
-      const waitForMount = () => {
-        if (document.getElementById(id)) {
-          settle();
+
+      const tick = () => {
+        if (cancelled) return;
+        const el = document.getElementById(id);
+        const elapsed = performance.now() - start;
+
+        if (!el) {
+          if (elapsed < MAX_WAIT_MS) setTimeout(tick, TICK_MS);
           return;
         }
-        if (mountTries++ < 30) setTimeout(waitForMount, 100);
+
+        const top = el.getBoundingClientRect().top + window.scrollY;
+        const docHeight = document.documentElement.scrollHeight;
+
+        // Re-align every tick so the target stays in view as layout shifts.
+        align(el);
+
+        if (top === lastTop && docHeight === lastDocHeight) {
+          stableCount += 1;
+        } else {
+          stableCount = 0;
+          lastTop = top;
+          lastDocHeight = docHeight;
+        }
+
+        if (stableCount >= STABLE_FRAMES) return; // layout settled
+        if (elapsed < MAX_WAIT_MS) setTimeout(tick, TICK_MS);
       };
-      waitForMount();
-      return;
+
+      tick();
+      return () => {
+        cancelled = true;
+      };
     }
     window.scrollTo({ top: 0, left: 0 });
   }, [pathname, hash]);

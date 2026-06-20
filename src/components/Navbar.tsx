@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, User, Menu, X, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -95,6 +95,7 @@ const Navbar = () => {
   const searchInputRef = useRef<HTMLInputElement>(null);
   const searchContainerRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, role, profile, signOut } = useAuth();
   const { settings } = useAllPlatformSettings();
   const branding = settings.branding as BrandingSettings | undefined;
@@ -265,6 +266,21 @@ const Navbar = () => {
     navigate("/");
   };
 
+  const handleHashNav = (hash: string) => {
+    const id = hash.replace(/^#/, "");
+    setMobileOpen(false);
+    if (location.pathname === "/") {
+      const el = document.getElementById(id);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+      } else {
+        window.location.hash = id;
+      }
+    } else {
+      navigate(`/#${id}`);
+    }
+  };
+
   return (
     <>
     <motion.nav
@@ -346,7 +362,15 @@ const Navbar = () => {
             ) : null;
             const label = item.shortLabel ?? item.label;
             return href.startsWith("#") ? (
-              <a key={item.label} href={href} className={className}>
+              <a
+                key={item.label}
+                href={`/${href}`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleHashNav(href);
+                }}
+                className={className}
+              >
                 {label}
                 {alertBadge}
               </a>
@@ -492,7 +516,15 @@ const Navbar = () => {
               ) : null;
               const menuLinkClassName = "inline-flex min-h-12 min-w-0 items-center justify-between gap-2 rounded-md bg-secondary px-4 py-3 text-sm font-medium text-secondary-foreground transition-colors hover:bg-secondary/80";
               return href.startsWith("#") ? (
-                <a key={item.label} href={href} className={menuLinkClassName} onClick={() => setMobileOpen(false)}>
+                <a
+                  key={item.label}
+                  href={`/${href}`}
+                  className={menuLinkClassName}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleHashNav(href);
+                  }}
+                >
                   <span className="min-w-0 break-words">{item.label}</span>
                   {alertBadge}
                 </a>

@@ -67,9 +67,20 @@ const ScrollToTop = () => {
         if (elapsed < MAX_WAIT_MS) setTimeout(tick, TICK_MS);
       };
 
+      const realign = () => {
+        const el = document.getElementById(id);
+        if (el && !cancelled) align(el);
+      };
+
       tick();
+
+      window.addEventListener("resize", realign);
+      window.addEventListener("orientationchange", realign);
+
       return () => {
         cancelled = true;
+        window.removeEventListener("resize", realign);
+        window.removeEventListener("orientationchange", realign);
       };
     }
     window.scrollTo({ top: 0, left: 0 });

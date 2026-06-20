@@ -91,28 +91,21 @@ export function useContentProtection(opts: ContentProtectionOptions) {
       const key = `${event}:${context}`;
       if (lastLogged.current[key] && now - lastLogged.current[key] < logThrottleMs) return;
       lastLogged.current[key] = now;
-      if (!user) return; // RLS: insert exige user_id = auth.uid()
+      if (!user || !ENFORCE_TRIGGER_EVENTS.has(event)) return;
       try {
-        await supabase.from("audit_logs").insert([
-          {
-            user_id: user.id,
-            action: `content_protection.${event}`,
-            target_table: "content_protection",
-            target_id: null,
+        await supabase.functions.invoke("enforce-content-protection", {
+          body: {
+            event,
+            context,
             metadata: {
-              context,
               user_agent: navigator.userAgent,
               url: window.location.pathname,
               ...metadata,
             },
           },
-        ] as any);
+        });
       } catch (err) {
-        console.warn("[content-protection] audit log failed", err);
-      }
-      // Após registrar, dispara a avaliação de bloqueio para eventos críticos.
-      if (ENFORCE_TRIGGER_EVENTS.has(event)) {
-        void enforce();
+        console.warn("[content-protection] enforcement call failed", err);
       }
     };
 

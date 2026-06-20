@@ -159,18 +159,6 @@ const Login = () => {
 
       if (activeBlock) {
         await supabase.auth.signOut();
-        try {
-          await supabase.from("audit_logs").insert([{
-            user_id: signInData.user.id,
-            action: "security.login_blocked_active_suspension",
-            metadata: {
-              blocked_until: activeBlock.blocked_until,
-              reason: activeBlock.reason,
-            },
-          }] as any);
-        } catch {
-          // Non-critical
-        }
         setContentBlockUntil(activeBlock.blocked_until);
         setLoading(false);
         return;
@@ -185,16 +173,6 @@ const Login = () => {
         return;
       }
 
-      // Log successful login to audit
-      try {
-        await supabase.from("audit_logs").insert([{
-          user_id: signInData.user.id,
-          action: "login",
-          metadata: { method: "password" },
-        }] as any);
-      } catch {
-        // Non-critical
-      }
     }
 
     toast.success("Login realizado com sucesso!");
@@ -203,18 +181,6 @@ const Login = () => {
   };
 
   const handleMfaVerified = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        await supabase.from("audit_logs").insert([{
-          user_id: user.id,
-          action: "login",
-          metadata: { method: "password", mfa: true },
-        }] as any);
-      }
-    } catch {
-      // Non-critical
-    }
     toast.success("Login realizado com sucesso!");
     navigate("/");
   };

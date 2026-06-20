@@ -16,6 +16,14 @@ const respond = (payload: Record<string, unknown>) =>
     headers: jsonHeaders,
   });
 
+async function sha256Hex(value: string) {
+  const bytes = new TextEncoder().encode(value);
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  return Array.from(new Uint8Array(digest))
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("");
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -145,7 +153,8 @@ Deno.serve(async (req) => {
     await supabase.from("phone_verifications").insert({
       user_id: userId,
       phone: e164Phone,
-      code,
+      code: "[redigido]",
+      code_hash: await sha256Hex(`${e164Phone}:${code}`),
       channel,
       verified: false,
       expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(),

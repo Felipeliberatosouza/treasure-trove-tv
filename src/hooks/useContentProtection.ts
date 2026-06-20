@@ -65,54 +65,32 @@ export function useContentProtection(opts: ContentProtectionOptions) {
     detectDevtools = true,
     onDevtoolsDetected,
     logThrottleMs = 30_000,
-    enforceDebounceMs = 60_000,
   } = opts;
   const lastLogged = useRef<Record<string, number>>({});
-  const lastEnforce = useRef(0);
 
   useEffect(() => {
     if (!enabled) return;
-
-    const enforce = async () => {
-      const now = Date.now();
-      if (now - lastEnforce.current < enforceDebounceMs) return;
-      lastEnforce.current = now;
-      try {
-        // A edge function lê o JWT do header e decide pelo próprio user_id.
-        await supabase.functions.invoke("enforce-content-protection", { body: {} });
-      } catch (err) {
-        // Silencioso: se a função falhar não queremos quebrar a UI.
-        console.warn("[content-protection] enforce call failed", err);
-      }
-    };
 
     const log = async (event: string, metadata: Record<string, unknown> = {}) => {
       const now = Date.now();
       const key = `${event}:${context}`;
       if (lastLogged.current[key] && now - lastLogged.current[key] < logThrottleMs) return;
       lastLogged.current[key] = now;
-      if (!user) return; // RLS: insert exige user_id = auth.uid()
+      if (!user || !ENFORCE_TRIGGER_EVENTS.has(event)) return;
       try {
-        await supabase.from("audit_logs").insert([
-          {
-            user_id: user.id,
-            action: `content_protection.${event}`,
-            target_table: "content_protection",
-            target_id: null,
+        await supabase.functions.invoke("enforce-content-protection", {
+          body: {
+            event,
+            context,
             metadata: {
-              context,
               user_agent: navigator.userAgent,
               url: window.location.pathname,
               ...metadata,
             },
           },
-        ] as any);
+        });
       } catch (err) {
-        console.warn("[content-protection] audit log failed", err);
-      }
-      // Após registrar, dispara a avaliação de bloqueio para eventos críticos.
-      if (ENFORCE_TRIGGER_EVENTS.has(event)) {
-        void enforce();
+        console.warn("[content-protection] enforcement call failed", err);
       }
     };
 

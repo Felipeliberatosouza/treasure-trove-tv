@@ -14,6 +14,14 @@ const respond = (payload: Record<string, unknown>) =>
     headers: jsonHeaders,
   });
 
+async function sha256Hex(value: string) {
+  const bytes = new TextEncoder().encode(value);
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  return Array.from(new Uint8Array(digest))
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("");
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -57,7 +65,8 @@ Deno.serve(async (req) => {
       return respond({ ok: false, error: "Muitas tentativas. Solicite um novo código." });
     }
 
-    if (verification.code !== code) {
+    const codeHash = await sha256Hex(`${e164Phone}:${code}`);
+    if (verification.code_hash !== codeHash) {
       const next = (verification.failed_attempts ?? 0) + 1;
       await supabase
         .from("phone_verifications")

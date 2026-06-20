@@ -1,9 +1,8 @@
 // Edge Function: enforce-content-protection
 //
-// Avalia detecções recentes de violação de proteção de conteúdo (registradas
-// em `audit_logs` pelo hook `useContentProtection`) e — se um usuário ultrapassa
-// o limiar configurado em `platform_settings.security_block_policy` — cria um
-// bloqueio temporário em `user_blocks`. Também registra a ação em `audit_logs`.
+// Registra detecções de violação de proteção de conteúdo e — se um usuário
+// ultrapassa o limiar configurado em `platform_settings.security_block_policy` —
+// cria um bloqueio temporário em `user_blocks`.
 //
 // Idempotência: se o usuário já tem um bloqueio ativo, a função apenas o retorna.
 // Configurável: window_minutes, threshold_count, block_duration_minutes,
@@ -66,6 +65,11 @@ Deno.serve(async (req) => {
       auth: { persistSession: false },
     });
 
+    const body = await req.json().catch(() => ({}));
+    const event = typeof body?.event === "string" ? body.event : null;
+    const context = typeof body?.context === "string" ? body.context.slice(0, 200) : null;
+    const metadata = body?.metadata && typeof body.metadata === "object" ? body.metadata : {};
+
     // 1) Já existe bloqueio ativo? Retornar imediatamente.
     const { data: activeBlocks, error: blockErr } = await admin
       .from("user_blocks")
@@ -99,6 +103,20 @@ Deno.serve(async (req) => {
 
     if (!policy.enabled) {
       return json({ blocked: false, policy_disabled: true });
+    }
+
+    const action = event ? `content_protection.${event}` : null;
+    if (action && policy.tracked_actions.includes(action)) {
+      await admin.from("audit_logs").insert({
+        user_id: userId,
+        action,
+        target_table: "content_protection",
+        target_id: null,
+        metadata: {
+          context,
+          ...(metadata as Record<string, unknown>),
+        },
+      });
     }
 
     // 3) Conta detecções relevantes na janela de tempo.

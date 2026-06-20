@@ -27,10 +27,15 @@ const ForgotPassword = () => {
     }
 
     setLoading(true);
-    const { error } = await supabase.auth.resetPasswordForEmail(
-      email.trim().toLowerCase(),
-      { redirectTo: `${window.location.origin}/reset-password` },
-    );
+    // Usa a Edge Function send-password-recovery para que o e-mail seja
+    // enviado pelo template `password_recovery` configurado no Painel
+    // Administrativo (assunto, remetente, logomarca, cores, textos).
+    const { error } = await supabase.functions.invoke("send-password-recovery", {
+      body: {
+        email: email.trim().toLowerCase(),
+        redirect_to: `${window.location.origin}/reset-password`,
+      },
+    });
 
     if (error) {
       toast.error(translateAuthError(error.message));

@@ -1148,6 +1148,7 @@ export type Database = {
         Row: {
           channel: string
           code: string
+          code_hash: string
           created_at: string
           expires_at: string
           failed_attempts: number
@@ -1159,7 +1160,8 @@ export type Database = {
         }
         Insert: {
           channel?: string
-          code: string
+          code?: string
+          code_hash: string
           created_at?: string
           expires_at?: string
           failed_attempts?: number
@@ -1172,6 +1174,7 @@ export type Database = {
         Update: {
           channel?: string
           code?: string
+          code_hash?: string
           created_at?: string
           expires_at?: string
           failed_attempts?: number
@@ -2970,11 +2973,13 @@ export type Database = {
           read_ct: number
         }[]
       }
+      record_free_trial_content_access: { Args: never; Returns: boolean }
       register_cashback_referral: {
         Args: { _referral_code: string; _referred_user_id: string }
         Returns: string
       }
       release_pending_cashback: { Args: never; Returns: number }
+      start_free_trial: { Args: never; Returns: boolean }
     }
     Enums: {
       app_role: "student" | "teacher" | "admin"

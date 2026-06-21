@@ -25,6 +25,7 @@ const ResetPassword = () => {
   const [isRecovery, setIsRecovery] = useState(false);
   const [sessionReady, setSessionReady] = useState(false);
   const [linkExpired, setLinkExpired] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(180); // 3 minutos em segundos
 
   useEffect(() => {
     // Listen for PASSWORD_RECOVERY event from the auth state

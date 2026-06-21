@@ -13,7 +13,10 @@ import PhoneVerification from "@/components/PhoneVerification";
 import { isValidBrazilianPhone } from "@/components/PhoneInput";
 import CpfInput from "@/components/CpfInput";
 import { isValidCPF } from "@/lib/cpfValidator";
-import { Camera, Loader2, CheckCircle2, XCircle, AlertCircle } from "lucide-react";
+import { Camera, Loader2, CheckCircle2, XCircle, AlertCircle, Plus, Trash2, Briefcase, GraduationCap } from "lucide-react";
+
+interface Experience { role: string; org: string; period?: string }
+interface Education { course: string; institution: string; year?: string }
 
 const PersonalDataTab = () => {
   const { user, profile, role, refreshProfile } = useAuth();
@@ -31,6 +34,8 @@ const PersonalDataTab = () => {
   const [pixKey, setPixKey] = useState("");
   const [acceptsMarketing, setAcceptsMarketing] = useState(false);
   const [phoneVerified, setPhoneVerified] = useState(false);
+  const [experiences, setExperiences] = useState<Experience[]>([]);
+  const [education, setEducation] = useState<Education[]>([]);
   const [saving, setSaving] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [slugStatus, setSlugStatus] = useState<"idle" | "checking" | "available" | "taken">("idle");
@@ -109,6 +114,10 @@ const PersonalDataTab = () => {
       setPixKey((profile as any).pix_key || "");
       setAcceptsMarketing((profile as any).accepts_marketing || false);
       setPhoneVerified((profile as any).phone_verified || false);
+      const exp = (profile as any).experiences;
+      setExperiences(Array.isArray(exp) ? exp : []);
+      const edu = (profile as any).education;
+      setEducation(Array.isArray(edu) ? edu : []);
     }
   }, [profile]);
 
@@ -200,6 +209,8 @@ const PersonalDataTab = () => {
       updateData.profile_title = profileTitle;
       updateData.address = address || null;
       updateData.pix_key = pixKey || null;
+      updateData.experiences = experiences.filter((x) => (x.role || "").trim() || (x.org || "").trim());
+      updateData.education = education.filter((x) => (x.course || "").trim() || (x.institution || "").trim());
     }
     const { error } = await supabase
       .from("profiles")

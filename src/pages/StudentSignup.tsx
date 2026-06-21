@@ -16,9 +16,14 @@ import { toast } from "sonner";
 import AreaSelector from "@/components/AreaSelector";
 import { translateAuthError } from "@/lib/translateAuthError";
 import PasswordStrengthChecker, { validatePassword } from "@/components/PasswordStrengthChecker";
+import { useAllPlatformSettings, type BrandingSettings } from "@/hooks/usePlatformSettings";
 
 const StudentSignup = () => {
   const navigate = useNavigate();
+  const { settings } = useAllPlatformSettings();
+  const branding = settings?.branding as BrandingSettings | undefined;
+  const platformName = branding?.platform_name || "Revisão Fácil";
+  const showLogoImage = !!branding?.logo_url && !branding?.use_text_logo;
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -163,6 +168,19 @@ const StudentSignup = () => {
         </Link>
 
         <div className="text-center space-y-2">
+          <Link to="/" className="inline-block">
+            {showLogoImage ? (
+              <div className="flex justify-center">
+                <img
+                  src={branding!.logo_url}
+                  alt={platformName}
+                  className="h-14 max-w-[260px] object-contain"
+                />
+              </div>
+            ) : (
+              <h1 className="font-display text-3xl font-bold text-gradient">{platformName}</h1>
+            )}
+          </Link>
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
             <GraduationCap className="h-7 w-7 text-primary" />
           </div>

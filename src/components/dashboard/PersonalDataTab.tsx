@@ -483,6 +483,13 @@ const PersonalDataTab = () => {
                     onChange={(e) => setEducation((arr) => arr.map((x, idx) => idx === i ? { ...x, institution: e.target.value } : x))}
                     className="bg-secondary"
                   />
+                  <Textarea
+                    placeholder="Descrição (disciplinas, projeto de conclusão, etc.)"
+                    value={edu.description || ""}
+                    onChange={(e) => setEducation((arr) => arr.map((x, idx) => idx === i ? { ...x, description: e.target.value } : x))}
+                    className="bg-secondary"
+                    rows={2}
+                  />
                   <div className="flex gap-2">
                     <Input
                       placeholder="Ano de conclusão"

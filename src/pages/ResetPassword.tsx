@@ -25,6 +25,7 @@ const ResetPassword = () => {
   const [isRecovery, setIsRecovery] = useState(false);
   const [sessionReady, setSessionReady] = useState(false);
   const [linkExpired, setLinkExpired] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(180); // 3 minutos em segundos
 
   useEffect(() => {
     // Listen for PASSWORD_RECOVERY event from the auth state
@@ -53,6 +54,22 @@ const ResetPassword = () => {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  // Contagem regressiva de 3 minutos para redefinição de senha
+  useEffect(() => {
+    if (success || linkExpired) return;
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          setLinkExpired(true);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [success, linkExpired]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -161,6 +178,11 @@ const ResetPassword = () => {
           <p className="text-sm text-muted-foreground">
             Digite sua nova senha abaixo
           </p>
+          {!linkExpired && timeLeft > 0 && (
+            <p className="text-xs font-medium text-amber-500">
+              Tempo restante: {Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, '0')}
+            </p>
+          )}
         </div>
 
         {linkExpired && (

@@ -20,6 +20,7 @@ interface UserWithRole {
   referral_code: number | null;
   active: boolean;
   accepts_marketing: boolean;
+  birth_date?: string | null;
   contract_signed_at?: string | null;
   contract_expires_at?: string | null;
   contract_status?: string | null;
@@ -43,7 +44,7 @@ const AdminUsersTab = () => {
 
   const fetchUsers = async () => {
     setLoading(true);
-    const { data: profiles } = await supabase.from("profiles").select("user_id, name, email, created_at, referral_code, active, accepts_marketing");
+    const { data: profiles } = await supabase.from("profiles").select("user_id, name, email, created_at, referral_code, active, accepts_marketing, birth_date");
     const { data: roles } = await supabase.from("user_roles").select("user_id, role");
     const { data: contracts } = await supabase.from("teacher_contracts" as any).select("teacher_id, signed_at, expires_at, status, contract_text, signature_name, signature_cpf").eq("status", "active");
 
@@ -244,6 +245,7 @@ const AdminUsersTab = () => {
                 <TableHead>Papel</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Contrato</TableHead>
+                <TableHead>Nascimento</TableHead>
                 <TableHead>Cadastro</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
@@ -277,6 +279,9 @@ const AdminUsersTab = () => {
                     ) : (
                       <span className="text-xs text-muted-foreground">—</span>
                     )}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground text-xs">
+                    {u.birth_date ? new Date(u.birth_date + "T00:00:00").toLocaleDateString("pt-BR") : "—"}
                   </TableCell>
                   <TableCell className="text-muted-foreground text-xs">
                     {new Date(u.created_at).toLocaleDateString("pt-BR")}
@@ -346,7 +351,7 @@ const AdminUsersTab = () => {
               ))}
               {filtered.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
                     Nenhum usuário encontrado.
                   </TableCell>
                 </TableRow>

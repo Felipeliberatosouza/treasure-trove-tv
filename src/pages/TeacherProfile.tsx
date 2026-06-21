@@ -619,10 +619,25 @@ const TeacherProfile = () => {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-10">
               {reorderedContent.map((item) => (
+                (() => {
+                  const q = debouncedQuery.toLowerCase();
+                  const hasQuery = q.length >= 2;
+                  const matches = hasQuery && (
+                    item.title.toLowerCase().includes(q) ||
+                    (item.description || "").toLowerCase().includes(q) ||
+                    (item.areas || []).some((a) => a.toLowerCase().includes(q))
+                  );
+                  return (
                 <Link
                   key={item.id}
                   to={`/video/${item.id}`}
-                  className="group rounded-xl border border-border bg-secondary/30 overflow-hidden hover:border-primary/30 transition-colors"
+                  className={`group rounded-xl border bg-secondary/30 overflow-hidden transition-all ${
+                    hasQuery
+                      ? matches
+                        ? "border-primary ring-2 ring-primary/40 shadow-lg shadow-primary/10"
+                        : "border-border opacity-40 hover:opacity-70"
+                      : "border-border hover:border-primary/30"
+                  }`}
                 >
                   <div className="aspect-video bg-muted relative overflow-hidden">
                     {item.thumbnail_url ? (
@@ -635,6 +650,11 @@ const TeacherProfile = () => {
                     <span className="absolute top-2 right-2 text-[10px] bg-background/80 text-foreground rounded px-1.5 py-0.5 font-medium">
                       {item.type === "lesson" ? "Aula" : "Resolução"}
                     </span>
+                    {matches && (
+                      <span className="absolute top-2 left-2 text-[10px] bg-primary text-primary-foreground rounded px-1.5 py-0.5 font-semibold">
+                        Resultado
+                      </span>
+                    )}
                   </div>
                   <div className="p-3 space-y-1">
                     <h3 className="text-sm font-semibold line-clamp-2 group-hover:text-primary transition-colors">{item.title}</h3>
@@ -648,7 +668,67 @@ const TeacherProfile = () => {
                     )}
                   </div>
                 </Link>
+                  );
+                })()
               ))}
+            </div>
+          )}
+
+          {debouncedQuery.length >= 2 && !reordering && (
+            <div className="mb-10">
+              <div className="flex items-center gap-2 mb-3">
+                <h3 className="font-display text-base font-semibold text-muted-foreground">
+                  Resultados de outros professores
+                </h3>
+                {searchingOthers && <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />}
+              </div>
+              {!searchingOthers && otherResults.length === 0 ? (
+                <p className="text-xs text-muted-foreground py-4">
+                  Nenhum conteúdo encontrado em outros professores para "{debouncedQuery}".
+                </p>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                  {otherResults.map((item) => (
+                    <Link
+                      key={`${item.type}-${item.id}`}
+                      to={`/video/${item.id}`}
+                      className="group rounded-lg border border-dashed border-border/60 bg-card/40 overflow-hidden hover:border-border transition-colors"
+                    >
+                      <div className="aspect-video bg-muted relative overflow-hidden">
+                        {item.thumbnail_url ? (
+                          <img src={item.thumbnail_url} alt={item.title} className="h-full w-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
+                        ) : (
+                          <div className="h-full w-full flex items-center justify-center">
+                            <Video className="h-6 w-6 text-muted-foreground/40" />
+                          </div>
+                        )}
+                        <span className="absolute top-1.5 right-1.5 text-[9px] bg-background/80 text-foreground rounded px-1 py-0.5">
+                          {item.type === "lesson" ? "Aula" : "Resolução"}
+                        </span>
+                      </div>
+                      <div className="p-2 space-y-0.5">
+                        <h4 className="text-xs font-medium line-clamp-2 text-muted-foreground group-hover:text-foreground transition-colors">
+                          {item.title}
+                        </h4>
+                        <p className="text-[10px] text-muted-foreground/80">
+                          Por{" "}
+                          {item.teacher_slug ? (
+                            <Link
+                              to={`/${item.teacher_slug}`}
+                              onClick={(e) => e.stopPropagation()}
+                              className="underline hover:text-primary"
+                            >
+                              {item.teacher_name}
+                            </Link>
+                          ) : (
+                            <span>{item.teacher_name}</span>
+                          )}
+                        </p>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 

@@ -100,7 +100,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       .eq("user_id", userId)
       .single();
     
-    if (data && data.active === false) {
+    const isRecoveryFlow =
+      typeof window !== "undefined" &&
+      (window.location.pathname.startsWith("/reset-password") ||
+        window.location.hash.includes("type=recovery"));
+
+    if (data && data.active === false && !isRecoveryFlow) {
       await supabase.auth.signOut();
       setProfile(null);
       setRole(null);

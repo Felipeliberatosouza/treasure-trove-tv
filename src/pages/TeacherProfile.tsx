@@ -3,7 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { Video, Star, ArrowLeft, Eye, Pencil, Save, X, Upload, Loader2, Plus, Trash2, Briefcase, GraduationCap, Clock, GripVertical, ArrowUpDown, Search } from "lucide-react";
+import { Video, Star, ArrowLeft, Eye, Pencil, Save, X, Upload, Loader2, Plus, Trash2, Briefcase, GraduationCap, Clock, GripVertical, ArrowUpDown, Search, MessageCircle, CalendarDays } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -12,6 +12,8 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
+import DoubtForm from "@/components/DoubtForm";
+import BookLessonModal from "@/components/BookLessonModal";
 
 interface Experience { role: string; org: string; period?: string; description?: string }
 interface Education { course: string; institution: string; year?: string; description?: string }
@@ -79,6 +81,7 @@ const TeacherProfile = () => {
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [otherResults, setOtherResults] = useState<OtherTeacherContent[]>([]);
   const [searchingOthers, setSearchingOthers] = useState(false);
+  const [bookOpen, setBookOpen] = useState(false);
 
   // Debounce search input
   useEffect(() => {
@@ -721,6 +724,64 @@ const TeacherProfile = () => {
             </div>
           )}
 
+          {/* Fale com o Professor + Agendar Aula Particular */}
+          {!isOwner && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10">
+              <div className="rounded-xl border border-primary/30 bg-gradient-to-br from-primary/10 via-card to-card p-4 flex flex-col">
+                <div className="flex items-center gap-2 mb-2">
+                  <MessageCircle className="h-4 w-4 text-primary" />
+                  <h3 className="font-display font-semibold">Fale com o Professor — Tire suas Dúvidas</h3>
+                </div>
+                <p className="text-xs text-muted-foreground mb-3">
+                  Envie uma dúvida diretamente para {teacher.name.split(" ")[0]}. As regras de
+                  cobrança e o limite de perguntas seguem as configurações da plataforma.
+                </p>
+                {user ? (
+                  <DoubtForm
+                    teacherId={teacher.user_id}
+                    contentType="teacher_profile"
+                    title="Enviar Dúvida ao Professor"
+                    placeholder={`Descreva sua dúvida para ${teacher.name.split(" ")[0]}...`}
+                  />
+                ) : (
+                  <div className="rounded-lg border border-border bg-secondary/30 p-4 text-center">
+                    <p className="text-sm text-muted-foreground mb-3">
+                      Faça login para enviar uma dúvida ao professor.
+                    </p>
+                    <Link to="/login">
+                      <Button size="sm" variant="outline">Entrar</Button>
+                    </Link>
+                  </div>
+                )}
+              </div>
+
+              <div className="rounded-xl border border-primary/30 bg-gradient-to-br from-primary/10 via-card to-card p-4 flex flex-col">
+                <div className="flex items-center gap-2 mb-2">
+                  <CalendarDays className="h-4 w-4 text-primary" />
+                  <h3 className="font-display font-semibold">Agendar Aula Particular</h3>
+                </div>
+                <p className="text-xs text-muted-foreground mb-3">
+                  Marque uma aula particular com {teacher.name.split(" ")[0]} na agenda dele. Os
+                  valores, janela de cancelamento sem custo e taxa de cancelamento tardio seguem as
+                  regras configuradas no painel administrativo.
+                </p>
+                <div className="mt-auto">
+                  {user ? (
+                    <Button onClick={() => setBookOpen(true)} className="w-full">
+                      <CalendarDays className="h-4 w-4 mr-1" /> Ver horários disponíveis
+                    </Button>
+                  ) : (
+                    <Link to="/login">
+                      <Button variant="outline" className="w-full">
+                        Entrar para agendar
+                      </Button>
+                    </Link>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Experience & Education */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
             {/* Experiences */}
@@ -812,6 +873,15 @@ const TeacherProfile = () => {
       </div>
 
       <Footer />
+
+      {!isOwner && teacher && (
+        <BookLessonModal
+          open={bookOpen}
+          onClose={() => setBookOpen(false)}
+          teacherId={teacher.user_id}
+          teacherName={teacher.name}
+        />
+      )}
 
       <Dialog open={showPreview} onOpenChange={setShowPreview}>
         <DialogContent className="w-[calc(100vw-1rem)] sm:w-full max-w-3xl max-h-[92vh] sm:max-h-[85vh] p-4 sm:p-6 flex flex-col gap-3">

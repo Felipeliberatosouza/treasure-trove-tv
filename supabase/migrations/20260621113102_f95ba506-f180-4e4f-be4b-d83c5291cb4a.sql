@@ -1,0 +1,1 @@
+ALTER TABLE public.student_doubts ALTER COLUMN content_id DROP NOT NULL;

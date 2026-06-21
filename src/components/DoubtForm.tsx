@@ -8,12 +8,14 @@ import { toast } from "sonner";
 import { useDoubtLimits } from "@/hooks/useDoubtLimits";
 
 interface DoubtFormProps {
-  contentId: string;
-  contentType: "lesson" | "exam_solution";
+  contentId?: string;
+  contentType?: "lesson" | "exam_solution" | "teacher_profile";
   teacherId: string;
+  title?: string;
+  placeholder?: string;
 }
 
-const DoubtForm = ({ contentId, contentType, teacherId }: DoubtFormProps) => {
+const DoubtForm = ({ contentId, contentType, teacherId, title, placeholder }: DoubtFormProps) => {
   const { user } = useAuth();
   const [question, setQuestion] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -39,10 +41,10 @@ const DoubtForm = ({ contentId, contentType, teacherId }: DoubtFormProps) => {
       id: doubtId,
       student_id: user.id,
       teacher_id: teacherId,
-      content_id: contentId,
-      content_type: contentType,
+      content_id: contentId ?? null,
+      content_type: contentType ?? "teacher_profile",
       question: question.trim(),
-    });
+    } as any);
 
     if (error) {
       toast.error("Erro ao enviar dúvida. Tente novamente.");
@@ -80,7 +82,7 @@ const DoubtForm = ({ contentId, contentType, teacherId }: DoubtFormProps) => {
     <div className="space-y-3 rounded-xl border border-border bg-secondary/30 p-4">
       <div className="flex items-center gap-2">
         <HelpCircle className="h-5 w-5 text-primary" />
-        <h3 className="text-sm font-semibold">Enviar Dúvida ao Professor</h3>
+        <h3 className="text-sm font-semibold">{title ?? "Enviar Dúvida ao Professor"}</h3>
       </div>
 
       <div className="flex items-start gap-2 rounded-lg bg-card/60 border border-border p-2.5 text-xs text-muted-foreground">
@@ -112,7 +114,7 @@ const DoubtForm = ({ contentId, contentType, teacherId }: DoubtFormProps) => {
       ) : (
         <>
           <Textarea
-            placeholder="Descreva sua dúvida sobre este conteúdo..."
+            placeholder={placeholder ?? "Descreva sua dúvida sobre este conteúdo..."}
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
             rows={3}

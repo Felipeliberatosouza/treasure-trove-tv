@@ -34,9 +34,9 @@ interface BookLessonModalProps {
   onClose: () => void;
   teacherId: string;
   teacherName: string | null;
-  contentId: string;
-  contentType: "lesson" | "exam_solution";
-  contentTitle: string;
+  contentId?: string | null;
+  contentType?: "lesson" | "exam_solution" | null;
+  contentTitle?: string | null;
 }
 
 interface RecurringRow {
@@ -365,14 +365,18 @@ const BookLessonModal = ({
     const { error } = await supabase.from("scheduled_lessons").insert({
       teacher_id: teacherId,
       student_id: user.id,
-      title: `Aula Particular — ${contentTitle}`,
-      description: `Aula particular sobre o conteúdo: ${contentTitle}`,
+      title: contentTitle
+        ? `Aula Particular — ${contentTitle}`
+        : `Aula Particular${teacherName ? ` com ${teacherName}` : ""}`,
+      description: contentTitle
+        ? `Aula particular sobre o conteúdo: ${contentTitle}`
+        : `Aula particular agendada diretamente pela página do professor${teacherName ? ` (${teacherName})` : ""}.`,
       scheduled_at: selectedSlot.toISOString(),
       duration_minutes: cfg.lesson_duration_minutes || 50,
       modality: "online",
       status: "pending",
-      content_id: contentId,
-      content_type: contentType,
+      content_id: contentId ?? null,
+      content_type: contentType ?? null,
       payment_type: useCredit ? "subscription" : "one_off",
       price: useCredit ? 0 : (resourcePrice ?? 0),
     });
@@ -390,8 +394,8 @@ const BookLessonModal = ({
         user_id: user.id,
         subscription_id: subscriptionId,
         resource_type: "aula_particular",
-        content_id: contentId,
-        content_type: contentType,
+        content_id: contentId ?? null,
+        content_type: contentType ?? null,
       });
     }
 

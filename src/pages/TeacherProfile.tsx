@@ -629,6 +629,7 @@ const TeacherProfile = () => {
                       <p className="text-muted-foreground text-xs">
                         {ed.institution}{ed.year ? ` · ${ed.year}` : ""}
                       </p>
+                      {ed.description && <p className="text-muted-foreground text-xs mt-1">{ed.description}</p>}
                     </li>
                   ))}
                 </ul>

@@ -610,6 +610,7 @@ const TeacherProfile = () => {
                       </div>
                       <Input placeholder="Curso / Titulação" maxLength={120} value={ed.course} onChange={(e) => updateEdu(i, "course", e.target.value)} />
                       <Input placeholder="Instituição" maxLength={120} value={ed.institution} onChange={(e) => updateEdu(i, "institution", e.target.value)} />
+                      <Textarea placeholder="Descrição (disciplinas, projeto de conclusão, etc.)" rows={2} maxLength={500} value={ed.description || ""} onChange={(e) => updateEdu(i, "description", e.target.value)} />
                       <Input placeholder="Ano de conclusão" maxLength={20} value={ed.year || ""} onChange={(e) => updateEdu(i, "year", e.target.value)} />
                     </div>
                   ))}

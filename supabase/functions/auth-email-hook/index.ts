@@ -9,6 +9,7 @@ import { MagicLinkEmail } from '../_shared/email-templates/magic-link.tsx'
 import { RecoveryEmail } from '../_shared/email-templates/recovery.tsx'
 import { EmailChangeEmail } from '../_shared/email-templates/email-change.tsx'
 import { ReauthenticationEmail } from '../_shared/email-templates/reauthentication.tsx'
+import { renderAdminEmail } from '../_shared/render-admin-email.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -23,6 +24,20 @@ const EMAIL_SUBJECTS: Record<string, string> = {
   recovery: 'Redefinição de senha',
   email_change: 'Confirme seu novo e-mail',
   reauthentication: 'Seu código de verificação',
+}
+
+// Mapeia o tipo de evento do Supabase Auth para o `template_key` editável
+// no Painel Administrativo (Configurações > E-mails). Quando existir uma
+// linha em `email_templates` com este key e `body_html` preenchido, o
+// e-mail é renderizado com o template do admin (logo, cores, textos e
+// assunto configurados). Caso contrário, cai no template React padrão.
+const ADMIN_TEMPLATE_KEY: Record<string, string> = {
+  signup: 'email_confirmation',
+  recovery: 'password_recovery',
+  magiclink: 'magiclink',
+  invite: 'invite',
+  email_change: 'email_change',
+  reauthentication: 'reauthentication',
 }
 
 // Template mapping
@@ -231,8 +246,8 @@ async function handleWebhook(req: Request): Promise<Response> {
   }
 
   // Render React Email to HTML and plain text
-  const html = await renderAsync(React.createElement(EmailTemplate, templateProps))
-  const text = await renderAsync(React.createElement(EmailTemplate, templateProps), {
+  let html = await renderAsync(React.createElement(EmailTemplate, templateProps))
+  let text = await renderAsync(React.createElement(EmailTemplate, templateProps), {
     plainText: true,
   })
 
@@ -241,6 +256,53 @@ async function handleWebhook(req: Request): Promise<Response> {
     Deno.env.get('SUPABASE_URL')!,
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
   )
+
+  // Override com template do admin quando configurado (Configurações > E-mails)
+  const fallbackSubject = EMAIL_SUBJECTS[emailType] || 'Notification'
+  let subject = fallbackSubject
+  let fromHeader = `${SITE_NAME} <noreply@${FROM_DOMAIN}>`
+
+  const adminKey = ADMIN_TEMPLATE_KEY[emailType]
+  if (adminKey) {
+    const adminTemplateData: Record<string, any> = {
+      name: '',
+      confirmation_link: payload.data.url,
+      recovery_link: payload.data.url,
+      magic_link: payload.data.url,
+      invite_link: payload.data.url,
+      email_change_link: payload.data.url,
+      url: payload.data.url,
+      token: payload.data.token,
+      email: payload.data.email,
+      old_email: payload.data.old_email,
+      new_email: payload.data.new_email,
+    }
+    try {
+      const { data: prof } = await supabase
+        .from('profiles')
+        .select('name')
+        .eq('email', String(payload.data.email).toLowerCase())
+        .maybeSingle()
+      adminTemplateData.name = ((prof as any)?.name || '').split(' ')[0] || ''
+    } catch (e) {
+      console.error('profile lookup failed (non-fatal)', e)
+    }
+
+    const rendered = await renderAdminEmail({
+      supabase,
+      templateKey: adminKey,
+      templateData: adminTemplateData,
+      fallbackSubject,
+      fallbackFromDomain: FROM_DOMAIN,
+      fallbackSiteName: SITE_NAME,
+    })
+    if (rendered) {
+      html = rendered.html
+      text = rendered.text
+      subject = rendered.subject
+      fromHeader = rendered.fromHeader
+    }
+  }
 
   const messageId = crypto.randomUUID()
 
@@ -258,9 +320,9 @@ async function handleWebhook(req: Request): Promise<Response> {
       run_id,
       message_id: messageId,
       to: payload.data.email,
-      from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
+      from: fromHeader,
       sender_domain: SENDER_DOMAIN,
-      subject: EMAIL_SUBJECTS[emailType] || 'Notification',
+      subject,
       html,
       text,
       purpose: 'transactional',

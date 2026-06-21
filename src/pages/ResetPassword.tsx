@@ -163,6 +163,20 @@ const ResetPassword = () => {
           </p>
         </div>
 
+        {linkExpired && (
+          <div className="rounded-md border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
+            <p className="mb-2 font-medium">Link de recuperação expirado</p>
+            <p className="mb-3">
+              Por segurança, o link de recuperação tem validade curta. Solicite um novo e-mail para continuar.
+            </p>
+            <Link
+              to="/forgot-password"
+              className="inline-block rounded bg-destructive px-3 py-1.5 text-xs font-semibold text-destructive-foreground"
+            >
+              Solicitar novo link
+            </Link>
+          </div>
+        )}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />

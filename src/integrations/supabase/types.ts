@@ -1759,7 +1759,7 @@ export type Database = {
           answer: string | null
           answered_at: string | null
           approved_at: string | null
-          content_id: string
+          content_id: string | null
           content_type: string
           created_at: string
           id: string
@@ -1775,7 +1775,7 @@ export type Database = {
           answer?: string | null
           answered_at?: string | null
           approved_at?: string | null
-          content_id: string
+          content_id?: string | null
           content_type?: string
           created_at?: string
           id?: string
@@ -1791,7 +1791,7 @@ export type Database = {
           answer?: string | null
           answered_at?: string | null
           approved_at?: string | null
-          content_id?: string
+          content_id?: string | null
           content_type?: string
           created_at?: string
           id?: string

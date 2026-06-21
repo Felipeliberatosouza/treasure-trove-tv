@@ -436,6 +436,13 @@ const PersonalDataTab = () => {
                     onChange={(e) => setExperiences((arr) => arr.map((x, idx) => idx === i ? { ...x, org: e.target.value } : x))}
                     className="bg-secondary"
                   />
+                  <Textarea
+                    placeholder="Descrição (atribuições, conquistas, etc.)"
+                    value={exp.description || ""}
+                    onChange={(e) => setExperiences((arr) => arr.map((x, idx) => idx === i ? { ...x, description: e.target.value } : x))}
+                    className="bg-secondary"
+                    rows={2}
+                  />
                   <div className="flex gap-2">
                     <Input
                       placeholder="Período (ex: 2020 - 2023)"

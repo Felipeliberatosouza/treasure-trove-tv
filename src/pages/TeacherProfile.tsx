@@ -3,7 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { Video, Star, ArrowLeft, Eye, Pencil, Save, X, Upload, Loader2, Plus, Trash2, Briefcase, GraduationCap, Clock, GripVertical, ArrowUpDown } from "lucide-react";
+import { Video, Star, ArrowLeft, Eye, Pencil, Save, X, Upload, Loader2, Plus, Trash2, Briefcase, GraduationCap, Clock, GripVertical, ArrowUpDown, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -35,6 +35,12 @@ interface ContentItem {
   thumbnail_url: string | null;
   areas: string[] | null;
   type: "lesson" | "exam_solution";
+}
+
+interface OtherTeacherContent extends ContentItem {
+  teacher_id: string;
+  teacher_name: string;
+  teacher_slug: string | null;
 }
 
 const emptyDraft = {
@@ -69,6 +75,72 @@ const TeacherProfile = () => {
   const [savingOrder, setSavingOrder] = useState(false);
   const [dragId, setDragId] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
+  const [otherResults, setOtherResults] = useState<OtherTeacherContent[]>([]);
+  const [searchingOthers, setSearchingOthers] = useState(false);
+
+  // Debounce search input
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedQuery(searchQuery.trim()), 300);
+    return () => clearTimeout(t);
+  }, [searchQuery]);
+
+  // Search other teachers' content
+  useEffect(() => {
+    if (!teacher || debouncedQuery.length < 2) {
+      setOtherResults([]);
+      return;
+    }
+    let cancelled = false;
+    const run = async () => {
+      setSearchingOthers(true);
+      const like = `%${debouncedQuery}%`;
+      const [lessonsRes, examsRes] = await Promise.all([
+        supabase
+          .from("lessons")
+          .select("id, title, description, thumbnail_url, areas, teacher_id")
+          .eq("published", true)
+          .eq("admin_approved", true)
+          .neq("teacher_id", teacher.user_id)
+          .or(`title.ilike.${like},description.ilike.${like}`)
+          .limit(12),
+        supabase
+          .from("exam_solutions")
+          .select("id, title, description, thumbnail_url, areas, teacher_id")
+          .eq("published", true)
+          .eq("admin_approved", true)
+          .neq("teacher_id", teacher.user_id)
+          .or(`title.ilike.${like},description.ilike.${like}`)
+          .limit(12),
+      ]);
+      const combined = [
+        ...((lessonsRes.data || []).map((l: any) => ({ ...l, type: "lesson" as const }))),
+        ...((examsRes.data || []).map((e: any) => ({ ...e, type: "exam_solution" as const }))),
+      ];
+      const teacherIds = Array.from(new Set(combined.map((c) => c.teacher_id)));
+      let teacherMap = new Map<string, { name: string; slug: string | null }>();
+      if (teacherIds.length > 0) {
+        const { data: tProfiles } = await supabase
+          .from("teacher_profiles_public")
+          .select("user_id, name, slug")
+          .in("user_id", teacherIds);
+        (tProfiles || []).forEach((p: any) => teacherMap.set(p.user_id, { name: p.name, slug: p.slug }));
+      }
+      const enriched: OtherTeacherContent[] = combined
+        .filter((c) => teacherMap.has(c.teacher_id))
+        .map((c) => ({
+          ...c,
+          teacher_name: teacherMap.get(c.teacher_id)!.name,
+          teacher_slug: teacherMap.get(c.teacher_id)!.slug,
+        }))
+        .slice(0, 12);
+      if (!cancelled) setOtherResults(enriched);
+      if (!cancelled) setSearchingOthers(false);
+    };
+    run();
+    return () => { cancelled = true; };
+  }, [debouncedQuery, teacher?.user_id]);
 
   useEffect(() => {
     if (!slug) return;

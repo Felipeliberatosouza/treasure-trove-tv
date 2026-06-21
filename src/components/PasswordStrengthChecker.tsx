@@ -12,6 +12,53 @@ const EASY_SEQUENCES = [
   "888888", "999999", "000000", "aaaaaa", "abcabc", "123123",
 ];
 
+// Detecta sequências simples de 4+ caracteres ascendentes/descendentes
+// (ex.: "1234", "abcd", "4321", "dcba") ou repetições do mesmo caractere ("aaaa", "1111").
+function hasSimpleSequence(pwd: string): boolean {
+  if (!pwd || pwd.length < 4) return false;
+  const lower = pwd.toLowerCase();
+  for (let i = 0; i <= lower.length - 4; i++) {
+    const a = lower.charCodeAt(i);
+    const b = lower.charCodeAt(i + 1);
+    const c = lower.charCodeAt(i + 2);
+    const d = lower.charCodeAt(i + 3);
+    // ascendente
+    if (b - a === 1 && c - b === 1 && d - c === 1) return true;
+    // descendente
+    if (a - b === 1 && b - c === 1 && c - d === 1) return true;
+    // repetido
+    if (a === b && b === c && c === d) return true;
+  }
+  return false;
+}
+
+function containsBirthDate(pwd: string, birthDate?: string): boolean {
+  if (!birthDate || !pwd) return false;
+  const clean = birthDate.replace(/\D/g, "");
+  if (clean.length !== 8) return false;
+  const dd = clean.slice(0, 2);
+  const mm = clean.slice(2, 4);
+  const yyyy = clean.slice(4, 8);
+  // Quando o input é ISO (YYYY-MM-DD) reorganizamos
+  const isISO = /^\d{4}-\d{2}-\d{2}$/.test(birthDate);
+  const D = isISO ? clean.slice(6, 8) : dd;
+  const M = isISO ? clean.slice(4, 6) : mm;
+  const Y = isISO ? clean.slice(0, 4) : yyyy;
+  const yy = Y.slice(2, 4);
+  const variants = new Set<string>([
+    `${D}${M}${Y}`,
+    `${D}${M}${yy}`,
+    `${Y}${M}${D}`,
+    `${yy}${M}${D}`,
+    `${M}${D}${Y}`,
+    `${M}${D}${yy}`,
+    Y,
+    `${D}${M}`,
+    `${M}${D}`,
+  ]);
+  return Array.from(variants).some((v) => v.length >= 4 && pwd.includes(v));
+}
+
 const PasswordStrengthChecker = ({ password, birthDate }: PasswordStrengthCheckerProps) => {
   const criteria = useMemo(() => {
     const pwd = password || "";
@@ -21,24 +68,10 @@ const PasswordStrengthChecker = ({ password, birthDate }: PasswordStrengthChecke
     const hasNumber = /\d/.test(pwd);
     const hasSpecial = /[^A-Za-z0-9]/.test(pwd);
 
-    // Check if password contains birth date digits (e.g. 19900115, 15011990, 150190)
-    let isNotBirthDate = true;
-    if (birthDate && pwd.length >= 6) {
-      const clean = birthDate.replace(/\D/g, "");
-      if (clean.length === 8) {
-        const variants = [
-          clean,
-          clean.slice(6, 8) + clean.slice(4, 6) + clean.slice(0, 4),
-          clean.slice(6, 8) + clean.slice(4, 6) + clean.slice(2, 4),
-          clean.slice(0, 4) + clean.slice(4, 6) + clean.slice(6, 8),
-        ];
-        isNotBirthDate = !variants.some((v) => pwd.includes(v));
-      }
-    }
-
-    const isNotEasySequence = !EASY_SEQUENCES.some(
-      (seq) => pwd.toLowerCase().includes(seq)
-    );
+    const isNotBirthDate = !containsBirthDate(pwd, birthDate);
+    const isNotEasySequence =
+      !EASY_SEQUENCES.some((seq) => pwd.toLowerCase().includes(seq)) &&
+      !hasSimpleSequence(pwd);
 
     return [
       { label: "Mínimo de 6 caracteres", met: hasMinLength },
@@ -80,18 +113,10 @@ export function validatePassword(password: string, birthDate?: string): string |
   if (!/[A-Z]/.test(password)) return "A senha deve conter uma letra maiúscula";
   if (!/\d/.test(password)) return "A senha deve conter um número";
   if (!/[^A-Za-z0-9]/.test(password)) return "A senha deve conter um caractere especial";
-  if (birthDate) {
-    const clean = birthDate.replace(/\D/g, "");
-    if (clean.length === 8) {
-      const variants = [
-        clean,
-        clean.slice(6, 8) + clean.slice(4, 6) + clean.slice(0, 4),
-        clean.slice(6, 8) + clean.slice(4, 6) + clean.slice(2, 4),
-      ];
-      if (variants.some((v) => password.includes(v))) return "A senha não pode conter sua data de nascimento";
-    }
+  if (containsBirthDate(password, birthDate)) return "A senha não pode conter sua data de nascimento";
+  if (EASY_SEQUENCES.some((seq) => password.toLowerCase().includes(seq)) || hasSimpleSequence(password)) {
+    return "A senha não pode conter sequências simples (ex.: 1234, abcd, aaaa)";
   }
-  if (EASY_SEQUENCES.some((seq) => password.toLowerCase().includes(seq))) return "A senha não pode ser uma sequência fácil";
   return null;
 }
 

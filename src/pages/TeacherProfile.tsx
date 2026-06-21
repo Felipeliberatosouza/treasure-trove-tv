@@ -81,6 +81,7 @@ const TeacherProfile = () => {
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [otherResults, setOtherResults] = useState<OtherTeacherContent[]>([]);
   const [searchingOthers, setSearchingOthers] = useState(false);
+  const [bookOpen, setBookOpen] = useState(false);
 
   // Debounce search input
   useEffect(() => {

@@ -2,6 +2,7 @@ import * as React from 'npm:react@18.3.1'
 import { renderAsync } from 'npm:@react-email/components@0.0.22'
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { TEMPLATES } from '../_shared/transactional-email-templates/registry.ts'
+import { buildEmailLogoHtml, escapeHtml } from '../_shared/email-logo.ts'
 
 // Configuration baked in at scaffold time — do NOT change these manually.
 // To update, re-run the email domain setup flow.
@@ -421,35 +422,142 @@ Deno.serve(async (req) => {
       ? template.subject(templateData)
       : template.subject
 
-  // 5.2 Resolve sender (From: header) — admin-configured per template_key
-  // Falls back to platform default (SITE_NAME <noreply@FROM_DOMAIN>) when not set.
+  // 5.2 Override rendered HTML/subject/sender with admin-configured template
+  // (email_templates table). When `body_html` is present, build the email
+  // using the SAME wrapper as the admin preview (logo, colors, footer),
+  // so the sent e-mail matches what the admin sees in Configurações > E-mails.
   let fromHeader = `${SITE_NAME} <noreply@${FROM_DOMAIN}>`
-  // Resolved subject can also be overridden per template_key from the admin panel.
   let finalSubject = resolvedSubject
+  let platformName = SITE_NAME
   try {
-    const { data: tplSender } = await supabase
+    const { data: brandingRow } = await supabase
+      .from('platform_settings')
+      .select('value')
+      .eq('key', 'branding')
+      .maybeSingle()
+    const brandingVal = (brandingRow?.value as any) || {}
+    if (brandingVal.platform_name) platformName = String(brandingVal.platform_name)
+
+    const { data: contactRow } = await supabase
+      .from('platform_settings')
+      .select('value')
+      .eq('key', 'contact')
+      .maybeSingle()
+    const contactVal = (contactRow?.value as any) || {}
+
+    const { data: tplCfg2 } = await supabase
       .from('email_templates')
-      .select('from_email, from_name, subject')
+      .select(
+        'from_email, from_name, subject, body_html, logo_url, use_uploaded_logo, text_color, heading_color, link_color, button_color, button_text_color, slogan_color, font_family, show_social_footer, always_send'
+      )
       .eq('template_key', templateName)
       .maybeSingle()
-    const customEmail = (tplSender?.from_email || '').trim()
-    const customName = (tplSender?.from_name || '').trim()
+
+    // Sender override
+    const customEmail = (tplCfg2?.from_email || '').trim()
+    const customName = (tplCfg2?.from_name || '').trim()
+    const senderName = customName || platformName
     if (customEmail) {
-      const name = customName || SITE_NAME
-      fromHeader = `${name} <${customEmail}>`
-    } else if (customName) {
-      fromHeader = `${customName} <noreply@${FROM_DOMAIN}>`
+      fromHeader = `${senderName} <${customEmail}>`
+    } else {
+      fromHeader = `${senderName} <noreply@${FROM_DOMAIN}>`
     }
-    const customSubject = (tplSender?.subject || '').trim()
-    if (customSubject) {
-      // Substitui placeholders simples {{key}} a partir de templateData
-      finalSubject = customSubject.replace(/\{\{\s*([\w.]+)\s*\}\}/g, (_m, k) => {
-        const v = (templateData as any)?.[k]
+
+    // Subject override (with {{placeholders}})
+    const mergedData = { platform_name: platformName, ...enrichedTemplateData }
+    const renderPlaceholders = (s: string) =>
+      s.replace(/\{\{\s*([\w.]+)\s*\}\}/g, (_m, k) => {
+        const v = (mergedData as any)?.[k]
         return v === undefined || v === null ? '' : String(v)
       })
+    const customSubject = (tplCfg2?.subject || '').trim()
+    if (customSubject) {
+      finalSubject = renderPlaceholders(customSubject)
+    }
+
+    // Body override → build HTML matching the admin preview
+    if (tplCfg2?.body_html && tplCfg2.body_html.trim().length > 0) {
+      const textColor = tplCfg2.text_color || '#333333'
+      const headingColor = tplCfg2.heading_color || '#dc2626'
+      const linkColor = tplCfg2.link_color || '#6366f1'
+      const buttonColor = tplCfg2.button_color || '#6366f1'
+      const buttonTextColor = tplCfg2.button_text_color || '#ffffff'
+      const sloganColor = tplCfg2.slogan_color || '#6b7280'
+      const fontFamily = tplCfg2.font_family || 'Arial, sans-serif'
+      const effectiveLogoUrl = tplCfg2.logo_url || brandingVal.logo_url || ''
+
+      const logoHtml = buildEmailLogoHtml({
+        logoUrl: effectiveLogoUrl,
+        useUploadedLogo: tplCfg2.use_uploaded_logo !== false,
+        platformName,
+        slogan: brandingVal.slogan,
+        headingColor,
+        sloganColor,
+      })
+
+      let body = renderPlaceholders(tplCfg2.body_html)
+      // Apply heading color to h1/h2/h3
+      body = body.replace(/<h([1-3])([^>]*)>/gi, (match, level, attrs) => {
+        if (/style=/.test(attrs)) {
+          return match.replace(/color:[^;"']*/i, `color:${headingColor}`)
+        }
+        return `<h${level}${attrs} style="color:${headingColor};">`
+      })
+      // Apply button color to elements with explicit background color
+      body = body.replace(/background-color:\s*#[0-9a-fA-F]{3,6}/gi, `background-color:${buttonColor}`)
+      body = body.replace(/background:\s*#[0-9a-fA-F]{3,6}/gi, `background:${buttonColor}`)
+      body = body.replace(
+        /(<a\b[^>]*style="[^"]*background(?:-color)?:\s*[^;"]*;[^"]*)(color:\s*#[0-9a-fA-F]{3,6})/gi,
+        (_m, pre) => `${pre}color:${buttonTextColor}`
+      )
+
+      // Footer (contatos + redes sociais)
+      let footerHtml = ''
+      if (tplCfg2.show_social_footer) {
+        const lines: string[] = []
+        if (contactVal.email) lines.push(`📧 ${escapeHtml(contactVal.email)}`)
+        if (contactVal.phone) lines.push(`📞 ${escapeHtml(contactVal.phone)}`)
+        if (contactVal.whatsapp) lines.push(`💬 WhatsApp: ${escapeHtml(contactVal.whatsapp)}`)
+        const socials: string[] = []
+        const linkStyle = `color:${linkColor};text-decoration:none;`
+        if (contactVal.instagram) socials.push(`<a href="https://instagram.com/${escapeHtml(String(contactVal.instagram).replace('@',''))}" style="${linkStyle}">Instagram</a>`)
+        if (contactVal.youtube) socials.push(`<a href="${escapeHtml(contactVal.youtube)}" style="${linkStyle}">YouTube</a>`)
+        if (contactVal.facebook) socials.push(`<a href="${escapeHtml(contactVal.facebook)}" style="${linkStyle}">Facebook</a>`)
+        if (contactVal.tiktok) socials.push(`<a href="https://tiktok.com/@${escapeHtml(String(contactVal.tiktok).replace('@',''))}" style="${linkStyle}">TikTok</a>`)
+        footerHtml = `
+          <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0;" />
+          <div style="text-align:center;font-size:12px;color:#6b7280;">
+            ${lines.map((l) => `<p style="margin:4px 0;">${l}</p>`).join('')}
+            ${socials.length ? `<p style="margin:8px 0;">${socials.join(' · ')}</p>` : ''}
+            <p style="margin:8px 0;color:#9ca3af;">© ${new Date().getFullYear()} ${escapeHtml(platformName)}</p>
+          </div>`
+      }
+
+      const innerHtml = `
+        <div style="max-width:600px;margin:0 auto;font-family:${fontFamily};background:#ffffff;padding:24px;border-radius:8px;color:${textColor};">
+          ${logoHtml}
+          ${body}
+          ${footerHtml}
+        </div>`
+
+      html = `<!doctype html><html><head><meta charset="utf-8" /><title>${escapeHtml(finalSubject)}</title></head><body style="margin:0;background:#f3f4f6;padding:16px 0;">${innerHtml}</body></html>`
+      // Plain-text fallback: strip tags from the body
+      plainText = body
+        .replace(/<style[\s\S]*?<\/style>/gi, '')
+        .replace(/<br\s*\/?>(\s*)/gi, '\n')
+        .replace(/<\/(p|div|h[1-6]|li)>/gi, '\n')
+        .replace(/<[^>]+>/g, '')
+        .replace(/&nbsp;/g, ' ')
+        .replace(/&amp;/g, '&')
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'")
+        .replace(/\n{3,}/g, '\n\n')
+        .trim()
     }
   } catch (e) {
-    console.error('Custom sender lookup failed (non-fatal)', e)
+    console.error('DB template render failed (fallback to React template)', e)
   }
 
   // 5. Enqueue the pre-rendered email for async processing by the dispatcher.

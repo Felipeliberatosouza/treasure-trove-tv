@@ -15,8 +15,8 @@ import CpfInput from "@/components/CpfInput";
 import { isValidCPF } from "@/lib/cpfValidator";
 import { Camera, Loader2, CheckCircle2, XCircle, AlertCircle, Plus, Trash2, Briefcase, GraduationCap } from "lucide-react";
 
-interface Experience { role: string; org: string; period?: string }
-interface Education { course: string; institution: string; year?: string }
+interface Experience { role: string; org: string; period?: string; description?: string }
+interface Education { course: string; institution: string; year?: string; description?: string }
 
 const PersonalDataTab = () => {
   const { user, profile, role, refreshProfile } = useAuth();

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Lock, Eye, EyeOff, CheckCircle } from "lucide-react";
 import PasswordStrengthChecker, { validatePassword } from "@/components/PasswordStrengthChecker";
+import TwoFactorChallenge from "@/components/TwoFactorChallenge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
@@ -27,6 +28,7 @@ const ResetPassword = () => {
   const [linkExpired, setLinkExpired] = useState(false);
   const [timeLeft, setTimeLeft] = useState(180); // 3 minutos em segundos
   const [birthDate, setBirthDate] = useState<string | undefined>(undefined);
+  const [needsMfa, setNeedsMfa] = useState(false);
 
   useEffect(() => {
     // Listen for PASSWORD_RECOVERY event from the auth state
@@ -115,6 +117,13 @@ const ResetPassword = () => {
     if (error) {
       const msg = error.message || "";
       const isSessionMissing = /session|jwt|token/i.test(msg) && /missing|expired|invalid|not found/i.test(msg);
+      const isAal2Required = /aal2/i.test(msg) || /mfa/i.test(msg);
+      if (isAal2Required) {
+        setNeedsMfa(true);
+        setLoading(false);
+        toast.info("Confirme o código do seu autenticador para redefinir a senha.");
+        return;
+      }
       if (isSessionMissing) {
         setLinkExpired(true);
         toast.error(

@@ -710,19 +710,8 @@ const TeacherProfile = () => {
                         <h4 className="text-xs font-medium line-clamp-2 text-muted-foreground group-hover:text-foreground transition-colors">
                           {item.title}
                         </h4>
-                        <p className="text-[10px] text-muted-foreground/80">
-                          Por{" "}
-                          {item.teacher_slug ? (
-                            <Link
-                              to={`/${item.teacher_slug}`}
-                              onClick={(e) => e.stopPropagation()}
-                              className="underline hover:text-primary"
-                            >
-                              {item.teacher_name}
-                            </Link>
-                          ) : (
-                            <span>{item.teacher_name}</span>
-                          )}
+                        <p className="text-[10px] text-muted-foreground/80 italic">
+                          Por {item.teacher_name}
                         </p>
                       </div>
                     </Link>

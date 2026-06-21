@@ -178,6 +178,11 @@ const ResetPassword = () => {
           <p className="text-sm text-muted-foreground">
             Digite sua nova senha abaixo
           </p>
+          {!linkExpired && timeLeft > 0 && (
+            <p className="text-xs font-medium text-amber-500">
+              Tempo restante: {Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, '0')}
+            </p>
+          )}
         </div>
 
         {linkExpired && (

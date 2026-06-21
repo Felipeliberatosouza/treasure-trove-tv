@@ -13,8 +13,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 
-interface Experience { role: string; org: string; period?: string }
-interface Education { course: string; institution: string; year?: string }
+interface Experience { role: string; org: string; period?: string; description?: string }
+interface Education { course: string; institution: string; year?: string; description?: string }
 
 interface TeacherData {
   name: string;
@@ -569,6 +569,7 @@ const TeacherProfile = () => {
                       </div>
                       <Input placeholder="Cargo / Função" maxLength={120} value={exp.role} onChange={(e) => updateExp(i, "role", e.target.value)} />
                       <Input placeholder="Empresa / Instituição" maxLength={120} value={exp.org} onChange={(e) => updateExp(i, "org", e.target.value)} />
+                      <Textarea placeholder="Descrição (atribuições, conquistas, etc.)" rows={2} maxLength={500} value={exp.description || ""} onChange={(e) => updateExp(i, "description", e.target.value)} />
                       <Input placeholder="Período (ex.: 2018 - 2022)" maxLength={60} value={exp.period || ""} onChange={(e) => updateExp(i, "period", e.target.value)} />
                     </div>
                   ))}
@@ -586,6 +587,7 @@ const TeacherProfile = () => {
                       <p className="text-muted-foreground text-xs">
                         {exp.org}{exp.period ? ` · ${exp.period}` : ""}
                       </p>
+                      {exp.description && <p className="text-muted-foreground text-xs mt-1">{exp.description}</p>}
                     </li>
                   ))}
                 </ul>
@@ -609,6 +611,7 @@ const TeacherProfile = () => {
                       </div>
                       <Input placeholder="Curso / Titulação" maxLength={120} value={ed.course} onChange={(e) => updateEdu(i, "course", e.target.value)} />
                       <Input placeholder="Instituição" maxLength={120} value={ed.institution} onChange={(e) => updateEdu(i, "institution", e.target.value)} />
+                      <Textarea placeholder="Descrição (disciplinas, projeto de conclusão, etc.)" rows={2} maxLength={500} value={ed.description || ""} onChange={(e) => updateEdu(i, "description", e.target.value)} />
                       <Input placeholder="Ano de conclusão" maxLength={20} value={ed.year || ""} onChange={(e) => updateEdu(i, "year", e.target.value)} />
                     </div>
                   ))}
@@ -626,6 +629,7 @@ const TeacherProfile = () => {
                       <p className="text-muted-foreground text-xs">
                         {ed.institution}{ed.year ? ` · ${ed.year}` : ""}
                       </p>
+                      {ed.description && <p className="text-muted-foreground text-xs mt-1">{ed.description}</p>}
                     </li>
                   ))}
                 </ul>

@@ -15,8 +15,8 @@ import CpfInput from "@/components/CpfInput";
 import { isValidCPF } from "@/lib/cpfValidator";
 import { Camera, Loader2, CheckCircle2, XCircle, AlertCircle, Plus, Trash2, Briefcase, GraduationCap } from "lucide-react";
 
-interface Experience { role: string; org: string; period?: string }
-interface Education { course: string; institution: string; year?: string }
+interface Experience { role: string; org: string; period?: string; description?: string }
+interface Education { course: string; institution: string; year?: string; description?: string }
 
 const PersonalDataTab = () => {
   const { user, profile, role, refreshProfile } = useAuth();
@@ -436,6 +436,13 @@ const PersonalDataTab = () => {
                     onChange={(e) => setExperiences((arr) => arr.map((x, idx) => idx === i ? { ...x, org: e.target.value } : x))}
                     className="bg-secondary"
                   />
+                  <Textarea
+                    placeholder="Descrição (atribuições, conquistas, etc.)"
+                    value={exp.description || ""}
+                    onChange={(e) => setExperiences((arr) => arr.map((x, idx) => idx === i ? { ...x, description: e.target.value } : x))}
+                    className="bg-secondary"
+                    rows={2}
+                  />
                   <div className="flex gap-2">
                     <Input
                       placeholder="Período (ex: 2020 - 2023)"
@@ -475,6 +482,13 @@ const PersonalDataTab = () => {
                     value={edu.institution}
                     onChange={(e) => setEducation((arr) => arr.map((x, idx) => idx === i ? { ...x, institution: e.target.value } : x))}
                     className="bg-secondary"
+                  />
+                  <Textarea
+                    placeholder="Descrição (disciplinas, projeto de conclusão, etc.)"
+                    value={edu.description || ""}
+                    onChange={(e) => setEducation((arr) => arr.map((x, idx) => idx === i ? { ...x, description: e.target.value } : x))}
+                    className="bg-secondary"
+                    rows={2}
                   />
                   <div className="flex gap-2">
                     <Input

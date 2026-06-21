@@ -13,7 +13,10 @@ import PhoneVerification from "@/components/PhoneVerification";
 import { isValidBrazilianPhone } from "@/components/PhoneInput";
 import CpfInput from "@/components/CpfInput";
 import { isValidCPF } from "@/lib/cpfValidator";
-import { Camera, Loader2, CheckCircle2, XCircle, AlertCircle } from "lucide-react";
+import { Camera, Loader2, CheckCircle2, XCircle, AlertCircle, Plus, Trash2, Briefcase, GraduationCap } from "lucide-react";
+
+interface Experience { role: string; org: string; period?: string }
+interface Education { course: string; institution: string; year?: string }
 
 const PersonalDataTab = () => {
   const { user, profile, role, refreshProfile } = useAuth();
@@ -31,6 +34,8 @@ const PersonalDataTab = () => {
   const [pixKey, setPixKey] = useState("");
   const [acceptsMarketing, setAcceptsMarketing] = useState(false);
   const [phoneVerified, setPhoneVerified] = useState(false);
+  const [experiences, setExperiences] = useState<Experience[]>([]);
+  const [education, setEducation] = useState<Education[]>([]);
   const [saving, setSaving] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [slugStatus, setSlugStatus] = useState<"idle" | "checking" | "available" | "taken">("idle");
@@ -111,6 +116,22 @@ const PersonalDataTab = () => {
       setPhoneVerified((profile as any).phone_verified || false);
     }
   }, [profile]);
+
+  useEffect(() => {
+    if (!user || role !== "teacher") return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("experiences, education")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (cancelled || !data) return;
+      setExperiences(Array.isArray((data as any).experiences) ? (data as any).experiences : []);
+      setEducation(Array.isArray((data as any).education) ? (data as any).education : []);
+    })();
+    return () => { cancelled = true; };
+  }, [user, role]);
 
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -200,6 +221,8 @@ const PersonalDataTab = () => {
       updateData.profile_title = profileTitle;
       updateData.address = address || null;
       updateData.pix_key = pixKey || null;
+      updateData.experiences = experiences.filter((x) => (x.role || "").trim() || (x.org || "").trim());
+      updateData.education = education.filter((x) => (x.course || "").trim() || (x.institution || "").trim());
     }
     const { error } = await supabase
       .from("profiles")
@@ -386,6 +409,86 @@ const PersonalDataTab = () => {
             <div>
               <label className="text-sm text-muted-foreground mb-1 block">Bio</label>
               <Textarea value={bio} onChange={(e) => setBio(e.target.value)} className="bg-secondary" rows={3} />
+            </div>
+            <div className="space-y-2 pt-2">
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium text-foreground flex items-center gap-2">
+                  <Briefcase className="h-4 w-4" /> Minha Experiência
+                </label>
+                <Button type="button" size="sm" variant="outline" onClick={() => setExperiences((arr) => [...arr, { role: "", org: "", period: "" }])}>
+                  <Plus className="h-3.5 w-3.5 mr-1" /> Adicionar
+                </Button>
+              </div>
+              {experiences.length === 0 && (
+                <p className="text-xs text-muted-foreground">Nenhuma experiência cadastrada.</p>
+              )}
+              {experiences.map((exp, i) => (
+                <div key={i} className="rounded-md border border-border p-3 space-y-2 bg-secondary/40">
+                  <Input
+                    placeholder="Cargo / Função"
+                    value={exp.role}
+                    onChange={(e) => setExperiences((arr) => arr.map((x, idx) => idx === i ? { ...x, role: e.target.value } : x))}
+                    className="bg-secondary"
+                  />
+                  <Input
+                    placeholder="Empresa / Instituição"
+                    value={exp.org}
+                    onChange={(e) => setExperiences((arr) => arr.map((x, idx) => idx === i ? { ...x, org: e.target.value } : x))}
+                    className="bg-secondary"
+                  />
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Período (ex: 2020 - 2023)"
+                      value={exp.period || ""}
+                      onChange={(e) => setExperiences((arr) => arr.map((x, idx) => idx === i ? { ...x, period: e.target.value } : x))}
+                      className="bg-secondary flex-1"
+                    />
+                    <Button type="button" size="icon" variant="ghost" onClick={() => setExperiences((arr) => arr.filter((_, idx) => idx !== i))}>
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="space-y-2 pt-2">
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium text-foreground flex items-center gap-2">
+                  <GraduationCap className="h-4 w-4" /> Minha Formação Acadêmica
+                </label>
+                <Button type="button" size="sm" variant="outline" onClick={() => setEducation((arr) => [...arr, { course: "", institution: "", year: "" }])}>
+                  <Plus className="h-3.5 w-3.5 mr-1" /> Adicionar
+                </Button>
+              </div>
+              {education.length === 0 && (
+                <p className="text-xs text-muted-foreground">Nenhuma formação cadastrada.</p>
+              )}
+              {education.map((edu, i) => (
+                <div key={i} className="rounded-md border border-border p-3 space-y-2 bg-secondary/40">
+                  <Input
+                    placeholder="Curso / Titulação"
+                    value={edu.course}
+                    onChange={(e) => setEducation((arr) => arr.map((x, idx) => idx === i ? { ...x, course: e.target.value } : x))}
+                    className="bg-secondary"
+                  />
+                  <Input
+                    placeholder="Instituição"
+                    value={edu.institution}
+                    onChange={(e) => setEducation((arr) => arr.map((x, idx) => idx === i ? { ...x, institution: e.target.value } : x))}
+                    className="bg-secondary"
+                  />
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Ano de conclusão"
+                      value={edu.year || ""}
+                      onChange={(e) => setEducation((arr) => arr.map((x, idx) => idx === i ? { ...x, year: e.target.value } : x))}
+                      className="bg-secondary flex-1"
+                    />
+                    <Button type="button" size="icon" variant="ghost" onClick={() => setEducation((arr) => arr.filter((_, idx) => idx !== i))}>
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
             </div>
           </>
         )}

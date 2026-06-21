@@ -569,6 +569,7 @@ const TeacherProfile = () => {
                       </div>
                       <Input placeholder="Cargo / Função" maxLength={120} value={exp.role} onChange={(e) => updateExp(i, "role", e.target.value)} />
                       <Input placeholder="Empresa / Instituição" maxLength={120} value={exp.org} onChange={(e) => updateExp(i, "org", e.target.value)} />
+                      <Textarea placeholder="Descrição (atribuições, conquistas, etc.)" rows={2} maxLength={500} value={exp.description || ""} onChange={(e) => updateExp(i, "description", e.target.value)} />
                       <Input placeholder="Período (ex.: 2018 - 2022)" maxLength={60} value={exp.period || ""} onChange={(e) => updateExp(i, "period", e.target.value)} />
                     </div>
                   ))}

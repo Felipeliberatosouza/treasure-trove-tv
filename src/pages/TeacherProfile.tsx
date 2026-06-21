@@ -518,6 +518,36 @@ const TeacherProfile = () => {
             )
           )}
 
+          {!editing && !reordering && (
+            <div className="max-w-xl mx-auto mb-8">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                <Input
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder={`Buscar conteúdos de ${teacher.name.split(" ")[0] || "professor"}...`}
+                  className="pl-9 pr-9"
+                  maxLength={100}
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery("")}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted"
+                    aria-label="Limpar busca"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                )}
+              </div>
+              {debouncedQuery.length >= 2 && (
+                <p className="text-[11px] text-muted-foreground mt-1.5 text-center">
+                  Resultados destacados são deste professor. Conteúdos de outros professores aparecem abaixo.
+                </p>
+              )}
+            </div>
+          )}
+
           <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
             <h2 className="font-display text-lg font-semibold">Conteúdos do Professor</h2>
             {isOwner && content.length > 1 && (

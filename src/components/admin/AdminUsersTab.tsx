@@ -245,7 +245,7 @@ const AdminUsersTab = () => {
                 <TableHead>Papel</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Contrato</TableHead>
-                <TableHead>Nascimento</TableHead>
+                <TableHead>Aniversário</TableHead>
                 <TableHead>Cadastro</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>

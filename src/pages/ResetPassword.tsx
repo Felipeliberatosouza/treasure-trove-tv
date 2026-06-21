@@ -23,12 +23,15 @@ const ResetPassword = () => {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [isRecovery, setIsRecovery] = useState(false);
+  const [sessionReady, setSessionReady] = useState(false);
+  const [linkExpired, setLinkExpired] = useState(false);
 
   useEffect(() => {
     // Listen for PASSWORD_RECOVERY event from the auth state
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "PASSWORD_RECOVERY") {
         setIsRecovery(true);
+        setSessionReady(!!session);
       }
     });
 
@@ -37,6 +40,16 @@ const ResetPassword = () => {
     if (hash.includes("type=recovery")) {
       setIsRecovery(true);
     }
+
+    // Detect link errors in the URL hash (expired/invalid recovery link)
+    if (hash.includes("error") && (hash.includes("expired") || hash.includes("invalid"))) {
+      setLinkExpired(true);
+    }
+
+    // Confirm a valid recovery session exists
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) setSessionReady(true);
+    });
 
     return () => subscription.unsubscribe();
   }, []);
@@ -59,10 +72,31 @@ const ResetPassword = () => {
     }
 
     setLoading(true);
+
+    // Make sure we still have a valid recovery session before calling updateUser.
+    const { data: { session: currentSession } } = await supabase.auth.getSession();
+    if (!currentSession) {
+      setLoading(false);
+      setLinkExpired(true);
+      toast.error(
+        "Seu link de recuperação expirou. Solicite um novo e-mail de recuperação.",
+      );
+      return;
+    }
+
     const { error } = await supabase.auth.updateUser({ password });
 
     if (error) {
-      toast.error(translateAuthError(error.message));
+      const msg = error.message || "";
+      const isSessionMissing = /session|jwt|token/i.test(msg) && /missing|expired|invalid|not found/i.test(msg);
+      if (isSessionMissing) {
+        setLinkExpired(true);
+        toast.error(
+          "Seu link de recuperação expirou. Solicite um novo e-mail de recuperação.",
+        );
+      } else {
+        toast.error(translateAuthError(msg));
+      }
     } else {
       setSuccess(true);
       toast.success("Senha redefinida com sucesso!");

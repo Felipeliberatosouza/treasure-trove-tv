@@ -171,6 +171,33 @@ const ResetPassword = () => {
     );
   }
 
+  if (needsMfa) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background px-4">
+        <TwoFactorChallenge
+          onVerified={async () => {
+            setLoading(true);
+            const { error } = await supabase.auth.updateUser({ password });
+            if (error) {
+              toast.error(translateAuthError(error.message));
+              setLoading(false);
+              setNeedsMfa(false);
+            } else {
+              setSuccess(true);
+              setNeedsMfa(false);
+              toast.success("Senha redefinida com sucesso!");
+              setTimeout(() => navigate("/login"), 3000);
+            }
+          }}
+          onCancel={() => {
+            setNeedsMfa(false);
+            navigate("/login");
+          }}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <motion.div

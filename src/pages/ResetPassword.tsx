@@ -26,6 +26,7 @@ const ResetPassword = () => {
   const [sessionReady, setSessionReady] = useState(false);
   const [linkExpired, setLinkExpired] = useState(false);
   const [timeLeft, setTimeLeft] = useState(180); // 3 minutos em segundos
+  const [birthDate, setBirthDate] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     // Listen for PASSWORD_RECOVERY event from the auth state
@@ -47,9 +48,17 @@ const ResetPassword = () => {
       setLinkExpired(true);
     }
 
-    // Confirm a valid recovery session exists
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) setSessionReady(true);
+    // Confirm a valid recovery session exists and load profile birth date
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (session) {
+        setSessionReady(true);
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("birth_date")
+          .eq("user_id", session.user.id)
+          .maybeSingle();
+        if (profile?.birth_date) setBirthDate(profile.birth_date as string);
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -78,7 +87,7 @@ const ResetPassword = () => {
       toast.error("Preencha todos os campos");
       return;
     }
-    const pwdError = validatePassword(password);
+    const pwdError = validatePassword(password, birthDate);
     if (pwdError) {
       toast.error(pwdError);
       return;
@@ -217,7 +226,7 @@ const ResetPassword = () => {
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           </div>
-          <PasswordStrengthChecker password={password} />
+          <PasswordStrengthChecker password={password} birthDate={birthDate} />
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input

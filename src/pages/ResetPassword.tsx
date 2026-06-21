@@ -55,6 +55,22 @@ const ResetPassword = () => {
     return () => subscription.unsubscribe();
   }, []);
 
+  // Contagem regressiva de 3 minutos para redefinição de senha
+  useEffect(() => {
+    if (success || linkExpired) return;
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          setLinkExpired(true);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [success, linkExpired]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 

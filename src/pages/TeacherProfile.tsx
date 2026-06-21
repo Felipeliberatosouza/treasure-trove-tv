@@ -874,6 +874,15 @@ const TeacherProfile = () => {
 
       <Footer />
 
+      {!isOwner && teacher && (
+        <BookLessonModal
+          open={bookOpen}
+          onClose={() => setBookOpen(false)}
+          teacherId={teacher.user_id}
+          teacherName={teacher.name}
+        />
+      )}
+
       <Dialog open={showPreview} onOpenChange={setShowPreview}>
         <DialogContent className="w-[calc(100vw-1rem)] sm:w-full max-w-3xl max-h-[92vh] sm:max-h-[85vh] p-4 sm:p-6 flex flex-col gap-3">
           <DialogHeader className="text-left">

@@ -587,6 +587,7 @@ const TeacherProfile = () => {
                       <p className="text-muted-foreground text-xs">
                         {exp.org}{exp.period ? ` · ${exp.period}` : ""}
                       </p>
+                      {exp.description && <p className="text-muted-foreground text-xs mt-1">{exp.description}</p>}
                     </li>
                   ))}
                 </ul>

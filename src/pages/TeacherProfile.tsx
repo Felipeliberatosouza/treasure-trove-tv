@@ -13,8 +13,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 
-interface Experience { role: string; org: string; period?: string }
-interface Education { course: string; institution: string; year?: string }
+interface Experience { role: string; org: string; period?: string; description?: string }
+interface Education { course: string; institution: string; year?: string; description?: string }
 
 interface TeacherData {
   name: string;

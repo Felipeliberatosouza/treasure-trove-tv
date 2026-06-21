@@ -114,12 +114,24 @@ const PersonalDataTab = () => {
       setPixKey((profile as any).pix_key || "");
       setAcceptsMarketing((profile as any).accepts_marketing || false);
       setPhoneVerified((profile as any).phone_verified || false);
-      const exp = (profile as any).experiences;
-      setExperiences(Array.isArray(exp) ? exp : []);
-      const edu = (profile as any).education;
-      setEducation(Array.isArray(edu) ? edu : []);
     }
   }, [profile]);
+
+  useEffect(() => {
+    if (!user || role !== "teacher") return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("experiences, education")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (cancelled || !data) return;
+      setExperiences(Array.isArray((data as any).experiences) ? (data as any).experiences : []);
+      setEducation(Array.isArray((data as any).education) ? (data as any).education : []);
+    })();
+    return () => { cancelled = true; };
+  }, [user, role]);
 
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

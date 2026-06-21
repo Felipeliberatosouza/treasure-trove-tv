@@ -7,6 +7,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { MailX, CheckCircle, AlertCircle, Loader2, Mail, MessageSquare } from "lucide-react";
+import { useAllPlatformSettings, type BrandingSettings } from "@/hooks/usePlatformSettings";
 
 type Status = "loading" | "valid" | "already" | "invalid" | "success_all" | "success_marketing" | "error";
 type FeedbackState = "hidden" | "asking" | "submitting" | "submitted";
@@ -18,6 +19,10 @@ const FEEDBACK_OPTIONS = [
 ] as const;
 
 const Unsubscribe = () => {
+  const { settings } = useAllPlatformSettings();
+  const branding = settings?.branding as BrandingSettings | undefined;
+  const platformName = branding?.platform_name || "Revisão Fácil";
+  const showLogoImage = !!branding?.logo_url && !branding?.use_text_logo;
   const [searchParams] = useSearchParams();
   const token = searchParams.get("token");
   const [status, setStatus] = useState<Status>("loading");
@@ -105,6 +110,19 @@ const Unsubscribe = () => {
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="max-w-lg w-full">
         <CardContent className="pt-6 space-y-5">
+          <div className="flex justify-center pb-2">
+            {showLogoImage ? (
+              <img
+                src={branding!.logo_url}
+                alt={platformName}
+                className="h-12 max-w-[240px] object-contain"
+              />
+            ) : (
+              <h1 className="font-display text-2xl font-bold text-gradient">
+                {platformName}
+              </h1>
+            )}
+          </div>
           {status === "loading" && (
             <div className="text-center space-y-4">
               <Loader2 className="h-12 w-12 animate-spin mx-auto text-muted-foreground" />

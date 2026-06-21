@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Mail, ArrowLeft } from "lucide-react";
@@ -18,18 +18,24 @@ const ForgotPassword = () => {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(30 * 60);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  useEffect(() => {
+    if (!sent) return;
+    if (timeLeft <= 0) return;
+    const t = setInterval(() => {
+      setTimeLeft((p) => (p <= 1 ? 0 : p - 1));
+    }, 1000);
+    return () => clearInterval(t);
+  }, [sent, timeLeft]);
+
+  const sendRecoveryEmail = async () => {
     if (!email.trim()) {
       toast.error("Informe seu e-mail");
       return;
     }
 
     setLoading(true);
-    // Usa a Edge Function send-password-recovery para que o e-mail seja
-    // enviado pelo template `password_recovery` configurado no Painel
-    // Administrativo (assunto, remetente, logomarca, cores, textos).
     const { error } = await supabase.functions.invoke("send-password-recovery", {
       body: {
         email: email.trim().toLowerCase(),
@@ -41,9 +47,15 @@ const ForgotPassword = () => {
       toast.error(translateAuthError(error.message));
     } else {
       setSent(true);
+      setTimeLeft(30 * 60);
       toast.success("E-mail de recuperação enviado!");
     }
     setLoading(false);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await sendRecoveryEmail();
   };
 
   return (
@@ -80,14 +92,36 @@ const ForgotPassword = () => {
         {sent ? (
           <div className="rounded-lg border border-primary/40 bg-black p-6 text-center space-y-3 shadow-lg">
             <p className="text-sm font-medium text-white">
-              Enviamos um link de redefinição para <strong>{email}</strong>.
+              Enviamos um link de redefinição para <strong>{email}</strong>
             </p>
             <p className="text-xs font-medium text-white">
-              Verifique sua caixa de entrada e spam. O link expira em 30 minutos.
+              Verifique sua caixa de entrada e spam.
             </p>
-            <Button variant="outline" onClick={() => setSent(false)} className="mt-2 border-white bg-black text-white hover:bg-white hover:text-black">
-              Enviar novamente
+            <p className="text-xs font-semibold text-amber-400">
+              {timeLeft > 0
+                ? `O link expira em: ${Math.floor(timeLeft / 60)}:${String(timeLeft % 60).padStart(2, "0")}`
+                : "O link expirou. Envie novamente."}
+            </p>
+            <Button
+              variant="outline"
+              onClick={sendRecoveryEmail}
+              disabled={loading}
+              className="mt-2 border-white bg-black text-white hover:bg-white hover:text-black"
+            >
+              {loading ? "Enviando..." : "Enviar novamente"}
             </Button>
+            <div>
+              <button
+                type="button"
+                onClick={() => {
+                  setSent(false);
+                  setTimeLeft(30 * 60);
+                }}
+                className="text-xs font-medium text-white underline underline-offset-4 hover:text-primary"
+              >
+                Alterar e-mail
+              </button>
+            </div>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">

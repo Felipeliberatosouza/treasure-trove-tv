@@ -6,6 +6,12 @@ export interface BrandingSettings {
   platform_name: string;
   slogan: string;
   logo_url: string;
+  /** Variante da logomarca para uso sobre fundos ESCUROS (geralmente uma
+   *  versão clara/branca da logo). Quando ausente, cai para `logo_url`. */
+  logo_url_dark_bg?: string;
+  /** Variante da logomarca para uso sobre fundos CLAROS (geralmente uma
+   *  versão escura/colorida da logo). Quando ausente, cai para `logo_url`. */
+  logo_url_light_bg?: string;
   primary_color: string;
   secondary_color: string;
   accent_color: string;

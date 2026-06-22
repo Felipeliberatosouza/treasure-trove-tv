@@ -26,7 +26,8 @@ const ResetPassword = () => {
   const [isRecovery, setIsRecovery] = useState(false);
   const [sessionReady, setSessionReady] = useState(false);
   const [linkExpired, setLinkExpired] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(180); // 3 minutos em segundos
+  const [deadline] = useState<number>(() => Date.now() + 180_000);
+  const [timeLeft, setTimeLeft] = useState(180);
   const [birthDate, setBirthDate] = useState<string | undefined>(undefined);
   const [needsMfa, setNeedsMfa] = useState(false);
 
@@ -69,18 +70,17 @@ const ResetPassword = () => {
   // Contagem regressiva de 3 minutos para redefinição de senha
   useEffect(() => {
     if (success || linkExpired) return;
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          setLinkExpired(true);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
+    const tick = () => {
+      const remaining = Math.max(0, Math.round((deadline - Date.now()) / 1000));
+      setTimeLeft(remaining);
+      if (remaining <= 0) {
+        setLinkExpired(true);
+      }
+    };
+    tick();
+    const timer = setInterval(tick, 1000);
     return () => clearInterval(timer);
-  }, [success, linkExpired]);
+  }, [success, linkExpired, deadline]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

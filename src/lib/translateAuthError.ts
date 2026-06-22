@@ -22,6 +22,14 @@ const errorMap: Record<string, string> = {
   "OAuth error": "Erro ao autenticar com provedor externo.",
   "Provider not found": "Provedor de autenticação não encontrado.",
   "User banned": "Esta conta foi suspensa.",
+  "Password is known to be weak and easy to guess": "Esta senha é conhecida por ser fraca e fácil de adivinhar. Escolha uma senha diferente.",
+  "Password is too weak": "Senha muito fraca. Escolha uma senha mais forte.",
+  "Password is too short": "Senha muito curta.",
+  "pwned": "Esta senha foi encontrada em vazamentos de dados. Escolha uma senha diferente.",
+  "Password should contain": "A senha deve conter caracteres mais variados (letras, números e símbolos).",
+  "weak_password": "Esta senha é conhecida por ser fraca e fácil de adivinhar. Escolha uma senha diferente.",
+  "Email link is invalid or has expired": "Link expirado ou inválido. Solicite um novo.",
+  "same_password": "A nova senha deve ser diferente da senha atual.",
 };
 
 export function translateAuthError(message: string): string {

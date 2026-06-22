@@ -46,10 +46,10 @@ const Footer = () => {
     <footer className="border-t border-border px-6 py-10 md:px-12 lg:px-20">
       <div className="mx-auto flex max-w-6xl flex-col items-center gap-6 md:flex-row md:justify-between">
         <div className="flex flex-col items-center gap-0 leading-none">
-          {branding?.logo_url ? (
+          {(branding?.logo_url_dark_bg || branding?.logo_url) ? (
             <img
               ref={logoRef}
-              src={branding.logo_url}
+              src={branding.logo_url_dark_bg || branding.logo_url}
               alt={name}
               className="h-16 md:h-20 max-w-[320px] object-contain block"
               onLoad={(e) => setLogoWidth((e.target as HTMLImageElement).getBoundingClientRect().width)}

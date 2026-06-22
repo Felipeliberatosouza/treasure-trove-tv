@@ -13,8 +13,11 @@ const SettingsBranding = () => {
   const { data, loading, update } = usePlatformSettings("branding");
   const { upload, uploading } = useStorageUpload("platform-assets");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const fileInputDarkBgRef = useRef<HTMLInputElement>(null);
+  const fileInputLightBgRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState<BrandingSettings>({
     platform_name: "", slogan: "", logo_url: "",
+    logo_url_dark_bg: "", logo_url_light_bg: "",
     primary_color: "#6366f1", secondary_color: "#8b5cf6", accent_color: "#f59e0b",
     background_color: "#09090f", slogan_color: "#6b7280",
     button_text_color: "#ffffff",
@@ -46,6 +49,8 @@ const SettingsBranding = () => {
     // Backfill legacy installs that don't yet have the 4 explicit button colors.
     setForm({
       ...data,
+      logo_url_dark_bg: data.logo_url_dark_bg || "",
+      logo_url_light_bg: data.logo_url_light_bg || "",
       primary_button_bg: data.primary_button_bg || data.primary_color || "#6366f1",
       primary_button_text: data.primary_button_text || data.button_text_color || "#ffffff",
       secondary_button_bg: data.secondary_button_bg || data.secondary_color || "#1f2937",
@@ -67,13 +72,15 @@ const SettingsBranding = () => {
     });
   }, [data]);
 
-  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleLogoUploadFor = (
+    field: "logo_url" | "logo_url_dark_bg" | "logo_url_light_bg",
+  ) => async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     const ext = file.name.split(".").pop();
-    const path = `logo/logo-${Date.now()}.${ext}`;
+    const path = `logo/${field}-${Date.now()}.${ext}`;
     const url = await upload(file, path);
-    if (url) setForm((prev) => ({ ...prev, logo_url: url }));
+    if (url) setForm((prev) => ({ ...prev, [field]: url }));
   };
 
   const handleSave = async () => {
@@ -136,14 +143,17 @@ const SettingsBranding = () => {
         </p>
       </div>
 
-      {/* Logo upload */}
-      <div className="space-y-2">
+      {/* ============= Gestão de Logomarca ============= */}
+      <div className="space-y-4 rounded-lg border border-border p-4">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <Label>Logotipo</Label>
-            <p className="text-xs text-muted-foreground">
+            <h3 className="text-sm font-semibold flex items-center gap-2">
+              <Image className="h-4 w-4" /> Gestão de Logomarca
+            </h3>
+            <p className="text-xs text-muted-foreground mt-1">
+              Envie variações da logomarca para serem usadas conforme a cor de fundo da tela.
+              A logo padrão é usada quando não há variação específica.
               Quando "Usar título em texto" está ativo, o nome da plataforma aparece em vez da imagem.
-              Sem upload, o nome em texto é exibido automaticamente.
             </p>
           </div>
           <div className="flex items-center gap-2 shrink-0">
@@ -157,42 +167,83 @@ const SettingsBranding = () => {
             </Label>
           </div>
         </div>
-        {form.logo_url && (
-          <div className="relative inline-block rounded-lg border border-border p-2">
-            <img src={form.logo_url} alt="Logo" className="h-20 max-w-[260px] object-contain" />
-            <button
-              onClick={() => setForm({ ...form, logo_url: "" })}
-              className="absolute -right-2 -top-2 rounded-full bg-destructive p-1 text-destructive-foreground hover:opacity-80"
-            >
-              <X className="h-3 w-3" />
-            </button>
-          </div>
-        )}
-        <div className="flex gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            disabled={uploading}
-            onClick={() => fileInputRef.current?.click()}
-          >
-            <Upload className="h-4 w-4 mr-1" />
-            {uploading ? "Enviando..." : "Enviar Imagem"}
-          </Button>
-          <Input
-            value={form.logo_url}
-            onChange={(e) => setForm({ ...form, logo_url: e.target.value })}
-            placeholder="ou cole uma URL..."
-            className="flex-1 text-xs"
-          />
-        </div>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          className="hidden"
-          onChange={handleLogoUpload}
-        />
+
+        {([
+          {
+            field: "logo_url" as const,
+            title: "Logo padrão",
+            description:
+              "Usada como fallback em toda a plataforma quando não há variação específica para o fundo.",
+            previewBg: "bg-muted",
+            inputRef: fileInputRef,
+          },
+          {
+            field: "logo_url_dark_bg" as const,
+            title: "Logo para fundo escuro",
+            description:
+              "Use uma versão clara/branca da logomarca. Aplicada automaticamente sobre fundos escuros (cabeçalho, rodapé).",
+            previewBg: "bg-slate-900",
+            inputRef: fileInputDarkBgRef,
+          },
+          {
+            field: "logo_url_light_bg" as const,
+            title: "Logo para fundo claro",
+            description:
+              "Use uma versão escura/colorida da logomarca. Aplicada automaticamente sobre fundos claros (e-mails, recibos em PDF).",
+            previewBg: "bg-white",
+            inputRef: fileInputLightBgRef,
+          },
+        ]).map(({ field, title, description, previewBg, inputRef }) => {
+          const url = (form[field] as string) || "";
+          return (
+            <div key={field} className="space-y-2 rounded-md border border-border p-3">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  {title}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">{description}</p>
+              </div>
+              {url && (
+                <div className={`relative inline-block rounded-lg border border-border p-2 ${previewBg}`}>
+                  <img src={url} alt={title} className="h-20 max-w-[260px] object-contain" />
+                  <button
+                    type="button"
+                    onClick={() => setForm({ ...form, [field]: "" })}
+                    className="absolute -right-2 -top-2 rounded-full bg-destructive p-1 text-destructive-foreground hover:opacity-80"
+                    aria-label={`Remover ${title}`}
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              )}
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={uploading}
+                  onClick={() => inputRef.current?.click()}
+                >
+                  <Upload className="h-4 w-4 mr-1" />
+                  {uploading ? "Enviando..." : "Enviar Imagem"}
+                </Button>
+                <Input
+                  value={url}
+                  onChange={(e) => setForm({ ...form, [field]: e.target.value })}
+                  placeholder="ou cole uma URL..."
+                  className="flex-1 text-xs"
+                />
+              </div>
+              <input
+                ref={inputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleLogoUploadFor(field)}
+              />
+            </div>
+          );
+        })}
       </div>
 
       <div className="grid grid-cols-2 gap-3">

@@ -93,7 +93,7 @@ const Login = () => {
         success: !error,
       }] as any);
 
-      // Notify admins on suspicious activity (5+ failed attempts = blocked)
+      // Notify admins on suspicious activity (3+ failed attempts = blocked)
       if (error) {
         const { count } = await supabase
           .from("login_attempts" as any)
@@ -102,7 +102,7 @@ const Login = () => {
           .eq("success", false)
           .gte("attempted_at", new Date(Date.now() - 15 * 60 * 1000).toISOString());
 
-        if (count && count >= 5) {
+        if (count && count >= 3) {
           supabase.functions.invoke("send-transactional-email", {
             body: {
               templateName: "suspicious-login-admin-notify",

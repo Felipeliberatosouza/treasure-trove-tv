@@ -62,6 +62,22 @@ export interface BrandingSettings {
   banner_nav_dot_idle?: string;
 }
 
+/** Resolve a logomarca padrão do site conforme o seletor configurado em
+ *  Configurações → Identidade Visual → Gestão de Logomarca. Cai para a logo
+ *  legada (`logo_url`) quando a variante selecionada não estiver definida. */
+export function resolveDefaultLogoUrl(
+  branding: Pick<
+    BrandingSettings,
+    "logo_url" | "logo_url_dark_bg" | "logo_url_light_bg" | "default_logo_variant"
+  > | null | undefined,
+): string {
+  if (!branding) return "";
+  const variant = branding.default_logo_variant === "light_bg"
+    ? branding.logo_url_light_bg
+    : branding.logo_url_dark_bg;
+  return variant || branding.logo_url || "";
+}
+
 export interface ContactSettings {
   email: string;
   phone: string;

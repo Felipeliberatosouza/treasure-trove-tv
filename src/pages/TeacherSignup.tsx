@@ -15,14 +15,15 @@ import { useCourseAreas } from "@/hooks/useCourseAreas";
 import AreaSelector from "@/components/AreaSelector";
 import { translateAuthError } from "@/lib/translateAuthError";
 import PasswordStrengthChecker, { validatePassword } from "@/components/PasswordStrengthChecker";
-import { useAllPlatformSettings, type BrandingSettings } from "@/hooks/usePlatformSettings";
+import { useAllPlatformSettings, resolveDefaultLogoUrl, type BrandingSettings } from "@/hooks/usePlatformSettings";
 
 const TeacherSignup = () => {
   const navigate = useNavigate();
   const { settings } = useAllPlatformSettings();
   const branding = settings?.branding as BrandingSettings | undefined;
   const platformName = branding?.platform_name || "Revisão Fácil";
-  const showLogoImage = !!branding?.logo_url && !branding?.use_text_logo;
+  const effectiveLogoUrl = resolveDefaultLogoUrl(branding);
+  const showLogoImage = !!effectiveLogoUrl && !branding?.use_text_logo;
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -169,7 +170,7 @@ const TeacherSignup = () => {
             {showLogoImage ? (
               <div className="flex justify-center">
                 <img
-                  src={branding!.logo_url}
+                  src={effectiveLogoUrl}
                   alt={platformName}
                   className="h-14 max-w-[260px] object-contain"
                 />

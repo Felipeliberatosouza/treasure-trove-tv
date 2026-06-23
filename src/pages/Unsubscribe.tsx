@@ -7,7 +7,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { MailX, CheckCircle, AlertCircle, Loader2, Mail, MessageSquare } from "lucide-react";
-import { useAllPlatformSettings, type BrandingSettings } from "@/hooks/usePlatformSettings";
+import { useAllPlatformSettings, resolveDefaultLogoUrl, type BrandingSettings } from "@/hooks/usePlatformSettings";
 
 type Status = "loading" | "valid" | "already" | "invalid" | "success_all" | "success_marketing" | "error";
 type FeedbackState = "hidden" | "asking" | "submitting" | "submitted";
@@ -22,7 +22,8 @@ const Unsubscribe = () => {
   const { settings } = useAllPlatformSettings();
   const branding = settings?.branding as BrandingSettings | undefined;
   const platformName = branding?.platform_name || "Revisão Fácil";
-  const showLogoImage = !!branding?.logo_url && !branding?.use_text_logo;
+  const effectiveLogoUrl = resolveDefaultLogoUrl(branding);
+  const showLogoImage = !!effectiveLogoUrl && !branding?.use_text_logo;
   const [searchParams] = useSearchParams();
   const token = searchParams.get("token");
   const [status, setStatus] = useState<Status>("loading");
@@ -113,7 +114,7 @@ const Unsubscribe = () => {
           <div className="flex justify-center pb-2">
             {showLogoImage ? (
               <img
-                src={branding!.logo_url}
+                src={effectiveLogoUrl}
                 alt={platformName}
                 className="h-12 max-w-[240px] object-contain"
               />

@@ -93,11 +93,8 @@ export default function ResourceLimitModal({
             </div>
           )}
         </div>
-
-        <p className="text-xs text-muted-foreground pt-2">
-          Ao fazer upgrade, você terá acesso a mais recursos e limites maiores.
-        </p>
       </DialogContent>
     </Dialog>
   );
 }
+

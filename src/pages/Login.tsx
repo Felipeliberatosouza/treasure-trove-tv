@@ -177,13 +177,13 @@ const Login = () => {
     }
 
     toast.success("Login realizado com sucesso!");
-    navigate("/");
+    navigate(searchParams.get("returnTo") || "/");
     setLoading(false);
   };
 
   const handleMfaVerified = async () => {
     toast.success("Login realizado com sucesso!");
-    navigate("/");
+    navigate(searchParams.get("returnTo") || "/");
   };
 
   const handleMfaCancel = async () => {
@@ -246,7 +246,7 @@ const Login = () => {
             }
             // Tokens received and session set — go home.
             toast.success("Login realizado com sucesso!");
-            navigate("/");
+            navigate(searchParams.get("returnTo") || "/");
           }}
         >
           <svg className="h-5 w-5" viewBox="0 0 24 24">

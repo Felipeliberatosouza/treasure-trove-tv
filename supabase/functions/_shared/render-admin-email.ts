@@ -8,7 +8,7 @@
 //
 // Retorna `null` quando não há linha em `email_templates` ou o body_html
 // está vazio — o caller deve então usar o template React de fallback.
-import { buildEmailLogoHtml, escapeHtml } from './email-logo.ts'
+import { buildEmailLogoHtml, escapeHtml, resolveEmailLogoUrl } from './email-logo.ts'
 
 export interface RenderAdminEmailResult {
   html: string
@@ -59,7 +59,7 @@ export async function renderAdminEmail(
     const { data: tpl } = await supabase
       .from('email_templates')
       .select(
-        'from_email, from_name, subject, body_html, logo_url, use_uploaded_logo, text_color, heading_color, link_color, button_color, button_text_color, slogan_color, font_family, show_social_footer',
+        'from_email, from_name, subject, body_html, logo_url, logo_variant, use_uploaded_logo, text_color, heading_color, link_color, button_color, button_text_color, slogan_color, font_family, show_social_footer',
       )
       .eq('template_key', templateKey)
       .maybeSingle()
@@ -95,7 +95,7 @@ export async function renderAdminEmail(
     const buttonTextColor = tpl.button_text_color || '#ffffff'
     const sloganColor = tpl.slogan_color || '#6b7280'
     const fontFamily = tpl.font_family || 'Arial, sans-serif'
-    const effectiveLogoUrl = tpl.logo_url || brandingVal.logo_url || ''
+    const effectiveLogoUrl = resolveEmailLogoUrl(tpl as any, brandingVal as any)
 
     const logoHtml = buildEmailLogoHtml({
       logoUrl: effectiveLogoUrl,

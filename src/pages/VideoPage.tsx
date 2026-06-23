@@ -172,6 +172,7 @@ const VideoPage = () => {
 
   useEffect(() => {
     if (!video) return;
+    if (trial.loading) return;
     const checkAccess = async () => {
       if (!user) { setHasFullAccess(false); return; }
 
@@ -180,10 +181,10 @@ const VideoPage = () => {
         .select("role")
         .eq("user_id", user.id);
       const userRoles = roles?.map((r) => r.role) || [];
-      if (userRoles.includes("admin")) { setHasFullAccess(true); return; }
-      if (userRoles.includes("teacher") && teacherId === user.id) { setHasFullAccess(true); return; }
+      if (userRoles.includes("admin")) { setLimitInfo(null); setHasFullAccess(true); return; }
+      if (userRoles.includes("teacher") && teacherId === user.id) { setLimitInfo(null); setHasFullAccess(true); return; }
 
-      if (trial.hasActiveTrial) { setHasFullAccess(true); return; }
+      if (trial.hasActiveTrial) { setLimitInfo(null); setHasFullAccess(true); return; }
 
       // Check individual purchase
       const { data: purchase } = await supabase
@@ -193,7 +194,7 @@ const VideoPage = () => {
         .eq("content_id", video.id)
         .eq("payment_status", "completed")
         .limit(1);
-      if (purchase && purchase.length > 0) { setHasFullAccess(true); return; }
+      if (purchase && purchase.length > 0) { setLimitInfo(null); setHasFullAccess(true); return; }
 
       // Check subscription resource limit
       if (resourceLimit.loaded && videoType) {
@@ -201,6 +202,7 @@ const VideoPage = () => {
         if (rt) {
           const result = resourceLimit.checkLimit(rt);
           if (result.hasSubscription && result.allowed) {
+            setLimitInfo(null);
             setHasFullAccess(true);
             return;
           }
@@ -217,7 +219,7 @@ const VideoPage = () => {
       setHasFullAccess(false);
     };
     checkAccess();
-  }, [video, user, trial.hasActiveTrial, teacherId, resourceLimit.loaded, videoType]);
+  }, [video, user, trial.loading, trial.hasActiveTrial, teacherId, resourceLimit.loaded, videoType]);
 
   useEffect(() => {
     if (!video || dbVideo) return;

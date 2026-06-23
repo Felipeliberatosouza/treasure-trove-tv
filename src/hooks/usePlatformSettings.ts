@@ -12,6 +12,9 @@ export interface BrandingSettings {
   /** Variante da logomarca para uso sobre fundos CLAROS (geralmente uma
    *  versão escura/colorida da logo). Quando ausente, cai para `logo_url`. */
   logo_url_light_bg?: string;
+  /** Qual das duas variações (logomarca para fundo escuro ou para fundo
+   *  claro) deve ser usada como padrão em todo o site. Default: 'dark_bg'. */
+  default_logo_variant?: "dark_bg" | "light_bg";
   primary_color: string;
   secondary_color: string;
   accent_color: string;

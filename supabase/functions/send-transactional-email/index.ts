@@ -2,7 +2,7 @@ import * as React from 'npm:react@18.3.1'
 import { renderAsync } from 'npm:@react-email/components@0.0.22'
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { TEMPLATES } from '../_shared/transactional-email-templates/registry.ts'
-import { buildEmailLogoHtml, escapeHtml } from '../_shared/email-logo.ts'
+import { buildEmailLogoHtml, escapeHtml, resolveEmailLogoUrl } from '../_shared/email-logo.ts'
 
 // Configuration baked in at scaffold time — do NOT change these manually.
 // To update, re-run the email domain setup flow.
@@ -448,7 +448,7 @@ Deno.serve(async (req) => {
     const { data: tplCfg2 } = await supabase
       .from('email_templates')
       .select(
-        'from_email, from_name, subject, body_html, logo_url, use_uploaded_logo, text_color, heading_color, link_color, button_color, button_text_color, slogan_color, font_family, show_social_footer, always_send'
+        'from_email, from_name, subject, body_html, logo_url, logo_variant, use_uploaded_logo, text_color, heading_color, link_color, button_color, button_text_color, slogan_color, font_family, show_social_footer, always_send'
       )
       .eq('template_key', templateName)
       .maybeSingle()
@@ -484,7 +484,7 @@ Deno.serve(async (req) => {
       const buttonTextColor = tplCfg2.button_text_color || '#ffffff'
       const sloganColor = tplCfg2.slogan_color || '#6b7280'
       const fontFamily = tplCfg2.font_family || 'Arial, sans-serif'
-      const effectiveLogoUrl = tplCfg2.logo_url || brandingVal.logo_url || ''
+      const effectiveLogoUrl = resolveEmailLogoUrl(tplCfg2 as any, brandingVal as any)
 
       const logoHtml = buildEmailLogoHtml({
         logoUrl: effectiveLogoUrl,

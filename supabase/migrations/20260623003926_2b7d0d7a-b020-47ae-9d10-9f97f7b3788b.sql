@@ -1,0 +1,1 @@
+ALTER TABLE public.email_templates ADD COLUMN IF NOT EXISTS logo_variant text NOT NULL DEFAULT 'default';

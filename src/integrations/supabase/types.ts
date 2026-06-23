@@ -538,6 +538,7 @@ export type Database = {
           id: string
           link_color: string
           logo_url: string | null
+          logo_variant: string
           respect_marketing_preference: boolean
           show_social_footer: boolean
           slogan_color: string
@@ -565,6 +566,7 @@ export type Database = {
           id?: string
           link_color?: string
           logo_url?: string | null
+          logo_variant?: string
           respect_marketing_preference?: boolean
           show_social_footer?: boolean
           slogan_color?: string
@@ -592,6 +594,7 @@ export type Database = {
           id?: string
           link_color?: string
           logo_url?: string | null
+          logo_variant?: string
           respect_marketing_preference?: boolean
           show_social_footer?: boolean
           slogan_color?: string

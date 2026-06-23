@@ -11,7 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Save, Upload, X, Eye, Mail, Shield, Copy, Tag, Sparkles } from "lucide-react";
 import { toast } from "sonner";
-import { buildEmailLogoHtml } from "../../../../supabase/functions/_shared/email-logo";
+import { buildEmailLogoHtml, resolveEmailLogoUrl } from "../../../../supabase/functions/_shared/email-logo";
 
 interface EmailTemplate {
   id: string;
@@ -30,6 +30,7 @@ interface EmailTemplate {
   slogan_color: string;
   font_family: string;
   use_uploaded_logo: boolean;
+  logo_variant: string;
   coupon_enabled: boolean;
   coupon_code: string;
   coupon_message: string;
@@ -185,7 +186,7 @@ const SettingsEmailTemplates = () => {
   // muda — assim o preview mostra o slogan já com o cálculo correto.
   useEffect(() => {
     const active = templates.find((t) => t.template_key === activeKey);
-    const url = active?.logo_url || brandingData?.logo_url || "";
+    const url = active ? resolveEmailLogoUrl(active as any, brandingData as any) : "";
     if (url) ensureLogoDims(url);
   }, [activeKey, templates, brandingData?.logo_url]);
 
@@ -295,6 +296,7 @@ const SettingsEmailTemplates = () => {
         slogan_color: active.slogan_color,
         font_family: active.font_family,
         use_uploaded_logo: active.use_uploaded_logo,
+        logo_variant: active.logo_variant || 'default',
         coupon_enabled: active.coupon_enabled,
         coupon_code: active.coupon_code,
         coupon_message: active.coupon_message,
@@ -328,6 +330,7 @@ const SettingsEmailTemplates = () => {
       font_family: active.font_family,
       logo_url: active.logo_url,
       use_uploaded_logo: active.use_uploaded_logo,
+      logo_variant: active.logo_variant || 'default',
     };
 
     const { error } = await supabase
@@ -432,7 +435,7 @@ const SettingsEmailTemplates = () => {
     const fontFamily = active.font_family || "Arial, sans-serif";
 
     const platformName = brandingData?.platform_name || "Revisão Fácil";
-    const effectiveLogoUrl = active.logo_url || brandingData?.logo_url || "";
+    const effectiveLogoUrl = resolveEmailLogoUrl(active as any, brandingData as any);
     const cached = effectiveLogoUrl ? logoDimsRef.current.get(effectiveLogoUrl) : undefined;
     const dims = cached && cached.width > 0 && cached.height > 0 ? cached : undefined;
     // Toca o tick para deixar explícita a dependência de re-render quando as
@@ -1012,14 +1015,42 @@ const SettingsEmailTemplates = () => {
 
             {active.use_uploaded_logo && (
               <>
-                {(active.logo_url || brandingData?.logo_url) && (
+                {/* Seletor de variante de logomarca */}
+                <div className="space-y-2">
+                  <Label className="text-xs">Qual logomarca usar neste e-mail?</Label>
+                  <Select
+                    value={active.logo_variant || "default"}
+                    onValueChange={(v) => updateField("logo_variant", v)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="default">Padrão da Identidade Visual</SelectItem>
+                      <SelectItem value="dark_bg" disabled={!brandingData?.logo_url_dark_bg}>
+                        Logo para fundo escuro {!brandingData?.logo_url_dark_bg && "(não configurada)"}
+                      </SelectItem>
+                      <SelectItem value="light_bg" disabled={!brandingData?.logo_url_light_bg}>
+                        Logo para fundo claro {!brandingData?.logo_url_light_bg && "(não configurada)"}
+                      </SelectItem>
+                      <SelectItem value="custom">Imagem personalizada (enviada abaixo)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    Escolha qual variante da logomarca aparecerá neste e-mail. As variantes são configuradas em <strong>Identidade Visual → Gestão de Logomarca</strong>.
+                  </p>
+                </div>
+
+                {(() => {
+                  const previewUrl = resolveEmailLogoUrl(active as any, brandingData as any);
+                  return previewUrl ? (
                   <div className="relative inline-block rounded-lg border border-border bg-muted/30 p-2">
                     <img
-                      src={active.logo_url || brandingData?.logo_url || ""}
+                      src={previewUrl}
                       alt="Logo"
                       className="h-12 max-w-[180px] object-contain"
                     />
-                    {active.logo_url && (
+                    {active.logo_variant === "custom" && active.logo_url && (
                       <button
                         onClick={() => updateField("logo_url", "")}
                         className="absolute -right-2 -top-2 rounded-full bg-destructive p-1 text-destructive-foreground hover:opacity-80"
@@ -1028,17 +1059,13 @@ const SettingsEmailTemplates = () => {
                       </button>
                     )}
                   </div>
-                )}
-                {!active.logo_url && brandingData?.logo_url && (
-                  <p className="text-xs text-muted-foreground">
-                    Usando a logomarca configurada em <strong>Identidade Visual</strong>. Envie uma imagem abaixo para sobrescrever apenas para este template.
-                  </p>
-                )}
-                {!active.logo_url && !brandingData?.logo_url && (
-                  <p className="text-xs text-amber-600 dark:text-amber-500">
-                    Nenhuma logomarca encontrada. Envie uma imagem abaixo ou configure em <strong>Identidade Visual</strong>.
-                  </p>
-                )}
+                  ) : (
+                    <p className="text-xs text-amber-600 dark:text-amber-500">
+                      Nenhuma logomarca encontrada para esta variante. Configure em <strong>Identidade Visual</strong> ou escolha outra variante.
+                    </p>
+                  );
+                })()}
+                {active.logo_variant === "custom" && (
                 <div className="flex gap-2">
                   <Button type="button" variant="outline" size="sm" disabled={uploading} onClick={() => fileInputRef.current?.click()}>
                     <Upload className="h-4 w-4 mr-1" /> {uploading ? "Enviando..." : "Enviar Imagem"}
@@ -1050,6 +1077,7 @@ const SettingsEmailTemplates = () => {
                     className="flex-1 text-xs"
                   />
                 </div>
+                )}
                 <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
               </>
             )}

@@ -42,6 +42,50 @@ export function escapeHtml(value: unknown): string {
 }
 
 /**
+ * Resolve a URL efetiva da logomarca para um template de e-mail conforme a
+ * variante selecionada no admin (`logo_variant` por template).
+ *
+ * Valores possíveis de `logo_variant`:
+ * - `"default"` (ou ausente): segue o padrão do branding global. Quando o
+ *   template tem `logo_url` próprio, ele tem prioridade (retrocompatível).
+ * - `"dark_bg"`: usa a logo configurada para fundo escuro.
+ * - `"light_bg"`: usa a logo configurada para fundo claro.
+ * - `"custom"`: usa exclusivamente a logo enviada no próprio template
+ *   (`tpl.logo_url`), caindo para a logo padrão se vazia.
+ */
+export interface EmailLogoTemplateLike {
+  logo_url?: string | null;
+  logo_variant?: string | null;
+}
+
+export interface EmailLogoBrandingLike {
+  logo_url?: string | null;
+  logo_url_dark_bg?: string | null;
+  logo_url_light_bg?: string | null;
+  default_logo_variant?: string | null;
+}
+
+export function resolveEmailLogoUrl(
+  tpl: EmailLogoTemplateLike | null | undefined,
+  branding: EmailLogoBrandingLike | null | undefined,
+): string {
+  const t = tpl || {};
+  const b = branding || {};
+  const variant = (t.logo_variant || "default") as string;
+  const dark = b.logo_url_dark_bg || "";
+  const light = b.logo_url_light_bg || "";
+  const fallback = b.logo_url || "";
+  if (variant === "dark_bg") return dark || fallback;
+  if (variant === "light_bg") return light || fallback;
+  if (variant === "custom") return (t.logo_url || "") || fallback;
+  // default: respeita logo customizada do template; senão segue variante padrão do branding.
+  if (t.logo_url) return t.logo_url;
+  const def =
+    b.default_logo_variant === "light_bg" ? light : dark;
+  return def || fallback;
+}
+
+/**
  * Monta o HTML inline (compatível com clients de e-mail) da logomarca com
  * slogan opcional logo abaixo, seguindo o mesmo padrão visual do site:
  * - slogan centralizado, levemente sobreposto à logo (margin-top negativa)

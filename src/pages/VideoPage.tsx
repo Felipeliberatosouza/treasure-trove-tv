@@ -800,7 +800,12 @@ const VideoPage = () => {
                 {trialExpired && (
                   <div className="flex items-center gap-2 rounded-lg border border-destructive/20 bg-destructive/5 p-3">
                     <AlertTriangle className="h-4 w-4 shrink-0 text-destructive" />
-                    <span className="text-sm text-foreground">Seu teste grátis expirou. Assine para continuar assistindo.</span>
+                    <button
+                      onClick={handleSubscribe}
+                      className="text-sm text-foreground underline hover:text-primary cursor-pointer bg-transparent border-0 p-0 text-left"
+                    >
+                      Seu teste grátis expirou. Assine para continuar assistindo.
+                    </button>
                   </div>
                 )}
               </>

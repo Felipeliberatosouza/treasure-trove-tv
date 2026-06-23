@@ -1015,14 +1015,42 @@ const SettingsEmailTemplates = () => {
 
             {active.use_uploaded_logo && (
               <>
-                {(active.logo_url || brandingData?.logo_url) && (
+                {/* Seletor de variante de logomarca */}
+                <div className="space-y-2">
+                  <Label className="text-xs">Qual logomarca usar neste e-mail?</Label>
+                  <Select
+                    value={active.logo_variant || "default"}
+                    onValueChange={(v) => updateField("logo_variant", v)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="default">Padrão da Identidade Visual</SelectItem>
+                      <SelectItem value="dark_bg" disabled={!brandingData?.logo_url_dark_bg}>
+                        Logo para fundo escuro {!brandingData?.logo_url_dark_bg && "(não configurada)"}
+                      </SelectItem>
+                      <SelectItem value="light_bg" disabled={!brandingData?.logo_url_light_bg}>
+                        Logo para fundo claro {!brandingData?.logo_url_light_bg && "(não configurada)"}
+                      </SelectItem>
+                      <SelectItem value="custom">Imagem personalizada (enviada abaixo)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    Escolha qual variante da logomarca aparecerá neste e-mail. As variantes são configuradas em <strong>Identidade Visual → Gestão de Logomarca</strong>.
+                  </p>
+                </div>
+
+                {(() => {
+                  const previewUrl = resolveEmailLogoUrl(active as any, brandingData as any);
+                  return previewUrl ? (
                   <div className="relative inline-block rounded-lg border border-border bg-muted/30 p-2">
                     <img
-                      src={active.logo_url || brandingData?.logo_url || ""}
+                      src={previewUrl}
                       alt="Logo"
                       className="h-12 max-w-[180px] object-contain"
                     />
-                    {active.logo_url && (
+                    {active.logo_variant === "custom" && active.logo_url && (
                       <button
                         onClick={() => updateField("logo_url", "")}
                         className="absolute -right-2 -top-2 rounded-full bg-destructive p-1 text-destructive-foreground hover:opacity-80"
@@ -1031,17 +1059,13 @@ const SettingsEmailTemplates = () => {
                       </button>
                     )}
                   </div>
-                )}
-                {!active.logo_url && brandingData?.logo_url && (
-                  <p className="text-xs text-muted-foreground">
-                    Usando a logomarca configurada em <strong>Identidade Visual</strong>. Envie uma imagem abaixo para sobrescrever apenas para este template.
-                  </p>
-                )}
-                {!active.logo_url && !brandingData?.logo_url && (
-                  <p className="text-xs text-amber-600 dark:text-amber-500">
-                    Nenhuma logomarca encontrada. Envie uma imagem abaixo ou configure em <strong>Identidade Visual</strong>.
-                  </p>
-                )}
+                  ) : (
+                    <p className="text-xs text-amber-600 dark:text-amber-500">
+                      Nenhuma logomarca encontrada para esta variante. Configure em <strong>Identidade Visual</strong> ou escolha outra variante.
+                    </p>
+                  );
+                })()}
+                {active.logo_variant === "custom" && (
                 <div className="flex gap-2">
                   <Button type="button" variant="outline" size="sm" disabled={uploading} onClick={() => fileInputRef.current?.click()}>
                     <Upload className="h-4 w-4 mr-1" /> {uploading ? "Enviando..." : "Enviar Imagem"}
@@ -1053,6 +1077,7 @@ const SettingsEmailTemplates = () => {
                     className="flex-1 text-xs"
                   />
                 </div>
+                )}
                 <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
               </>
             )}

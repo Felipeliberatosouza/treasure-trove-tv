@@ -74,7 +74,15 @@ export async function getPdfBranding(): Promise<PdfBranding> {
       const value = (row.value ?? {}) as Record<string, string>;
       if (row.key === "branding") {
         if (value.platform_name) platformName = value.platform_name;
-        if (value.logo_url) logoUrl = value.logo_url;
+        // Respeita o seletor de logomarca padrão (Configurações → Identidade
+        // Visual → Gestão de Logomarca). Cai para `logo_url` legado quando a
+        // variante selecionada não estiver definida.
+        const v = value as Record<string, string | undefined>;
+        const variant = v.default_logo_variant === "light_bg"
+          ? v.logo_url_light_bg
+          : v.logo_url_dark_bg;
+        const chosen = variant || v.logo_url;
+        if (chosen) logoUrl = chosen;
         const rgb = hexToRgb(value.primary_color || "");
         if (rgb) primaryRgb = rgb;
       } else if (row.key === "contact") {

@@ -296,6 +296,7 @@ const SettingsEmailTemplates = () => {
         slogan_color: active.slogan_color,
         font_family: active.font_family,
         use_uploaded_logo: active.use_uploaded_logo,
+        logo_variant: active.logo_variant || 'default',
         coupon_enabled: active.coupon_enabled,
         coupon_code: active.coupon_code,
         coupon_message: active.coupon_message,
@@ -329,6 +330,7 @@ const SettingsEmailTemplates = () => {
       font_family: active.font_family,
       logo_url: active.logo_url,
       use_uploaded_logo: active.use_uploaded_logo,
+      logo_variant: active.logo_variant || 'default',
     };
 
     const { error } = await supabase

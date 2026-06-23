@@ -46,17 +46,23 @@ const Footer = () => {
     <footer className="border-t border-border px-6 py-10 md:px-12 lg:px-20">
       <div className="mx-auto flex max-w-6xl flex-col items-center gap-6 md:flex-row md:justify-between">
         <div className="flex flex-col items-center gap-0 leading-none">
-          {(branding?.logo_url_dark_bg || branding?.logo_url) ? (
+          {(() => {
+            const variant = branding?.default_logo_variant === "light_bg"
+              ? branding?.logo_url_light_bg
+              : branding?.logo_url_dark_bg;
+            const logoSrc = variant || branding?.logo_url;
+            return logoSrc ? (
             <img
               ref={logoRef}
-              src={branding.logo_url_dark_bg || branding.logo_url}
+              src={logoSrc}
               alt={name}
               className="h-16 md:h-20 max-w-[320px] object-contain block"
               onLoad={(e) => setLogoWidth((e.target as HTMLImageElement).getBoundingClientRect().width)}
             />
           ) : (
             <span className="font-display text-lg font-bold text-gradient">{name}</span>
-          )}
+          );
+          })()}
           {slogan && (
             <span
               className="-mt-5 md:-mt-6 leading-none text-center whitespace-nowrap overflow-hidden"

@@ -380,7 +380,10 @@ const VideoPage = () => {
   };
 
   const handleStartTrial = async () => {
-    if (!user) { navigate("/login"); return; }
+    if (!user) {
+      navigate(`/login?returnTo=${encodeURIComponent(`/video/${video?.id ?? ""}?intent=trial`)}`);
+      return;
+    }
     setStartingTrial(true);
     const ok = await trial.startTrial();
     if (ok) {

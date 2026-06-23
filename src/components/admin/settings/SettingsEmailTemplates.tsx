@@ -186,7 +186,7 @@ const SettingsEmailTemplates = () => {
   // muda — assim o preview mostra o slogan já com o cálculo correto.
   useEffect(() => {
     const active = templates.find((t) => t.template_key === activeKey);
-    const url = active?.logo_url || brandingData?.logo_url || "";
+    const url = active ? resolveEmailLogoUrl(active as any, brandingData as any) : "";
     if (url) ensureLogoDims(url);
   }, [activeKey, templates, brandingData?.logo_url]);
 

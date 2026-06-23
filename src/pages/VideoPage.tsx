@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getSignedVideoUrl } from "@/lib/signedUrlCache";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFreeTrial } from "@/hooks/useFreeTrial";
-import { usePlatformSettings, type VideoPricingSettings, DEFAULT_PRODUCT_CONFIG } from "@/hooks/usePlatformSettings";
+import { usePlatformSettings, resolveDefaultLogoUrl, type VideoPricingSettings, DEFAULT_PRODUCT_CONFIG } from "@/hooks/usePlatformSettings";
 import { useResourceLimit, type ResourceType } from "@/hooks/useResourceLimit";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
@@ -661,7 +661,7 @@ const VideoPage = () => {
                 poster={video.thumbnail}
                 previewLimit={previewLimit}
                 onPreviewLimitReached={handlePreviewLimitReached}
-                logoUrl={branding?.logo_url}
+                logoUrl={resolveDefaultLogoUrl(branding)}
                 previewVttUrl={previewVttUrl || undefined}
               />
             ) : (

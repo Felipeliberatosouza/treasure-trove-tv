@@ -53,10 +53,7 @@ export default function ResourceLimitModal({
                 <Badge variant="secondary" className="mx-1">{label}</Badge> disponíveis no seu plano.
               </>
             ) : (
-              <>
-                Você não possui uma assinatura ativa para acessar{" "}
-                <Badge variant="secondary" className="mx-1">{label}</Badge>.
-              </>
+              <>Você não possui assinatura ativa!</>
             )}
           </DialogDescription>
         </DialogHeader>

@@ -290,7 +290,7 @@ const Navbar = () => {
       className="fixed top-0 z-50 w-full border-b border-border/50 bg-background/80 backdrop-blur-xl"
     >
       <div className="flex items-center justify-between gap-3 px-4 py-3 md:px-12 lg:px-20">
-        <Link to="/" className="flex flex-col items-center gap-0 leading-none shrink-0">
+        <Link to="/" className="flex flex-col items-center gap-0 leading-none shrink-0 self-start">
           {(() => {
             const variant = branding?.default_logo_variant === "light_bg"
               ? branding?.logo_url_light_bg

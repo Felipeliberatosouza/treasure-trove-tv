@@ -12,7 +12,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import AreaSelector from "@/components/AreaSelector";
 import VideoRecorder from "./VideoRecorder";
-import { usePlatformSettings, DEFAULT_PRODUCT_CONFIG } from "@/hooks/usePlatformSettings";
+import { usePlatformSettings, resolveDefaultLogoUrl, DEFAULT_PRODUCT_CONFIG } from "@/hooks/usePlatformSettings";
 import { compositeVideo, type ImpactWord, type WatermarkStatus } from "@/utils/videoCompositor";
 import { shiftVtt } from "@/utils/vttSync";
 import { generateDefaultCover } from "@/utils/coverGenerator";
@@ -303,7 +303,7 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
   const enableAutoCover = productConfig?.revisoes?.enable_auto_cover ?? false;
   const enableWatermark = productConfig?.revisoes?.enable_watermark ?? false;
   const watermarkText = (branding?.platform_name || "").trim();
-  const watermarkLogoUrl = (branding?.logo_url || "").trim();
+  const watermarkLogoUrl = resolveDefaultLogoUrl(branding).trim();
   const needsProcessing =
     enableSubtitles || enableBlackboard || enableAutoCover || enableWatermark;
 

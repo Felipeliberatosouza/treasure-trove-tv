@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { useAllPlatformSettings } from "@/hooks/usePlatformSettings";
+import { useAllPlatformSettings, resolveDefaultLogoUrl } from "@/hooks/usePlatformSettings";
 import type { BrandingSettings } from "@/hooks/usePlatformSettings";
 
 const EmailSecurityNotification = () => {
@@ -10,7 +10,7 @@ const EmailSecurityNotification = () => {
   const { settings, loading: settingsLoading } = useAllPlatformSettings();
 
   const branding = settings.branding as BrandingSettings | undefined;
-  const logoUrl = branding?.logo_url;
+  const logoUrl = resolveDefaultLogoUrl(branding);
   const platformName = branding?.platform_name || "Revisão Fácil";
 
   useEffect(() => {

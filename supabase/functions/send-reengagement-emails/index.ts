@@ -6,7 +6,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.101.1'
-import { buildEmailLogoHtml } from '../_shared/email-logo.ts'
+import { buildEmailLogoHtml, resolveEmailLogoUrl } from '../_shared/email-logo.ts'
 import { fetchImageDimensions, type ImageDimensions } from '../_shared/image-dimensions.ts'
 
 interface ReengagementConfig {
@@ -59,7 +59,7 @@ Deno.serve(async (req: Request) => {
     // Templates
     const { data: tpls } = await supabase
       .from('email_templates')
-      .select('template_key, subject, body_html, logo_url, show_social_footer, heading_color, button_color, button_text_color, link_color, text_color, font_family, use_uploaded_logo')
+      .select('template_key, subject, body_html, logo_url, logo_variant, show_social_footer, heading_color, button_color, button_text_color, link_color, text_color, font_family, use_uploaded_logo')
       .in('template_key', ['reengagement_student', 'reengagement_teacher'])
     const tplStudent = tpls?.find((t) => t.template_key === 'reengagement_student')
     const tplTeacher = tpls?.find((t) => t.template_key === 'reengagement_teacher')
@@ -278,7 +278,7 @@ Deno.serve(async (req: Request) => {
           continue // sem vídeos elegíveis, não faz sentido mandar
         }
 
-        const studentLogoUrl = tplStudent.logo_url || brandingData.logo_url || ''
+        const studentLogoUrl = resolveEmailLogoUrl(tplStudent as any, brandingData as any)
         const logoHtml = await buildLogoHtml(
           studentLogoUrl,
           !!tplStudent.use_uploaded_logo,
@@ -490,7 +490,7 @@ Deno.serve(async (req: Request) => {
           </div>
         `
 
-        const teacherLogoUrl = tplTeacher.logo_url || brandingData.logo_url || ''
+        const teacherLogoUrl = resolveEmailLogoUrl(tplTeacher as any, brandingData as any)
         const logoHtml = await buildLogoHtml(
           teacherLogoUrl,
           !!tplTeacher.use_uploaded_logo,

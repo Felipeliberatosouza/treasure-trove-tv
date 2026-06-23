@@ -29,7 +29,8 @@ const Login = () => {
   const [showMfaChallenge, setShowMfaChallenge] = useState(false);
   const [unconfirmedEmail, setUnconfirmedEmail] = useState<string | null>(null);
   const [resending, setResending] = useState(false);
-  const returnTo = searchParams.get("returnTo") || "/";
+  const requestedReturnTo = searchParams.get("returnTo");
+  const returnTo = requestedReturnTo?.startsWith("/") && !requestedReturnTo.startsWith("//") ? requestedReturnTo : "/";
 
   useEffect(() => {
     const checkEmail = searchParams.get("check_email");

@@ -34,6 +34,7 @@ import AccessSuspendedScreen from "@/components/AccessSuspendedScreen";
 import { useActiveBlock } from "@/hooks/useActiveBlock";
 
 const DEMO_VIDEO_URL = "/demo-course.mp4";
+const PENDING_TRIAL_RETURN_KEY = "revisao_facil_pending_trial_return";
 
 const VideoPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -79,6 +80,7 @@ const VideoPage = () => {
   const [isBookLessonOpen, setIsBookLessonOpen] = useState(false);
   const [materialModal, setMaterialModal] = useState<MaterialKind | null>(null);
   const [previewVttUrl, setPreviewVttUrl] = useState<string | null>(null);
+  const pendingTrialHandledRef = useRef(false);
   const { availability: materials } = useLessonMaterials(id || null);
   const { block: activeBlock, loading: blockLoading } = useActiveBlock();
 
@@ -380,11 +382,7 @@ const VideoPage = () => {
     setSubmitting(false);
   };
 
-  const handleStartTrial = async () => {
-    if (!user) {
-      navigate(`/login?returnTo=${encodeURIComponent(`/video/${video?.id ?? ""}?intent=trial`)}`);
-      return;
-    }
+  const activateTrial = async () => {
     setStartingTrial(true);
     const ok = await trial.startTrial();
     if (ok) {
@@ -395,31 +393,51 @@ const VideoPage = () => {
       toast.error("Não foi possível iniciar o teste grátis.");
     }
     setStartingTrial(false);
+    return ok;
+  };
+
+  const handleStartTrial = async () => {
+    if (!user) {
+      const returnTo = `/video/${video?.id ?? id ?? ""}?intent=trial`;
+      window.sessionStorage.setItem(PENDING_TRIAL_RETURN_KEY, returnTo);
+      navigate(`/login?returnTo=${encodeURIComponent(returnTo)}`);
+      return;
+    }
+    await activateTrial();
   };
 
   // Auto-start (or resume) trial when user comes back from login with ?intent=trial
   useEffect(() => {
-    if (searchParams.get("intent") !== "trial") return;
+    const storedReturnTo = window.sessionStorage.getItem(PENDING_TRIAL_RETURN_KEY);
+    const currentTrialReturnTo = `/video/${video?.id ?? id ?? ""}?intent=trial`;
+    const hasTrialIntent =
+      searchParams.get("intent") === "trial" || storedReturnTo === currentTrialReturnTo;
+    if (!hasTrialIntent || pendingTrialHandledRef.current) return;
     if (!user || trial.loading || startingTrial) return;
     const clearIntent = () => {
+      window.sessionStorage.removeItem(PENDING_TRIAL_RETURN_KEY);
       const next = new URLSearchParams(searchParams);
       next.delete("intent");
       setSearchParams(next, { replace: true });
     };
     if (trial.hasActiveTrial) {
+      pendingTrialHandledRef.current = true;
       setShowPaywall(false);
       setHasFullAccess(true);
       clearIntent();
       return;
     }
     if (!trial.trialRow && trial.trialEnabled) {
-      handleStartTrial();
-      clearIntent();
+      pendingTrialHandledRef.current = true;
+      activateTrial().then((ok) => {
+        if (ok) clearIntent();
+      });
     } else {
+      pendingTrialHandledRef.current = true;
       clearIntent();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, trial.loading, trial.hasActiveTrial, trial.trialRow, trial.trialEnabled]);
+  }, [user, video, id, trial.loading, trial.hasActiveTrial, trial.trialRow, trial.trialEnabled, startingTrial]);
 
   const handleReplayVideo = () => {
     setIsWatching(true);

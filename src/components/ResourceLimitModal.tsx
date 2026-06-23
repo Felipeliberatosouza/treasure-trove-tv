@@ -1,7 +1,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { AlertTriangle, ArrowUpCircle, ShoppingCart } from "lucide-react";
+import { AlertTriangle, ArrowUpCircle, ShoppingCart, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const RESOURCE_LABELS: Record<string, string> = {
@@ -58,26 +58,35 @@ export default function ResourceLimitModal({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-3 pt-2">
-          {/* Upgrade option */}
-          <Button
-            variant="default"
-            className="w-full justify-start gap-2"
-            onClick={() => {
-              onClose();
-              navigate("/#pricing");
-            }}
-          >
-            <ArrowUpCircle className="h-4 w-4" />
-            {hasSubscription ? "Fazer upgrade de plano" : "Ver planos de assinatura"}
-          </Button>
+        <div className="space-y-4 pt-2">
+          {/* CTA subscription */}
+          <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 space-y-3">
+            <p className="text-sm font-medium text-foreground">
+              <Sparkles className="inline h-4 w-4 text-primary mr-1.5 -mt-0.5" />
+              Para mais acessos, assine um plano.
+            </p>
+            <Button
+              variant="default"
+              className="w-full gap-2"
+              onClick={() => {
+                onClose();
+                navigate("/#pricing");
+              }}
+            >
+              <ArrowUpCircle className="h-4 w-4" />
+              {hasSubscription ? "Fazer upgrade de plano" : "Ver planos de assinatura"}
+            </Button>
+          </div>
 
           {/* Individual purchase */}
           {individualPrice !== null && individualPrice > 0 && (
-            <div className="space-y-1.5">
+            <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+              <p className="text-sm text-muted-foreground">
+                Prefere usar apenas este recurso?
+              </p>
               <Button
                 variant="outline"
-                className="w-full justify-start gap-2"
+                className="w-full gap-2"
                 onClick={() => {
                   onBuyIndividual?.();
                   onClose();
@@ -86,18 +95,17 @@ export default function ResourceLimitModal({
                 <ShoppingCart className="h-4 w-4" />
                 Comprar avulso por R$ {individualPrice.toFixed(2).replace(".", ",")}
               </Button>
-              <p className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1.5 pl-1">
-                <AlertTriangle className="h-3 w-3 shrink-0" />
-                A compra avulsa dá direito a <strong>1 único uso</strong>. Para mais acessos, assine um plano ou compre novamente.
-              </p>
+              <div className="flex items-start gap-2 rounded-lg bg-amber-500/10 px-3 py-2">
+                <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                <p className="text-xs text-amber-700 dark:text-amber-300 leading-relaxed">
+                  A compra avulsa dá direito a <strong>1 único uso</strong>. Para mais acessos, assine um plano ou compre novamente.
+                </p>
+              </div>
             </div>
           )}
         </div>
-
-        <p className="text-xs text-muted-foreground pt-2">
-          Ao fazer upgrade, você terá acesso a mais recursos e limites maiores.
-        </p>
       </DialogContent>
     </Dialog>
   );
 }
+

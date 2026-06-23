@@ -11,7 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Save, Upload, X, Eye, Mail, Shield, Copy, Tag, Sparkles } from "lucide-react";
 import { toast } from "sonner";
-import { buildEmailLogoHtml } from "../../../../supabase/functions/_shared/email-logo";
+import { buildEmailLogoHtml, resolveEmailLogoUrl } from "../../../../supabase/functions/_shared/email-logo";
 
 interface EmailTemplate {
   id: string;
@@ -30,6 +30,7 @@ interface EmailTemplate {
   slogan_color: string;
   font_family: string;
   use_uploaded_logo: boolean;
+  logo_variant: string;
   coupon_enabled: boolean;
   coupon_code: string;
   coupon_message: string;

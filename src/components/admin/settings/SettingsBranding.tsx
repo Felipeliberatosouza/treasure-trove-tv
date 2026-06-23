@@ -246,6 +246,64 @@ const SettingsBranding = () => {
             </div>
           );
         })}
+
+        {/* Selector: qual variação é a padrão do site */}
+        <div className="space-y-2 rounded-md border border-border p-3">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Logomarca padrão do site
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Escolha qual das duas variações abaixo será usada como logomarca padrão na barra de navegação, rodapé e demais áreas do site.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 pt-1">
+            {([
+              {
+                value: "dark_bg" as const,
+                label: "Logo para fundo escuro",
+                url: form.logo_url_dark_bg,
+                previewBg: "bg-slate-900",
+              },
+              {
+                value: "light_bg" as const,
+                label: "Logo para fundo claro",
+                url: form.logo_url_light_bg,
+                previewBg: "bg-white",
+              },
+            ]).map((opt) => {
+              const selected = (form.default_logo_variant || "dark_bg") === opt.value;
+              const disabled = !opt.url;
+              return (
+                <button
+                  key={opt.value}
+                  type="button"
+                  disabled={disabled}
+                  onClick={() => setForm({ ...form, default_logo_variant: opt.value })}
+                  className={`flex flex-col items-stretch gap-2 rounded-md border p-2 text-left transition ${
+                    selected
+                      ? "border-primary ring-2 ring-primary/40"
+                      : "border-border hover:border-primary/40"
+                  } ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+                >
+                  <div className={`flex h-16 items-center justify-center rounded ${opt.previewBg}`}>
+                    {opt.url ? (
+                      <img src={opt.url} alt={opt.label} className="h-12 max-w-[200px] object-contain" />
+                    ) : (
+                      <span className="text-[10px] text-muted-foreground">Envie a imagem acima</span>
+                    )}
+                  </div>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs font-medium">{opt.label}</span>
+                    {selected && (
+                      <span className="rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground">
+                        Padrão
+                      </span>
+                    )}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-3">

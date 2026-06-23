@@ -68,7 +68,7 @@ export default function ResourceLimitModal({
             className="w-full justify-start gap-2"
             onClick={() => {
               onClose();
-              navigate("/#planos");
+              navigate("/#pricing");
             }}
           >
             <ArrowUpCircle className="h-4 w-4" />

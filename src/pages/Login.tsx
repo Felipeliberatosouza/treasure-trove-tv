@@ -29,6 +29,8 @@ const Login = () => {
   const [showMfaChallenge, setShowMfaChallenge] = useState(false);
   const [unconfirmedEmail, setUnconfirmedEmail] = useState<string | null>(null);
   const [resending, setResending] = useState(false);
+  const requestedReturnTo = searchParams.get("returnTo");
+  const returnTo = requestedReturnTo?.startsWith("/") && !requestedReturnTo.startsWith("//") ? requestedReturnTo : "/";
 
   useEffect(() => {
     const checkEmail = searchParams.get("check_email");
@@ -177,13 +179,13 @@ const Login = () => {
     }
 
     toast.success("Login realizado com sucesso!");
-    navigate(searchParams.get("returnTo") || "/");
+    navigate(returnTo);
     setLoading(false);
   };
 
   const handleMfaVerified = async () => {
     toast.success("Login realizado com sucesso!");
-    navigate(searchParams.get("returnTo") || "/");
+    navigate(returnTo);
   };
 
   const handleMfaCancel = async () => {
@@ -234,7 +236,7 @@ const Login = () => {
           className="w-full font-display font-semibold gap-2"
           onClick={async () => {
             const result = await lovable.auth.signInWithOAuth("google", {
-              redirect_uri: window.location.origin,
+              redirect_uri: `${window.location.origin}${returnTo}`,
             });
             if (result.error) {
               toast.error("Erro ao entrar com Google");
@@ -246,7 +248,7 @@ const Login = () => {
             }
             // Tokens received and session set — go home.
             toast.success("Login realizado com sucesso!");
-            navigate(searchParams.get("returnTo") || "/");
+            navigate(returnTo);
           }}
         >
           <svg className="h-5 w-5" viewBox="0 0 24 24">

@@ -1,0 +1,1 @@
+UPDATE public.platform_settings SET value = jsonb_set(value, '{logo_url_light_bg}', '"https://uzhajthlokwglujtgmgm.supabase.co/storage/v1/object/public/platform-assets/logo%2Flogo-revisaofacil-light-bg.png"'::jsonb) WHERE key='branding';

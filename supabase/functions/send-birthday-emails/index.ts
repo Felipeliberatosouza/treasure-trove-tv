@@ -3,7 +3,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.101.1'
-import { buildEmailLogoHtml } from '../_shared/email-logo.ts'
+import { buildEmailLogoHtml, resolveEmailLogoUrl } from '../_shared/email-logo.ts'
 import { fetchImageDimensions, type ImageDimensions } from '../_shared/image-dimensions.ts'
 
 Deno.serve(async (req: Request) => {
@@ -59,7 +59,7 @@ Deno.serve(async (req: Request) => {
     // Carrega os 3 templates: birthday (alunos sem assinatura), birthday_subscriber (alunos assinantes), birthday_teacher (professores)
     const { data: templates } = await supabase
       .from('email_templates')
-      .select('template_key, subject, body_html, logo_url, show_social_footer, coupon_enabled, coupon_code, coupon_message, coupon_starts_at, coupon_expires_at')
+      .select('template_key, subject, body_html, logo_url, logo_variant, show_social_footer, coupon_enabled, coupon_code, coupon_message, coupon_starts_at, coupon_expires_at')
       .in('template_key', ['birthday', 'birthday_subscriber', 'birthday_teacher'])
 
     const tplStudentNoSub = templates?.find((t) => t.template_key === 'birthday')
@@ -267,7 +267,7 @@ Deno.serve(async (req: Request) => {
       if (isTeacher && tplTeacher) tpl = tplTeacher
       else if (isActiveSubscriber && tplStudentSub) tpl = tplStudentSub
 
-      const birthdayLogoUrl = tpl.logo_url || brandingData.logo_url || ''
+      const birthdayLogoUrl = resolveEmailLogoUrl(tpl as any, brandingData as any)
       const birthdayLogoDims = await getLogoDims(birthdayLogoUrl)
       const logoHtml = birthdayLogoUrl
         ? buildEmailLogoHtml({

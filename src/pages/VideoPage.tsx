@@ -397,6 +397,30 @@ const VideoPage = () => {
     setStartingTrial(false);
   };
 
+  // Auto-start (or resume) trial when user comes back from login with ?intent=trial
+  useEffect(() => {
+    if (searchParams.get("intent") !== "trial") return;
+    if (!user || trial.loading || startingTrial) return;
+    const clearIntent = () => {
+      const next = new URLSearchParams(searchParams);
+      next.delete("intent");
+      setSearchParams(next, { replace: true });
+    };
+    if (trial.hasActiveTrial) {
+      setShowPaywall(false);
+      setHasFullAccess(true);
+      clearIntent();
+      return;
+    }
+    if (!trial.trialRow && trial.trialEnabled) {
+      handleStartTrial();
+      clearIntent();
+    } else {
+      clearIntent();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, trial.loading, trial.hasActiveTrial, trial.trialRow, trial.trialEnabled]);
+
   const handleReplayVideo = () => {
     setIsWatching(true);
     setShowPaywall(false);

@@ -18,6 +18,7 @@ const SettingsBranding = () => {
   const [form, setForm] = useState<BrandingSettings>({
     platform_name: "", slogan: "", logo_url: "",
     logo_url_dark_bg: "", logo_url_light_bg: "",
+    default_logo_variant: "dark_bg",
     primary_color: "#6366f1", secondary_color: "#8b5cf6", accent_color: "#f59e0b",
     background_color: "#09090f", slogan_color: "#6b7280",
     button_text_color: "#ffffff",
@@ -51,6 +52,7 @@ const SettingsBranding = () => {
       ...data,
       logo_url_dark_bg: data.logo_url_dark_bg || "",
       logo_url_light_bg: data.logo_url_light_bg || "",
+      default_logo_variant: data.default_logo_variant === "light_bg" ? "light_bg" : "dark_bg",
       primary_button_bg: data.primary_button_bg || data.primary_color || "#6366f1",
       primary_button_text: data.primary_button_text || data.button_text_color || "#ffffff",
       secondary_button_bg: data.secondary_button_bg || data.secondary_color || "#1f2937",

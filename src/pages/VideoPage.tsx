@@ -453,11 +453,7 @@ const VideoPage = () => {
   };
 
   const handleSubscribe = () => {
-    if (!user) { navigate("/login"); return; }
-    requireCpf(() => {
-      navigate("/");
-      setTimeout(() => document.getElementById("pricing")?.scrollIntoView({ behavior: "smooth" }), 300);
-    });
+    navigate("/#pricing");
   };
 
   const handleGoToSignup = () => navigate("/signup/student");

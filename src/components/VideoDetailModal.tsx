@@ -275,14 +275,11 @@ const VideoDetailModal = ({ video, open, onClose }: VideoDetailModalProps) => {
   const handleSubscribe = () => {
     if (!user) {
       onClose();
-      navigate("/login");
+      navigate("/#pricing");
       return;
     }
-    requireCpf(() => {
-      const el = document.getElementById("pricing");
-      onClose();
-      setTimeout(() => el?.scrollIntoView({ behavior: "smooth" }), 300);
-    });
+    onClose();
+    navigate("/#pricing");
   };
 
   const handleGoToSignup = () => {
@@ -409,9 +406,13 @@ const VideoDetailModal = ({ video, open, onClose }: VideoDetailModalProps) => {
               {trialExpired && (
                 <div className="flex items-center gap-2 rounded-lg border border-destructive/20 bg-destructive/5 p-3">
                   <AlertTriangle className="h-4 w-4 text-destructive shrink-0" />
-                  <span className="text-sm text-foreground">
+                  <button
+                    type="button"
+                    onClick={handleSubscribe}
+                    className="border-0 bg-transparent p-0 text-left text-sm text-foreground underline hover:text-primary"
+                  >
                     Seu teste grátis expirou. Assine para continuar assistindo.
-                  </span>
+                  </button>
                 </div>
               )}
             </>

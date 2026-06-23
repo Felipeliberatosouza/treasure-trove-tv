@@ -18,6 +18,7 @@ const SettingsBranding = () => {
   const [form, setForm] = useState<BrandingSettings>({
     platform_name: "", slogan: "", logo_url: "",
     logo_url_dark_bg: "", logo_url_light_bg: "",
+    default_logo_variant: "dark_bg",
     primary_color: "#6366f1", secondary_color: "#8b5cf6", accent_color: "#f59e0b",
     background_color: "#09090f", slogan_color: "#6b7280",
     button_text_color: "#ffffff",
@@ -51,6 +52,7 @@ const SettingsBranding = () => {
       ...data,
       logo_url_dark_bg: data.logo_url_dark_bg || "",
       logo_url_light_bg: data.logo_url_light_bg || "",
+      default_logo_variant: data.default_logo_variant === "light_bg" ? "light_bg" : "dark_bg",
       primary_button_bg: data.primary_button_bg || data.primary_color || "#6366f1",
       primary_button_text: data.primary_button_text || data.button_text_color || "#ffffff",
       secondary_button_bg: data.secondary_button_bg || data.secondary_color || "#1f2937",
@@ -244,6 +246,64 @@ const SettingsBranding = () => {
             </div>
           );
         })}
+
+        {/* Selector: qual variação é a padrão do site */}
+        <div className="space-y-2 rounded-md border border-border p-3">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Logomarca padrão do site
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Escolha qual das duas variações abaixo será usada como logomarca padrão na barra de navegação, rodapé e demais áreas do site.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 pt-1">
+            {([
+              {
+                value: "dark_bg" as const,
+                label: "Logo para fundo escuro",
+                url: form.logo_url_dark_bg,
+                previewBg: "bg-slate-900",
+              },
+              {
+                value: "light_bg" as const,
+                label: "Logo para fundo claro",
+                url: form.logo_url_light_bg,
+                previewBg: "bg-white",
+              },
+            ]).map((opt) => {
+              const selected = (form.default_logo_variant || "dark_bg") === opt.value;
+              const disabled = !opt.url;
+              return (
+                <button
+                  key={opt.value}
+                  type="button"
+                  disabled={disabled}
+                  onClick={() => setForm({ ...form, default_logo_variant: opt.value })}
+                  className={`flex flex-col items-stretch gap-2 rounded-md border p-2 text-left transition ${
+                    selected
+                      ? "border-primary ring-2 ring-primary/40"
+                      : "border-border hover:border-primary/40"
+                  } ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+                >
+                  <div className={`flex h-16 items-center justify-center rounded ${opt.previewBg}`}>
+                    {opt.url ? (
+                      <img src={opt.url} alt={opt.label} className="h-12 max-w-[200px] object-contain" />
+                    ) : (
+                      <span className="text-[10px] text-muted-foreground">Envie a imagem acima</span>
+                    )}
+                  </div>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs font-medium">{opt.label}</span>
+                    {selected && (
+                      <span className="rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground">
+                        Padrão
+                      </span>
+                    )}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-3">

@@ -291,11 +291,16 @@ const Navbar = () => {
     >
       <div className="flex items-center justify-between gap-3 px-4 py-3 md:px-12 lg:px-20">
         <Link to="/" className="relative flex items-center leading-none shrink-0">
-          {(branding?.logo_url_dark_bg || branding?.logo_url) && !branding?.use_text_logo ? (
+          {(() => {
+            const variant = branding?.default_logo_variant === "light_bg"
+              ? branding?.logo_url_light_bg
+              : branding?.logo_url_dark_bg;
+            const logoSrc = variant || branding?.logo_url;
+            return logoSrc && !branding?.use_text_logo ? (
             <img
               ref={logoRef}
-              src={branding.logo_url_dark_bg || branding.logo_url}
-              alt={branding.platform_name || "Logo"}
+              src={logoSrc}
+              alt={branding?.platform_name || "Logo"}
               className="h-12 md:h-14 max-w-[260px] object-contain block"
               onLoad={(e) => setLogoWidth((e.target as HTMLImageElement).getBoundingClientRect().width)}
             />
@@ -303,7 +308,8 @@ const Navbar = () => {
             <span className="font-display text-xl font-bold text-gradient">
               {branding?.platform_name || "Revisão Fácil"}
             </span>
-          )}
+          );
+          })()}
           {slogan && (
             <span
               className="absolute left-1/2 -translate-x-1/2 top-full -mt-1 leading-none text-center whitespace-nowrap overflow-hidden pointer-events-none"

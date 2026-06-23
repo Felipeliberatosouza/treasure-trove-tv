@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, useNavigate, Link, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Star, Play, ShoppingCart, Zap, Clock, BookOpen, Gift, AlertTriangle, Lock, ArrowLeft, FileText, ClipboardList, Trophy, StickyNote, HelpCircle, CalendarCheck, ThumbsUp, ThumbsDown } from "lucide-react";
@@ -38,6 +38,7 @@ const DEMO_VIDEO_URL = "/demo-course.mp4";
 const VideoPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user, allRoles, loading: authLoading } = useAuth();
   const isAdmin = allRoles.includes("admin");
   const trial = useFreeTrial();
@@ -380,7 +381,10 @@ const VideoPage = () => {
   };
 
   const handleStartTrial = async () => {
-    if (!user) { navigate("/login"); return; }
+    if (!user) {
+      navigate(`/login?returnTo=${encodeURIComponent(`/video/${video?.id ?? ""}?intent=trial`)}`);
+      return;
+    }
     setStartingTrial(true);
     const ok = await trial.startTrial();
     if (ok) {
@@ -392,6 +396,30 @@ const VideoPage = () => {
     }
     setStartingTrial(false);
   };
+
+  // Auto-start (or resume) trial when user comes back from login with ?intent=trial
+  useEffect(() => {
+    if (searchParams.get("intent") !== "trial") return;
+    if (!user || trial.loading || startingTrial) return;
+    const clearIntent = () => {
+      const next = new URLSearchParams(searchParams);
+      next.delete("intent");
+      setSearchParams(next, { replace: true });
+    };
+    if (trial.hasActiveTrial) {
+      setShowPaywall(false);
+      setHasFullAccess(true);
+      clearIntent();
+      return;
+    }
+    if (!trial.trialRow && trial.trialEnabled) {
+      handleStartTrial();
+      clearIntent();
+    } else {
+      clearIntent();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, trial.loading, trial.hasActiveTrial, trial.trialRow, trial.trialEnabled]);
 
   const handleReplayVideo = () => {
     setIsWatching(true);

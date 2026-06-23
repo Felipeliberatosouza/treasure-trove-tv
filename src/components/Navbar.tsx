@@ -301,7 +301,7 @@ const Navbar = () => {
               ref={logoRef}
               src={logoSrc}
               alt={branding?.platform_name || "Logo"}
-              className="h-9 md:h-11 max-w-[200px] md:max-w-[260px] object-contain block"
+              className="h-11 md:h-14 max-w-[240px] md:max-w-[300px] object-contain block"
               onLoad={(e) => setLogoWidth((e.target as HTMLImageElement).getBoundingClientRect().width)}
             />
           ) : (

@@ -7,12 +7,13 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { translateAuthError } from "@/lib/translateAuthError";
-import { useAllPlatformSettings, type BrandingSettings } from "@/hooks/usePlatformSettings";
+import { useAllPlatformSettings, resolveDefaultLogoUrl, type BrandingSettings } from "@/hooks/usePlatformSettings";
 
 const ForgotPassword = () => {
   const { settings } = useAllPlatformSettings();
   const branding = settings?.branding as BrandingSettings | undefined;
-  const showLogoImage = !!branding?.logo_url && !branding?.use_text_logo;
+  const effectiveLogoUrl = resolveDefaultLogoUrl(branding);
+  const showLogoImage = !!effectiveLogoUrl && !branding?.use_text_logo;
   const platformName = branding?.platform_name || "Revisão Fácil";
 
   const [email, setEmail] = useState("");
@@ -74,7 +75,7 @@ const ForgotPassword = () => {
             {showLogoImage ? (
               <div className="flex justify-center">
                 <img
-                  src={branding!.logo_url}
+                  src={effectiveLogoUrl}
                   alt={platformName}
                   className="h-16 max-w-[280px] object-contain"
                 />

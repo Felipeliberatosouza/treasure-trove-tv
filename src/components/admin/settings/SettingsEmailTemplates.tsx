@@ -435,7 +435,7 @@ const SettingsEmailTemplates = () => {
     const fontFamily = active.font_family || "Arial, sans-serif";
 
     const platformName = brandingData?.platform_name || "Revisão Fácil";
-    const effectiveLogoUrl = active.logo_url || brandingData?.logo_url || "";
+    const effectiveLogoUrl = resolveEmailLogoUrl(active as any, brandingData as any);
     const cached = effectiveLogoUrl ? logoDimsRef.current.get(effectiveLogoUrl) : undefined;
     const dims = cached && cached.width > 0 && cached.height > 0 ? cached : undefined;
     // Toca o tick para deixar explícita a dependência de re-render quando as

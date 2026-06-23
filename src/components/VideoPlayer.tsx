@@ -144,6 +144,7 @@ const VideoPlayer = ({
   const handleTimeUpdate = () => {
     const video = videoRef.current;
     if (!video || !video.duration) return;
+    if (!isFinite(video.duration) || video.duration <= 0) return;
     const pct = (video.currentTime / video.duration) * 100;
     // Acumula segundos reais assistidos (delta seguro entre 0 e 2s para evitar saltos por seek)
     if (lastTimestampRef.current !== null && !video.paused) {
@@ -166,7 +167,23 @@ const VideoPlayer = ({
 
   const handleLoadedMetadata = () => {
     const video = videoRef.current;
-    if (video) setDuration(video.duration);
+    if (!video) return;
+    if (!isFinite(video.duration) || video.duration === 0) {
+      // Webm sem duração: força o browser a calcular indo até o fim
+      const onSeeked = () => {
+        video.currentTime = 0;
+        if (isFinite(video.duration)) setDuration(video.duration);
+        video.removeEventListener("seeked", onSeeked);
+      };
+      video.addEventListener("seeked", onSeeked);
+      try {
+        video.currentTime = 1e101;
+      } catch {
+        // ignore
+      }
+      return;
+    }
+    setDuration(video.duration);
   };
 
   const togglePlay = () => {
@@ -236,6 +253,7 @@ const VideoPlayer = ({
   };
 
   const formatTime = (seconds: number) => {
+    if (!isFinite(seconds) || isNaN(seconds) || seconds < 0) return "0:00";
     const m = Math.floor(seconds / 60);
     const s = Math.floor(seconds % 60);
     return `${m}:${s.toString().padStart(2, "0")}`;

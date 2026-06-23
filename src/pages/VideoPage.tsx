@@ -559,11 +559,7 @@ const VideoPage = () => {
           total={limitInfo.total}
           hasSubscription={limitInfo.hasSubscription}
           individualPrice={limitInfo.individualPrice}
-          onBuyIndividual={() => {
-            requireCpf(() => {
-              toast.info("Compra individual em breve.");
-            });
-          }}
+          onBuyIndividual={handleBuyUnit}
         />
       )}
 

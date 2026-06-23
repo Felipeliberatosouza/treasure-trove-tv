@@ -290,7 +290,7 @@ const Navbar = () => {
       className="fixed top-0 z-50 w-full border-b border-border/50 bg-background/80 backdrop-blur-xl"
     >
       <div className="flex items-center justify-between gap-3 px-4 py-3 md:px-12 lg:px-20">
-        <Link to="/" className="relative flex items-center leading-none shrink-0">
+        <Link to="/" className="flex flex-col items-center gap-0 leading-none shrink-0">
           {(() => {
             const variant = branding?.default_logo_variant === "light_bg"
               ? branding?.logo_url_light_bg
@@ -301,7 +301,7 @@ const Navbar = () => {
               ref={logoRef}
               src={logoSrc}
               alt={branding?.platform_name || "Logo"}
-              className="h-12 md:h-14 max-w-[260px] object-contain block"
+              className="h-16 md:h-20 max-w-[320px] object-contain block"
               onLoad={(e) => setLogoWidth((e.target as HTMLImageElement).getBoundingClientRect().width)}
             />
           ) : (
@@ -312,7 +312,7 @@ const Navbar = () => {
           })()}
           {slogan && (
             <span
-              className="absolute left-1/2 -translate-x-1/2 top-full -mt-1 leading-none text-center whitespace-nowrap overflow-hidden pointer-events-none"
+              className="-mt-5 md:-mt-6 leading-none text-center whitespace-nowrap overflow-hidden"
               style={{
                 width: logoWidth > 0 ? `${logoWidth}px` : undefined,
                 fontSize: `${sloganFontSize}px`,

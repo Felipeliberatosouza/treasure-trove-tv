@@ -54,6 +54,27 @@ const VideoPlayer = ({
   const watchAccumulatorSec = useRef(0);
   const lastTimestampRef = useRef<number | null>(null);
 
+  const getValidDuration = (video: HTMLVideoElement) => {
+    if (Number.isFinite(video.duration) && video.duration > 0) return video.duration;
+    if (video.seekable.length > 0) {
+      const seekableEnd = video.seekable.end(video.seekable.length - 1);
+      if (Number.isFinite(seekableEnd) && seekableEnd > 0) return seekableEnd;
+    }
+    if (video.buffered.length > 0) {
+      const bufferedEnd = video.buffered.end(video.buffered.length - 1);
+      if (Number.isFinite(bufferedEnd) && bufferedEnd > 0) return bufferedEnd;
+    }
+    return 0;
+  };
+
+  const syncDuration = () => {
+    const video = videoRef.current;
+    if (!video) return 0;
+    const nextDuration = getValidDuration(video);
+    if (nextDuration > 0) setDuration(nextDuration);
+    return nextDuration;
+  };
+
   // Hover-seek preview (sprite WebVTT)
   const [thumbData, setThumbData] = useState<ParsedThumbVtt | null>(null);
   const [hoverPreview, setHoverPreview] = useState<
@@ -143,23 +164,24 @@ const VideoPlayer = ({
 
   const handleTimeUpdate = () => {
     const video = videoRef.current;
-    if (!video || !video.duration) return;
-    if (!isFinite(video.duration) || video.duration <= 0) return;
-    const pct = (video.currentTime / video.duration) * 100;
+    if (!video) return;
+    const safeCurrentTime = Number.isFinite(video.currentTime) ? video.currentTime : 0;
+    const safeDuration = duration || syncDuration();
+    const pct = safeDuration > 0 ? Math.min(100, Math.max(0, (safeCurrentTime / safeDuration) * 100)) : 0;
     // Acumula segundos reais assistidos (delta seguro entre 0 e 2s para evitar saltos por seek)
     if (lastTimestampRef.current !== null && !video.paused) {
-      const delta = video.currentTime - lastTimestampRef.current;
+      const delta = safeCurrentTime - lastTimestampRef.current;
       if (delta > 0 && delta < 2) {
         watchAccumulatorSec.current += delta;
       }
     }
-    lastTimestampRef.current = video.currentTime;
-    setCurrentTime(video.currentTime);
+    lastTimestampRef.current = safeCurrentTime;
+    setCurrentTime(safeCurrentTime);
     setPercentage(pct);
 
-    if (previewLimit && pct >= previewLimit) {
+    if (previewLimit && safeDuration > 0 && pct >= previewLimit) {
       video.pause();
-      video.currentTime = (previewLimit / 100) * video.duration;
+      video.currentTime = (previewLimit / 100) * safeDuration;
       setIsPlaying(false);
       onPreviewLimitReached?.();
     }
@@ -168,11 +190,12 @@ const VideoPlayer = ({
   const handleLoadedMetadata = () => {
     const video = videoRef.current;
     if (!video) return;
-    if (!isFinite(video.duration) || video.duration === 0) {
+    const nextDuration = syncDuration();
+    if (nextDuration === 0 && !Number.isFinite(video.duration)) {
       // Webm sem duração: força o browser a calcular indo até o fim
       const onSeeked = () => {
         video.currentTime = 0;
-        if (isFinite(video.duration)) setDuration(video.duration);
+        syncDuration();
         video.removeEventListener("seeked", onSeeked);
       };
       video.addEventListener("seeked", onSeeked);
@@ -183,7 +206,6 @@ const VideoPlayer = ({
       }
       return;
     }
-    setDuration(video.duration);
   };
 
   const togglePlay = () => {
@@ -274,6 +296,9 @@ const VideoPlayer = ({
         preload="metadata"
         onTimeUpdate={handleTimeUpdate}
         onLoadedMetadata={handleLoadedMetadata}
+            onDurationChange={syncDuration}
+            onProgress={syncDuration}
+            onCanPlay={syncDuration}
         onPlay={() => setIsPlaying(true)}
         onPause={() => setIsPlaying(false)}
         onEnded={() => {

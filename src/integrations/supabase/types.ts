@@ -2890,6 +2890,7 @@ export type Database = {
         Returns: string
       }
       add_student_role_to_self: { Args: never; Returns: boolean }
+      admin_reset_free_trial: { Args: { _user_id: string }; Returns: boolean }
       can_access_lesson_material: {
         Args: { _lesson_id: string; _material_type: string }
         Returns: boolean

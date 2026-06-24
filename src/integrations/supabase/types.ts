@@ -2966,10 +2966,11 @@ export type Database = {
       }
       get_user_cashback_tier: { Args: { _user_id: string }; Returns: Json }
       get_video_rating_aggregates: {
-        Args: { _content_type: string; _ids: string[] }
+        Args: { _ids: string[] }
         Returns: {
           average: number
           content_id: string
+          content_type: string
           count: number
         }[]
       }

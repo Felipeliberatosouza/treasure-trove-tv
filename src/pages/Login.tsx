@@ -12,6 +12,7 @@ import TwoFactorChallenge from "@/components/TwoFactorChallenge";
 import { useAllPlatformSettings, resolveDefaultLogoUrl, type BrandingSettings } from "@/hooks/usePlatformSettings";
 
 const PENDING_TRIAL_INTENT_KEY = "revisao_facil_pending_trial_intent";
+const PENDING_TRIAL_RETURN_KEY = "revisao_facil_pending_trial_return";
 const TRIAL_ALREADY_USED_MESSAGE = "Você já utilizou seu teste grátis anteriormente!";
 
 const Login = () => {
@@ -52,6 +53,7 @@ const Login = () => {
     if (!hasTrialIntent && !hasStoredTrialIntent) return false;
 
     window.sessionStorage.removeItem(PENDING_TRIAL_INTENT_KEY);
+    window.sessionStorage.removeItem(PENDING_TRIAL_RETURN_KEY);
     const { data, error } = await supabase.rpc("start_free_trial" as any);
     if (error || data !== true) {
       toast.error(TRIAL_ALREADY_USED_MESSAGE);

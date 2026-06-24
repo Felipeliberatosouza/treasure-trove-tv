@@ -35,6 +35,8 @@ import { useActiveBlock } from "@/hooks/useActiveBlock";
 
 const DEMO_VIDEO_URL = "/demo-course.mp4";
 const PENDING_TRIAL_RETURN_KEY = "revisao_facil_pending_trial_return";
+const PENDING_TRIAL_INTENT_KEY = "revisao_facil_pending_trial_intent";
+const TRIAL_ALREADY_USED_MESSAGE = "Você já utilizou seu teste grátis anteriormente!";
 
 const VideoPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -408,7 +410,7 @@ const VideoPage = () => {
       if (video?.id) setTrialAccessContentId(video.id);
       setHasFullAccess(true);
     } else {
-      toast.error("Você já utilizou seu teste grátis anteriormente e não pode iniciá-lo novamente. Assine um plano ou compre o conteúdo avulso para continuar.");
+      toast.error(TRIAL_ALREADY_USED_MESSAGE);
     }
     setStartingTrial(false);
     return ok;
@@ -418,6 +420,7 @@ const VideoPage = () => {
     if (!user) {
       const returnTo = `/video/${video?.id ?? id ?? ""}?intent=trial`;
       window.sessionStorage.setItem(PENDING_TRIAL_RETURN_KEY, returnTo);
+      window.sessionStorage.setItem(PENDING_TRIAL_INTENT_KEY, "1");
       navigate(`/login?returnTo=${encodeURIComponent(returnTo)}`);
       return;
     }
@@ -453,7 +456,7 @@ const VideoPage = () => {
     } else {
       pendingTrialHandledRef.current = true;
       if (trial.trialRow && !trial.hasActiveTrial) {
-        toast.error("Você já utilizou seu teste grátis anteriormente. Assine um plano para continuar.");
+        toast.error(TRIAL_ALREADY_USED_MESSAGE);
       }
       clearIntent();
     }
@@ -528,6 +531,7 @@ const VideoPage = () => {
   const handleGoToSignup = () => {
     const returnTo = `/video/${video?.id ?? id ?? ""}?intent=trial`;
     window.sessionStorage.setItem(PENDING_TRIAL_RETURN_KEY, returnTo);
+    window.sessionStorage.setItem(PENDING_TRIAL_INTENT_KEY, "1");
     navigate(`/signup/student?returnTo=${encodeURIComponent(returnTo)}`);
   };
 

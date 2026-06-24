@@ -5,7 +5,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useFreeTrial } from "@/hooks/useFreeTrial";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { useSearchParams } from "react-router-dom";
+
+const PENDING_TRIAL_INTENT_KEY = "revisao_facil_pending_trial_intent";
+const TRIAL_ALREADY_USED_MESSAGE = "Você já utilizou seu teste grátis anteriormente!";
 
 const EMPTY_COUNTDOWN = { days: 0, hours: 0, minutes: 0, seconds: 0 };
 
@@ -79,9 +83,34 @@ const CountdownUnit = ({ value, label }: { value: number; label: string }) => (
 const FreeTrialBanner = () => {
   const { user, allRoles } = useAuth();
   const trial = useFreeTrial();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [starting, setStarting] = useState(false);
+  const pendingTrialHandledRef = useRef(false);
 
   const countdown = useCountdown(trial.hasActiveTrial ? trial.expiresAt : null);
+
+  useEffect(() => {
+    if (!user || trial.loading || pendingTrialHandledRef.current) return;
+
+    const hasStoredTrialIntent = window.sessionStorage.getItem(PENDING_TRIAL_INTENT_KEY) === "1";
+    const hasUrlTrialIntent = searchParams.get("intent") === "trial";
+    if (!hasStoredTrialIntent && !hasUrlTrialIntent) return;
+
+    pendingTrialHandledRef.current = true;
+    window.sessionStorage.removeItem(PENDING_TRIAL_INTENT_KEY);
+
+    if (hasUrlTrialIntent) {
+      const next = new URLSearchParams(searchParams);
+      next.delete("intent");
+      setSearchParams(next, { replace: true });
+    }
+
+    setStarting(true);
+    trial.startTrial().then((ok) => {
+      if (ok) toast.success("Teste grátis ativado! Aproveite.");
+      else toast.error(TRIAL_ALREADY_USED_MESSAGE);
+    }).finally(() => setStarting(false));
+  }, [user, trial.loading, trial.startTrial, searchParams, setSearchParams]);
 
   // Don't render if trial feature is disabled or still loading
   if (trial.loading || !trial.trialEnabled) return null;
@@ -97,7 +126,7 @@ const FreeTrialBanner = () => {
     setStarting(true);
     const ok = await trial.startTrial();
     if (ok) toast.success("Teste grátis ativado! Aproveite.");
-    else toast.error("Não foi possível iniciar o teste grátis.");
+    else toast.error(TRIAL_ALREADY_USED_MESSAGE);
     setStarting(false);
   };
 
@@ -189,7 +218,10 @@ const FreeTrialBanner = () => {
             </Button>
           ) : (
             <Button size="lg" className="gap-2 font-display font-semibold shrink-0" asChild>
-              <Link to="/login">
+              <Link
+                to="/login?returnTo=%2F%3Fintent%3Dtrial"
+                onClick={() => window.sessionStorage.setItem(PENDING_TRIAL_INTENT_KEY, "1")}
+              >
                 <Gift className="h-4 w-4" /> Entrar e Testar Grátis
               </Link>
             </Button>

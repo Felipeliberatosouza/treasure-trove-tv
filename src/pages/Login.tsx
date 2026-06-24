@@ -11,6 +11,10 @@ import { translateAuthError } from "@/lib/translateAuthError";
 import TwoFactorChallenge from "@/components/TwoFactorChallenge";
 import { useAllPlatformSettings, resolveDefaultLogoUrl, type BrandingSettings } from "@/hooks/usePlatformSettings";
 
+const PENDING_TRIAL_INTENT_KEY = "revisao_facil_pending_trial_intent";
+const PENDING_TRIAL_RETURN_KEY = "revisao_facil_pending_trial_return";
+const TRIAL_ALREADY_USED_MESSAGE = "Você já utilizou seu teste grátis anteriormente!";
+
 const Login = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -31,7 +35,33 @@ const Login = () => {
   const [resending, setResending] = useState(false);
   const requestedReturnTo = searchParams.get("returnTo");
   const returnTo = requestedReturnTo?.startsWith("/") && !requestedReturnTo.startsWith("//") ? requestedReturnTo : "/";
+  const hasTrialIntent = returnTo.includes("intent=trial");
   const studentSignupUrl = returnTo === "/" ? "/signup/student" : `/signup/student?returnTo=${encodeURIComponent(returnTo)}`;
+
+  const clearTrialIntentFromPath = (path: string) => {
+    try {
+      const url = new URL(path, window.location.origin);
+      url.searchParams.delete("intent");
+      return `${url.pathname}${url.search}${url.hash}`;
+    } catch {
+      return path;
+    }
+  };
+
+  const handlePendingTrialAfterLogin = async () => {
+    const hasStoredTrialIntent = window.sessionStorage.getItem(PENDING_TRIAL_INTENT_KEY) === "1";
+    if (!hasTrialIntent && !hasStoredTrialIntent) return false;
+
+    window.sessionStorage.removeItem(PENDING_TRIAL_INTENT_KEY);
+    window.sessionStorage.removeItem(PENDING_TRIAL_RETURN_KEY);
+    const { data, error } = await supabase.rpc("start_free_trial" as any);
+    if (error || data !== true) {
+      toast.error(TRIAL_ALREADY_USED_MESSAGE);
+    } else {
+      toast.success("Teste grátis ativado!");
+    }
+    return true;
+  };
 
   useEffect(() => {
     const checkEmail = searchParams.get("check_email");
@@ -179,14 +209,16 @@ const Login = () => {
 
     }
 
-    toast.success("Login realizado com sucesso!");
-    navigate(returnTo);
+    const handledTrialIntent = await handlePendingTrialAfterLogin();
+    if (!handledTrialIntent) toast.success("Login realizado com sucesso!");
+    navigate(handledTrialIntent ? clearTrialIntentFromPath(returnTo) : returnTo);
     setLoading(false);
   };
 
   const handleMfaVerified = async () => {
-    toast.success("Login realizado com sucesso!");
-    navigate(returnTo);
+    const handledTrialIntent = await handlePendingTrialAfterLogin();
+    if (!handledTrialIntent) toast.success("Login realizado com sucesso!");
+    navigate(handledTrialIntent ? clearTrialIntentFromPath(returnTo) : returnTo);
   };
 
   const handleMfaCancel = async () => {
@@ -236,6 +268,9 @@ const Login = () => {
           size="lg"
           className="w-full font-display font-semibold gap-2"
           onClick={async () => {
+              if (hasTrialIntent) {
+                window.sessionStorage.setItem(PENDING_TRIAL_INTENT_KEY, "1");
+              }
             const result = await lovable.auth.signInWithOAuth("google", {
               redirect_uri: `${window.location.origin}${returnTo}`,
             });
@@ -248,8 +283,9 @@ const Login = () => {
               return;
             }
             // Tokens received and session set — go home.
-            toast.success("Login realizado com sucesso!");
-            navigate(returnTo);
+            const handledTrialIntent = await handlePendingTrialAfterLogin();
+            if (!handledTrialIntent) toast.success("Login realizado com sucesso!");
+            navigate(handledTrialIntent ? clearTrialIntentFromPath(returnTo) : returnTo);
           }}
         >
           <svg className="h-5 w-5" viewBox="0 0 24 24">

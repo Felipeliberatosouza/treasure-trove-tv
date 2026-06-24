@@ -27,6 +27,8 @@ interface RatingData {
 }
 
 const DEMO_VIDEO_URL = "/demo-course.mp4";
+const PENDING_TRIAL_INTENT_KEY = "revisao_facil_pending_trial_intent";
+const TRIAL_ALREADY_USED_MESSAGE = "Você já utilizou seu teste grátis anteriormente!";
 
 const VideoDetailModal = ({ video, open, onClose }: VideoDetailModalProps) => {
   const { user } = useAuth();
@@ -236,6 +238,7 @@ const VideoDetailModal = ({ video, open, onClose }: VideoDetailModalProps) => {
     if (!user) {
       onClose();
       const returnTo = `/video/${video?.id ?? ""}?intent=trial`;
+      window.sessionStorage.setItem(PENDING_TRIAL_INTENT_KEY, "1");
       navigate(`/login?returnTo=${encodeURIComponent(returnTo)}`);
       return;
     }
@@ -247,7 +250,7 @@ const VideoDetailModal = ({ video, open, onClose }: VideoDetailModalProps) => {
       if (video?.id) setTrialAccessContentId(video.id);
       setHasFullAccess(true);
     } else {
-      toast.error("Você já utilizou seu teste grátis anteriormente e não pode iniciá-lo novamente. Assine um plano ou compre o conteúdo avulso para continuar.");
+      toast.error(TRIAL_ALREADY_USED_MESSAGE);
     }
     setStartingTrial(false);
   };
@@ -308,6 +311,7 @@ const VideoDetailModal = ({ video, open, onClose }: VideoDetailModalProps) => {
   const handleGoToSignup = () => {
     onClose();
     const returnTo = `/video/${video.id}?intent=trial`;
+    window.sessionStorage.setItem(PENDING_TRIAL_INTENT_KEY, "1");
     navigate(`/signup/student?returnTo=${encodeURIComponent(returnTo)}`);
   };
 

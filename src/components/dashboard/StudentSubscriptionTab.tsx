@@ -12,6 +12,7 @@ import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/comp
 import { toast } from "sonner";
 import { useAuditLog } from "@/hooks/useAuditLog";
 import { useActiveSubscription } from "@/hooks/useActiveSubscription";
+import { useFreeTrial } from "@/hooks/useFreeTrial";
 import SubscriptionStatement from "./subscription/SubscriptionStatement";
 import PlanChangeModal from "./subscription/PlanChangeModal";
 import PlanChangeCheckoutModal from "./subscription/PlanChangeCheckoutModal";
@@ -67,6 +68,7 @@ export default function StudentSubscriptionTab() {
   // - Skip the heavy join query when we already know the user has none
   // - Notify the navbar (via refresh) after plan change / cancellation
   const { isActive: hasActiveSub, loading: activeSubLoading, refresh: refreshActiveSub } = useActiveSubscription();
+  const trial = useFreeTrial();
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeSubscription, setActiveSubscription] = useState<SubscriptionData | null>(null);
   const [allSubscriptions, setAllSubscriptions] = useState<SubscriptionData[]>([]);
@@ -660,6 +662,39 @@ export default function StudentSubscriptionTab() {
   return (
     <div className="space-y-6">
       <h2 className="font-display text-lg font-semibold mb-1">Assinatura e Compras</h2>
+
+      {/* Free Trial status */}
+      {trial.trialEnabled && !trial.loading && (
+        <div className="rounded-lg border border-border bg-card p-3 flex items-start gap-3">
+          <div className="rounded-md bg-primary/10 p-2 shrink-0">
+            <Award className="h-4 w-4 text-primary" />
+          </div>
+          <div className="text-sm">
+            <p className="font-medium mb-0.5">Teste Grátis</p>
+            {!trial.trialRow ? (
+              <p className="text-muted-foreground text-xs">Você ainda não utilizou seu teste grátis.</p>
+            ) : trial.hasActiveTrial ? (
+              <p className="text-muted-foreground text-xs">
+                Em andamento —{" "}
+                {trial.trialType === "days"
+                  ? `${trial.daysRemaining} dia(s) restante(s)`
+                  : `${trial.videosRemaining} acesso(s) restante(s)`}
+                {trial.trialRow?.started_at && (
+                  <> · Iniciado em {new Date(trial.trialRow.started_at).toLocaleDateString("pt-BR")}</>
+                )}
+              </p>
+            ) : (
+              <p className="text-muted-foreground text-xs">
+                Você já utilizou seu teste grátis
+                {trial.trialRow?.started_at && (
+                  <> em {new Date(trial.trialRow.started_at).toLocaleDateString("pt-BR")}</>
+                )}
+                . Não é possível iniciá-lo novamente.
+              </p>
+            )}
+          </div>
+        </div>
+      )}
 
       <Tabs defaultValue="current" className="w-full">
         <TabsList className="grid w-full grid-cols-3">

@@ -27,6 +27,12 @@ interface UserWithRole {
   contract_text?: string | null;
   contract_signature_name?: string | null;
   contract_signature_cpf?: string | null;
+  trial_status?: "none" | "active" | "used";
+  trial_started_at?: string | null;
+  trial_type?: string | null;
+  trial_days?: number | null;
+  trial_videos?: number | null;
+  trial_videos_watched?: number | null;
 }
 
 const AdminUsersTab = () => {
@@ -47,12 +53,30 @@ const AdminUsersTab = () => {
     const { data: profiles } = await supabase.from("profiles").select("user_id, name, email, created_at, referral_code, active, accepts_marketing, birth_date");
     const { data: roles } = await supabase.from("user_roles").select("user_id, role");
     const { data: contracts } = await supabase.from("teacher_contracts" as any).select("teacher_id, signed_at, expires_at, status, contract_text, signature_name, signature_cpf").eq("status", "active");
+    const { data: trials } = await supabase
+      .from("free_trials")
+      .select("user_id, active, started_at, trial_type, trial_days, trial_videos, videos_watched");
 
     if (profiles && roles) {
       const roleMap = new Map(roles.map((r) => [r.user_id, r.role]));
       const contractMap = new Map((contracts as any[] || []).map((c: any) => [c.teacher_id, c]));
+      const trialMap = new Map((trials as any[] || []).map((t: any) => [t.user_id, t]));
       const merged: UserWithRole[] = profiles.map((p) => {
         const contract = contractMap.get(p.user_id) as any;
+        const t = trialMap.get(p.user_id) as any;
+        let trial_status: "none" | "active" | "used" = "none";
+        if (t) {
+          let stillActive = false;
+          if (t.active) {
+            if (t.trial_type === "days") {
+              const exp = new Date(t.started_at).getTime() + (t.trial_days || 0) * 86400000;
+              stillActive = exp > Date.now();
+            } else {
+              stillActive = (t.videos_watched || 0) < (t.trial_videos || 0);
+            }
+          }
+          trial_status = stillActive ? "active" : "used";
+        }
         return {
           ...p,
           role: roleMap.get(p.user_id) || "student",
@@ -65,6 +89,12 @@ const AdminUsersTab = () => {
           contract_text: contract?.contract_text || null,
           contract_signature_name: contract?.signature_name || null,
           contract_signature_cpf: contract?.signature_cpf || null,
+          trial_status,
+          trial_started_at: t?.started_at || null,
+          trial_type: t?.trial_type || null,
+          trial_days: t?.trial_days ?? null,
+          trial_videos: t?.trial_videos ?? null,
+          trial_videos_watched: t?.videos_watched ?? null,
         };
       });
       setUsers(merged);
@@ -245,6 +275,7 @@ const AdminUsersTab = () => {
                 <TableHead>Papel</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Contrato</TableHead>
+                <TableHead>Teste Grátis</TableHead>
                 <TableHead>Aniversário</TableHead>
                 <TableHead>Cadastro</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
@@ -278,6 +309,21 @@ const AdminUsersTab = () => {
                       )
                     ) : (
                       <span className="text-xs text-muted-foreground">—</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {u.trial_status === "active" ? (
+                      <Badge variant="outline" className="border-green-500/30 text-green-500" title={u.trial_started_at ? `Iniciado em ${new Date(u.trial_started_at).toLocaleDateString("pt-BR")}` : undefined}>
+                        Em andamento
+                      </Badge>
+                    ) : u.trial_status === "used" ? (
+                      <Badge variant="outline" className="border-amber-500/30 text-amber-500" title={u.trial_started_at ? `Iniciado em ${new Date(u.trial_started_at).toLocaleDateString("pt-BR")}` : undefined}>
+                        Já utilizado
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" className="border-muted-foreground/20 text-muted-foreground">
+                        Não usado
+                      </Badge>
                     )}
                   </TableCell>
                   <TableCell className="text-muted-foreground text-xs">
@@ -351,7 +397,7 @@ const AdminUsersTab = () => {
               ))}
               {filtered.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={10} className="text-center text-muted-foreground py-8">
                     Nenhum usuário encontrado.
                   </TableCell>
                 </TableRow>

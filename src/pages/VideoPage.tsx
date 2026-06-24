@@ -633,6 +633,7 @@ const VideoPage = () => {
           hasSubscription={limitInfo.hasSubscription}
           individualPrice={limitInfo.individualPrice}
           onBuyIndividual={handleBuyUnit}
+          trialAlreadyUsed={!!(trial.trialEnabled && trial.trialRow && !trial.hasActiveTrial)}
         />
       )}
 

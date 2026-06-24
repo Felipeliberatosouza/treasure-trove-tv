@@ -12,22 +12,14 @@ export function useVideoRatings(contentIds: string[], contentType = "lesson") {
     if (contentIds.length === 0) return;
 
     const fetchAll = async () => {
-      const { data } = await supabase
-        .from("video_ratings")
-        .select("content_id, rating")
-        .eq("content_type", contentType)
-        .in("content_id", contentIds);
-
+      const { data } = await supabase.rpc("get_video_rating_aggregates" as any, {
+        _ids: contentIds,
+      });
       if (!data) return;
-
       const map: RatingsMap = {};
-      for (const r of data) {
-        if (!map[r.content_id]) map[r.content_id] = { average: 0, count: 0 };
-        map[r.content_id].count++;
-        map[r.content_id].average += r.rating;
-      }
-      for (const id of Object.keys(map)) {
-        map[id].average = map[id].average / map[id].count;
+      for (const r of data as any[]) {
+        if (r.content_type !== contentType) continue;
+        map[r.content_id] = { average: Number(r.average) || 0, count: r.count || 0 };
       }
       setRatings(map);
     };

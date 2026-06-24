@@ -239,10 +239,6 @@ const VideoDetailModal = ({ video, open, onClose }: VideoDetailModalProps) => {
       navigate(`/login?returnTo=${encodeURIComponent(returnTo)}`);
       return;
     }
-    if (trial.trialRow) {
-      toast.error("Você já utilizou seu teste grátis anteriormente e não pode iniciá-lo novamente. Assine um plano para continuar.");
-      return;
-    }
     setStartingTrial(true);
     const ok = await trial.startTrial();
     if (ok) {
@@ -251,7 +247,7 @@ const VideoDetailModal = ({ video, open, onClose }: VideoDetailModalProps) => {
       if (video?.id) setTrialAccessContentId(video.id);
       setHasFullAccess(true);
     } else {
-      toast.error("Não foi possível iniciar o teste grátis. Caso já tenha utilizado, não é possível iniciá-lo novamente.");
+      toast.error("Você já utilizou seu teste grátis anteriormente e não pode iniciá-lo novamente. Assine um plano ou compre o conteúdo avulso para continuar.");
     }
     setStartingTrial(false);
   };

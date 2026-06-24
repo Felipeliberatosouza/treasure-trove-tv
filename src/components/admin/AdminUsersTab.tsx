@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Search, Trash2, UserCog, UserCheck, UserX, FileSignature, Eye, Download, MailCheck, KeyRound, Send } from "lucide-react";
+import { Search, Trash2, UserCog, UserCheck, UserX, FileSignature, Eye, Download, MailCheck, KeyRound, Send, Gift } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuditLog } from "@/hooks/useAuditLog";
 
@@ -209,6 +209,18 @@ const AdminUsersTab = () => {
     setNewPwd("");
   };
 
+  const handleResetTrial = async (user: UserWithRole) => {
+    if (!confirm(`Liberar o teste grátis novamente para "${user.name}"? O histórico do teste anterior será apagado.`)) return;
+    const { error } = await supabase.rpc("admin_reset_free_trial" as any, { _user_id: user.user_id });
+    if (error) {
+      toast({ title: "Erro", description: error.message || "Não foi possível liberar o teste grátis.", variant: "destructive" });
+      return;
+    }
+    await logAction("free_trial_reset", { targetTable: "free_trials", targetId: user.user_id, metadata: { name: user.name, email: user.email } });
+    toast({ title: "Liberado", description: `Teste grátis liberado novamente para "${user.name}".` });
+    fetchUsers();
+  };
+
   const filtered = users.filter((u) => {
     const matchSearch = u.name.toLowerCase().includes(search.toLowerCase()) || u.email.toLowerCase().includes(search.toLowerCase());
     const matchRole = filterRole === "all" || u.role === filterRole;
@@ -313,13 +325,27 @@ const AdminUsersTab = () => {
                   </TableCell>
                   <TableCell>
                     {u.trial_status === "active" ? (
-                      <Badge variant="outline" className="border-green-500/30 text-green-500" title={u.trial_started_at ? `Iniciado em ${new Date(u.trial_started_at).toLocaleDateString("pt-BR")}` : undefined}>
-                        Em andamento
-                      </Badge>
+                      <div className="flex flex-col gap-0.5">
+                        <Badge variant="outline" className="border-green-500/30 text-green-500 w-fit" title={u.trial_started_at ? `Iniciado em ${new Date(u.trial_started_at).toLocaleDateString("pt-BR")}` : undefined}>
+                          Em andamento
+                        </Badge>
+                        {u.trial_type === "videos" && (
+                          <span className="text-[10px] text-muted-foreground">
+                            {(u.trial_videos_watched ?? 0)}/{(u.trial_videos ?? 0)} acessos · {Math.max(0, (u.trial_videos ?? 0) - (u.trial_videos_watched ?? 0))} restantes
+                          </span>
+                        )}
+                      </div>
                     ) : u.trial_status === "used" ? (
-                      <Badge variant="outline" className="border-amber-500/30 text-amber-500" title={u.trial_started_at ? `Iniciado em ${new Date(u.trial_started_at).toLocaleDateString("pt-BR")}` : undefined}>
-                        Já utilizado
-                      </Badge>
+                      <div className="flex flex-col gap-0.5">
+                        <Badge variant="outline" className="border-amber-500/30 text-amber-500 w-fit" title={u.trial_started_at ? `Iniciado em ${new Date(u.trial_started_at).toLocaleDateString("pt-BR")}` : undefined}>
+                          Já utilizado
+                        </Badge>
+                        {u.trial_type === "videos" && (
+                          <span className="text-[10px] text-muted-foreground">
+                            {(u.trial_videos_watched ?? 0)}/{(u.trial_videos ?? 0)} acessos
+                          </span>
+                        )}
+                      </div>
                     ) : (
                       <Badge variant="outline" className="border-muted-foreground/20 text-muted-foreground">
                         Não usado
@@ -373,6 +399,17 @@ const AdminUsersTab = () => {
                       >
                         <KeyRound className="h-4 w-4" />
                       </Button>
+                      {u.trial_status !== "none" && (
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-8 w-8 text-primary hover:text-primary"
+                          onClick={() => handleResetTrial(u)}
+                          title="Liberar teste grátis novamente"
+                        >
+                          <Gift className="h-4 w-4" />
+                        </Button>
+                      )}
                       <Button
                         size="sm"
                         variant="ghost"

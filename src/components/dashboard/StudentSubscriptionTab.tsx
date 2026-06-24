@@ -678,7 +678,7 @@ export default function StudentSubscriptionTab() {
                 Em andamento —{" "}
                 {trial.trialType === "days"
                   ? `${trial.daysRemaining} dia(s) restante(s)`
-                  : `${trial.videosRemaining} acesso(s) restante(s)`}
+                  : `${(trial.trialRow?.videos_watched ?? 0)} de ${(trial.trialRow?.trial_videos ?? 0)} acessos utilizados · ${trial.videosRemaining} restante(s)`}
                 {trial.trialRow?.started_at && (
                   <> · Iniciado em {new Date(trial.trialRow.started_at).toLocaleDateString("pt-BR")}</>
                 )}
@@ -686,6 +686,9 @@ export default function StudentSubscriptionTab() {
             ) : (
               <p className="text-muted-foreground text-xs">
                 Você já utilizou seu teste grátis
+                {trial.trialRow?.trial_type === "videos" && (
+                  <> ({trial.trialRow?.videos_watched ?? 0} de {trial.trialRow?.trial_videos ?? 0} acessos)</>
+                )}
                 {trial.trialRow?.started_at && (
                   <> em {new Date(trial.trialRow.started_at).toLocaleDateString("pt-BR")}</>
                 )}

@@ -2883,6 +2883,15 @@ export type Database = {
         }
         Relationships: []
       }
+      video_rating_aggregates: {
+        Row: {
+          average: number | null
+          content_id: string | null
+          content_type: string | null
+          count: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       add_business_days: {
@@ -2956,11 +2965,24 @@ export type Database = {
         Returns: number
       }
       get_user_cashback_tier: { Args: { _user_id: string }; Returns: Json }
+      get_video_rating_aggregates: {
+        Args: { _ids: string[] }
+        Returns: {
+          average: number
+          content_id: string
+          content_type: string
+          count: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      is_content_teacher: {
+        Args: { _content_id: string; _content_type: string; _user_id: string }
         Returns: boolean
       }
       is_course_owner: {

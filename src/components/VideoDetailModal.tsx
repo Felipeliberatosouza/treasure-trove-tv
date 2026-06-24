@@ -188,20 +188,28 @@ const VideoDetailModal = ({ video, open, onClose }: VideoDetailModalProps) => {
 
   const fetchRatings = async () => {
     if (!video) return;
-    const { data: ratings } = await supabase
-      .from("video_ratings")
-      .select("rating, user_id")
-      .eq("content_type", "lesson")
-      .eq("content_id", video.id);
-
-    if (ratings && ratings.length > 0) {
-      const avg = ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length;
-      const userR = user ? ratings.find((r) => r.user_id === user.id)?.rating ?? null : null;
-      setRatingData({ average: avg, count: ratings.length, userRating: userR });
+    const [aggRes, ownRes] = await Promise.all([
+      supabase.rpc("get_video_rating_aggregates" as any, { _ids: [video.id] }),
+      user
+        ? supabase
+            .from("video_ratings")
+            .select("rating")
+            .eq("content_type", "lesson")
+            .eq("content_id", video.id)
+            .eq("user_id", user.id)
+            .maybeSingle()
+        : Promise.resolve({ data: null } as any),
+    ]);
+    const agg = ((aggRes.data as any[]) || []).find(
+      (r) => r.content_type === "lesson" && r.content_id === video.id,
+    );
+    const userR = (ownRes as any).data?.rating ?? null;
+    if (agg) {
+      setRatingData({ average: Number(agg.average) || 0, count: agg.count || 0, userRating: userR });
       if (userR) setRating(userR);
     } else {
-      setRatingData({ average: 0, count: 0, userRating: null });
-      setRating(0);
+      setRatingData({ average: 0, count: 0, userRating: userR });
+      setRating(userR ?? 0);
     }
   };
 

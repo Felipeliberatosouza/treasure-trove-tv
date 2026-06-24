@@ -218,14 +218,14 @@ const TeacherProfile = () => {
       if (contentIds.length > 0) {
         const [viewsRes, ratingsRes] = await Promise.all([
           supabase.from("video_views").select("id", { count: "exact", head: true }).in("content_id", contentIds),
-          supabase.from("video_ratings").select("rating").in("content_id", contentIds),
+          supabase.rpc("get_video_rating_aggregates" as any, { _ids: contentIds }),
         ]);
         setTotalViews(viewsRes.count || 0);
-        const ratings = ratingsRes.data || [];
-        setRatingCount(ratings.length);
-        if (ratings.length > 0) {
-          setAvgRating(ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length);
-        }
+        const aggRows = ((ratingsRes.data as any[]) || []);
+        const totalCount = aggRows.reduce((s, r) => s + (r.count || 0), 0);
+        const weighted = aggRows.reduce((s, r) => s + (Number(r.average) || 0) * (r.count || 0), 0);
+        setRatingCount(totalCount);
+        if (totalCount > 0) setAvgRating(weighted / totalCount);
       }
 
       setLoading(false);

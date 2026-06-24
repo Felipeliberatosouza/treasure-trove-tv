@@ -141,10 +141,7 @@ const StudentContentSections = ({
             })
           : Promise.resolve({ data: [] as any[] }),
         allIds.length
-          ? supabase
-              .from("video_ratings")
-              .select("content_id, rating")
-              .in("content_id", allIds)
+          ? supabase.rpc("get_video_rating_aggregates" as any, { _ids: allIds })
           : Promise.resolve({ data: [] as any[] }),
         allIds.length
           ? supabase
@@ -162,16 +159,12 @@ const StudentContentSections = ({
         (r) => viewsMap.set(r.content_id, r.views_count)
       );
 
-      const ratingAgg: Record<string, { sum: number; count: number }> = {};
-      ((ratingsRes.data as any[]) || []).forEach((r) => {
-        const a = ratingAgg[r.content_id] || { sum: 0, count: 0 };
-        a.sum += r.rating;
-        a.count += 1;
-        ratingAgg[r.content_id] = a;
-      });
       const ratingsMap: Record<string, { average: number; count: number }> = {};
-      Object.entries(ratingAgg).forEach(([id, a]) => {
-        ratingsMap[id] = { average: a.count > 0 ? a.sum / a.count : 0, count: a.count };
+      ((ratingsRes.data as any[]) || []).forEach((r) => {
+        ratingsMap[r.content_id] = {
+          average: Number(r.average) || 0,
+          count: r.count || 0,
+        };
       });
 
       const watched = new Set<string>();

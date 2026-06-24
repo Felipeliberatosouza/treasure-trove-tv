@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Mail, Lock, User, Eye, EyeOff, GraduationCap, ArrowLeft, CalendarDays, Camera, CreditCard } from "lucide-react";
 import DateInput from "@/components/DateInput";
@@ -20,6 +20,7 @@ import { useAllPlatformSettings, resolveDefaultLogoUrl, type BrandingSettings } 
 
 const StudentSignup = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { settings } = useAllPlatformSettings();
   const branding = settings?.branding as BrandingSettings | undefined;
   const platformName = branding?.platform_name || "Revisão Fácil";
@@ -42,6 +43,9 @@ const StudentSignup = () => {
   const [acceptsMarketing, setAcceptsMarketing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [phoneVerified, setPhoneVerified] = useState(false);
+  const requestedReturnTo = searchParams.get("returnTo");
+  const returnTo = requestedReturnTo?.startsWith("/") && !requestedReturnTo.startsWith("//") ? requestedReturnTo : "/";
+  const loginUrl = returnTo === "/" ? "/login" : `/login?returnTo=${encodeURIComponent(returnTo)}`;
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -86,7 +90,7 @@ const StudentSignup = () => {
       password,
       options: {
         data: { name, role: "student", areas: selectedAreas, birth_date: birthDate, phone: verifiedPhone },
-        emailRedirectTo: window.location.origin,
+        emailRedirectTo: `${window.location.origin}${loginUrl}`,
       },
     });
 
@@ -146,7 +150,8 @@ const StudentSignup = () => {
         }
       }
       toast.success("Conta criada! Enviamos um e-mail para você confirmar o cadastro.");
-      navigate(`/login?check_email=${encodeURIComponent(email)}`);
+      const separator = loginUrl.includes("?") ? "&" : "?";
+      navigate(`${loginUrl}${separator}check_email=${encodeURIComponent(email)}`);
     }
     setLoading(false);
   };
@@ -198,7 +203,7 @@ const StudentSignup = () => {
           className="w-full font-display font-semibold gap-2"
           onClick={async () => {
             const result = await lovable.auth.signInWithOAuth("google", {
-              redirect_uri: window.location.origin,
+              redirect_uri: `${window.location.origin}${returnTo}`,
             });
             if (result.error) {
               toast.error("Erro ao cadastrar com Google");
@@ -208,7 +213,7 @@ const StudentSignup = () => {
               return;
             }
             toast.success("Cadastro realizado com sucesso!");
-            navigate("/");
+            navigate(returnTo);
           }}
         >
           <svg className="h-5 w-5" viewBox="0 0 24 24">
@@ -366,7 +371,7 @@ const StudentSignup = () => {
 
         <p className="text-center text-sm text-muted-foreground">
           Já tem uma conta?{" "}
-          <Link to="/login" className="font-medium text-primary hover:underline">
+          <Link to={loginUrl} className="font-medium text-primary hover:underline">
             Entrar
           </Link>
         </p>

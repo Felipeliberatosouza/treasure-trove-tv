@@ -66,6 +66,7 @@ const VideoPage = () => {
   const [viewId, setViewId] = useState<string | null>(null);
   const [showPaywall, setShowPaywall] = useState(false);
   const [hasFullAccess, setHasFullAccess] = useState(false);
+  const [trialAccessContentId, setTrialAccessContentId] = useState<string | null>(null);
   const [teacherProfile, setTeacherProfile] = useState<{ name: string; avatar_url: string | null; slug: string | null } | null>(null);
   const [teacherId, setTeacherId] = useState<string | null>(null);
   const [videoType, setVideoType] = useState<string | null>(null);
@@ -81,6 +82,7 @@ const VideoPage = () => {
   const [materialModal, setMaterialModal] = useState<MaterialKind | null>(null);
   const [previewVttUrl, setPreviewVttUrl] = useState<string | null>(null);
   const pendingTrialHandledRef = useRef(false);
+  const recordedTrialAccessRef = useRef<Set<string>>(new Set());
   const { availability: materials } = useLessonMaterials(id || null);
   const { block: activeBlock, loading: blockLoading } = useActiveBlock();
 
@@ -187,6 +189,7 @@ const VideoPage = () => {
       if (userRoles.includes("admin")) { setLimitInfo(null); setHasFullAccess(true); return; }
       if (userRoles.includes("teacher") && teacherId === user.id) { setLimitInfo(null); setHasFullAccess(true); return; }
 
+      if (trialAccessContentId === video.id) { setLimitInfo(null); setHasFullAccess(true); return; }
       if (trial.hasActiveTrial) { setLimitInfo(null); setHasFullAccess(true); return; }
 
       // Check individual purchase
@@ -222,7 +225,7 @@ const VideoPage = () => {
       setHasFullAccess(false);
     };
     checkAccess();
-  }, [video, user, trial.loading, trial.hasActiveTrial, teacherId, resourceLimit.loaded, videoType]);
+  }, [video, user, trial.loading, trial.hasActiveTrial, trialAccessContentId, teacherId, resourceLimit.loaded, videoType]);
 
   useEffect(() => {
     if (!video || dbVideo) return;
@@ -320,10 +323,24 @@ const VideoPage = () => {
       setViewId(null);
       setShowPaywall(false);
       setIsWatching(true);
+      setTrialAccessContentId(null);
       promotedRef.current = false;
       if (user) startViewTracking(video.id);
     }
   }, [video, user]);
+
+  useEffect(() => {
+    if (!user || !video || trial.loading || !trial.hasActiveTrial) return;
+    const accessKey = `${user.id}:${video.id}`;
+    if (recordedTrialAccessRef.current.has(accessKey)) return;
+
+    recordedTrialAccessRef.current.add(accessKey);
+    setTrialAccessContentId(video.id);
+
+    trial.recordContentAccess().then((ok) => {
+      if (!ok) recordedTrialAccessRef.current.delete(accessKey);
+    });
+  }, [user, video, trial.loading, trial.hasActiveTrial, trial.recordContentAccess]);
 
   const startViewTracking = async (contentId: string) => {
     if (!user) return;
@@ -388,6 +405,7 @@ const VideoPage = () => {
     if (ok) {
       toast.success("Teste grátis ativado!");
       setShowPaywall(false);
+      if (video?.id) setTrialAccessContentId(video.id);
       setHasFullAccess(true);
     } else {
       toast.error("Não foi possível iniciar o teste grátis.");
@@ -504,7 +522,11 @@ const VideoPage = () => {
     navigate("/#pricing");
   };
 
-  const handleGoToSignup = () => navigate("/signup/student");
+  const handleGoToSignup = () => {
+    const returnTo = `/video/${video?.id ?? id ?? ""}?intent=trial`;
+    window.sessionStorage.setItem(PENDING_TRIAL_RETURN_KEY, returnTo);
+    navigate(`/signup/student?returnTo=${encodeURIComponent(returnTo)}`);
+  };
 
   if (loadingDb) {
     return (

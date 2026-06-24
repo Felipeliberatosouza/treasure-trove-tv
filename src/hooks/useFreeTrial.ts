@@ -26,11 +26,15 @@ export function useFreeTrial() {
       setLoading(false);
       return;
     }
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("free_trials")
       .select("*")
       .eq("user_id", user.id)
       .maybeSingle();
+
+    if (error) {
+      console.error("Erro ao carregar teste grátis", error);
+    }
     setTrialRow(data);
     setLoading(false);
   }, [user]);
@@ -53,9 +57,14 @@ export function useFreeTrial() {
 
   /** Increment videos_watched counter. Call after any content is accessed during trial (revisões, resumos, simulados, top questões, colinhas). */
   const recordContentAccess = useCallback(async () => {
-    if (!user || !trialRow) return;
-    await supabase.rpc("record_free_trial_content_access" as any);
+    if (!user || !trialRow) return false;
+    const { data, error } = await supabase.rpc("record_free_trial_content_access" as any);
+    if (error || data !== true) {
+      console.error("Erro ao registrar acesso do teste grátis", error);
+      return false;
+    }
     await fetchTrial();
+    return true;
   }, [user, trialRow, fetchTrial]);
 
   // Compute status

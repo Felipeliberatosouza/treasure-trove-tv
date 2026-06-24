@@ -31,6 +31,7 @@ const Login = () => {
   const [resending, setResending] = useState(false);
   const requestedReturnTo = searchParams.get("returnTo");
   const returnTo = requestedReturnTo?.startsWith("/") && !requestedReturnTo.startsWith("//") ? requestedReturnTo : "/";
+  const studentSignupUrl = returnTo === "/" ? "/signup/student" : `/signup/student?returnTo=${encodeURIComponent(returnTo)}`;
 
   useEffect(() => {
     const checkEmail = searchParams.get("check_email");
@@ -377,7 +378,7 @@ const Login = () => {
             Não tem uma conta?
           </p>
           <div className="flex gap-3 justify-center">
-            <Link to="/signup/student">
+            <Link to={studentSignupUrl}>
               <Button variant="default" size="sm" className="font-display">
                 Cadastrar como Aluno
               </Button>

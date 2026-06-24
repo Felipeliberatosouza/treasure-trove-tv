@@ -44,9 +44,11 @@ const VideoDetailModal = ({ video, open, onClose }: VideoDetailModalProps) => {
   const [viewId, setViewId] = useState<string | null>(null);
   const [showPaywall, setShowPaywall] = useState(false);
   const [hasFullAccess, setHasFullAccess] = useState(false);
+  const [trialAccessContentId, setTrialAccessContentId] = useState<string | null>(null);
   const [unitPrice, setUnitPrice] = useState<number | null>(null);
   const [contentType, setContentType] = useState<"lesson" | "exam_solution">("lesson");
   const [buying, setBuying] = useState(false);
+  const recordedTrialAccessRef = useRef<Set<string>>(new Set());
 
   // Check if user has full access (subscription, purchase, or active trial)
   useEffect(() => {
@@ -65,6 +67,11 @@ const VideoDetailModal = ({ video, open, onClose }: VideoDetailModalProps) => {
         .eq("user_id", user.id);
       const userRoles = roles?.map((r) => r.role) || [];
       if (userRoles.includes("admin")) { setHasFullAccess(true); return; }
+
+      if (trialAccessContentId === video.id) {
+        setHasFullAccess(true);
+        return;
+      }
 
       // Check active trial
       if (trial.hasActiveTrial) {
@@ -90,7 +97,7 @@ const VideoDetailModal = ({ video, open, onClose }: VideoDetailModalProps) => {
     };
 
     checkAccess();
-  }, [video, open, user, trial.hasActiveTrial]);
+  }, [video, open, user, trial.hasActiveTrial, trialAccessContentId]);
 
   useEffect(() => {
     if (video && open) {
@@ -99,6 +106,7 @@ const VideoDetailModal = ({ video, open, onClose }: VideoDetailModalProps) => {
       setViewId(null);
       setShowPaywall(false);
       setIsWatching(true);
+      setTrialAccessContentId(null);
       if (user) {
         startViewTracking(video.id);
       }
@@ -131,6 +139,19 @@ const VideoDetailModal = ({ video, open, onClose }: VideoDetailModalProps) => {
       setShowPaywall(false);
     }
   }, [video, open, user]);
+
+  useEffect(() => {
+    if (!open || !user || !video || trial.loading || !trial.hasActiveTrial) return;
+    const accessKey = `${user.id}:${video.id}`;
+    if (recordedTrialAccessRef.current.has(accessKey)) return;
+
+    recordedTrialAccessRef.current.add(accessKey);
+    setTrialAccessContentId(video.id);
+
+    trial.recordContentAccess().then((ok) => {
+      if (!ok) recordedTrialAccessRef.current.delete(accessKey);
+    });
+  }, [open, user, video, trial.loading, trial.hasActiveTrial, trial.recordContentAccess]);
 
   const startViewTracking = async (contentId: string) => {
     if (!user) return;
@@ -214,7 +235,8 @@ const VideoDetailModal = ({ video, open, onClose }: VideoDetailModalProps) => {
   const handleStartTrial = async () => {
     if (!user) {
       onClose();
-      navigate("/login");
+      const returnTo = `/video/${video?.id ?? ""}?intent=trial`;
+      navigate(`/login?returnTo=${encodeURIComponent(returnTo)}`);
       return;
     }
     setStartingTrial(true);
@@ -222,6 +244,7 @@ const VideoDetailModal = ({ video, open, onClose }: VideoDetailModalProps) => {
     if (ok) {
       toast.success("Teste grátis ativado! Aproveite.");
       setShowPaywall(false);
+      if (video?.id) setTrialAccessContentId(video.id);
       setHasFullAccess(true);
     } else {
       toast.error("Não foi possível iniciar o teste grátis.");
@@ -284,7 +307,8 @@ const VideoDetailModal = ({ video, open, onClose }: VideoDetailModalProps) => {
 
   const handleGoToSignup = () => {
     onClose();
-    navigate("/cadastro-aluno");
+    const returnTo = `/video/${video.id}?intent=trial`;
+    navigate(`/signup/student?returnTo=${encodeURIComponent(returnTo)}`);
   };
 
   if (!video) return null;

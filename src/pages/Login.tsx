@@ -11,6 +11,9 @@ import { translateAuthError } from "@/lib/translateAuthError";
 import TwoFactorChallenge from "@/components/TwoFactorChallenge";
 import { useAllPlatformSettings, resolveDefaultLogoUrl, type BrandingSettings } from "@/hooks/usePlatformSettings";
 
+const PENDING_TRIAL_INTENT_KEY = "revisao_facil_pending_trial_intent";
+const TRIAL_ALREADY_USED_MESSAGE = "Você já utilizou seu teste grátis anteriormente!";
+
 const Login = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -31,7 +34,21 @@ const Login = () => {
   const [resending, setResending] = useState(false);
   const requestedReturnTo = searchParams.get("returnTo");
   const returnTo = requestedReturnTo?.startsWith("/") && !requestedReturnTo.startsWith("//") ? requestedReturnTo : "/";
+  const hasTrialIntent = returnTo.includes("intent=trial");
   const studentSignupUrl = returnTo === "/" ? "/signup/student" : `/signup/student?returnTo=${encodeURIComponent(returnTo)}`;
+
+  const handlePendingTrialAfterLogin = async () => {
+    const hasStoredTrialIntent = window.sessionStorage.getItem(PENDING_TRIAL_INTENT_KEY) === "1";
+    if (!hasTrialIntent && !hasStoredTrialIntent) return;
+
+    window.sessionStorage.removeItem(PENDING_TRIAL_INTENT_KEY);
+    const { data, error } = await supabase.rpc("start_free_trial" as any);
+    if (error || data !== true) {
+      toast.error(TRIAL_ALREADY_USED_MESSAGE);
+    } else {
+      toast.success("Teste grátis ativado!");
+    }
+  };
 
   useEffect(() => {
     const checkEmail = searchParams.get("check_email");
@@ -179,12 +196,14 @@ const Login = () => {
 
     }
 
+    await handlePendingTrialAfterLogin();
     toast.success("Login realizado com sucesso!");
     navigate(returnTo);
     setLoading(false);
   };
 
   const handleMfaVerified = async () => {
+    await handlePendingTrialAfterLogin();
     toast.success("Login realizado com sucesso!");
     navigate(returnTo);
   };
@@ -236,6 +255,9 @@ const Login = () => {
           size="lg"
           className="w-full font-display font-semibold gap-2"
           onClick={async () => {
+              if (hasTrialIntent) {
+                window.sessionStorage.setItem(PENDING_TRIAL_INTENT_KEY, "1");
+              }
             const result = await lovable.auth.signInWithOAuth("google", {
               redirect_uri: `${window.location.origin}${returnTo}`,
             });

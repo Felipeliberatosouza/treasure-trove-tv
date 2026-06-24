@@ -7,6 +7,9 @@ import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
 
+const PENDING_TRIAL_INTENT_KEY = "revisao_facil_pending_trial_intent";
+const TRIAL_ALREADY_USED_MESSAGE = "Você já utilizou seu teste grátis anteriormente!";
+
 const EMPTY_COUNTDOWN = { days: 0, hours: 0, minutes: 0, seconds: 0 };
 
 function useCountdown(expiresAt: Date | null) {
@@ -97,7 +100,7 @@ const FreeTrialBanner = () => {
     setStarting(true);
     const ok = await trial.startTrial();
     if (ok) toast.success("Teste grátis ativado! Aproveite.");
-    else toast.error("Não foi possível iniciar o teste grátis.");
+    else toast.error(TRIAL_ALREADY_USED_MESSAGE);
     setStarting(false);
   };
 
@@ -189,7 +192,10 @@ const FreeTrialBanner = () => {
             </Button>
           ) : (
             <Button size="lg" className="gap-2 font-display font-semibold shrink-0" asChild>
-              <Link to="/login">
+              <Link
+                to="/login?returnTo=%2F%3Fintent%3Dtrial"
+                onClick={() => window.sessionStorage.setItem(PENDING_TRIAL_INTENT_KEY, "1")}
+              >
                 <Gift className="h-4 w-4" /> Entrar e Testar Grátis
               </Link>
             </Button>

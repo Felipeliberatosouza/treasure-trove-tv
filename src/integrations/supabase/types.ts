@@ -2981,6 +2981,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_content_teacher: {
+        Args: { _content_id: string; _content_type: string; _user_id: string }
+        Returns: boolean
+      }
       is_course_owner: {
         Args: { _course_id: string; _user_id: string }
         Returns: boolean

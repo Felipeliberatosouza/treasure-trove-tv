@@ -2883,6 +2883,15 @@ export type Database = {
         }
         Relationships: []
       }
+      video_rating_aggregates: {
+        Row: {
+          average: number | null
+          content_id: string | null
+          content_type: string | null
+          count: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       add_business_days: {
@@ -2956,6 +2965,14 @@ export type Database = {
         Returns: number
       }
       get_user_cashback_tier: { Args: { _user_id: string }; Returns: Json }
+      get_video_rating_aggregates: {
+        Args: { _content_type: string; _ids: string[] }
+        Returns: {
+          average: number
+          content_id: string
+          count: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

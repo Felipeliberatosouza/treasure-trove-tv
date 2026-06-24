@@ -664,7 +664,7 @@ export default function StudentSubscriptionTab() {
       <h2 className="font-display text-lg font-semibold mb-1">Assinatura e Compras</h2>
 
       {/* Free Trial status */}
-      {trial.trialEnabled && !trial.loading && (
+      {!trial.loading && (trial.trialEnabled || trial.trialRow) && (
         <div className="rounded-lg border border-border bg-card p-3 flex items-start gap-3">
           <div className="rounded-md bg-primary/10 p-2 shrink-0">
             <Award className="h-4 w-4 text-primary" />

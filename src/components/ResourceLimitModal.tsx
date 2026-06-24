@@ -1,7 +1,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { AlertTriangle, ArrowUpCircle, ShoppingCart, Sparkles } from "lucide-react";
+import { AlertTriangle, ArrowUpCircle, ShoppingCart, Sparkles, Gift } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const RESOURCE_LABELS: Record<string, string> = {
@@ -23,6 +23,7 @@ interface Props {
   hasSubscription: boolean;
   individualPrice: number | null;
   onBuyIndividual?: () => void;
+  trialAlreadyUsed?: boolean;
 }
 
 export default function ResourceLimitModal({
@@ -34,6 +35,7 @@ export default function ResourceLimitModal({
   hasSubscription,
   individualPrice,
   onBuyIndividual,
+  trialAlreadyUsed,
 }: Props) {
   const navigate = useNavigate();
   const label = RESOURCE_LABELS[resourceType] || resourceType;
@@ -59,6 +61,14 @@ export default function ResourceLimitModal({
         </DialogHeader>
 
         <div className="space-y-4 pt-2">
+          {trialAlreadyUsed && (
+            <div className="flex items-start gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3">
+              <Gift className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+              <p className="text-xs text-amber-700 dark:text-amber-300 leading-relaxed">
+                Você já utilizou seu <strong>teste grátis</strong> anteriormente e não pode iniciá-lo novamente. Assine um plano ou compre o conteúdo avulso para continuar.
+              </p>
+            </div>
+          )}
           {/* CTA subscription */}
           <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 space-y-3">
             <p className="text-sm font-medium text-foreground">

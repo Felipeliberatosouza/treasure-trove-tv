@@ -104,6 +104,19 @@ const StudentSignup = () => {
     }
 
     setLoading(true);
+    const cleanedCpf = cpf.replace(/\D/g, "");
+    // Check CPF duplicate before creating the account
+    const { data: cpfTaken, error: cpfCheckErr } = await supabase.rpc("is_cpf_taken", { _cpf: cleanedCpf });
+    if (cpfCheckErr) {
+      toast.error("Não foi possível validar o CPF. Tente novamente.");
+      setLoading(false);
+      return;
+    }
+    if (cpfTaken) {
+      toast.error("CPF já cadastrado na plataforma.");
+      setLoading(false);
+      return;
+    }
     const { data: signUpData, error } = await supabase.auth.signUp({
       email,
       password,
@@ -114,7 +127,12 @@ const StudentSignup = () => {
     });
 
     if (error) {
-      toast.error(translateAuthError(error.message));
+      const msg = error.message || "";
+      if (/cpf/i.test(msg) && /unique|duplicate|23505/i.test(msg)) {
+        toast.error("CPF já cadastrado na plataforma.");
+      } else {
+        toast.error(translateAuthError(msg));
+      }
     } else {
       // Upload avatar if provided
       if (signUpData?.user && avatarFile) {
@@ -128,11 +146,19 @@ const StudentSignup = () => {
       }
       // Save areas, phone and marketing preference to profile if signup succeeded
       if (signUpData?.user) {
-        const updateData: any = { accepts_marketing: acceptsMarketing, cpf };
+        const updateData: any = { accepts_marketing: acceptsMarketing, cpf: cleanedCpf };
         if (birthDate) updateData.birth_date = birthDate;
         if (selectedAreas.length > 0) updateData.areas = selectedAreas;
         if (verifiedPhone) updateData.phone = verifiedPhone;
-        await supabase.from("profiles").update(updateData).eq("user_id", signUpData.user.id);
+        const { error: profErr } = await supabase.from("profiles").update(updateData).eq("user_id", signUpData.user.id);
+        if (profErr) {
+          const pmsg = profErr.message || "";
+          if (/cpf/i.test(pmsg) && /unique|duplicate|23505/i.test(pmsg)) {
+            toast.error("CPF já cadastrado na plataforma.");
+            setLoading(false);
+            return;
+          }
+        }
       }
       // Send welcome email and notify admins
       if (signUpData?.user) {

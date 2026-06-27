@@ -390,6 +390,7 @@ const StudentSignup = () => {
             {email && (
               <button
                 type="button"
+                aria-label="Limpar e-mail"
                 onClick={() => setEmail("")}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
               >
@@ -412,6 +413,7 @@ const StudentSignup = () => {
             {birthDate && (
               <button
                 type="button"
+                aria-label="Limpar data de nascimento"
                 onClick={() => setBirthDate("")}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground z-10"
               >
@@ -445,6 +447,7 @@ const StudentSignup = () => {
             {password && (
               <button
                 type="button"
+                aria-label="Limpar senha"
                 onClick={() => setPassword("")}
                 className="absolute right-10 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
               >
@@ -465,6 +468,7 @@ const StudentSignup = () => {
             {confirmPassword && (
               <button
                 type="button"
+                aria-label="Limpar confirmação de senha"
                 onClick={() => setConfirmPassword("")}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
               >

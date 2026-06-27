@@ -121,6 +121,7 @@ const StudentSignup = () => {
       toast.error("Preencha todos os campos obrigatórios antes do celular");
       return;
     }
+    if (!isFullName(name)) { toast.error("Insira seu nome completo (nome e sobrenome)"); return; }
     if (!isValidCPF(cpf)) { toast.error("Informe um CPF válido"); return; }
     const pwdError = validatePassword(password, birthDate);
     if (pwdError) { toast.error(pwdError); return; }

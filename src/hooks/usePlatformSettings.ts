@@ -470,8 +470,10 @@ export function usePlatformSettings<K extends keyof SettingsMap>(key: K) {
   const update = useCallback(async (value: SettingsMap[K]) => {
     const { error } = await supabase
       .from("platform_settings")
-      .update({ value: JSON.parse(JSON.stringify(value)) })
-      .eq("key", key);
+      .upsert(
+        { key, value: JSON.parse(JSON.stringify(value)) },
+        { onConflict: "key" },
+      );
 
     if (error) {
       toast({ title: "Erro", description: "Falha ao salvar configuração.", variant: "destructive" });

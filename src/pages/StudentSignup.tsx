@@ -34,6 +34,7 @@ const StudentSignup = () => {
   const [birthDate, setBirthDate] = useState("");
   const [phone, setPhone] = useState("");
   const [cpf, setCpf] = useState("");
+  const [cpfDuplicate, setCpfDuplicate] = useState(false);
   
   const [selectedAreas, setSelectedAreas] = useState<string[]>([]);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
@@ -58,6 +59,7 @@ const StudentSignup = () => {
   const preSignupValid = () => {
     if (!name.trim() || !email.trim() || !password.trim() || !birthDate || !cpf) return false;
     if (!isValidCPF(cpf)) return false;
+    if (cpfDuplicate) return false;
     if (validatePassword(password, birthDate)) return false;
     if (password !== confirmPassword) return false;
     if (!acceptsTerms) return false;
@@ -72,6 +74,7 @@ const StudentSignup = () => {
     if (!birthDate) pending.push("Data de nascimento");
     if (!cpf) pending.push("CPF");
     else if (!isValidCPF(cpf)) pending.push("CPF válido");
+    else if (cpfDuplicate) pending.push("CPF já cadastrado na plataforma");
     if (!password.trim()) pending.push("Senha");
     else {
       const pwdError = validatePassword(password, birthDate);
@@ -328,7 +331,7 @@ const StudentSignup = () => {
           <div className="relative">
             <CreditCard className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <div className="pl-10">
-              <CpfInput value={cpf} onChange={setCpf} placeholder="CPF *" className="bg-secondary border-border" />
+              <CpfInput value={cpf} onChange={setCpf} placeholder="CPF *" className="bg-secondary border-border" checkDuplicate onDuplicateChange={setCpfDuplicate} />
             </div>
           </div>
           

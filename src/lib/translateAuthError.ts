@@ -30,6 +30,7 @@ const errorMap: Record<string, string> = {
   "weak_password": "Esta senha é conhecida por ser fraca e fácil de adivinhar. Escolha uma senha diferente.",
   "Email link is invalid or has expired": "Link expirado ou inválido. Solicite um novo.",
   "same_password": "A nova senha deve ser diferente da senha atual.",
+  "Database error saving new user": "Erro ao salvar o novo usuário. Tente novamente em alguns instantes.",
 };
 
 export function translateAuthError(message: string): string {

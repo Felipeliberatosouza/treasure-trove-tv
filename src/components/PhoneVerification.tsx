@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
+import { Input } from "@/components/ui/input";
 import PhoneInput, { isValidBrazilianPhone } from "@/components/PhoneInput";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -91,14 +91,15 @@ const PhoneVerification = ({ phone, onPhoneChange, onVerified, verified = false,
   }, [phone, channel]);
 
   const verifyCode = useCallback(async () => {
-    if (code.length !== 6) {
+    const cleanCode = code.replace(/\D/g, "").slice(0, 6);
+    if (cleanCode.length !== 6) {
       toast.error("Digite o código de 6 dígitos");
       return;
     }
     setVerifying(true);
     try {
       const { data, error } = await supabase.functions.invoke("verify-phone-code", {
-        body: { phone, code },
+        body: { phone, code: cleanCode },
       });
 
       if (error) {
@@ -123,6 +124,10 @@ const PhoneVerification = ({ phone, onPhoneChange, onVerified, verified = false,
       setVerifying(false);
     }
   }, [phone, code, onVerified]);
+
+  const handleCodeChange = useCallback((value: string) => {
+    setCode(value.replace(/\D/g, "").slice(0, 6));
+  }, []);
 
   const handleChangeNumber = useCallback(() => {
     setStep("input");
@@ -186,18 +191,25 @@ const PhoneVerification = ({ phone, onPhoneChange, onVerified, verified = false,
           <p className="text-xs text-muted-foreground">
             Digite o código de 6 dígitos:
           </p>
-          <div className="flex justify-center">
-            <InputOTP maxLength={6} value={code} onChange={setCode} autoFocus={false} data-no-autofocus>
-              <InputOTPGroup>
-                <InputOTPSlot index={0} />
-                <InputOTPSlot index={1} />
-                <InputOTPSlot index={2} />
-                <InputOTPSlot index={3} />
-                <InputOTPSlot index={4} />
-                <InputOTPSlot index={5} />
-              </InputOTPGroup>
-            </InputOTP>
-          </div>
+          <Input
+            type="text"
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            pattern="[0-9]*"
+            maxLength={6}
+            value={code}
+            onChange={(event) => handleCodeChange(event.target.value)}
+            onPaste={(event) => handleCodeChange(event.clipboardData.getData("text"))}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" && code.length === 6 && !verifying) {
+                event.preventDefault();
+                verifyCode();
+              }
+            }}
+            aria-label="Código de verificação recebido por SMS ou WhatsApp"
+            placeholder="000000"
+            className="h-12 bg-secondary text-center font-mono text-2xl font-semibold tracking-[0.35em] text-foreground placeholder:text-muted-foreground/40"
+          />
           <Button
             type="button"
             onClick={verifyCode}

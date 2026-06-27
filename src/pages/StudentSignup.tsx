@@ -452,11 +452,11 @@ const StudentSignup = () => {
             {preSignupValid() ? (
               <PhoneVerification phone={phone} onPhoneChange={setPhone} onVerified={handlePhoneVerified} verified={phoneVerified} />
             ) : (
-              <div className="rounded-md bg-secondary/50 border border-border px-3 py-3 text-xs text-foreground">
-                <p className="font-medium mb-2 text-center">
+              <div className="rounded-md bg-yellow-500/20 border border-yellow-500/50 px-3 py-3 text-xs">
+                <p className="font-medium mb-2 text-center text-white">
                   Para liberar a verificação do celular, ajuste os itens abaixo:
                 </p>
-                <ul className="list-disc list-inside space-y-1 text-muted-foreground">
+                <ul className="list-disc list-inside space-y-1 text-red-400">
                   {getPendingFields().map((item) => (
                     <li key={item}>{item}</li>
                   ))}

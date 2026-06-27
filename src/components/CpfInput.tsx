@@ -80,6 +80,7 @@ const CpfInput = ({ value, onChange, placeholder = "CPF *", className, checkDupl
         {clearable && cleaned.length > 0 && (
           <button
             type="button"
+            aria-label="Limpar CPF"
             onClick={() => onClear?.()}
             className="absolute right-10 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
           >

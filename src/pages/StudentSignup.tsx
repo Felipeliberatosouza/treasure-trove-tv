@@ -373,10 +373,10 @@ const StudentSignup = () => {
               placeholder="E-mail"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="pl-10 pr-10 bg-secondary border-border"
+              className="pl-10 pr-16 bg-secondary border-border"
             />
             {email.trim() && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()) && (
-              <span className="absolute right-3 top-1/2 -translate-y-1/2">
+              <span className="absolute right-10 top-1/2 -translate-y-1/2">
                 {emailChecking ? (
                   <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
                 ) : emailDuplicate ? (
@@ -385,6 +385,15 @@ const StudentSignup = () => {
                   <Check className="h-4 w-4 text-green-500" />
                 )}
               </span>
+            )}
+            {email && (
+              <button
+                type="button"
+                onClick={() => setEmail("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                <X className="h-4 w-4" />
+              </button>
             )}
           </div>
           {emailDuplicate && !emailChecking && (

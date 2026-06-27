@@ -522,7 +522,7 @@ const StudentSignup = () => {
             ) : (
               <div
                 className="rounded-md border px-3 py-3 text-xs"
-                style={{ backgroundColor: `${alertBox.bg_color}33`, borderColor: alertBox.border_color }}
+                style={{ backgroundColor: alertBox.bg_color, borderColor: alertBox.border_color }}
               >
                 <p className="font-medium mb-2 text-center" style={{ color: alertBox.title_color }}>
                   Para liberar a verificação do celular, ajuste os itens abaixo:

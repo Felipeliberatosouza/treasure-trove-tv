@@ -127,6 +127,12 @@ const TeacherSignup = () => {
     }
 
     setLoading(true);
+    const { data: emailTaken } = await supabase.rpc("is_email_taken", { _email: email.trim() });
+    if (emailTaken) {
+      toast.error("E-mail já cadastrado na plataforma.");
+      setLoading(false);
+      return;
+    }
     const { error } = await supabase.auth.signUp({
       email,
       password,

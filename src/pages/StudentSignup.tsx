@@ -1,7 +1,7 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Mail, Lock, User, Eye, EyeOff, GraduationCap, ArrowLeft, CalendarDays, Camera, CreditCard } from "lucide-react";
+import { Mail, Lock, User, Eye, EyeOff, GraduationCap, ArrowLeft, CalendarDays, Camera, CreditCard, Check, X, Loader2 } from "lucide-react";
 import DateInput from "@/components/DateInput";
 import PhoneVerification from "@/components/PhoneVerification";
 import { isValidBrazilianPhone } from "@/components/PhoneInput";
@@ -28,6 +28,8 @@ const StudentSignup = () => {
   const showLogoImage = !!effectiveLogoUrl && !branding?.use_text_logo;
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [emailDuplicate, setEmailDuplicate] = useState(false);
+  const [emailChecking, setEmailChecking] = useState(false);
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -35,6 +37,24 @@ const StudentSignup = () => {
   const [phone, setPhone] = useState("");
   const [cpf, setCpf] = useState("");
   const [cpfDuplicate, setCpfDuplicate] = useState(false);
+
+  // Real-time email duplicate check (debounced)
+  useEffect(() => {
+    const value = email.trim();
+    const isValidFormat = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+    if (!isValidFormat) {
+      setEmailDuplicate(false);
+      setEmailChecking(false);
+      return;
+    }
+    setEmailChecking(true);
+    const t = setTimeout(async () => {
+      const { data, error } = await supabase.rpc("is_email_taken", { _email: value });
+      if (!error) setEmailDuplicate(!!data);
+      setEmailChecking(false);
+    }, 400);
+    return () => clearTimeout(t);
+  }, [email]);
   
   const [selectedAreas, setSelectedAreas] = useState<string[]>([]);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
@@ -60,6 +80,8 @@ const StudentSignup = () => {
     if (!name.trim() || !email.trim() || !password.trim() || !birthDate || !cpf) return false;
     if (!isValidCPF(cpf)) return false;
     if (cpfDuplicate) return false;
+    if (emailDuplicate || emailChecking) return false;
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) return false;
     if (validatePassword(password, birthDate)) return false;
     if (password !== confirmPassword) return false;
     if (!acceptsTerms) return false;
@@ -71,6 +93,9 @@ const StudentSignup = () => {
     const pending: string[] = [];
     if (!name.trim()) pending.push("Nome completo");
     if (!email.trim()) pending.push("E-mail");
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) pending.push("E-mail válido");
+    else if (emailDuplicate) pending.push("E-mail já cadastrado na plataforma");
+    else if (emailChecking) pending.push("Validando e-mail...");
     if (!birthDate) pending.push("Data de nascimento");
     if (!cpf) pending.push("CPF");
     else if (!isValidCPF(cpf)) pending.push("CPF válido");
@@ -315,9 +340,23 @@ const StudentSignup = () => {
               placeholder="E-mail"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="pl-10 bg-secondary border-border"
+              className="pl-10 pr-10 bg-secondary border-border"
             />
+            {email.trim() && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()) && (
+              <span className="absolute right-3 top-1/2 -translate-y-1/2">
+                {emailChecking ? (
+                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                ) : emailDuplicate ? (
+                  <X className="h-4 w-4 text-destructive" />
+                ) : (
+                  <Check className="h-4 w-4 text-green-500" />
+                )}
+              </span>
+            )}
           </div>
+          {emailDuplicate && !emailChecking && (
+            <p className="text-xs text-destructive -mt-2">E-mail já cadastrado na plataforma.</p>
+          )}
           <div className="relative">
             <CalendarDays className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground z-10" />
             <DateInput

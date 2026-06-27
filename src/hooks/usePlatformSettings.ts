@@ -291,6 +291,20 @@ export interface FooterSettings {
   contact_url: string;
 }
 
+export interface AlertBoxSettings {
+  bg_color: string;
+  border_color: string;
+  title_color: string;
+  item_color: string;
+}
+
+export const DEFAULT_ALERT_BOX_SETTINGS: AlertBoxSettings = {
+  bg_color: "#CA8A04",
+  border_color: "#CA8A04",
+  title_color: "#FFFFFF",
+  item_color: "#F87171",
+};
+
 export const DEFAULT_FOOTER_SETTINGS: FooterSettings = {
   copyright: "© 2026 {platform_name}. Todos os direitos reservados.",
   about_label: "Sobre",
@@ -327,6 +341,7 @@ type SettingsMap = {
   retention_coupon: RetentionCouponSettings;
   aula_particular_config: AulaParticularConfigSettings;
   footer: FooterSettings;
+  alert_box: AlertBoxSettings;
 };
 
 export interface TwilioConfigSettings {

@@ -16,13 +16,14 @@ import { toast } from "sonner";
 import AreaSelector from "@/components/AreaSelector";
 import { translateAuthError } from "@/lib/translateAuthError";
 import PasswordStrengthChecker, { validatePassword } from "@/components/PasswordStrengthChecker";
-import { useAllPlatformSettings, resolveDefaultLogoUrl, type BrandingSettings } from "@/hooks/usePlatformSettings";
+import { useAllPlatformSettings, resolveDefaultLogoUrl, type BrandingSettings, type AlertBoxSettings, DEFAULT_ALERT_BOX_SETTINGS } from "@/hooks/usePlatformSettings";
 
 const StudentSignup = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { settings } = useAllPlatformSettings();
   const branding = settings?.branding as BrandingSettings | undefined;
+  const alertBox = { ...DEFAULT_ALERT_BOX_SETTINGS, ...((settings?.alert_box as AlertBoxSettings | undefined) || {}) };
   const platformName = branding?.platform_name || "Revisão Fácil";
   const effectiveLogoUrl = resolveDefaultLogoUrl(branding);
   const showLogoImage = !!effectiveLogoUrl && !branding?.use_text_logo;
@@ -452,11 +453,14 @@ const StudentSignup = () => {
             {preSignupValid() ? (
               <PhoneVerification phone={phone} onPhoneChange={setPhone} onVerified={handlePhoneVerified} verified={phoneVerified} />
             ) : (
-              <div className="rounded-md bg-yellow-500/20 border border-yellow-500/50 px-3 py-3 text-xs">
-                <p className="font-medium mb-2 text-center text-white">
+              <div
+                className="rounded-md border px-3 py-3 text-xs"
+                style={{ backgroundColor: `${alertBox.bg_color}33`, borderColor: alertBox.border_color }}
+              >
+                <p className="font-medium mb-2 text-center" style={{ color: alertBox.title_color }}>
                   Para liberar a verificação do celular, ajuste os itens abaixo:
                 </p>
-                <ul className="list-disc list-inside space-y-1 text-red-400">
+                <ul className="list-disc list-inside space-y-1" style={{ color: alertBox.item_color }}>
                   {getPendingFields().map((item) => (
                     <li key={item}>{item}</li>
                   ))}

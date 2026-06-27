@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Settings, Palette, Phone, FileText, Star, Layout, Gift, FolderOpen, Mail, Package, FileSignature, Smartphone, Heart, GraduationCap, Users, Megaphone, Target, CalendarClock, Sparkles, PanelBottom } from "lucide-react";
+import { Settings, Palette, Phone, FileText, Star, Layout, Gift, FolderOpen, Mail, Package, FileSignature, Smartphone, Heart, GraduationCap, Users, Megaphone, Target, CalendarClock, Sparkles, PanelBottom, AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import SettingsBranding from "./settings/SettingsBranding";
@@ -19,8 +19,10 @@ import SettingsTeacherGoal from "./settings/SettingsTeacherGoal";
 import SettingsAulaParticular from "./settings/SettingsAulaParticular";
 import SettingsCashback from "./settings/SettingsCashback";
 import SettingsFooter from "./settings/SettingsFooter";
+import SettingsAlertBox from "./settings/SettingsAlertBox";
 
 const SECTIONS_RAW = [
+  { id: "alert_box", label: "Caixa de Alerta", icon: AlertTriangle },
   { id: "aula_particular", label: "Aula Particular", icon: CalendarClock },
   { id: "areas", label: "Áreas de Cursos", icon: FolderOpen },
   { id: "hero_student", label: "Banner Aluno", icon: GraduationCap },
@@ -129,6 +131,7 @@ const AdminSettingsTab = () => {
       {activeSection === "teacher_goal" && <SettingsTeacherGoal />}
       {activeSection === "twilio" && <SettingsTwilio />}
       {activeSection === "retention" && <SettingsRetentionCoupon />}
+      {activeSection === "alert_box" && <SettingsAlertBox />}
     </div>
   );
 };

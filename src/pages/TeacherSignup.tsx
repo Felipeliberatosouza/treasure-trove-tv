@@ -21,6 +21,7 @@ const TeacherSignup = () => {
   const navigate = useNavigate();
   const { settings } = useAllPlatformSettings();
   const branding = settings?.branding as BrandingSettings | undefined;
+  const alertBox = { ...DEFAULT_ALERT_BOX_SETTINGS, ...((settings?.alert_box as AlertBoxSettings | undefined) || {}) };
   const platformName = branding?.platform_name || "Revisão Fácil";
   const effectiveLogoUrl = resolveDefaultLogoUrl(branding);
   const showLogoImage = !!effectiveLogoUrl && !branding?.use_text_logo;

@@ -403,7 +403,10 @@ const Login = () => {
             {loading ? "Entrando..." : "Entrar"}
           </Button>
           <div className="text-right">
-            <Link to="/forgot-password" className="text-xs text-primary hover:underline">
+            <Link
+              to={email.trim() ? `/forgot-password?email=${encodeURIComponent(email.trim())}&auto=1` : "/forgot-password"}
+              className="text-xs text-primary hover:underline"
+            >
               Esqueci minha senha
             </Link>
           </div>

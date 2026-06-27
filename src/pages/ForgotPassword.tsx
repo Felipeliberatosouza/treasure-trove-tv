@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Mail, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,13 +10,14 @@ import { translateAuthError } from "@/lib/translateAuthError";
 import { useAllPlatformSettings, resolveDefaultLogoUrl, type BrandingSettings } from "@/hooks/usePlatformSettings";
 
 const ForgotPassword = () => {
+  const [searchParams] = useSearchParams();
   const { settings } = useAllPlatformSettings();
   const branding = settings?.branding as BrandingSettings | undefined;
   const effectiveLogoUrl = resolveDefaultLogoUrl(branding);
   const showLogoImage = !!effectiveLogoUrl && !branding?.use_text_logo;
   const platformName = branding?.platform_name || "Revisão Fácil";
 
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(searchParams.get("email") || "");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const [timeLeft, setTimeLeft] = useState(30 * 60);
@@ -30,8 +31,9 @@ const ForgotPassword = () => {
     return () => clearInterval(t);
   }, [sent, timeLeft]);
 
-  const sendRecoveryEmail = async () => {
-    if (!email.trim()) {
+  const sendRecoveryEmail = async (overrideEmail?: string) => {
+    const target = (overrideEmail ?? email).trim().toLowerCase();
+    if (!target) {
       toast.error("Informe seu e-mail");
       return;
     }
@@ -39,7 +41,7 @@ const ForgotPassword = () => {
     setLoading(true);
     const { error } = await supabase.functions.invoke("send-password-recovery", {
       body: {
-        email: email.trim().toLowerCase(),
+        email: target,
         redirect_to: `${window.location.origin}/reset-password`,
       },
     });
@@ -53,6 +55,15 @@ const ForgotPassword = () => {
     }
     setLoading(false);
   };
+
+  useEffect(() => {
+    const prefEmail = searchParams.get("email");
+    const auto = searchParams.get("auto");
+    if (prefEmail && auto === "1" && !sent && !loading) {
+      sendRecoveryEmail(prefEmail);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

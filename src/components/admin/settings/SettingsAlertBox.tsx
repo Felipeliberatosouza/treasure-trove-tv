@@ -64,7 +64,7 @@ const SettingsAlertBox = () => {
           <div
             className="mt-2 rounded-md border px-3 py-3 text-xs"
             style={{
-              backgroundColor: `${form.bg_color}33`,
+              backgroundColor: form.bg_color,
               borderColor: form.border_color,
             }}
           >

@@ -64,6 +64,25 @@ const StudentSignup = () => {
     return true;
   };
 
+  // Lista detalhada das pendências para exibir ao usuário.
+  const getPendingFields = (): string[] => {
+    const pending: string[] = [];
+    if (!name.trim()) pending.push("Nome completo");
+    if (!email.trim()) pending.push("E-mail");
+    if (!birthDate) pending.push("Data de nascimento");
+    if (!cpf) pending.push("CPF");
+    else if (!isValidCPF(cpf)) pending.push("CPF válido");
+    if (!password.trim()) pending.push("Senha");
+    else {
+      const pwdError = validatePassword(password, birthDate);
+      if (pwdError) pending.push(pwdError);
+    }
+    if (!confirmPassword.trim()) pending.push("Confirmação de senha");
+    else if (password !== confirmPassword) pending.push("As senhas devem coincidir");
+    if (!acceptsTerms) pending.push("Aceitar os Termos de Uso");
+    return pending;
+  };
+
   const reportPreSignupError = () => {
     if (!name.trim() || !email.trim() || !password.trim() || !birthDate || !cpf) {
       toast.error("Preencha todos os campos obrigatórios antes do celular");
@@ -359,8 +378,15 @@ const StudentSignup = () => {
             {preSignupValid() ? (
               <PhoneVerification phone={phone} onPhoneChange={setPhone} onVerified={handlePhoneVerified} verified={phoneVerified} />
             ) : (
-              <div className="rounded-md bg-secondary/50 border border-border px-3 py-3 text-xs text-black text-center">
-                Preencha todos os campos acima e aceite os Termos para liberar a verificação do celular.
+              <div className="rounded-md bg-secondary/50 border border-border px-3 py-3 text-xs text-foreground">
+                <p className="font-medium mb-2 text-center">
+                  Para liberar a verificação do celular, ajuste os itens abaixo:
+                </p>
+                <ul className="list-disc list-inside space-y-1 text-muted-foreground">
+                  {getPendingFields().map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
               </div>
             )}
             {phoneVerified && (

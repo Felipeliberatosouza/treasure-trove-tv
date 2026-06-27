@@ -15,7 +15,7 @@ import { useCourseAreas } from "@/hooks/useCourseAreas";
 import AreaSelector from "@/components/AreaSelector";
 import { translateAuthError } from "@/lib/translateAuthError";
 import PasswordStrengthChecker, { validatePassword } from "@/components/PasswordStrengthChecker";
-import { useAllPlatformSettings, resolveDefaultLogoUrl, type BrandingSettings } from "@/hooks/usePlatformSettings";
+import { useAllPlatformSettings, resolveDefaultLogoUrl, type BrandingSettings, type AlertBoxSettings, DEFAULT_ALERT_BOX_SETTINGS } from "@/hooks/usePlatformSettings";
 
 const TeacherSignup = () => {
   const navigate = useNavigate();

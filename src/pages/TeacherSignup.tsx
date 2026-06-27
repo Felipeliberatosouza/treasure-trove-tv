@@ -52,6 +52,7 @@ const TeacherSignup = () => {
 
   const preSignupValid = () => {
     if (!name.trim() || !email.trim() || !password.trim() || !birthDate) return false;
+    if (name.trim().split(/\s+/).filter((p) => p.length >= 2).length < 2) return false;
     if (validatePassword(password, birthDate)) return false;
     if (password !== confirmPassword) return false;
     if (!acceptsTerms) return false;
@@ -61,6 +62,10 @@ const TeacherSignup = () => {
   const reportPreSignupError = () => {
     if (!name.trim() || !email.trim() || !password.trim() || !birthDate) {
       toast.error("Preencha todos os campos obrigatórios antes do celular");
+      return;
+    }
+    if (name.trim().split(/\s+/).filter((p) => p.length >= 2).length < 2) {
+      toast.error("Insira seu nome completo (nome e sobrenome)");
       return;
     }
     const pwdError = validatePassword(password, birthDate);

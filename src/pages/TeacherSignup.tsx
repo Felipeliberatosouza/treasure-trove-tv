@@ -86,15 +86,32 @@ const TeacherSignup = () => {
     return pending;
   };
 
+  // Real-time email duplicate check (debounced)
+  useEffect(() => {
+    const value = email.trim();
+    const isValidFormat = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+    if (!isValidFormat) {
+      setEmailDuplicate(false);
+      setEmailChecking(false);
+      return;
+    }
+    setEmailChecking(true);
+    const t = setTimeout(async () => {
+      const { data, error } = await supabase.rpc("is_email_taken", { _email: value });
+      if (!error) setEmailDuplicate(!!data);
+      setEmailChecking(false);
+    }, 400);
+    return () => clearTimeout(t);
+  }, [email]);
+
   const reportPreSignupError = () => {
     if (!name.trim() || !email.trim() || !password.trim() || !birthDate) {
       toast.error("Preencha todos os campos obrigatórios antes do celular");
       return;
     }
-    if (name.trim().split(/\s+/).filter((p) => p.length >= 2).length < 2) {
-      toast.error("Insira seu nome completo (nome e sobrenome)");
-      return;
-    }
+    if (!isFullName(name)) { toast.error("Insira seu nome completo (nome e sobrenome)"); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) { toast.error("Informe um e-mail válido"); return; }
+    if (emailDuplicate) { toast.error("E-mail já cadastrado na plataforma"); return; }
     const pwdError = validatePassword(password, birthDate);
     if (pwdError) { toast.error(pwdError); return; }
     if (password !== confirmPassword) { toast.error("As senhas não coincidem"); return; }

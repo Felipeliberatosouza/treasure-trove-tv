@@ -342,16 +342,25 @@ const StudentSignup = () => {
               placeholder="Nome completo"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="pl-10 pr-10 bg-secondary border-border"
+              className="pl-10 pr-16 bg-secondary border-border"
             />
             {name.trim() && (
-              <span className="absolute right-3 top-1/2 -translate-y-1/2">
+              <span className="absolute right-10 top-1/2 -translate-y-1/2">
                 {isFullName(name) ? (
                   <Check className="h-4 w-4 text-green-500" />
                 ) : (
                   <X className="h-4 w-4 text-destructive" />
                 )}
               </span>
+            )}
+            {name && (
+              <button
+                type="button"
+                onClick={() => setName("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                <X className="h-4 w-4" />
+              </button>
             )}
           </div>
           {name.trim() && !isFullName(name) && (

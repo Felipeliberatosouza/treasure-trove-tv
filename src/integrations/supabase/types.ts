@@ -2989,6 +2989,7 @@ export type Database = {
         Args: { _course_id: string; _user_id: string }
         Returns: boolean
       }
+      is_cpf_taken: { Args: { _cpf: string }; Returns: boolean }
       is_lesson_owner: {
         Args: { _lesson_id: string; _user_id: string }
         Returns: boolean

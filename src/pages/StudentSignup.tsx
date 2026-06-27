@@ -145,6 +145,12 @@ const StudentSignup = () => {
       setLoading(false);
       return;
     }
+    const { data: emailTaken } = await supabase.rpc("is_email_taken", { _email: email.trim() });
+    if (emailTaken) {
+      toast.error("E-mail já cadastrado na plataforma.");
+      setLoading(false);
+      return;
+    }
     const { data: signUpData, error } = await supabase.auth.signUp({
       email,
       password,

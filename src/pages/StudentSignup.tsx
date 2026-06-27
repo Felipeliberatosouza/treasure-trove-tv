@@ -363,6 +363,17 @@ const StudentSignup = () => {
                 Preencha todos os campos acima e aceite os Termos para liberar a verificação do celular.
               </div>
             )}
+            {phoneVerified && (
+              <Button
+                type="button"
+                className="w-full font-display font-semibold mt-3"
+                size="lg"
+                disabled={loading || !preSignupValid() || !isValidBrazilianPhone(phone)}
+                onClick={() => performSignup(phone)}
+              >
+                {loading ? "Criando sua conta..." : "Concluir cadastro"}
+              </Button>
+            )}
             {loading && (
               <p className="text-center text-xs text-primary mt-3">Criando sua conta...</p>
             )}

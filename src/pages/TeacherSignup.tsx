@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Mail, Lock, User, Eye, EyeOff, BookOpen, ArrowLeft, CalendarDays, Camera } from "lucide-react";
+import { Mail, Lock, User, Eye, EyeOff, BookOpen, ArrowLeft, CalendarDays, Camera, X } from "lucide-react";
 import DateInput from "@/components/DateInput";
 import PhoneVerification from "@/components/PhoneVerification";
 import { isValidBrazilianPhone } from "@/components/PhoneInput";

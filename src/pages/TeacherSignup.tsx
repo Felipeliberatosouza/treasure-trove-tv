@@ -27,6 +27,8 @@ const TeacherSignup = () => {
   const showLogoImage = !!effectiveLogoUrl && !branding?.use_text_logo;
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [emailDuplicate, setEmailDuplicate] = useState(false);
+  const [emailChecking, setEmailChecking] = useState(false);
   const [password, setPassword] = useState("");
   const [expertise, setExpertise] = useState<string[]>([]);
   const [birthDate, setBirthDate] = useState("");

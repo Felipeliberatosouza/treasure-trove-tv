@@ -49,7 +49,7 @@ const UserMenu = forwardRef<HTMLDivElement>((_, forwardedRef) => {
             onClick={() => setOpen(false)}
             className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-foreground hover:bg-secondary transition-colors"
           >
-            <LayoutDashboard className="h-4 w-4" /> Meu Painel
+            <LayoutDashboard className="h-4 w-4" /> {role === "admin" ? "Painel Administrativo" : "Meu Painel"}
           </Link>
           <button
             onClick={handleSignOut}

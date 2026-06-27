@@ -330,8 +330,19 @@ const TeacherSignup = () => {
               placeholder="E-mail *"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="pl-10 pr-10 bg-secondary border-border"
+              className="pl-10 pr-16 bg-secondary border-border"
             />
+            {email.trim() && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()) && (
+              <span className="absolute right-10 top-1/2 -translate-y-1/2">
+                {emailChecking ? (
+                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                ) : emailDuplicate ? (
+                  <X className="h-4 w-4 text-destructive" />
+                ) : (
+                  <Check className="h-4 w-4 text-green-500" />
+                )}
+              </span>
+            )}
             {email && (
               <button
                 type="button"
@@ -343,6 +354,9 @@ const TeacherSignup = () => {
               </button>
             )}
           </div>
+          {emailDuplicate && !emailChecking && (
+            <p className="text-xs text-destructive -mt-2">E-mail já cadastrado na plataforma.</p>
+          )}
           <div className="relative">
             <CalendarDays className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground z-10" />
             <DateInput

@@ -126,8 +126,46 @@ const PhoneVerification = ({ phone, onPhoneChange, onVerified, verified = false,
   }, [phone, code, onVerified]);
 
   const handleCodeChange = useCallback((value: string) => {
-    setCode(value.replace(/\D/g, "").slice(0, 6));
+    const cleaned = value.replace(/\D/g, "").slice(0, 6);
+    setCode(cleaned);
   }, []);
+
+  // Auto-submit when 6 digits are detected (via paste, autofill, or Web OTP)
+  const verifyingRef = useRef(false);
+  useEffect(() => {
+    verifyingRef.current = verifying;
+  }, [verifying]);
+
+  useEffect(() => {
+    if (step === "code" && code.length === 6 && !verifyingRef.current && !isVerified) {
+      verifyCode();
+    }
+  }, [code, step, isVerified, verifyCode]);
+
+  // Web OTP API (Android Chrome): auto-fill code from SMS
+  useEffect(() => {
+    if (step !== "code" || isVerified) return;
+    if (typeof window === "undefined") return;
+    const w = window as any;
+    if (!("OTPCredential" in w)) return;
+
+    const ac = new AbortController();
+    try {
+      navigator.credentials
+        .get({ otp: { transport: ["sms"] }, signal: ac.signal } as any)
+        .then((otp: any) => {
+          if (otp?.code) {
+            handleCodeChange(otp.code);
+          }
+        })
+        .catch(() => {
+          // ignored: user dismissed or unsupported
+        });
+    } catch {
+      // ignored
+    }
+    return () => ac.abort();
+  }, [step, isVerified, handleCodeChange]);
 
   const handleChangeNumber = useCallback(() => {
     setStep("input");

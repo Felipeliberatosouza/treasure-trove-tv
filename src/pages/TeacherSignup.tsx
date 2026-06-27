@@ -311,7 +311,7 @@ const TeacherSignup = () => {
               placeholder="Senha *"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="pl-10 pr-10 bg-secondary border-border"
+              className="pl-10 pr-16 bg-secondary border-border"
             />
             <button
               type="button"
@@ -320,6 +320,15 @@ const TeacherSignup = () => {
             >
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
+            {password && (
+              <button
+                type="button"
+                onClick={() => setPassword("")}
+                className="absolute right-10 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
           </div>
           <PasswordStrengthChecker password={password} birthDate={birthDate} />
           <div className="relative">

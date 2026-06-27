@@ -1,7 +1,7 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Mail, Lock, User, Eye, EyeOff, BookOpen, ArrowLeft, CalendarDays, Camera, X } from "lucide-react";
+import { Mail, Lock, User, Eye, EyeOff, BookOpen, ArrowLeft, CalendarDays, Camera, Check, X, Loader2 } from "lucide-react";
 import DateInput from "@/components/DateInput";
 import PhoneVerification from "@/components/PhoneVerification";
 import { isValidBrazilianPhone } from "@/components/PhoneInput";
@@ -15,17 +15,20 @@ import { useCourseAreas } from "@/hooks/useCourseAreas";
 import AreaSelector from "@/components/AreaSelector";
 import { translateAuthError } from "@/lib/translateAuthError";
 import PasswordStrengthChecker, { validatePassword } from "@/components/PasswordStrengthChecker";
-import { useAllPlatformSettings, resolveDefaultLogoUrl, type BrandingSettings } from "@/hooks/usePlatformSettings";
+import { useAllPlatformSettings, resolveDefaultLogoUrl, type BrandingSettings, type AlertBoxSettings, DEFAULT_ALERT_BOX_SETTINGS } from "@/hooks/usePlatformSettings";
 
 const TeacherSignup = () => {
   const navigate = useNavigate();
   const { settings } = useAllPlatformSettings();
   const branding = settings?.branding as BrandingSettings | undefined;
+  const alertBox = { ...DEFAULT_ALERT_BOX_SETTINGS, ...((settings?.alert_box as AlertBoxSettings | undefined) || {}) };
   const platformName = branding?.platform_name || "Revisão Fácil";
   const effectiveLogoUrl = resolveDefaultLogoUrl(branding);
   const showLogoImage = !!effectiveLogoUrl && !branding?.use_text_logo;
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [emailDuplicate, setEmailDuplicate] = useState(false);
+  const [emailChecking, setEmailChecking] = useState(false);
   const [password, setPassword] = useState("");
   const [expertise, setExpertise] = useState<string[]>([]);
   const [birthDate, setBirthDate] = useState("");
@@ -50,24 +53,65 @@ const TeacherSignup = () => {
     }
   };
 
+  const isFullName = (n: string) => n.trim().split(/\s+/).filter((p) => p.length >= 2).length >= 2;
+
   const preSignupValid = () => {
     if (!name.trim() || !email.trim() || !password.trim() || !birthDate) return false;
-    if (name.trim().split(/\s+/).filter((p) => p.length >= 2).length < 2) return false;
+    if (!isFullName(name)) return false;
+    if (emailDuplicate || emailChecking) return false;
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) return false;
     if (validatePassword(password, birthDate)) return false;
     if (password !== confirmPassword) return false;
     if (!acceptsTerms) return false;
     return true;
   };
 
+  const getPendingFields = (): string[] => {
+    const pending: string[] = [];
+    if (!name.trim()) pending.push("Nome completo");
+    else if (!isFullName(name)) pending.push("Insira seu nome completo (nome e sobrenome)");
+    if (!email.trim()) pending.push("E-mail");
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) pending.push("E-mail válido");
+    else if (emailDuplicate) pending.push("E-mail já cadastrado na plataforma");
+    else if (emailChecking) pending.push("Validando e-mail...");
+    if (!birthDate) pending.push("Data de nascimento");
+    if (!password.trim()) pending.push("Senha");
+    else {
+      const pwdError = validatePassword(password, birthDate);
+      if (pwdError) pending.push(pwdError);
+    }
+    if (!confirmPassword.trim()) pending.push("Confirmação de senha");
+    else if (password !== confirmPassword) pending.push("As senhas devem coincidir");
+    if (!acceptsTerms) pending.push("Aceitar os Termos de Uso");
+    return pending;
+  };
+
+  // Real-time email duplicate check (debounced)
+  useEffect(() => {
+    const value = email.trim();
+    const isValidFormat = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+    if (!isValidFormat) {
+      setEmailDuplicate(false);
+      setEmailChecking(false);
+      return;
+    }
+    setEmailChecking(true);
+    const t = setTimeout(async () => {
+      const { data, error } = await supabase.rpc("is_email_taken", { _email: value });
+      if (!error) setEmailDuplicate(!!data);
+      setEmailChecking(false);
+    }, 400);
+    return () => clearTimeout(t);
+  }, [email]);
+
   const reportPreSignupError = () => {
     if (!name.trim() || !email.trim() || !password.trim() || !birthDate) {
       toast.error("Preencha todos os campos obrigatórios antes do celular");
       return;
     }
-    if (name.trim().split(/\s+/).filter((p) => p.length >= 2).length < 2) {
-      toast.error("Insira seu nome completo (nome e sobrenome)");
-      return;
-    }
+    if (!isFullName(name)) { toast.error("Insira seu nome completo (nome e sobrenome)"); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) { toast.error("Informe um e-mail válido"); return; }
+    if (emailDuplicate) { toast.error("E-mail já cadastrado na plataforma"); return; }
     const pwdError = validatePassword(password, birthDate);
     if (pwdError) { toast.error(pwdError); return; }
     if (password !== confirmPassword) { toast.error("As senhas não coincidem"); return; }
@@ -83,6 +127,12 @@ const TeacherSignup = () => {
     }
 
     setLoading(true);
+    const { data: emailTaken } = await supabase.rpc("is_email_taken", { _email: email.trim() });
+    if (emailTaken) {
+      toast.error("E-mail já cadastrado na plataforma.");
+      setLoading(false);
+      return;
+    }
     const { error } = await supabase.auth.signUp({
       email,
       password,
@@ -254,8 +304,17 @@ const TeacherSignup = () => {
               placeholder="Nome completo *"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="pl-10 pr-10 bg-secondary border-border"
+              className="pl-10 pr-16 bg-secondary border-border"
             />
+            {name.trim() && (
+              <span className="absolute right-10 top-1/2 -translate-y-1/2">
+                {isFullName(name) ? (
+                  <Check className="h-4 w-4 text-green-500" />
+                ) : (
+                  <X className="h-4 w-4 text-destructive" />
+                )}
+              </span>
+            )}
             {name && (
               <button
                 type="button"
@@ -267,6 +326,9 @@ const TeacherSignup = () => {
               </button>
             )}
           </div>
+          {name.trim() && !isFullName(name) && (
+            <p className="text-xs text-destructive -mt-2">Insira seu nome completo (nome e sobrenome).</p>
+          )}
           <div className="relative">
             <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -274,8 +336,19 @@ const TeacherSignup = () => {
               placeholder="E-mail *"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="pl-10 pr-10 bg-secondary border-border"
+              className="pl-10 pr-16 bg-secondary border-border"
             />
+            {email.trim() && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()) && (
+              <span className="absolute right-10 top-1/2 -translate-y-1/2">
+                {emailChecking ? (
+                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                ) : emailDuplicate ? (
+                  <X className="h-4 w-4 text-destructive" />
+                ) : (
+                  <Check className="h-4 w-4 text-green-500" />
+                )}
+              </span>
+            )}
             {email && (
               <button
                 type="button"
@@ -287,6 +360,9 @@ const TeacherSignup = () => {
               </button>
             )}
           </div>
+          {emailDuplicate && !emailChecking && (
+            <p className="text-xs text-destructive -mt-2">E-mail já cadastrado na plataforma.</p>
+          )}
           <div className="relative">
             <CalendarDays className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground z-10" />
             <DateInput
@@ -410,8 +486,18 @@ const TeacherSignup = () => {
             {preSignupValid() ? (
               <PhoneVerification phone={phone} onPhoneChange={setPhone} onVerified={handlePhoneVerified} verified={phoneVerified} />
             ) : (
-              <div className="rounded-md bg-secondary/50 border border-border px-3 py-3 text-xs text-black text-center">
-                Preencha todos os campos acima e aceite os Termos para liberar a verificação do celular.
+              <div
+                className="rounded-md border px-3 py-3 text-xs"
+                style={{ backgroundColor: `${alertBox.bg_color}33`, borderColor: alertBox.border_color }}
+              >
+                <p className="font-medium mb-2 text-center" style={{ color: alertBox.title_color }}>
+                  Para liberar a verificação do celular, ajuste os itens abaixo:
+                </p>
+                <ul className="list-disc list-inside space-y-1" style={{ color: alertBox.item_color }}>
+                  {getPendingFields().map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
               </div>
             )}
             {loading && (

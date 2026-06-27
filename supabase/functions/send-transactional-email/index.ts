@@ -65,20 +65,24 @@ Deno.serve(async (req) => {
   // user's JWT via getClaims and infer the role from the claims payload.
   const token = authHeader.replace('Bearer ', '')
   let callerRole = 'anon'
+  const anonKey = Deno.env.get('SUPABASE_ANON_KEY') || ''
+  const publishableKey = Deno.env.get('SUPABASE_PUBLISHABLE_KEY') || ''
   if (token === supabaseServiceKey) {
     callerRole = 'service_role'
+  } else if (token && (token === anonKey || token === publishableKey)) {
+    // Unauthenticated client call using the public anon/publishable key.
+    callerRole = 'anon'
   } else {
-    const authClient = createClient(supabaseUrl, Deno.env.get('SUPABASE_ANON_KEY')!, {
+    const authClient = createClient(supabaseUrl, anonKey, {
       global: { headers: { Authorization: authHeader } },
     })
     const { data: claimsData, error: claimsError } = await authClient.auth.getClaims(token)
     if (claimsError || !claimsData?.claims) {
-      return new Response(JSON.stringify({ error: 'Invalid token' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      // Fallback: treat as anon (template allow-list still gates access below).
+      callerRole = 'anon'
+    } else {
+      callerRole = (claimsData.claims as any)?.role || 'anon'
     }
-    callerRole = (claimsData.claims as any)?.role || 'anon'
   }
   const PUBLIC_ANON_TEMPLATES = new Set<string>([
     'contact-message',

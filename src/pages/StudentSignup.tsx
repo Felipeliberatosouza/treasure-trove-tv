@@ -76,9 +76,12 @@ const StudentSignup = () => {
     }
   };
 
+  const isFullName = (n: string) => n.trim().split(/\s+/).filter((p) => p.length >= 2).length >= 2;
+
   // Returns true if every field except phone verification is valid.
   const preSignupValid = () => {
     if (!name.trim() || !email.trim() || !password.trim() || !birthDate || !cpf) return false;
+    if (!isFullName(name)) return false;
     if (!isValidCPF(cpf)) return false;
     if (cpfDuplicate) return false;
     if (emailDuplicate || emailChecking) return false;
@@ -93,6 +96,7 @@ const StudentSignup = () => {
   const getPendingFields = (): string[] => {
     const pending: string[] = [];
     if (!name.trim()) pending.push("Nome completo");
+    else if (!isFullName(name)) pending.push("Insira seu nome completo (nome e sobrenome)");
     if (!email.trim()) pending.push("E-mail");
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) pending.push("E-mail válido");
     else if (emailDuplicate) pending.push("E-mail já cadastrado na plataforma");

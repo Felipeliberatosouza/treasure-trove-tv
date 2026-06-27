@@ -1,7 +1,7 @@
 import { Input } from "@/components/ui/input";
 import { formatCPF, isValidCPF } from "@/lib/cpfValidator";
 import { useState, useEffect } from "react";
-import { CheckCircle2, XCircle } from "lucide-react";
+import { CheckCircle2, XCircle, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface CpfInputProps {
@@ -11,9 +11,11 @@ interface CpfInputProps {
   className?: string;
   checkDuplicate?: boolean;
   onDuplicateChange?: (isDuplicate: boolean) => void;
+  clearable?: boolean;
+  onClear?: () => void;
 }
 
-const CpfInput = ({ value, onChange, placeholder = "CPF *", className, checkDuplicate = false, onDuplicateChange }: CpfInputProps) => {
+const CpfInput = ({ value, onChange, placeholder = "CPF *", className, checkDuplicate = false, onDuplicateChange, clearable, onClear }: CpfInputProps) => {
   const [touched, setTouched] = useState(false);
   const [isDuplicate, setIsDuplicate] = useState(false);
   const [checking, setChecking] = useState(false);
@@ -57,7 +59,7 @@ const CpfInput = ({ value, onChange, placeholder = "CPF *", className, checkDupl
           onChange={(e) => onChange(e.target.value.replace(/\D/g, "").slice(0, 11))}
           onBlur={() => setTouched(true)}
           placeholder={placeholder}
-          className={`${className} pr-10 ${
+          className={`${className} ${clearable ? "pr-16" : "pr-10"} ${
             isComplete
               ? isValid
                 ? "border-green-500 focus-visible:ring-green-500/30"
@@ -74,6 +76,15 @@ const CpfInput = ({ value, onChange, placeholder = "CPF *", className, checkDupl
               <XCircle className="h-4 w-4 text-destructive" />
             )}
           </div>
+        )}
+        {clearable && cleaned.length > 0 && (
+          <button
+            type="button"
+            onClick={() => onClear?.()}
+            className="absolute right-10 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+          >
+            <X className="h-4 w-4" />
+          </button>
         )}
       </div>
       {isComplete && !isFormatValid && (

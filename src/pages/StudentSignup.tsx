@@ -342,16 +342,25 @@ const StudentSignup = () => {
               placeholder="Nome completo"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="pl-10 pr-10 bg-secondary border-border"
+              className="pl-10 pr-16 bg-secondary border-border"
             />
             {name.trim() && (
-              <span className="absolute right-3 top-1/2 -translate-y-1/2">
+              <span className="absolute right-10 top-1/2 -translate-y-1/2">
                 {isFullName(name) ? (
                   <Check className="h-4 w-4 text-green-500" />
                 ) : (
                   <X className="h-4 w-4 text-destructive" />
                 )}
               </span>
+            )}
+            {name && (
+              <button
+                type="button"
+                onClick={() => setName("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                <X className="h-4 w-4" />
+              </button>
             )}
           </div>
           {name.trim() && !isFullName(name) && (
@@ -364,10 +373,10 @@ const StudentSignup = () => {
               placeholder="E-mail"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="pl-10 pr-10 bg-secondary border-border"
+              className="pl-10 pr-16 bg-secondary border-border"
             />
             {email.trim() && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()) && (
-              <span className="absolute right-3 top-1/2 -translate-y-1/2">
+              <span className="absolute right-10 top-1/2 -translate-y-1/2">
                 {emailChecking ? (
                   <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
                 ) : emailDuplicate ? (
@@ -376,6 +385,15 @@ const StudentSignup = () => {
                   <Check className="h-4 w-4 text-green-500" />
                 )}
               </span>
+            )}
+            {email && (
+              <button
+                type="button"
+                onClick={() => setEmail("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                <X className="h-4 w-4" />
+              </button>
             )}
           </div>
           {emailDuplicate && !emailChecking && (
@@ -387,14 +405,23 @@ const StudentSignup = () => {
               placeholder="Data de Nascimento *"
               value={birthDate}
               onChange={setBirthDate}
-              className="flex h-10 w-full rounded-md border border-input bg-secondary px-3 py-2 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm pl-10"
+              className="flex h-10 w-full rounded-md border border-input bg-secondary px-3 py-2 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm pl-10 pr-10"
               max={new Date().toISOString().split("T")[0]}
             />
+            {birthDate && (
+              <button
+                type="button"
+                onClick={() => setBirthDate("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground z-10"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
           </div>
           <div className="relative">
             <CreditCard className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <div className="pl-10">
-              <CpfInput value={cpf} onChange={setCpf} placeholder="CPF *" className="bg-secondary border-border" checkDuplicate onDuplicateChange={setCpfDuplicate} />
+              <CpfInput value={cpf} onChange={setCpf} placeholder="CPF *" className="bg-secondary border-border" checkDuplicate onDuplicateChange={setCpfDuplicate} clearable onClear={() => setCpf("")} />
             </div>
           </div>
           
@@ -405,7 +432,7 @@ const StudentSignup = () => {
               placeholder="Senha *"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="pl-10 pr-10 bg-secondary border-border"
+              className="pl-10 pr-16 bg-secondary border-border"
             />
             <button
               type="button"
@@ -414,6 +441,15 @@ const StudentSignup = () => {
             >
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
+            {password && (
+              <button
+                type="button"
+                onClick={() => setPassword("")}
+                className="absolute right-10 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
           </div>
           <PasswordStrengthChecker password={password} birthDate={birthDate} />
           <div className="relative">
@@ -423,8 +459,17 @@ const StudentSignup = () => {
               placeholder="Confirmar senha *"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="pl-10 bg-secondary border-border"
+              className="pl-10 pr-10 bg-secondary border-border"
             />
+            {confirmPassword && (
+              <button
+                type="button"
+                onClick={() => setConfirmPassword("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
           </div>
           {confirmPassword && password !== confirmPassword && (
             <p className="text-xs text-destructive">As senhas não coincidem</p>

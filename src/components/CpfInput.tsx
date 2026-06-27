@@ -1,21 +1,53 @@
 import { Input } from "@/components/ui/input";
 import { formatCPF, isValidCPF } from "@/lib/cpfValidator";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { CheckCircle2, XCircle } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface CpfInputProps {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
   className?: string;
+  checkDuplicate?: boolean;
+  onDuplicateChange?: (isDuplicate: boolean) => void;
 }
 
-const CpfInput = ({ value, onChange, placeholder = "CPF *", className }: CpfInputProps) => {
+const CpfInput = ({ value, onChange, placeholder = "CPF *", className, checkDuplicate = false, onDuplicateChange }: CpfInputProps) => {
   const [touched, setTouched] = useState(false);
+  const [isDuplicate, setIsDuplicate] = useState(false);
+  const [checking, setChecking] = useState(false);
   const cleaned = value.replace(/\D/g, "");
   const isComplete = cleaned.length === 11;
-  const isValid = isComplete && isValidCPF(cleaned);
+  const isFormatValid = isComplete && isValidCPF(cleaned);
+  const isValid = isFormatValid && !isDuplicate;
   const showStatus = cleaned.length > 0;
+
+  useEffect(() => {
+    if (!checkDuplicate || !isFormatValid) {
+      setIsDuplicate(false);
+      onDuplicateChange?.(false);
+      return;
+    }
+    let cancelled = false;
+    setChecking(true);
+    const handle = setTimeout(async () => {
+      const { data, error } = await supabase.rpc("is_cpf_taken", { _cpf: cleaned });
+      if (cancelled) return;
+      setChecking(false);
+      if (!error && data === true) {
+        setIsDuplicate(true);
+        onDuplicateChange?.(true);
+      } else {
+        setIsDuplicate(false);
+        onDuplicateChange?.(false);
+      }
+    }, 400);
+    return () => {
+      cancelled = true;
+      clearTimeout(handle);
+    };
+  }, [cleaned, isFormatValid, checkDuplicate, onDuplicateChange]);
 
   return (
     <div>
@@ -34,7 +66,7 @@ const CpfInput = ({ value, onChange, placeholder = "CPF *", className }: CpfInpu
           }`}
           maxLength={14}
         />
-        {showStatus && isComplete && (
+        {showStatus && isComplete && !checking && (
           <div className="absolute right-3 top-1/2 -translate-y-1/2">
             {isValid ? (
               <CheckCircle2 className="h-4 w-4 text-green-500" />
@@ -44,8 +76,11 @@ const CpfInput = ({ value, onChange, placeholder = "CPF *", className }: CpfInpu
           </div>
         )}
       </div>
-      {touched && isComplete && !isValid && (
+      {isComplete && !isFormatValid && (
         <p className="text-xs text-destructive mt-1">CPF inválido</p>
+      )}
+      {isFormatValid && isDuplicate && (
+        <p className="text-xs text-destructive mt-1">CPF já cadastrado na plataforma.</p>
       )}
       {!touched && cleaned.length > 0 && !isComplete && (
         <p className="text-xs text-muted-foreground mt-1">

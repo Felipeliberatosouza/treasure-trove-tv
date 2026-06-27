@@ -4,7 +4,7 @@ import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp
 import PhoneInput, { isValidBrazilianPhone } from "@/components/PhoneInput";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { MessageCircle, Phone, Loader2, CheckCircle2, RotateCcw } from "lucide-react";
+import { MessageCircle, Phone, Loader2, CheckCircle2 } from "lucide-react";
 
 interface PhoneVerificationProps {
   phone: string;
@@ -53,15 +53,16 @@ const PhoneVerification = ({ phone, onPhoneChange, onVerified, verified = false,
     return () => clearTimeout(timer);
   }, [sendCooldown]);
 
-  const sendCode = useCallback(async () => {
+  const sendCode = useCallback(async (targetChannel?: "sms" | "whatsapp") => {
     if (!isValidBrazilianPhone(phone)) {
       toast.error("Informe um celular válido com DDD (11 dígitos)");
       return;
     }
+    const effectiveChannel = targetChannel || channel;
     setSending(true);
     try {
       const { data, error } = await supabase.functions.invoke("send-phone-code", {
-        body: { phone, channel },
+        body: { phone, channel: effectiveChannel },
       });
 
       if (error) {
@@ -78,7 +79,7 @@ const PhoneVerification = ({ phone, onPhoneChange, onVerified, verified = false,
         return;
       }
 
-      toast.success(`Código enviado via ${channel === "sms" ? "SMS" : "WhatsApp"}!`);
+      toast.success(`Código enviado via ${effectiveChannel === "sms" ? "SMS" : "WhatsApp"}!`);
       setStep("code");
       setCountdown(60);
       setSendCooldown(60);
@@ -129,9 +130,10 @@ const PhoneVerification = ({ phone, onPhoneChange, onVerified, verified = false,
     onPhoneChange("");
   }, [onPhoneChange]);
 
-  const handleChannelChange = useCallback((newChannel: "sms" | "whatsapp") => {
-    setChannel(newChannel);
-  }, []);
+  const sendVia = useCallback(async (targetChannel: "sms" | "whatsapp") => {
+    setChannel(targetChannel);
+    await sendCode(targetChannel);
+  }, [sendCode]);
 
   return (
     <div className={`space-y-3 ${className}`}>
@@ -155,7 +157,8 @@ const PhoneVerification = ({ phone, onPhoneChange, onVerified, verified = false,
               type="button"
               variant={channel === "sms" ? "default" : "outline"}
               size="sm"
-              onClick={() => handleChannelChange("sms")}
+              onClick={() => sendVia("sms")}
+              disabled={sending || sendCooldown > 0}
               className="flex-1 gap-1.5"
             >
               <Phone className="h-3.5 w-3.5" /> SMS
@@ -164,27 +167,13 @@ const PhoneVerification = ({ phone, onPhoneChange, onVerified, verified = false,
               type="button"
               variant={channel === "whatsapp" ? "default" : "outline"}
               size="sm"
-              onClick={() => handleChannelChange("whatsapp")}
+              onClick={() => sendVia("whatsapp")}
+              disabled={sending || sendCooldown > 0}
               className="flex-1 gap-1.5"
             >
               <MessageCircle className="h-3.5 w-3.5" /> WhatsApp
             </Button>
           </div>
-          <Button
-            type="button"
-            onClick={sendCode}
-            disabled={sending || sendCooldown > 0}
-            size="sm"
-            className="w-full"
-          >
-            {sending ? (
-              <><Loader2 className="h-4 w-4 animate-spin mr-1" /> Enviando...</>
-            ) : sendCooldown > 0 ? (
-              `Aguarde ${sendCooldown}s para reenviar`
-            ) : (
-              "Enviar código"
-            )}
-          </Button>
         </div>
       )}
 
@@ -239,7 +228,8 @@ const PhoneVerification = ({ phone, onPhoneChange, onVerified, verified = false,
                   type="button"
                   variant={channel === "sms" ? "default" : "outline"}
                   size="sm"
-                  onClick={() => handleChannelChange("sms")}
+                  onClick={() => sendVia("sms")}
+                  disabled={sending}
                   className="flex-1 gap-1.5"
                 >
                   <Phone className="h-3.5 w-3.5" /> SMS
@@ -248,26 +238,13 @@ const PhoneVerification = ({ phone, onPhoneChange, onVerified, verified = false,
                   type="button"
                   variant={channel === "whatsapp" ? "default" : "outline"}
                   size="sm"
-                  onClick={() => handleChannelChange("whatsapp")}
+                  onClick={() => sendVia("whatsapp")}
+                  disabled={sending}
                   className="flex-1 gap-1.5"
                 >
                   <MessageCircle className="h-3.5 w-3.5" /> WhatsApp
                 </Button>
               </div>
-              <Button
-                type="button"
-                onClick={sendCode}
-                disabled={sending}
-                size="sm"
-                variant="outline"
-                className="w-full gap-1.5"
-              >
-                {sending ? (
-                  <><Loader2 className="h-4 w-4 animate-spin mr-1" /> Enviando...</>
-                ) : (
-                  <><RotateCcw className="h-3.5 w-3.5" /> Reenviar código via {channel === "sms" ? "SMS" : "WhatsApp"}</>
-                )}
-              </Button>
             </div>
           )}
         </div>

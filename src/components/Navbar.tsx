@@ -151,7 +151,7 @@ const Navbar = () => {
       : role === "teacher"
         ? "/dashboard/teacher"
         : "/dashboard/student";
-  const meuPainelItem: MenuItem = { label: "Meu Painel", shortLabel: "Painel", href: dashboardPath };
+  const meuPainelItem: MenuItem = { label: role === "admin" ? "Painel Administrativo" : "Meu Painel", shortLabel: "Painel", href: dashboardPath };
   let menuItems = user && role === "student" && hasActiveSubscription
     ? [subscriberMenuItem, ...resolvedBase]
     : resolvedBase;

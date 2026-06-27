@@ -254,8 +254,17 @@ const TeacherSignup = () => {
               placeholder="Nome completo *"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="pl-10 bg-secondary border-border"
+              className="pl-10 pr-10 bg-secondary border-border"
             />
+            {name && (
+              <button
+                type="button"
+                onClick={() => setName("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
           </div>
           <div className="relative">
             <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />

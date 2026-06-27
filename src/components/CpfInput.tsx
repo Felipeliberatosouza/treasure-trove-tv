@@ -1,7 +1,7 @@
 import { Input } from "@/components/ui/input";
 import { formatCPF, isValidCPF } from "@/lib/cpfValidator";
 import { useState, useEffect } from "react";
-import { CheckCircle2, XCircle } from "lucide-react";
+import { CheckCircle2, XCircle, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface CpfInputProps {
@@ -11,6 +11,8 @@ interface CpfInputProps {
   className?: string;
   checkDuplicate?: boolean;
   onDuplicateChange?: (isDuplicate: boolean) => void;
+  clearable?: boolean;
+  onClear?: () => void;
 }
 
 const CpfInput = ({ value, onChange, placeholder = "CPF *", className, checkDuplicate = false, onDuplicateChange }: CpfInputProps) => {

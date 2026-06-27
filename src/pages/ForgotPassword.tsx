@@ -116,7 +116,7 @@ const ForgotPassword = () => {
             </p>
             <Button
               variant="outline"
-              onClick={sendRecoveryEmail}
+              onClick={() => sendRecoveryEmail()}
               disabled={loading}
               className="mt-2 border-white bg-black text-white hover:bg-white hover:text-black"
             >

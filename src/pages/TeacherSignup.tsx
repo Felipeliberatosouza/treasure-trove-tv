@@ -53,13 +53,37 @@ const TeacherSignup = () => {
     }
   };
 
+  const isFullName = (n: string) => n.trim().split(/\s+/).filter((p) => p.length >= 2).length >= 2;
+
   const preSignupValid = () => {
     if (!name.trim() || !email.trim() || !password.trim() || !birthDate) return false;
-    if (name.trim().split(/\s+/).filter((p) => p.length >= 2).length < 2) return false;
+    if (!isFullName(name)) return false;
+    if (emailDuplicate || emailChecking) return false;
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) return false;
     if (validatePassword(password, birthDate)) return false;
     if (password !== confirmPassword) return false;
     if (!acceptsTerms) return false;
     return true;
+  };
+
+  const getPendingFields = (): string[] => {
+    const pending: string[] = [];
+    if (!name.trim()) pending.push("Nome completo");
+    else if (!isFullName(name)) pending.push("Insira seu nome completo (nome e sobrenome)");
+    if (!email.trim()) pending.push("E-mail");
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) pending.push("E-mail válido");
+    else if (emailDuplicate) pending.push("E-mail já cadastrado na plataforma");
+    else if (emailChecking) pending.push("Validando e-mail...");
+    if (!birthDate) pending.push("Data de nascimento");
+    if (!password.trim()) pending.push("Senha");
+    else {
+      const pwdError = validatePassword(password, birthDate);
+      if (pwdError) pending.push(pwdError);
+    }
+    if (!confirmPassword.trim()) pending.push("Confirmação de senha");
+    else if (password !== confirmPassword) pending.push("As senhas devem coincidir");
+    if (!acceptsTerms) pending.push("Aceitar os Termos de Uso");
+    return pending;
   };
 
   const reportPreSignupError = () => {

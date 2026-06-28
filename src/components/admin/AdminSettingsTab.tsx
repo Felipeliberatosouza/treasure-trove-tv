@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import SettingsBranding from "./settings/SettingsBranding";
 import SettingsContact from "./settings/SettingsContact";
+import SettingsSupport from "./settings/SettingsSupport";
 import SettingsPages from "./settings/SettingsPages";
 import SettingsHeroBanner from "./settings/SettingsHeroBanner";
 import SettingsFeaturedVideos from "./settings/SettingsFeaturedVideos";

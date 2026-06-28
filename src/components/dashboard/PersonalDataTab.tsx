@@ -12,7 +12,7 @@ import AreaSelector from "@/components/AreaSelector";
 import PhoneVerification from "@/components/PhoneVerification";
 import { isValidBrazilianPhone } from "@/components/PhoneInput";
 import CpfInput from "@/components/CpfInput";
-import { isValidCPF } from "@/lib/cpfValidator";
+import { isValidCPF, formatCPF } from "@/lib/cpfValidator";
 import { Camera, Loader2, CheckCircle2, XCircle, AlertCircle, Plus, Trash2, Briefcase, GraduationCap } from "lucide-react";
 
 interface Experience { role: string; org: string; period?: string; description?: string }
@@ -28,6 +28,8 @@ const PersonalDataTab = () => {
   const [birthDate, setBirthDate] = useState("");
   const [phone, setPhone] = useState("");
   const [cpf, setCpf] = useState("");
+  const [email, setEmail] = useState("");
+  const [originalEmail, setOriginalEmail] = useState("");
   const [slug, setSlug] = useState("");
   const [profileTitle, setProfileTitle] = useState("");
   const [address, setAddress] = useState("");
@@ -110,6 +112,8 @@ const PersonalDataTab = () => {
       setBirthDate(profile.birth_date || "");
       setPhone(profile.phone || "");
       setCpf((profile as any).cpf || "");
+      setEmail(profile.email || user?.email || "");
+      setOriginalEmail(profile.email || user?.email || "");
       setSlug((profile as any).slug || "");
       originalSlug.current = (profile as any).slug || "";
       setProfileTitle((profile as any).profile_title || "");
@@ -165,6 +169,12 @@ const PersonalDataTab = () => {
       toast.error("Informe o nome completo (nome e sobrenome)");
       return;
     }
+    const trimmedEmail = email.trim().toLowerCase();
+    const emailChanged = trimmedEmail && trimmedEmail !== (originalEmail || "").toLowerCase();
+    if (!trimmedEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+      toast.error("Informe um e-mail válido");
+      return;
+    }
     if (!birthDate) {
       toast.error("A data de nascimento é obrigatória");
       return;
@@ -205,6 +215,15 @@ const PersonalDataTab = () => {
     }
     setSaving(true);
 
+    if (emailChanged) {
+      const { error: authErr } = await supabase.auth.updateUser({ email: trimmedEmail });
+      if (authErr) {
+        toast.error("Erro ao atualizar e-mail: " + authErr.message);
+        setSaving(false);
+        return;
+      }
+    }
+
     // If re-enabling marketing, call the reactivation function to clear suppression
     if (acceptsMarketing && !(profile as any)?.accepts_marketing) {
       const { error: reactivateErr } = await supabase.functions.invoke("reactivate-email-marketing", {
@@ -218,6 +237,9 @@ const PersonalDataTab = () => {
     }
 
     const updateData: any = { name, bio, expertise_area: expertiseAreas.join(", "), birth_date: birthDate || null, phone: phone || null, cpf: cpf || null, accepts_marketing: acceptsMarketing };
+    if (emailChanged) {
+      updateData.email = trimmedEmail;
+    }
     if (role === "student") {
       updateData.areas = studentAreas;
     }
@@ -243,7 +265,12 @@ const PersonalDataTab = () => {
       }
     } else {
       await logAction("profile_update", { targetTable: "profiles", metadata: { fields: Object.keys(updateData) } });
-      toast.success("Dados atualizados com sucesso!");
+      if (emailChanged) {
+        setOriginalEmail(trimmedEmail);
+        toast.success("Dados atualizados! Confirme o novo e-mail pelo link enviado.");
+      } else {
+        toast.success("Dados atualizados com sucesso!");
+      }
       refreshProfile();
     }
     setSaving(false);
@@ -296,7 +323,16 @@ const PersonalDataTab = () => {
         </div>
         <div>
           <label className="text-sm text-muted-foreground mb-1 block">E-mail</label>
-          <Input value={user?.email || ""} disabled className="bg-secondary opacity-60" />
+          <Input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="bg-secondary"
+            placeholder="seu@email.com"
+          />
+          <p className="text-xs text-muted-foreground mt-1">
+            Ao alterar, enviaremos um link de confirmação para o novo endereço.
+          </p>
         </div>
         {(profile as any)?.referral_code && (
           <div>
@@ -322,8 +358,14 @@ const PersonalDataTab = () => {
           verified={phoneVerified}
         />
         <div>
-          <label className="text-sm text-muted-foreground mb-1 block">CPF {role === "teacher" && <span className="text-xs text-primary font-medium">(obrigatório para contrato)</span>}</label>
-          <CpfInput value={cpf} onChange={setCpf} className="bg-secondary" />
+          <label className="text-sm text-muted-foreground mb-1 block">
+            CPF {role === "teacher" && <span className="text-xs text-primary font-medium">(obrigatório para contrato)</span>}
+          </label>
+          <Input value={formatCPF(cpf)} disabled className="bg-secondary opacity-60 cursor-not-allowed" placeholder="Não informado" />
+          <p className="text-xs text-muted-foreground mt-1 flex items-start gap-1">
+            <AlertCircle className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5" />
+            Por questões de segurança, o CPF não pode ser alterado. Em caso de erro de cadastro, entre em contato com o suporte.
+          </p>
         </div>
         <div className="flex items-start gap-2 pt-2">
           <Checkbox

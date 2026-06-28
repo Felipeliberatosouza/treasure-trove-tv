@@ -1,13 +1,92 @@
-import { useState } from "react";
-import { Shield, LogIn, ShieldAlert, ShieldCheck } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Shield, LogIn, ShieldAlert, ShieldCheck, Mail } from "lucide-react";
 import AdminAuditLogsTab from "./AdminAuditLogsTab";
 import AdminLoginAttemptsTab from "./AdminLoginAttemptsTab";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { useEffect } from "react";
 import TwoFactorSetup from "@/components/TwoFactorSetup";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+
+interface EmailChange {
+  id: string;
+  user_id: string;
+  old_email: string | null;
+  new_email: string;
+  created_at: string;
+  user_name?: string;
+}
+
+const EmailChangeHistorySection = () => {
+  const [rows, setRows] = useState<EmailChange[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      setLoading(true);
+      const { data } = await supabase
+        .from("email_change_history" as any)
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(200);
+      const list = (data || []) as any[];
+      if (list.length > 0) {
+        const ids = [...new Set(list.map((r) => r.user_id))];
+        const { data: profs } = await supabase
+          .from("profiles")
+          .select("user_id, name")
+          .in("user_id", ids);
+        const map = new Map((profs || []).map((p) => [p.user_id, p.name]));
+        setRows(list.map((r) => ({ ...r, user_name: map.get(r.user_id) || "—" })));
+      } else {
+        setRows([]);
+      }
+      setLoading(false);
+    })();
+  }, []);
+
+  return (
+    <div className="space-y-3">
+      <h3 className="font-display font-semibold flex items-center gap-2">
+        <Mail className="h-5 w-5" /> Histórico de Troca de E-mails
+      </h3>
+      <p className="text-sm text-muted-foreground">
+        Registro de todas as alterações de e-mail realizadas pelos usuários.
+      </p>
+      {loading ? (
+        <p className="text-center text-muted-foreground py-8">Carregando...</p>
+      ) : rows.length === 0 ? (
+        <p className="text-center text-muted-foreground py-8">Nenhuma alteração registrada.</p>
+      ) : (
+        <div className="rounded-md border overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Data/Hora</TableHead>
+                <TableHead>Usuário</TableHead>
+                <TableHead>E-mail Anterior</TableHead>
+                <TableHead>Novo E-mail</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {rows.map((r) => (
+                <TableRow key={r.id}>
+                  <TableCell className="whitespace-nowrap text-sm">
+                    {new Date(r.created_at).toLocaleString("pt-BR")}
+                  </TableCell>
+                  <TableCell className="text-sm">{r.user_name}</TableCell>
+                  <TableCell className="text-sm text-muted-foreground">{r.old_email || "—"}</TableCell>
+                  <TableCell className="text-sm">{r.new_email}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      )}
+    </div>
+  );
+};
 
 const SecuritySection = () => {
   const [mandatory, setMandatory] = useState(false);
@@ -75,6 +154,7 @@ const sections = [
   { id: "2fa", label: "2FA", icon: ShieldCheck },
   { id: "audit", label: "Logs de Auditoria", icon: ShieldAlert },
   { id: "login-attempts", label: "Tentativas de Login", icon: LogIn },
+  { id: "email-history", label: "Histórico de E-mails", icon: Mail },
 ] as const;
 
 type SectionId = (typeof sections)[number]["id"];
@@ -108,6 +188,7 @@ const AdminSecurityTab = () => {
       {activeSection === "2fa" && <SecuritySection />}
       {activeSection === "audit" && <AdminAuditLogsTab />}
       {activeSection === "login-attempts" && <AdminLoginAttemptsTab />}
+      {activeSection === "email-history" && <EmailChangeHistorySection />}
     </div>
   );
 };

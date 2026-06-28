@@ -16,6 +16,30 @@ const SENDER_DOMAIN = "notify.revisaofacil.com.br"
 // even though actual sending uses the subdomain above.
 const FROM_DOMAIN = "notify.revisaofacil.com.br"
 
+// Maps registry template names (kebab-case used in code) to the
+// `template_key` column used in the `email_templates` admin table.
+// Without this mapping the admin-configured HTML/subject/sender are
+// ignored and the React fallback template is sent instead.
+const TEMPLATE_KEY_ALIAS: Record<string, string> = {
+  'welcome-student': 'welcome',
+  'welcome-teacher': 'welcome',
+  'new-student-admin-notify': 'new_student_admin',
+  'new-teacher-admin-notify': 'new_teacher_admin',
+  'password-recovery': 'password_recovery',
+  'content-approved': 'content_approved',
+  'content-rejected': 'content_rejected',
+  'contract-signed': 'contract_signed',
+  'doubt-answered': 'doubt_answered',
+  'doubt-approved': 'doubt_approved',
+  'doubt-sent-confirmation': 'doubt_submitted',
+  'payment-confirmation': 'payment_confirmation',
+  'subscription-cancelled': 'subscription_cancelled',
+}
+
+function resolveAdminTemplateKey(name: string): string {
+  return TEMPLATE_KEY_ALIAS[name] || name
+}
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers':
@@ -374,7 +398,7 @@ Deno.serve(async (req) => {
     const { data: tplCfg } = await supabase
       .from('email_templates')
       .select('coupon_enabled, coupon_code, coupon_message, coupon_expires_at, coupon_starts_at')
-      .eq('template_key', templateName)
+      .eq('template_key', resolveAdminTemplateKey(templateName))
       .maybeSingle()
 
     const nowMs = Date.now()
@@ -454,7 +478,7 @@ Deno.serve(async (req) => {
       .select(
         'from_email, from_name, subject, body_html, logo_url, logo_variant, use_uploaded_logo, text_color, heading_color, link_color, button_color, button_text_color, slogan_color, font_family, show_social_footer, always_send'
       )
-      .eq('template_key', templateName)
+      .eq('template_key', resolveAdminTemplateKey(templateName))
       .maybeSingle()
 
     // Sender override

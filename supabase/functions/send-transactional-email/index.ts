@@ -398,7 +398,7 @@ Deno.serve(async (req) => {
     const { data: tplCfg } = await supabase
       .from('email_templates')
       .select('coupon_enabled, coupon_code, coupon_message, coupon_expires_at, coupon_starts_at')
-      .eq('template_key', templateName)
+      .eq('template_key', resolveAdminTemplateKey(templateName))
       .maybeSingle()
 
     const nowMs = Date.now()
@@ -478,7 +478,7 @@ Deno.serve(async (req) => {
       .select(
         'from_email, from_name, subject, body_html, logo_url, logo_variant, use_uploaded_logo, text_color, heading_color, link_color, button_color, button_text_color, slogan_color, font_family, show_social_footer, always_send'
       )
-      .eq('template_key', templateName)
+      .eq('template_key', resolveAdminTemplateKey(templateName))
       .maybeSingle()
 
     // Sender override

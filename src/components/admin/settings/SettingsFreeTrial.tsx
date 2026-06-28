@@ -12,6 +12,7 @@ const defaults: FreeTrialSettings = {
   trial_type: "days",
   trial_days: 7,
   trial_videos: 5,
+  min_view_percent: 70,
 };
 
 const SettingsFreeTrial = () => {
@@ -20,7 +21,7 @@ const SettingsFreeTrial = () => {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (data) setForm(data);
+    if (data) setForm({ min_view_percent: 70, ...data });
   }, [data]);
 
   const handleSave = async () => {
@@ -123,6 +124,34 @@ const SettingsFreeTrial = () => {
           )}
         </Card>
       )}
+
+      <Card className="p-5 space-y-3">
+        <div>
+          <h3 className="text-sm font-semibold">Tempo mínimo para contar uma visualização</h3>
+          <p className="text-xs text-muted-foreground">
+            Apenas visualizações em que o usuário assistiu acima desse percentual do vídeo serão contabilizadas
+            nas estatísticas públicas (KPIs, perfis de professores e listas de mais assistidos).
+          </p>
+        </div>
+        <div className="max-w-xs">
+          <Label>Percentual mínimo (%)</Label>
+          <Input
+            type="number"
+            min={1}
+            max={100}
+            value={form.min_view_percent ?? 70}
+            onChange={(e) =>
+              setForm({
+                ...form,
+                min_view_percent: Math.min(100, Math.max(1, parseInt(e.target.value) || 70)),
+              })
+            }
+          />
+          <p className="text-xs text-muted-foreground mt-1">
+            Recomendado: 70%. Valor aplicado também para promover áreas de interesse.
+          </p>
+        </div>
+      </Card>
 
       <Button onClick={handleSave} disabled={saving}>
         <Save className="h-4 w-4 mr-2" /> {saving ? "Salvando..." : "Salvar Configurações de Teste"}

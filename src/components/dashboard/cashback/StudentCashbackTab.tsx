@@ -66,7 +66,7 @@ const StudentCashbackTab = () => {
 
   const referralLink = useMemo(() => {
     if (!account?.referral_code) return "";
-    return `${window.location.origin}/signup-aluno?ref=${account.referral_code}`;
+    return `${window.location.origin}/signup/student?ref=${account.referral_code}`;
   }, [account?.referral_code]);
 
   const copyCode = () => {

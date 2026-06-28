@@ -80,8 +80,13 @@ const Index = () => {
       setLoadingPopular(true);
 
       // Fetch all view counts and lessons in parallel
+      const { fetchMinViewPercent } = await import("@/hooks/useMinViewPercent");
+      const minViewPct = await fetchMinViewPercent();
       const [viewCountsRes, lessonsRes] = await Promise.all([
-        supabase.from("video_views").select("content_id, content_type"),
+        supabase
+          .from("video_views")
+          .select("content_id, content_type")
+          .gte("watch_percentage", minViewPct),
         supabase
           .from("lessons")
           .select("*")

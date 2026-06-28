@@ -63,6 +63,7 @@ const TEMPLATE_LABELS: Record<string, string> = {
   contract_signed: "Contrato Assinado",
   subscription_expiring: "Lembrete de Vencimento",
   subscription_cancelled: "Assinatura Cancelada/Expirada",
+  cashback_referral_share: "Link de Indicação (Cashback)",
 };
 
 const TEMPLATE_DESCRIPTIONS: Record<string, string> = {
@@ -88,6 +89,7 @@ const TEMPLATE_DESCRIPTIONS: Record<string, string> = {
   contract_signed: "Confirmação enviada ao professor após assinar o contrato.",
   subscription_expiring: "Enviado automaticamente alguns dias antes do vencimento da assinatura do aluno.",
   subscription_cancelled: "Enviado ao aluno quando sua assinatura é cancelada ou expira.",
+  cashback_referral_share: "Enviado ao aluno quando ele solicita o envio do seu link/código de indicação de amigos por e-mail (programa de cashback).",
 };
 
 const TEMPLATE_VARS: Record<string, string[]> = {
@@ -113,6 +115,7 @@ const TEMPLATE_VARS: Record<string, string[]> = {
   contract_signed: ["{{teacher_name}}", "{{signed_date}}", "{{expiry_date}}", "{{dashboard_link}}"],
   subscription_expiring: ["{{name}}", "{{plan_name}}", "{{days_remaining}}", "{{expiry_date}}", "{{subscription_status}}", "{{renew_link}}"],
   subscription_cancelled: ["{{name}}", "{{plan_name}}", "{{expiry_date}}", "{{reason}}", "{{renew_link}}"],
+  cashback_referral_share: ["{{name}}", "{{referral_code}}", "{{referral_link}}", "{{share_text}}", "{{referral_percent}}", "{{platform_name}}"],
 };
 
 const FONT_OPTIONS = [

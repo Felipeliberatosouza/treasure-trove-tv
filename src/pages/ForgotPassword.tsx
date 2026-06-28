@@ -41,7 +41,7 @@ const ForgotPassword = () => {
     }
 
     setLoading(true);
-    const { error } = await supabase.functions.invoke("send-password-recovery", {
+    const { data, error } = await supabase.functions.invoke("send-password-recovery", {
       body: {
         email: target,
         redirect_to: `${window.location.origin}/reset-password`,
@@ -50,10 +50,12 @@ const ForgotPassword = () => {
 
     if (error) {
       toast.error(translateAuthError(error.message));
+    } else if (data && (data as any).exists === false) {
+      toast.error("E-mail não cadastrado. Verifique o endereço informado ou crie uma conta.");
     } else {
       setSent(true);
       setTimeLeft(30 * 60);
-      toast.success("Se o e-mail estiver cadastrado, enviaremos o link de recuperação.");
+      toast.success("E-mail de recuperação enviado!");
     }
     setLoading(false);
   };
@@ -106,7 +108,7 @@ const ForgotPassword = () => {
         {sent ? (
           <div className="rounded-lg border border-primary/40 bg-black p-6 text-center space-y-3 shadow-lg">
             <p className="text-sm font-medium text-white">
-              Se houver uma conta cadastrada para <strong>{email}</strong>, enviaremos um link de redefinição.
+              Enviamos um link de redefinição para <strong>{email}</strong>.
             </p>
             <p className="text-xs font-medium text-white">
               Verifique sua caixa de entrada e spam.

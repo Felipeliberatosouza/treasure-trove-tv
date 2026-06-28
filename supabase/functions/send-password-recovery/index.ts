@@ -43,6 +43,23 @@ Deno.serve(async (req) => {
 
   const admin = createClient(supabaseUrl, serviceRole)
 
+  // Verifica se o e-mail está cadastrado (em profiles)
+  try {
+    const { data: existingProfile } = await admin
+      .from('profiles')
+      .select('id')
+      .eq('email', email)
+      .maybeSingle()
+    if (!existingProfile) {
+      return new Response(
+        JSON.stringify({ success: false, exists: false, error: 'user_not_found' }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      )
+    }
+  } catch (e) {
+    console.error('profile existence check failed', e)
+  }
+
   // Busca nome e plataforma para personalizar o e-mail
   let userName = ''
   try {
@@ -78,10 +95,17 @@ Deno.serve(async (req) => {
       options: redirectTo ? { redirectTo } : undefined,
     })
     if (linkError) {
-      // Se o usuário não existe, devolvemos sucesso silenciosamente
-      console.log('generateLink error (silent)', linkError.message)
+      const msg = String(linkError.message || '').toLowerCase()
+      const notFound = msg.includes('not found') || msg.includes('user_not_found')
+      if (notFound) {
+        return new Response(
+          JSON.stringify({ success: false, exists: false, error: 'user_not_found' }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+        )
+      }
+      console.log('generateLink error', linkError.message)
       return new Response(
-        JSON.stringify({ success: true }),
+        JSON.stringify({ success: false, error: 'generate_link_failed' }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
       )
     }

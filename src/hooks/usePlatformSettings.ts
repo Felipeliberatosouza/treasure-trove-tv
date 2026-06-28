@@ -255,6 +255,10 @@ export interface FreeTrialSettings {
   trial_type: "days" | "videos";
   trial_days: number;
   trial_videos: number;
+  /** Percentual mínimo de progresso de vídeo (0-100) para que uma
+   *  visualização seja contabilizada nas estatísticas públicas
+   *  (KPIs, contagens em perfis e listas). Default: 70. */
+  min_view_percent?: number;
 }
 
 export interface PageContentSettings {

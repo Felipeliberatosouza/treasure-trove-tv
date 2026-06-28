@@ -216,8 +216,14 @@ const TeacherProfile = () => {
 
       const contentIds = allContent.map((c) => c.id);
       if (contentIds.length > 0) {
+        const { fetchMinViewPercent } = await import("@/hooks/useMinViewPercent");
+        const minViewPct = await fetchMinViewPercent();
         const [viewsRes, ratingsRes] = await Promise.all([
-          supabase.from("video_views").select("id", { count: "exact", head: true }).in("content_id", contentIds),
+          supabase
+            .from("video_views")
+            .select("id", { count: "exact", head: true })
+            .in("content_id", contentIds)
+            .gte("watch_percentage", minViewPct),
           supabase.rpc("get_video_rating_aggregates" as any, { _ids: contentIds }),
         ]);
         setTotalViews(viewsRes.count || 0);

@@ -5,6 +5,7 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/
 import { BarChart, Bar, XAxis, YAxis, PieChart, Pie, Cell, LineChart, Line, CartesianGrid, ResponsiveContainer } from "recharts";
 import { Users, Video, DollarSign, Clock, TrendingUp, Star, MailX, Megaphone } from "lucide-react";
 import KpiDetailDialog from "./KpiDetailDialog";
+import { fetchMinViewPercent } from "@/hooks/useMinViewPercent";
 
 interface KPIs {
   totalUsers: number;
@@ -54,6 +55,8 @@ const AdminOverviewTab = ({ onNavigate }: AdminOverviewTabProps) => {
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     const thirtyDaysAgoIso = thirtyDaysAgo.toISOString();
 
+    const minViewPct = await fetchMinViewPercent();
+
     const [
       { data: roles },
       { data: lessons },
@@ -69,7 +72,7 @@ const AdminOverviewTab = ({ onNavigate }: AdminOverviewTabProps) => {
       supabase.from("lessons").select("admin_approved, published"),
       supabase.from("exam_solutions").select("admin_approved, published"),
       supabase.from("teacher_payments").select("gross_amount, net_amount, platform_fee, status, period_start"),
-      supabase.from("video_views").select("id"),
+      supabase.from("video_views").select("id").gte("watch_percentage", minViewPct),
       supabase.from("video_ratings").select("rating"),
       supabase.from("profiles").select("*", { count: "exact", head: true }).eq("accepts_marketing", false),
       supabase.from("teacher_sales_posts").select("*", { count: "exact", head: true }),

@@ -49,6 +49,8 @@ const StudentCashbackTab = () => {
   const { account, loading: loadingAcc } = useCashbackAccount();
   const { transactions, loading: loadingTx } = useCashbackTransactions();
   const { config, loading: loadingCfg } = useCashbackConfig();
+  const { settings } = useAllPlatformSettings();
+  const alertBox = { ...DEFAULT_ALERT_BOX_SETTINGS, ...((settings?.alert_box as AlertBoxSettings | undefined) || {}) };
   const [sendingEmail, setSendingEmail] = useState(false);
 
   const currentTier = useMemo(() => {

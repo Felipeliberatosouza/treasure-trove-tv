@@ -35,6 +35,7 @@ const TEMPLATE_KEY_ALIAS: Record<string, string> = {
   'payment-confirmation': 'payment_confirmation',
   'subscription-cancelled': 'subscription_cancelled',
   'password-changed-admin': 'password_changed_admin',
+  'cashback-referral-share': 'cashback_referral_share',
 }
 
 function resolveAdminTemplateKey(name: string): string {

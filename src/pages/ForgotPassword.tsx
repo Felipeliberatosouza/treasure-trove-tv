@@ -53,7 +53,7 @@ const ForgotPassword = () => {
     } else {
       setSent(true);
       setTimeLeft(30 * 60);
-      toast.success("E-mail de recuperação enviado!");
+      toast.success("Se o e-mail estiver cadastrado, enviaremos o link de recuperação.");
     }
     setLoading(false);
   };
@@ -106,7 +106,7 @@ const ForgotPassword = () => {
         {sent ? (
           <div className="rounded-lg border border-primary/40 bg-black p-6 text-center space-y-3 shadow-lg">
             <p className="text-sm font-medium text-white">
-              Enviamos um link de redefinição para <strong>{email}</strong>
+              Se houver uma conta cadastrada para <strong>{email}</strong>, enviaremos um link de redefinição.
             </p>
             <p className="text-xs font-medium text-white">
               Verifique sua caixa de entrada e spam.

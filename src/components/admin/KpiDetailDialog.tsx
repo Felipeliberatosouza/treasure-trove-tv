@@ -84,9 +84,12 @@ const KpiDetailDialog = ({ open, onOpenChange, kpiKey, title }: KpiDetailDialogP
         break;
       }
       case "views": {
+        const { fetchMinViewPercent } = await import("@/hooks/useMinViewPercent");
+        const minViewPct = await fetchMinViewPercent();
         const { data: views } = await supabase
           .from("video_views")
           .select("content_id, content_type, user_id, viewed_at, watch_percentage")
+          .gte("watch_percentage", minViewPct)
           .order("viewed_at", { ascending: false })
           .limit(100);
         const userIds = [...new Set((views ?? []).map(v => v.user_id))];

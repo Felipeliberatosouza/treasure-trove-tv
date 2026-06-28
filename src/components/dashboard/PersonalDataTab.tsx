@@ -43,6 +43,8 @@ const PersonalDataTab = () => {
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const { areas } = useCourseAreas(true);
   const originalSlug = useRef("");
+  const initializedProfile = useRef(false);
+  const initializedTeacherLists = useRef(false);
 
   const [slugSuggestions, setSlugSuggestions] = useState<string[]>([]);
 
@@ -99,7 +101,8 @@ const PersonalDataTab = () => {
   };
 
   useEffect(() => {
-    if (profile) {
+    if (profile && !initializedProfile.current) {
+      initializedProfile.current = true;
       setName(profile.name || "");
       setBio(profile.bio || "");
       setExpertiseAreas(profile.expertise_area ? profile.expertise_area.split(", ").filter(Boolean) : []);
@@ -119,6 +122,7 @@ const PersonalDataTab = () => {
 
   useEffect(() => {
     if (!user || role !== "teacher") return;
+    if (initializedTeacherLists.current) return;
     let cancelled = false;
     (async () => {
       const { data } = await supabase
@@ -127,6 +131,7 @@ const PersonalDataTab = () => {
         .eq("user_id", user.id)
         .maybeSingle();
       if (cancelled || !data) return;
+      initializedTeacherLists.current = true;
       setExperiences(Array.isArray((data as any).experiences) ? (data as any).experiences : []);
       setEducation(Array.isArray((data as any).education) ? (data as any).education : []);
     })();

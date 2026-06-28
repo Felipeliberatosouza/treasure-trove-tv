@@ -46,6 +46,7 @@ const PersonalDataTab = () => {
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const { areas } = useCourseAreas(true);
   const { data: contact } = usePlatformSettings("contact");
+  const { data: support } = usePlatformSettings("support");
   const originalSlug = useRef("");
   const initializedProfile = useRef(false);
   const initializedTeacherLists = useRef(false);

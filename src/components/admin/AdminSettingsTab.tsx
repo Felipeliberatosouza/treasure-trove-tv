@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Settings, Palette, Phone, FileText, Star, Layout, Gift, FolderOpen, Mail, Package, FileSignature, Smartphone, Heart, GraduationCap, Users, Megaphone, Target, CalendarClock, Sparkles, PanelBottom, AlertTriangle } from "lucide-react";
+import { Settings, Palette, Phone, FileText, Star, Layout, Gift, FolderOpen, Mail, Package, FileSignature, Smartphone, Heart, GraduationCap, Users, Megaphone, Target, CalendarClock, Sparkles, PanelBottom, AlertTriangle, Headset } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import SettingsBranding from "./settings/SettingsBranding";

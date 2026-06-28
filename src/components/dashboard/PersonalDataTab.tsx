@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuditLog } from "@/hooks/useAuditLog";
 import { useCourseAreas } from "@/hooks/useCourseAreas";
+import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import AreaSelector from "@/components/AreaSelector";
 import PhoneVerification from "@/components/PhoneVerification";
 import { isValidBrazilianPhone } from "@/components/PhoneInput";
@@ -44,6 +45,7 @@ const PersonalDataTab = () => {
   const slugCheckTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const { areas } = useCourseAreas(true);
+  const { data: contact } = usePlatformSettings("contact");
   const originalSlug = useRef("");
   const initializedProfile = useRef(false);
   const initializedTeacherLists = useRef(false);
@@ -362,10 +364,39 @@ const PersonalDataTab = () => {
             CPF {role === "teacher" && <span className="text-xs text-primary font-medium">(obrigatório para contrato)</span>}
           </label>
           <Input value={formatCPF(cpf)} disabled className="bg-secondary opacity-60 cursor-not-allowed" placeholder="Não informado" />
-          <p className="text-xs text-muted-foreground mt-1 flex items-start gap-1">
+          <div className="text-xs text-muted-foreground mt-1 flex items-start gap-1">
             <AlertCircle className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5" />
-            Por questões de segurança, o CPF não pode ser alterado. Em caso de erro de cadastro, entre em contato com o suporte.
-          </p>
+            <div className="space-y-1">
+              <p>
+                Por questões de segurança, o CPF não pode ser alterado. Em caso de erro de cadastro, entre em contato com o suporte:
+              </p>
+              <ul className="space-y-0.5">
+                {contact?.email && (
+                  <li>
+                    E-mail: <a href={`mailto:${contact.email}`} className="text-primary hover:underline">{contact.email}</a>
+                  </li>
+                )}
+                {contact?.phone && (
+                  <li>
+                    Telefone: <a href={`tel:${contact.phone.replace(/\D/g, "")}`} className="text-primary hover:underline">{contact.phone}</a>
+                  </li>
+                )}
+                {contact?.whatsapp && (
+                  <li>
+                    WhatsApp:{" "}
+                    <a
+                      href={`https://wa.me/${contact.whatsapp.replace(/\D/g, "")}${contact.whatsapp_message ? `?text=${encodeURIComponent(contact.whatsapp_message)}` : ""}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary hover:underline"
+                    >
+                      {contact.whatsapp}
+                    </a>
+                  </li>
+                )}
+              </ul>
+            </div>
+          </div>
         </div>
         <div className="flex items-start gap-2 pt-2">
           <Checkbox

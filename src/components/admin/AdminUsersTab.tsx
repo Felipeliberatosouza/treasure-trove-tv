@@ -204,6 +204,36 @@ const AdminUsersTab = () => {
       toast({ title: "Erro", description: (data as any)?.error || "Não foi possível alterar a senha.", variant: "destructive" });
       return;
     }
+    // Envia e-mail de notificação de segurança ao usuário (best-effort).
+    try {
+      const [{ data: branding }, { data: contact }] = await Promise.all([
+        supabase.from("platform_settings").select("value").eq("key", "branding").maybeSingle(),
+        supabase.from("platform_settings").select("value").eq("key", "contact").maybeSingle(),
+      ]);
+      const platformName = (branding?.value as any)?.platform_name || "Revisão Fácil";
+      const supportEmail = (contact?.value as any)?.email || "";
+      const supportWhatsapp = (contact?.value as any)?.whatsapp || "";
+      const changedAt = new Date().toLocaleString("pt-BR", {
+        day: "2-digit", month: "2-digit", year: "numeric",
+        hour: "2-digit", minute: "2-digit",
+      });
+      await supabase.functions.invoke("send-transactional-email", {
+        body: {
+          templateName: "password_changed_admin",
+          recipientEmail: pwdUser.email,
+          idempotencyKey: `pwd-changed-admin-${pwdUser.user_id}-${Date.now()}`,
+          templateData: {
+            name: (pwdUser.name || "").split(" ")[0] || "",
+            platform_name: platformName,
+            support_email: supportEmail,
+            support_whatsapp: supportWhatsapp,
+            changed_at: changedAt,
+          },
+        },
+      });
+    } catch (e) {
+      console.error("Falha ao enviar e-mail de notificação de senha alterada", e);
+    }
     toast({ title: "Senha atualizada", description: `Nova senha definida para "${pwdUser.name}". Informe ao usuário com segurança.` });
     setPwdUser(null);
     setNewPwd("");

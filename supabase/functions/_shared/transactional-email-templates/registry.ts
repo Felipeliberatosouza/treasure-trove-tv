@@ -29,12 +29,15 @@ import { template as contentEditedAdminNotify } from './content-edited-admin-not
 import { template as commitmentPenaltyRefunded } from './commitment-penalty-refunded.tsx'
 import { template as teacherPaymentPaid } from './teacher-payment-paid.tsx'
 import { template as passwordRecovery } from './password-recovery.tsx'
+import { template as passwordChangedAdmin } from './password-changed-admin.tsx'
 import { template as contactMessage } from './contact-message.tsx'
 import { template as cashbackReferralShare } from './cashback-referral-share.tsx'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'password_recovery': passwordRecovery,
   'password-recovery': passwordRecovery,
+  'password_changed_admin': passwordChangedAdmin,
+  'password-changed-admin': passwordChangedAdmin,
   'doubt-approved': doubtApproved,
   'doubt-answered': doubtAnswered,
   'doubt-sent-confirmation': doubtSentConfirmation,

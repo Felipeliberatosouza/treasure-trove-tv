@@ -16,6 +16,30 @@ const SENDER_DOMAIN = "notify.revisaofacil.com.br"
 // even though actual sending uses the subdomain above.
 const FROM_DOMAIN = "notify.revisaofacil.com.br"
 
+// Maps registry template names (kebab-case used in code) to the
+// `template_key` column used in the `email_templates` admin table.
+// Without this mapping the admin-configured HTML/subject/sender are
+// ignored and the React fallback template is sent instead.
+const TEMPLATE_KEY_ALIAS: Record<string, string> = {
+  'welcome-student': 'welcome',
+  'welcome-teacher': 'welcome',
+  'new-student-admin-notify': 'new_student_admin',
+  'new-teacher-admin-notify': 'new_teacher_admin',
+  'password-recovery': 'password_recovery',
+  'content-approved': 'content_approved',
+  'content-rejected': 'content_rejected',
+  'contract-signed': 'contract_signed',
+  'doubt-answered': 'doubt_answered',
+  'doubt-approved': 'doubt_approved',
+  'doubt-sent-confirmation': 'doubt_submitted',
+  'payment-confirmation': 'payment_confirmation',
+  'subscription-cancelled': 'subscription_cancelled',
+}
+
+function resolveAdminTemplateKey(name: string): string {
+  return TEMPLATE_KEY_ALIAS[name] || name
+}
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers':

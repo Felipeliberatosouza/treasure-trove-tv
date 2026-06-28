@@ -212,6 +212,37 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
       await fetchRole(nextSession.user.id);
       if (!cancelled) setLoading(false);
+
+      // After the user confirms the e-mail and signs in for the first time,
+      // send the welcome e-mail. The edge function dedupes per recipient,
+      // so repeated sign-ins won't generate duplicates.
+      try {
+        const u = nextSession.user;
+        if (u?.email && u.email_confirmed_at) {
+          const { data: roleRows } = await supabase
+            .from("user_roles")
+            .select("role")
+            .eq("user_id", u.id);
+          const roles = (roleRows || []).map((r: any) => r.role);
+          const isTeacher = roles.includes("teacher");
+          const templateName = isTeacher ? "welcome-teacher" : "welcome-student";
+          const { data: prof } = await supabase
+            .from("profiles")
+            .select("name")
+            .eq("user_id", u.id)
+            .maybeSingle();
+          await supabase.functions.invoke("send-transactional-email", {
+            body: {
+              templateName,
+              recipientEmail: u.email,
+              idempotencyKey: `${templateName}-${u.id}`,
+              templateData: { name: (prof?.name || "").trim() },
+            },
+          });
+        }
+      } catch (_e) {
+        // Silent — welcome e-mail is best-effort.
+      }
     };
 
     const { data: { subscription: authSub } } = supabase.auth.onAuthStateChange(

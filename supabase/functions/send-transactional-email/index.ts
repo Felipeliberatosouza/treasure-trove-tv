@@ -201,6 +201,30 @@ Deno.serve(async (req) => {
   // Create Supabase client with service role (bypasses RLS)
   const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
+  // Dedupe: certain templates must be sent at most once per recipient.
+  // Prevents duplicate welcome e-mails if the user signs in multiple times
+  // after confirming the e-mail.
+  const ONCE_PER_RECIPIENT = new Set<string>([
+    'welcome-student',
+    'welcome-teacher',
+  ])
+  if (ONCE_PER_RECIPIENT.has(templateName)) {
+    const { data: priorSend } = await supabase
+      .from('email_send_log')
+      .select('id')
+      .eq('template_name', templateName)
+      .eq('recipient_email', effectiveRecipient)
+      .neq('status', 'failed')
+      .limit(1)
+      .maybeSingle()
+    if (priorSend) {
+      return new Response(
+        JSON.stringify({ success: false, reason: 'already_sent' }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+  }
+
   // 2. Check suppression list (fail-closed: if we can't verify, don't send)
   const { data: suppressed, error: suppressionError } = await supabase
     .from('suppressed_emails')

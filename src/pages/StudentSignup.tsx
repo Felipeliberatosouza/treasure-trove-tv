@@ -200,16 +200,10 @@ const StudentSignup = () => {
           }
         }
       }
-      // Send welcome email and notify admins
+      // O e-mail de boas-vindas é enviado APÓS o usuário confirmar o e-mail
+      // (disparado em AuthContext no primeiro SIGNED_IN com email_confirmed_at).
+      // Aqui apenas notificamos os administradores.
       if (signUpData?.user) {
-        await supabase.functions.invoke("send-transactional-email", {
-          body: {
-            templateName: "welcome-student",
-            recipientEmail: email,
-            idempotencyKey: `welcome-student-${signUpData.user.id}`,
-            templateData: { name: name.trim() },
-          },
-        });
         // Notify admin about new student signup
         const { data: adminRoles } = await supabase
           .from("user_roles")

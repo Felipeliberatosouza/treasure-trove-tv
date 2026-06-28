@@ -162,17 +162,9 @@ const TeacherSignup = () => {
         if (birthDate) updateData.birth_date = birthDate;
         await supabase.from("profiles").update(updateData).eq("user_id", userId);
       }
-      // Send welcome email
+      // O e-mail de boas-vindas é enviado APÓS o usuário confirmar o e-mail
+      // (disparado em AuthContext no primeiro SIGNED_IN com email_confirmed_at).
       if (userId) {
-        // Send welcome email to teacher
-        await supabase.functions.invoke("send-transactional-email", {
-          body: {
-            templateName: "welcome-teacher",
-            recipientEmail: email,
-            idempotencyKey: `welcome-teacher-${userId}`,
-            templateData: { name: name.trim() },
-          },
-        });
         // Notify admin about new teacher signup
         const { data: adminRoles } = await supabase
           .from("user_roles")

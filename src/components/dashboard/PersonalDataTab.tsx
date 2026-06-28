@@ -12,7 +12,7 @@ import AreaSelector from "@/components/AreaSelector";
 import PhoneVerification from "@/components/PhoneVerification";
 import { isValidBrazilianPhone } from "@/components/PhoneInput";
 import CpfInput from "@/components/CpfInput";
-import { isValidCPF } from "@/lib/cpfValidator";
+import { isValidCPF, formatCPF } from "@/lib/cpfValidator";
 import { Camera, Loader2, CheckCircle2, XCircle, AlertCircle, Plus, Trash2, Briefcase, GraduationCap } from "lucide-react";
 
 interface Experience { role: string; org: string; period?: string; description?: string }
@@ -361,7 +361,7 @@ const PersonalDataTab = () => {
           <label className="text-sm text-muted-foreground mb-1 block">
             CPF {role === "teacher" && <span className="text-xs text-primary font-medium">(obrigatório para contrato)</span>}
           </label>
-          <CpfInput value={cpf} onChange={() => {}} className="bg-secondary opacity-60 cursor-not-allowed" disabled />
+          <Input value={formatCPF(cpf)} disabled className="bg-secondary opacity-60 cursor-not-allowed" placeholder="Não informado" />
           <p className="text-xs text-muted-foreground mt-1 flex items-start gap-1">
             <AlertCircle className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5" />
             Por questões de segurança, o CPF não pode ser alterado. Em caso de erro de cadastro, entre em contato com o suporte.

@@ -97,6 +97,13 @@ export interface ContactSettings {
   whatsapp_hours: string;
 }
 
+export interface SupportSettings {
+  email: string;
+  phone: string;
+  whatsapp: string;
+  whatsapp_message: string;
+}
+
 export type HeroColorScheme = "light" | "dark" | "accent";
 
 export interface HeroBannerSettings {

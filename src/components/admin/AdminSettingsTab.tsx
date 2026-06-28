@@ -36,6 +36,7 @@ const SECTIONS_RAW = [
   { id: "products", label: "Config. de Produtos", icon: Package },
   { id: "contract", label: "Contrato do Professor", icon: FileSignature },
   { id: "contact", label: "Dados e Contatos", icon: Phone },
+  { id: "support", label: "Suporte", icon: Headset },
   { id: "emails", label: "E-mails", icon: Mail },
   { id: "branding", label: "Identidade Visual", icon: Palette },
   { id: "teacher_goal", label: "Metas do Professor", icon: Target },

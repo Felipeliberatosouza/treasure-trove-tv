@@ -69,7 +69,7 @@ const SettingsAlertBox = () => {
             }}
           >
             <p className="font-medium mb-2 text-center" style={{ color: form.title_color }}>
-              Para liberar a verificação do celular, ajuste os itens abaixo:
+              Conclua o seu cadastro:
             </p>
             <ul className="list-disc list-inside space-y-1" style={{ color: form.item_color }}>
               <li>CPF já cadastrado na plataforma</li>

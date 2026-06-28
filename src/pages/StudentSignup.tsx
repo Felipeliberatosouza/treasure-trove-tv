@@ -161,7 +161,7 @@ const StudentSignup = () => {
       email,
       password,
       options: {
-        data: { name, role: "student", areas: selectedAreas, birth_date: birthDate, phone: verifiedPhone },
+        data: { name, role: "student", areas: selectedAreas, birth_date: birthDate, phone: verifiedPhone, cpf: cleanedCpf, accepts_marketing: acceptsMarketing },
         emailRedirectTo: `${window.location.origin}${loginUrl}`,
       },
     });

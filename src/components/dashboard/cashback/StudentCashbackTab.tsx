@@ -99,6 +99,11 @@ const StudentCashbackTab = () => {
           idempotencyKey: `cashback-referral-share-${user.id}-${Date.now()}`,
           templateData: {
             name: (profile as { name?: string } | null)?.name ?? "",
+            referral_code: account.referral_code,
+            referral_link: referralLink,
+            share_text: shareText,
+            referral_percent: config.referral_percent,
+            // camelCase aliases (React Email template fallback)
             referralCode: account.referral_code,
             referralLink,
             shareText,

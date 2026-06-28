@@ -190,17 +190,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     let cancelled = false;
+    let loadedUserId: string | null = null;
 
     const loadAuthState = async (nextSession: Session | null) => {
       setLoading(true);
       setSession(nextSession);
       setUser(nextSession?.user ?? null);
+      loadedUserId = nextSession?.user?.id ?? null;
 
       if (!nextSession?.user) {
         setRole(null);
         setAllRoles([]);
         setProfile(null);
         setSubscription(defaultSubscription);
+        loadedUserId = null;
         if (!cancelled) setLoading(false);
         return;
       }
@@ -246,7 +249,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
 
     const { data: { subscription: authSub } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
+      (event, session) => {
+        if (event === "TOKEN_REFRESHED" || (event === "SIGNED_IN" && loadedUserId === session?.user?.id)) {
+          setSession(session);
+          setUser(session?.user ?? null);
+          return;
+        }
         void loadAuthState(session);
       }
     );

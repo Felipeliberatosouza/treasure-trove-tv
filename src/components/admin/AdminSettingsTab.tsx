@@ -84,6 +84,7 @@ const AdminSettingsTab = () => {
 
       {activeSection === "branding" && <SettingsBranding />}
       {activeSection === "contact" && <SettingsContact />}
+      {activeSection === "support" && <SettingsSupport />}
       {activeSection === "emails" && <SettingsEmailTemplates />}
       {activeSection === "footer" && <SettingsFooter />}
       {activeSection === "pages" && <SettingsPages />}

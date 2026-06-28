@@ -519,7 +519,7 @@ const StudentSignup = () => {
                 style={{ backgroundColor: alertBox.bg_color, borderColor: alertBox.border_color }}
               >
                 <p className="font-medium mb-2 text-center" style={{ color: alertBox.title_color }}>
-                  Para liberar a verificação do celular, ajuste os itens abaixo:
+                  Conclua o seu cadastro:
                 </p>
                 <ul className="list-disc list-inside space-y-1" style={{ color: alertBox.item_color }}>
                   {getPendingFields().map((item) => (

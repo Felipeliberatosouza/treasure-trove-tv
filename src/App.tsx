@@ -44,6 +44,7 @@ import InactivityGuard from "./components/InactivityGuard.tsx";
 import UserBlockGuard from "./components/UserBlockGuard.tsx";
 import GlobalRedirectOverlay from "./components/GlobalRedirectOverlay.tsx";
 import OnboardingGuard from "./components/OnboardingGuard.tsx";
+import EmailConfirmationHandler from "./components/EmailConfirmationHandler.tsx";
 import ScrollToTop from "./components/ScrollToTop.tsx";
 import SubscriptionUnavailableBanner from "./components/SubscriptionUnavailableBanner.tsx";
 import GlobalContentProtection from "./components/GlobalContentProtection.tsx";
@@ -128,6 +129,7 @@ const App = () => (
           <InactivityGuard />
           <GlobalRedirectOverlay />
           <OnboardingGuard />
+          <EmailConfirmationHandler />
           <UserBlockGuard />
           <SubscriptionUnavailableBanner />
           <GlobalContentProtection />

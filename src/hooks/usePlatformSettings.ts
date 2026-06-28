@@ -327,6 +327,7 @@ export const DEFAULT_FOOTER_SETTINGS: FooterSettings = {
 type SettingsMap = {
   branding: BrandingSettings;
   contact: ContactSettings;
+  support: SupportSettings;
   hero_banner: HeroBannerCarouselSettings;
   hero_banner_student: HeroBannerCarouselSettings;
   hero_banner_teacher: HeroBannerCarouselSettings;

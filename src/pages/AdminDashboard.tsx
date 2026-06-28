@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import MandatoryMfaGuard from "@/components/MandatoryMfaGuard";
 import { motion } from "framer-motion";
-import { ArrowLeft, Video, DollarSign, Shield, LayoutDashboard, Settings, HelpCircle, Mail, CalendarClock, Megaphone, Users, CreditCard, FileText, ScrollText, Activity, RefreshCcw, Receipt, XCircle, LifeBuoy, UserCog } from "lucide-react";
+import { ArrowLeft, Video, DollarSign, Shield, LayoutDashboard, Settings, HelpCircle, Mail, CalendarClock, Megaphone, Users, CreditCard, FileText, ScrollText, Activity, RefreshCcw, Receipt, XCircle, LifeBuoy, UserCog, User, Lock } from "lucide-react";
 import { Link, Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
@@ -27,6 +27,8 @@ import AdminCancellationsTab from "@/components/admin/AdminCancellationsTab";
 import AdminUsageHistoryTab from "@/components/admin/AdminUsageHistoryTab";
 import AdminSupportTicketsTab from "@/components/admin/AdminSupportTicketsTab";
 import AdminProfileApprovalsTab from "@/components/admin/AdminProfileApprovalsTab";
+import PersonalDataTab from "@/components/dashboard/PersonalDataTab";
+import LoginDataTab from "@/components/dashboard/LoginDataTab";
 
 const tabs = [
   { id: "overview", label: "Visão Geral", icon: LayoutDashboard },
@@ -38,6 +40,8 @@ const tabs = [
   { id: "compensation", label: "Pagamento de Professores", icon: DollarSign },
   { id: "security", label: "Segurança", icon: Shield },
   { id: "settings", label: "Configurações", icon: Settings },
+  { id: "personal", label: "Dados Pessoais", icon: User },
+  { id: "login", label: "Dados de Login", icon: Lock },
   // Hidden: agora acessadas como submenu dentro de Cancelamentos
   { id: "cancellation-reasons", label: "Motivos de Cancelamento", icon: FileText, hidden: true },
   { id: "cancellation-receipts", label: "Recibos de Cancelamento", icon: Receipt, hidden: true },
@@ -132,6 +136,8 @@ const AdminDashboard = () => {
             {activeTab === "support-tickets" && <AdminSupportTicketsTab />}
             {activeTab === "profile-approvals" && <AdminProfileApprovalsTab />}
             {activeTab === "settings" && <AdminSettingsTab />}
+            {activeTab === "personal" && <PersonalDataTab />}
+            {activeTab === "login" && <LoginDataTab />}
           </motion.div>
         </div>
       </div>

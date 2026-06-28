@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { usePlatformSettings, FreeTrialSettings } from "@/hooks/usePlatformSettings";
+import { invalidateMinViewPercentCache } from "@/hooks/useMinViewPercent";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -27,6 +28,7 @@ const SettingsFreeTrial = () => {
   const handleSave = async () => {
     setSaving(true);
     await update(form);
+    invalidateMinViewPercentCache();
     setSaving(false);
   };
 

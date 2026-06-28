@@ -456,6 +456,39 @@ export type Database = {
           },
         ]
       }
+      email_change_history: {
+        Row: {
+          changed_by: string | null
+          created_at: string
+          id: string
+          ip_address: string | null
+          new_email: string
+          old_email: string | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          changed_by?: string | null
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          new_email: string
+          old_email?: string | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          changed_by?: string | null
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          new_email?: string
+          old_email?: string | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       email_send_log: {
         Row: {
           created_at: string

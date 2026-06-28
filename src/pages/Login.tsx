@@ -422,15 +422,7 @@ const Login = () => {
           <Button className="w-full font-display font-semibold" size="lg" disabled={loading}>
             {loading ? "Entrando..." : "Entrar"}
           </Button>
-          <div className="flex items-center justify-between gap-2">
-            <button
-              type="button"
-              onClick={() => resendConfirmation(email)}
-              disabled={resending}
-              className="text-xs text-primary hover:underline disabled:opacity-50"
-            >
-              {resending ? "Reenviando..." : "Reenviar e-mail de confirmação"}
-            </button>
+      <div className="flex items-center justify-end gap-2">
             <Link
               to={email.trim() ? `/forgot-password?email=${encodeURIComponent(email.trim())}&auto=1` : "/forgot-password"}
               className="text-xs text-primary hover:underline"

@@ -72,21 +72,41 @@ const Login = () => {
   }, [searchParams]);
 
   const resendConfirmation = async (target: string) => {
-    if (!target) return;
+    const normalized = (target || "").trim().toLowerCase();
+    if (!normalized) {
+      toast.error("Informe seu e-mail no campo acima para reenviar a confirmação.");
+      return;
+    }
+    // Basic e-mail format check
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized)) {
+      toast.error("E-mail inválido. Verifique o endereço informado.");
+      return;
+    }
     setResending(true);
     try {
       const { error } = await supabase.auth.resend({
         type: "signup",
-        email: target,
+        email: normalized,
         options: { emailRedirectTo: window.location.origin },
       });
       if (error) {
-        toast.error(translateAuthError(error.message));
+        const msg = error.message || "";
+        if (/already.*confirmed|already.*registered/i.test(msg)) {
+          toast.success("Este e-mail já foi confirmado. Você já pode entrar normalmente.");
+          setUnconfirmedEmail(null);
+        } else if (/rate limit|too many|seconds/i.test(msg)) {
+          toast.error("Muitas tentativas. Aguarde alguns instantes antes de tentar novamente.");
+        } else if (/not found|user.*found/i.test(msg)) {
+          toast.error("E-mail não cadastrado. Verifique o endereço ou crie uma conta.");
+        } else {
+          toast.error(translateAuthError(msg) || "Não foi possível reenviar o e-mail. Tente novamente.");
+        }
       } else {
-        toast.success("E-mail de confirmação reenviado! Verifique sua caixa de entrada.");
+        toast.success(`E-mail de confirmação reenviado para ${normalized}. Verifique sua caixa de entrada e a pasta de spam.`);
+        setUnconfirmedEmail(normalized);
       }
     } catch (err: any) {
-      toast.error(err?.message || "Erro ao reenviar e-mail");
+      toast.error(err?.message || "Erro ao reenviar o e-mail de confirmação. Tente novamente.");
     } finally {
       setResending(false);
     }

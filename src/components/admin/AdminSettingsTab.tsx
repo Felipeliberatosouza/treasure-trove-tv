@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
-import { Settings, Palette, Phone, FileText, Star, Layout, Gift, FolderOpen, Mail, Package, FileSignature, Smartphone, Heart, GraduationCap, Users, Megaphone, Target, CalendarClock, Sparkles, PanelBottom, AlertTriangle } from "lucide-react";
+import { Settings, Palette, Phone, FileText, Star, Layout, Gift, FolderOpen, Mail, Package, FileSignature, Smartphone, Heart, GraduationCap, Users, Megaphone, Target, CalendarClock, Sparkles, PanelBottom, AlertTriangle, Headset } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import SettingsBranding from "./settings/SettingsBranding";
 import SettingsContact from "./settings/SettingsContact";
+import SettingsSupport from "./settings/SettingsSupport";
 import SettingsPages from "./settings/SettingsPages";
 import SettingsHeroBanner from "./settings/SettingsHeroBanner";
 import SettingsFeaturedVideos from "./settings/SettingsFeaturedVideos";
@@ -35,6 +36,7 @@ const SECTIONS_RAW = [
   { id: "products", label: "Config. de Produtos", icon: Package },
   { id: "contract", label: "Contrato do Professor", icon: FileSignature },
   { id: "contact", label: "Dados e Contatos", icon: Phone },
+  { id: "support", label: "Suporte", icon: Headset },
   { id: "emails", label: "E-mails", icon: Mail },
   { id: "branding", label: "Identidade Visual", icon: Palette },
   { id: "teacher_goal", label: "Metas do Professor", icon: Target },
@@ -82,6 +84,7 @@ const AdminSettingsTab = () => {
 
       {activeSection === "branding" && <SettingsBranding />}
       {activeSection === "contact" && <SettingsContact />}
+      {activeSection === "support" && <SettingsSupport />}
       {activeSection === "emails" && <SettingsEmailTemplates />}
       {activeSection === "footer" && <SettingsFooter />}
       {activeSection === "pages" && <SettingsPages />}

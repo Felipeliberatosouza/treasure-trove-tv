@@ -97,6 +97,13 @@ export interface ContactSettings {
   whatsapp_hours: string;
 }
 
+export interface SupportSettings {
+  email: string;
+  phone: string;
+  whatsapp: string;
+  whatsapp_message: string;
+}
+
 export type HeroColorScheme = "light" | "dark" | "accent";
 
 export interface HeroBannerSettings {
@@ -320,6 +327,7 @@ export const DEFAULT_FOOTER_SETTINGS: FooterSettings = {
 type SettingsMap = {
   branding: BrandingSettings;
   contact: ContactSettings;
+  support: SupportSettings;
   hero_banner: HeroBannerCarouselSettings;
   hero_banner_student: HeroBannerCarouselSettings;
   hero_banner_teacher: HeroBannerCarouselSettings;

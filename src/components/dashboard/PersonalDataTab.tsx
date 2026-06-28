@@ -46,6 +46,7 @@ const PersonalDataTab = () => {
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const { areas } = useCourseAreas(true);
   const { data: contact } = usePlatformSettings("contact");
+  const { data: support } = usePlatformSettings("support");
   const originalSlug = useRef("");
   const initializedProfile = useRef(false);
   const initializedTeacherLists = useRef(false);
@@ -371,26 +372,26 @@ const PersonalDataTab = () => {
                 Por questões de segurança, o CPF não pode ser alterado. Em caso de erro de cadastro, entre em contato com o suporte:
               </p>
               <ul className="space-y-0.5">
-                {contact?.email && (
+                {support?.email && (
                   <li>
-                    E-mail: <a href={`mailto:${contact.email}`} className="text-primary hover:underline">{contact.email}</a>
+                    E-mail: <a href={`mailto:${support.email}`} className="text-primary hover:underline">{support.email}</a>
                   </li>
                 )}
-                {contact?.phone && (
+                {support?.phone && (
                   <li>
-                    Telefone: <a href={`tel:${contact.phone.replace(/\D/g, "")}`} className="text-primary hover:underline">{contact.phone}</a>
+                    Telefone: <a href={`tel:${support.phone.replace(/\D/g, "")}`} className="text-primary hover:underline">{support.phone}</a>
                   </li>
                 )}
-                {contact?.whatsapp && (
+                {support?.whatsapp && (
                   <li>
                     WhatsApp:{" "}
                     <a
-                      href={`https://wa.me/${contact.whatsapp.replace(/\D/g, "")}${contact.whatsapp_message ? `?text=${encodeURIComponent(contact.whatsapp_message)}` : ""}`}
+                      href={`https://wa.me/${support.whatsapp.replace(/\D/g, "")}${support.whatsapp_message ? `?text=${encodeURIComponent(support.whatsapp_message)}` : ""}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-primary hover:underline"
                     >
-                      {contact.whatsapp}
+                      {support.whatsapp}
                     </a>
                   </li>
                 )}

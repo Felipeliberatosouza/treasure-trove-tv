@@ -207,9 +207,12 @@ const StudentCashbackTab = () => {
           <div>
             <label className="text-xs text-muted-foreground">Seu código</label>
             <div className="flex gap-2 mt-1">
-              <code className="flex-1 px-3 py-2 rounded-md bg-secondary font-mono text-lg tracking-wider text-center">
+              <div
+                className="flex-1 px-3 py-2 rounded-md border font-mono text-lg tracking-wider text-center"
+                style={{ backgroundColor: alertBox.bg_color, borderColor: alertBox.border_color, color: alertBox.title_color }}
+              >
                 {account?.referral_code ?? "—"}
-              </code>
+              </div>
               <Button variant="outline" size="icon" onClick={copyCode}>
                 <Copy className="h-4 w-4" />
               </Button>

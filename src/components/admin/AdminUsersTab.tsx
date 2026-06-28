@@ -10,6 +10,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Search, Trash2, UserCog, UserCheck, UserX, FileSignature, Eye, Download, MailCheck, KeyRound, Send, Gift } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuditLog } from "@/hooks/useAuditLog";
+import { formatCPF } from "@/lib/cpfValidator";
 
 interface UserWithRole {
   user_id: string;
@@ -21,6 +22,7 @@ interface UserWithRole {
   active: boolean;
   accepts_marketing: boolean;
   birth_date?: string | null;
+  cpf?: string | null;
   contract_signed_at?: string | null;
   contract_expires_at?: string | null;
   contract_status?: string | null;
@@ -50,7 +52,7 @@ const AdminUsersTab = () => {
 
   const fetchUsers = async () => {
     setLoading(true);
-    const { data: profiles } = await supabase.from("profiles").select("user_id, name, email, created_at, referral_code, active, accepts_marketing, birth_date");
+    const { data: profiles } = await supabase.from("profiles").select("user_id, name, email, created_at, referral_code, active, accepts_marketing, birth_date, cpf");
     const { data: roles } = await supabase.from("user_roles").select("user_id, role");
     const { data: contracts } = await supabase.from("teacher_contracts" as any).select("teacher_id, signed_at, expires_at, status, contract_text, signature_name, signature_cpf").eq("status", "active");
     const { data: trials } = await supabase
@@ -314,6 +316,7 @@ const AdminUsersTab = () => {
                 <TableHead>Código</TableHead>
                 <TableHead>Nome</TableHead>
                 <TableHead>Email</TableHead>
+                <TableHead>CPF</TableHead>
                 <TableHead>Papel</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Contrato</TableHead>
@@ -329,6 +332,7 @@ const AdminUsersTab = () => {
                   <TableCell className="font-mono text-sm">{u.referral_code || "—"}</TableCell>
                   <TableCell className="font-medium">{u.name}</TableCell>
                   <TableCell className="text-muted-foreground break-all">{u.email}</TableCell>
+                  <TableCell className="text-muted-foreground text-xs font-mono whitespace-nowrap">{u.cpf ? formatCPF(u.cpf) : "—"}</TableCell>
                   <TableCell>{roleBadge(u.role)}</TableCell>
                   <TableCell>
                     {u.active ? (

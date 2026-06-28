@@ -141,13 +141,22 @@ const SettingsFreeTrial = () => {
             type="number"
             min={1}
             max={100}
-            value={form.min_view_percent ?? 70}
-            onChange={(e) =>
-              setForm({
-                ...form,
-                min_view_percent: Math.min(100, Math.max(1, parseInt(e.target.value) || 70)),
-              })
-            }
+            value={form.min_view_percent ?? ""}
+            onChange={(e) => {
+              const raw = e.target.value;
+              if (raw === "") {
+                setForm({ ...form, min_view_percent: undefined });
+                return;
+              }
+              const n = parseInt(raw, 10);
+              if (Number.isNaN(n)) return;
+              setForm({ ...form, min_view_percent: n });
+            }}
+            onBlur={(e) => {
+              const n = parseInt(e.target.value, 10);
+              const clamped = Number.isNaN(n) ? 70 : Math.min(100, Math.max(1, n));
+              setForm({ ...form, min_view_percent: clamped });
+            }}
           />
           <p className="text-xs text-muted-foreground mt-1">
             Recomendado: 70%. Valor aplicado também para promover áreas de interesse.

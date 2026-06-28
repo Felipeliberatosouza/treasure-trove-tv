@@ -79,9 +79,10 @@ const AdminPaymentsTab = () => {
   const fetchData = async () => {
     setLoading(true);
 
+    const minViewPct = await (await import("@/hooks/useMinViewPercent")).fetchMinViewPercent();
     const [profilesRes, viewsRes, ratingsRes, purchasesRes, paymentsRes] = await Promise.all([
       supabase.from("profiles").select("user_id, name, pix_key"),
-      supabase.from("video_views").select("content_id, content_type, user_id"),
+      supabase.from("video_views").select("content_id, content_type, user_id").gte("watch_percentage", minViewPct),
       supabase.from("video_ratings").select("content_id, content_type, rating"),
       supabase.from("video_purchases").select("content_id, content_type, amount, user_id"),
       supabase.from("teacher_payments").select("*").order("created_at", { ascending: false }),

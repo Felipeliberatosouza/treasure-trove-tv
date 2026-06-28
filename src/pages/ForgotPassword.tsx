@@ -20,8 +20,8 @@ const ForgotPassword = () => {
   const prefEmailInitial = searchParams.get("email") || "";
   const autoInitial = searchParams.get("auto") === "1" && !!prefEmailInitial;
   const [email, setEmail] = useState(prefEmailInitial);
-  const [loading, setLoading] = useState(autoInitial);
-  const [sent, setSent] = useState(autoInitial);
+  const [loading, setLoading] = useState(false);
+  const [sent, setSent] = useState(false);
   const [timeLeft, setTimeLeft] = useState(30 * 60);
 
   useEffect(() => {

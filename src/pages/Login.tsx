@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Mail, Lock, Eye, EyeOff, ArrowLeft } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, ArrowLeft, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
@@ -399,8 +399,18 @@ const Login = () => {
               placeholder="E-mail"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="pl-10 bg-secondary border-border"
+              className="pl-10 pr-10 bg-secondary border-border"
             />
+            {email.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setEmail("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                aria-label="Limpar e-mail"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
           </div>
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -409,8 +419,18 @@ const Login = () => {
               placeholder="Senha"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="pl-10 pr-10 bg-secondary border-border"
+              className="pl-10 pr-[4.5rem] bg-secondary border-border"
             />
+            {password.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setPassword("")}
+                className="absolute right-10 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                aria-label="Limpar senha"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}

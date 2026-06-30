@@ -31,6 +31,7 @@ const TEMPLATE_KEY_ALIAS: Record<string, string> = {
   'contract-signed': 'contract_signed',
   'doubt-answered': 'doubt_answered',
   'doubt-approved': 'doubt_approved',
+  'doubt-question-approved': 'doubt_question_approved',
   'doubt-sent-confirmation': 'doubt_submitted',
   'payment-confirmation': 'payment_confirmation',
   'subscription-cancelled': 'subscription_cancelled',

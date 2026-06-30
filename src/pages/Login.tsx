@@ -419,8 +419,18 @@ const Login = () => {
               placeholder="Senha"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="pl-10 pr-10 bg-secondary border-border"
+              className="pl-10 pr-[4.5rem] bg-secondary border-border"
             />
+            {password.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setPassword("")}
+                className="absolute right-10 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                aria-label="Limpar senha"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}

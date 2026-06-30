@@ -88,7 +88,7 @@ const DoubtForm = ({ contentId, contentType, teacherId, title, placeholder }: Do
       <div className="flex items-start gap-2 rounded-lg bg-card/60 border border-border p-2.5 text-xs text-muted-foreground">
         <MessageSquare className="h-3.5 w-3.5 shrink-0 mt-0.5 text-primary" />
         <span>
-          Esta dúvida dá direito a até{" "}
+          Você pode enviar até{" "}
           <strong className="text-foreground">
             {individualLimit} pergunta{individualLimit === 1 ? "" : "s"}
           </strong>{" "}

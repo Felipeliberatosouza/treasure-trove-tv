@@ -152,6 +152,7 @@ const AdminDoubtsTab = () => {
           templateData: {
             studentName: studentProfile.name || "Aluno",
             question: doubt.question,
+            student_name: studentProfile.name || "Aluno",
           },
         },
       });

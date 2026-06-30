@@ -399,8 +399,18 @@ const Login = () => {
               placeholder="E-mail"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="pl-10 bg-secondary border-border"
+              className="pl-10 pr-10 bg-secondary border-border"
             />
+            {email.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setEmail("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                aria-label="Limpar e-mail"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
           </div>
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />

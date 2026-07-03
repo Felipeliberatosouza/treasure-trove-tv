@@ -178,6 +178,48 @@ const Login = () => {
     if (error) {
       if (/email not confirmed/i.test(error.message)) {
         setUnconfirmedEmail(email);
+      } else if (/invalid login credentials|invalid email or password/i.test(error.message)) {
+        // Diferencia "e-mail inexistente" de "senha incorreta"
+        let emailExists = false;
+        try {
+          const { data: exists } = await supabase.rpc("is_email_taken", {
+            _email: email.toLowerCase(),
+          });
+          emailExists = !!exists;
+        } catch {
+          // fallback silencioso — trata como credencial inválida genérica
+        }
+
+        if (!emailExists) {
+          toast.error(
+            "E-mail inexistente ou incorreto. Verifique o e-mail digitado ou crie um novo cadastro."
+          );
+        } else {
+          // Conta falhas recentes deste e-mail (inclui a tentativa recém-inserida)
+          let failedCount = 0;
+          try {
+            const { count } = await supabase
+              .from("login_attempts" as any)
+              .select("*", { count: "exact", head: true })
+              .eq("email", email.toLowerCase())
+              .eq("success", false)
+              .gte(
+                "attempted_at",
+                new Date(Date.now() - 15 * 60 * 1000).toISOString()
+              );
+            failedCount = count || 0;
+          } catch {
+            // ignore
+          }
+
+          if (failedCount === 2) {
+            toast.error(
+              '2 tentativas de acesso com senha incorreta. Se você errar novamente a conta será bloqueada. Clique em: Esqueci minha senha.'
+            );
+          } else {
+            toast.error("Senha incorreta.");
+          }
+        }
       } else {
         toast.error(translateAuthError(error.message));
       }

@@ -365,7 +365,7 @@ const LessonReminderPreferences = () => {
                   setIsDirty(true);
                 }}
               >
-                <SelectTrigger className="bg-secondary">
+                <SelectTrigger className="bg-background">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -442,7 +442,7 @@ const LessonReminderPreferences = () => {
                       addCustomHour();
                     }
                   }}
-                  className="bg-secondary"
+                  className="bg-background"
                 />
                 <Button
                   type="button"

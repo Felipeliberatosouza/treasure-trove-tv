@@ -34,6 +34,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import LessonReadyChecklist from "@/components/LessonReadyChecklist";
 import LessonReminderPreferences from "@/components/LessonReminderPreferences";
+import BookLessonSection from "@/components/BookLessonSection";
 
 interface ScheduledLesson {
   id: string;
@@ -490,6 +491,12 @@ const MinhasAulasAgendadas = () => {
           <div className="flex justify-end">
             <LessonReminderPreferences />
           </div>
+
+          {!isTeacher && (
+            <div className="-mx-6 md:-mx-16 lg:-mx-32">
+              <BookLessonSection />
+            </div>
+          )}
 
           {loading ? (
             <div className="flex items-center justify-center py-16">

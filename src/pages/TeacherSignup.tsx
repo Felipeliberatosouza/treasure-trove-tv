@@ -158,7 +158,7 @@ const TeacherSignup = () => {
       }
       // Save phone and marketing preference to profile
       if (userId) {
-        const updateData: any = { phone: verifiedPhone, accepts_marketing: acceptsMarketing };
+        const updateData: any = { phone: verifiedPhone, accepts_marketing: acceptsMarketing, phone_verified: true };
         if (birthDate) updateData.birth_date = birthDate;
         await supabase.from("profiles").update(updateData).eq("user_id", userId);
       }

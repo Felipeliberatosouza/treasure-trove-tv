@@ -186,7 +186,7 @@ const StudentSignup = () => {
       }
       // Save areas, phone and marketing preference to profile if signup succeeded
       if (signUpData?.user) {
-        const updateData: any = { accepts_marketing: acceptsMarketing, cpf: cleanedCpf };
+        const updateData: any = { accepts_marketing: acceptsMarketing, cpf: cleanedCpf, phone_verified: true };
         if (birthDate) updateData.birth_date = birthDate;
         if (selectedAreas.length > 0) updateData.areas = selectedAreas;
         if (verifiedPhone) updateData.phone = verifiedPhone;

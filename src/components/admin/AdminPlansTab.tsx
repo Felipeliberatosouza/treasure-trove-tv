@@ -95,6 +95,23 @@ const AdminPlansTab = () => {
   };
 
   const handleSave = async () => {
+    // Validate: every enabled service must have a quantity > 0
+    for (let i = 0; i < plans.length; i++) {
+      const plan = plans[i];
+      for (const s of SERVICE_KEYS) {
+        if (plan[`service_${s.key}`]) {
+          const qty = Number(plan[`service_${s.key}_qty`]);
+          if (!qty || qty <= 0) {
+            toast({
+              title: "Quantidade obrigatória",
+              description: `No plano "${plan.name || `Plano ${i + 1}`}", informe a quantidade para o serviço "${s.label}".`,
+              variant: "destructive",
+            });
+            return;
+          }
+        }
+      }
+    }
     setSaving(true);
     for (let i = 0; i < plans.length; i++) {
       const { id, ...rest } = plans[i];

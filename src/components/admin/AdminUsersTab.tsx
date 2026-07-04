@@ -319,6 +319,7 @@ const AdminUsersTab = () => {
                 <TableHead>CPF</TableHead>
                 <TableHead>Papel</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Aceita e-mails</TableHead>
                 <TableHead>Contrato</TableHead>
                 <TableHead>Teste Grátis</TableHead>
                 <TableHead>Aniversário</TableHead>
@@ -339,6 +340,13 @@ const AdminUsersTab = () => {
                       <Badge variant="outline" className="border-green-500/30 text-green-500">Ativo</Badge>
                     ) : (
                       <Badge variant="outline" className="border-destructive/30 text-destructive">Inativo</Badge>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {u.accepts_marketing ? (
+                      <Badge variant="outline" className="border-green-500/30 text-green-500">Sim</Badge>
+                    ) : (
+                      <Badge variant="outline" className="border-muted-foreground/30 text-muted-foreground">Não</Badge>
                     )}
                   </TableCell>
                   <TableCell>

@@ -79,8 +79,12 @@ const DynamicBranding = () => {
       button_text_color?: string;
       primary_button_bg?: string;
       primary_button_text?: string;
+      primary_button_hover_bg?: string;
+      primary_button_hover_text?: string;
       secondary_button_bg?: string;
       secondary_button_text?: string;
+      secondary_button_hover_bg?: string;
+      secondary_button_hover_text?: string;
       selection_button_bg?: string;
       selection_button_text?: string;
       selection_button_selected_bg?: string;
@@ -229,6 +233,41 @@ const DynamicBranding = () => {
       }
       ensureStyleTag().textContent = rules.join("\n");
     }
+
+    // Hover colors for primary & secondary buttons — override shadcn's default
+    // `hover:bg-primary/90` / `hover:bg-secondary/80` opacity-based hover so
+    // admins can pick explicit hover bg + text colors.
+    const ensureHoverTag = () => {
+      let tag = document.getElementById("dynamic-button-hover-branding") as HTMLStyleElement | null;
+      if (!tag) {
+        tag = document.createElement("style");
+        tag.id = "dynamic-button-hover-branding";
+        document.head.appendChild(tag);
+      }
+      return tag;
+    };
+    const pHoverBg = branding.primary_button_hover_bg;
+    const pHoverFg = branding.primary_button_hover_text;
+    const sHoverBg = branding.secondary_button_hover_bg;
+    const sHoverFg = branding.secondary_button_hover_text;
+    const hoverRules: string[] = [];
+    if (pHoverBg || pHoverFg) {
+      const decls: string[] = [];
+      if (pHoverBg) decls.push(`background-color: ${pHoverBg} !important;`);
+      if (pHoverFg) decls.push(`color: ${pHoverFg} !important;`);
+      hoverRules.push(
+        `.bg-primary:hover, .hover\\:bg-primary:hover, .hover\\:bg-primary\\/90:hover, .hover\\:bg-primary\\/80:hover { ${decls.join(" ")} }`
+      );
+    }
+    if (sHoverBg || sHoverFg) {
+      const decls: string[] = [];
+      if (sHoverBg) decls.push(`background-color: ${sHoverBg} !important;`);
+      if (sHoverFg) decls.push(`color: ${sHoverFg} !important;`);
+      hoverRules.push(
+        `.bg-secondary:hover, .hover\\:bg-secondary:hover, .hover\\:bg-secondary\\/80:hover, .hover\\:bg-secondary\\/90:hover { ${decls.join(" ")} }`
+      );
+    }
+    ensureHoverTag().textContent = hoverRules.join("\n");
   }, [settings, loading]);
 
   return null;

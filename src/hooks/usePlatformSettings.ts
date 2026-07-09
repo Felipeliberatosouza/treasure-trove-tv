@@ -32,10 +32,18 @@ export interface BrandingSettings {
   primary_button_bg: string;
   /** Text color rendered on top of primary CTAs. */
   primary_button_text: string;
+  /** Background color of primary CTAs when hovered by the cursor. */
+  primary_button_hover_bg?: string;
+  /** Text color of primary CTAs when hovered by the cursor. */
+  primary_button_hover_text?: string;
   /** Background color of secondary CTAs. */
   secondary_button_bg: string;
   /** Text color rendered on top of secondary CTAs. */
   secondary_button_text: string;
+  /** Background color of secondary CTAs when hovered by the cursor. */
+  secondary_button_hover_bg?: string;
+  /** Text color of secondary CTAs when hovered by the cursor. */
+  secondary_button_hover_text?: string;
   /** Background color of selection buttons (e.g. tag-style multi-choice chips) when idle. */
   selection_button_bg?: string;
   /** Text color of selection buttons when idle. */

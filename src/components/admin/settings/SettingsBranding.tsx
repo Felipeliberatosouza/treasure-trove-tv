@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Save, Upload, X, Image } from "lucide-react";
+import { Save, Upload, X, Image, Download } from "lucide-react";
+
 
 const SettingsBranding = () => {
   const { data, loading, update } = usePlatformSettings("branding");

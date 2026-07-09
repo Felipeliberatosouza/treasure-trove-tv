@@ -383,7 +383,7 @@ const SettingsBranding = () => {
             </div>
           </div>
         )}
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button
             type="button"
             variant="outline"
@@ -394,11 +394,21 @@ const SettingsBranding = () => {
             <Upload className="h-4 w-4 mr-1" />
             {uploading ? "Enviando..." : form.favicon_url ? "Substituir favicon" : "Enviar favicon (PNG)"}
           </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={!form.favicon_url}
+            onClick={handleDownloadFavicon}
+          >
+            <Download className="h-4 w-4 mr-1" />
+            Baixar favicon PNG
+          </Button>
           <Input
             value={form.favicon_url || ""}
             onChange={(e) => setForm({ ...form, favicon_url: e.target.value })}
             placeholder="ou cole uma URL do PNG..."
-            className="flex-1 text-xs"
+            className="flex-1 text-xs min-w-[200px]"
           />
         </div>
         <input
@@ -415,6 +425,7 @@ const SettingsBranding = () => {
             if (url) setForm((prev) => ({ ...prev, favicon_url: url }));
           }}
         />
+
       </div>
 
       <div className="grid grid-cols-2 gap-3">

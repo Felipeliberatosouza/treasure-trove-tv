@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Save, Upload, X, Image } from "lucide-react";
+import { Save, Upload, X, Image, Download } from "lucide-react";
+
 
 const SettingsBranding = () => {
   const { data, loading, update } = usePlatformSettings("branding");
@@ -114,6 +115,32 @@ const SettingsBranding = () => {
     }
     setSaving(false);
   };
+
+  const handleDownloadFavicon = async () => {
+    const url = form.favicon_url;
+    if (!url) {
+      toast.error("Nenhum favicon configurado para download.");
+      return;
+    }
+    try {
+      const response = await fetch(url, { mode: "cors" });
+      if (!response.ok) throw new Error("Falha ao baixar favicon.");
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = "favicon.png";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+      toast.success("Download do favicon iniciado!");
+    } catch (err) {
+      console.error("Favicon download error:", err);
+      toast.error("Não foi possível baixar o favicon. Tente abrir a URL manualmente.");
+    }
+  };
+
 
   if (loading) return <p className="text-sm text-muted-foreground">Carregando...</p>;
 
@@ -356,7 +383,7 @@ const SettingsBranding = () => {
             </div>
           </div>
         )}
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button
             type="button"
             variant="outline"
@@ -367,11 +394,21 @@ const SettingsBranding = () => {
             <Upload className="h-4 w-4 mr-1" />
             {uploading ? "Enviando..." : form.favicon_url ? "Substituir favicon" : "Enviar favicon (PNG)"}
           </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={!form.favicon_url}
+            onClick={handleDownloadFavicon}
+          >
+            <Download className="h-4 w-4 mr-1" />
+            Baixar favicon PNG
+          </Button>
           <Input
             value={form.favicon_url || ""}
             onChange={(e) => setForm({ ...form, favicon_url: e.target.value })}
             placeholder="ou cole uma URL do PNG..."
-            className="flex-1 text-xs"
+            className="flex-1 text-xs min-w-[200px]"
           />
         </div>
         <input
@@ -388,6 +425,7 @@ const SettingsBranding = () => {
             if (url) setForm((prev) => ({ ...prev, favicon_url: url }));
           }}
         />
+
       </div>
 
       <div className="grid grid-cols-2 gap-3">

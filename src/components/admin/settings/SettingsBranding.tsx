@@ -15,9 +15,11 @@ const SettingsBranding = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const fileInputDarkBgRef = useRef<HTMLInputElement>(null);
   const fileInputLightBgRef = useRef<HTMLInputElement>(null);
+  const fileInputFaviconRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState<BrandingSettings>({
     platform_name: "", slogan: "", logo_url: "",
     logo_url_dark_bg: "", logo_url_light_bg: "",
+    favicon_url: "",
     default_logo_variant: "dark_bg",
     primary_color: "#6366f1", secondary_color: "#8b5cf6", accent_color: "#f59e0b",
     background_color: "#09090f", slogan_color: "#6b7280",
@@ -52,6 +54,7 @@ const SettingsBranding = () => {
       ...data,
       logo_url_dark_bg: data.logo_url_dark_bg || "",
       logo_url_light_bg: data.logo_url_light_bg || "",
+      favicon_url: data.favicon_url || "",
       default_logo_variant: data.default_logo_variant === "light_bg" ? "light_bg" : "dark_bg",
       primary_button_bg: data.primary_button_bg || data.primary_color || "#6366f1",
       primary_button_text: data.primary_button_text || data.button_text_color || "#ffffff",

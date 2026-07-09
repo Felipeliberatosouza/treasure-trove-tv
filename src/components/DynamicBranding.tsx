@@ -256,7 +256,7 @@ const DynamicBranding = () => {
       if (pHoverBg) decls.push(`background-color: ${pHoverBg} !important;`);
       if (pHoverFg) decls.push(`color: ${pHoverFg} !important;`);
       hoverRules.push(
-        `.bg-primary:hover, .hover\\:bg-primary:hover, .hover\\:bg-primary\\/90:hover, .hover\\:bg-primary\\/80:hover { ${decls.join(" ")} }`
+        `.bg-primary:hover, [class*="hover:bg-primary"]:hover { ${decls.join(" ")} }`
       );
     }
     if (sHoverBg || sHoverFg) {
@@ -264,7 +264,7 @@ const DynamicBranding = () => {
       if (sHoverBg) decls.push(`background-color: ${sHoverBg} !important;`);
       if (sHoverFg) decls.push(`color: ${sHoverFg} !important;`);
       hoverRules.push(
-        `.bg-secondary:hover, .hover\\:bg-secondary:hover, .hover\\:bg-secondary\\/80:hover, .hover\\:bg-secondary\\/90:hover { ${decls.join(" ")} }`
+        `.bg-secondary:hover, [class*="hover:bg-secondary"]:hover { ${decls.join(" ")} }`
       );
     }
     ensureHoverTag().textContent = hoverRules.join("\n");

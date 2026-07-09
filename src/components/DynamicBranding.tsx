@@ -97,6 +97,24 @@ const DynamicBranding = () => {
 
     const root = document.documentElement;
 
+    // Favicon dinâmico: substitui o ícone da aba do navegador quando o admin
+    // configurar um PNG customizado em Configurações → Identidade Visual.
+    const faviconUrl = (settings.branding as { favicon_url?: string } | undefined)?.favicon_url;
+    if (faviconUrl) {
+      const head = document.head;
+      // Remove todos os <link rel="icon"> e apple-touch-icon existentes.
+      head.querySelectorAll('link[rel="icon"], link[rel="shortcut icon"], link[rel="apple-touch-icon"]').forEach((el) => el.parentNode?.removeChild(el));
+      const icon = document.createElement("link");
+      icon.rel = "icon";
+      icon.type = "image/png";
+      icon.href = faviconUrl;
+      head.appendChild(icon);
+      const apple = document.createElement("link");
+      apple.rel = "apple-touch-icon";
+      apple.href = faviconUrl;
+      head.appendChild(apple);
+    }
+
     // Primary button background overrides primary_color when explicitly set,
     // so the global --primary token always matches the configured CTA color.
     const primaryBg = branding.primary_button_bg || branding.primary_color;

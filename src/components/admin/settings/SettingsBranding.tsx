@@ -15,9 +15,11 @@ const SettingsBranding = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const fileInputDarkBgRef = useRef<HTMLInputElement>(null);
   const fileInputLightBgRef = useRef<HTMLInputElement>(null);
+  const fileInputFaviconRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState<BrandingSettings>({
     platform_name: "", slogan: "", logo_url: "",
     logo_url_dark_bg: "", logo_url_light_bg: "",
+    favicon_url: "",
     default_logo_variant: "dark_bg",
     primary_color: "#6366f1", secondary_color: "#8b5cf6", accent_color: "#f59e0b",
     background_color: "#09090f", slogan_color: "#6b7280",
@@ -52,6 +54,7 @@ const SettingsBranding = () => {
       ...data,
       logo_url_dark_bg: data.logo_url_dark_bg || "",
       logo_url_light_bg: data.logo_url_light_bg || "",
+      favicon_url: data.favicon_url || "",
       default_logo_variant: data.default_logo_variant === "light_bg" ? "light_bg" : "dark_bg",
       primary_button_bg: data.primary_button_bg || data.primary_color || "#6366f1",
       primary_button_text: data.primary_button_text || data.button_text_color || "#ffffff",
@@ -304,6 +307,87 @@ const SettingsBranding = () => {
             })}
           </div>
         </div>
+      </div>
+
+      {/* ============= Gestão de Favicon ============= */}
+      <div className="space-y-3 rounded-lg border border-border p-4">
+        <div>
+          <h3 className="text-sm font-semibold flex items-center gap-2">
+            <Image className="h-4 w-4" /> Gestão de Favicon
+          </h3>
+          <p className="text-xs text-muted-foreground mt-1">
+            O <strong>favicon</strong> é o pequeno ícone que aparece na aba do navegador,
+            nos favoritos, no histórico e ao adicionar o site à tela inicial do celular.
+            Ele funciona como uma abreviação visual da logomarca e ajuda o usuário a
+            identificar rapidamente o site entre várias abas abertas.
+          </p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Envie um arquivo <strong>PNG quadrado</strong> (recomendado 512×512 px) com fundo
+            transparente ou sólido. Você pode substituí-lo a qualquer momento — a alteração
+            é aplicada automaticamente em toda a plataforma após salvar.
+          </p>
+        </div>
+        {form.favicon_url && (
+          <div className="flex items-center gap-3">
+            <div className="relative inline-block rounded-lg border border-border p-2 bg-white">
+              <img
+                src={form.favicon_url}
+                alt="Favicon atual"
+                className="h-16 w-16 object-contain"
+              />
+              <button
+                type="button"
+                onClick={() => setForm({ ...form, favicon_url: "" })}
+                className="absolute -right-2 -top-2 rounded-full bg-destructive p-1 text-destructive-foreground hover:opacity-80"
+                aria-label="Remover favicon"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </div>
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center gap-2 rounded bg-slate-900 px-2 py-1">
+                <img src={form.favicon_url} alt="" className="h-4 w-4 object-contain" />
+                <span className="text-[11px] text-white">Aba do navegador</span>
+              </div>
+              <div className="flex items-center gap-2 rounded bg-white px-2 py-1 border border-border">
+                <img src={form.favicon_url} alt="" className="h-4 w-4 object-contain" />
+                <span className="text-[11px] text-slate-900">Fundo claro</span>
+              </div>
+            </div>
+          </div>
+        )}
+        <div className="flex gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={uploading}
+            onClick={() => fileInputFaviconRef.current?.click()}
+          >
+            <Upload className="h-4 w-4 mr-1" />
+            {uploading ? "Enviando..." : form.favicon_url ? "Substituir favicon" : "Enviar favicon (PNG)"}
+          </Button>
+          <Input
+            value={form.favicon_url || ""}
+            onChange={(e) => setForm({ ...form, favicon_url: e.target.value })}
+            placeholder="ou cole uma URL do PNG..."
+            className="flex-1 text-xs"
+          />
+        </div>
+        <input
+          ref={fileInputFaviconRef}
+          type="file"
+          accept="image/png,image/x-icon,image/vnd.microsoft.icon"
+          className="hidden"
+          onChange={async (e) => {
+            const file = e.target.files?.[0];
+            if (!file) return;
+            const ext = file.name.split(".").pop() || "png";
+            const path = `favicon/favicon-${Date.now()}.${ext}`;
+            const url = await upload(file, path);
+            if (url) setForm((prev) => ({ ...prev, favicon_url: url }));
+          }}
+        />
       </div>
 
       <div className="grid grid-cols-2 gap-3">

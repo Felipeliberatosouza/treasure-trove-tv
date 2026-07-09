@@ -6,6 +6,10 @@ export interface BrandingSettings {
   platform_name: string;
   slogan: string;
   logo_url: string;
+  /** Favicon PNG do site (ícone exibido na aba do navegador, favoritos e
+   *  atalhos). Recomenda-se PNG quadrado de 512×512. Quando ausente, o
+   *  favicon padrão embarcado no build é utilizado. */
+  favicon_url?: string;
   /** Variante da logomarca para uso sobre fundos ESCUROS (geralmente uma
    *  versão clara/branca da logo). Quando ausente, cai para `logo_url`. */
   logo_url_dark_bg?: string;

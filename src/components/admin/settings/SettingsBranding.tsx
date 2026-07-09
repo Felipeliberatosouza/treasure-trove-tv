@@ -116,6 +116,32 @@ const SettingsBranding = () => {
     setSaving(false);
   };
 
+  const handleDownloadFavicon = async () => {
+    const url = form.favicon_url;
+    if (!url) {
+      toast.error("Nenhum favicon configurado para download.");
+      return;
+    }
+    try {
+      const response = await fetch(url, { mode: "cors" });
+      if (!response.ok) throw new Error("Falha ao baixar favicon.");
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = "favicon.png";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+      toast.success("Download do favicon iniciado!");
+    } catch (err) {
+      console.error("Favicon download error:", err);
+      toast.error("Não foi possível baixar o favicon. Tente abrir a URL manualmente.");
+    }
+  };
+
+
   if (loading) return <p className="text-sm text-muted-foreground">Carregando...</p>;
 
   return (

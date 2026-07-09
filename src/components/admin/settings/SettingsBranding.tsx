@@ -514,6 +514,40 @@ const SettingsBranding = () => {
                 />
               </div>
             </div>
+            <div>
+              <Label className="text-xs">Cor de fundo (hover)</Label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={form.primary_button_hover_bg || "#4f46e5"}
+                  onChange={(e) => setForm({ ...form, primary_button_hover_bg: e.target.value })}
+                  className="w-9 h-9 rounded cursor-pointer border-0"
+                />
+                <Input
+                  value={form.primary_button_hover_bg || "#4f46e5"}
+                  onChange={(e) => setForm({ ...form, primary_button_hover_bg: e.target.value })}
+                  className="flex-1 text-xs"
+                  maxLength={7}
+                />
+              </div>
+            </div>
+            <div>
+              <Label className="text-xs">Cor do texto (hover)</Label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={form.primary_button_hover_text || "#ffffff"}
+                  onChange={(e) => setForm({ ...form, primary_button_hover_text: e.target.value })}
+                  className="w-9 h-9 rounded cursor-pointer border-0"
+                />
+                <Input
+                  value={form.primary_button_hover_text || "#ffffff"}
+                  onChange={(e) => setForm({ ...form, primary_button_hover_text: e.target.value })}
+                  className="flex-1 text-xs"
+                  maxLength={7}
+                />
+              </div>
+            </div>
           </div>
 
           {/* Secondary */}
@@ -553,24 +587,79 @@ const SettingsBranding = () => {
                 />
               </div>
             </div>
+            <div>
+              <Label className="text-xs">Cor de fundo (hover)</Label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={form.secondary_button_hover_bg || "#111827"}
+                  onChange={(e) => setForm({ ...form, secondary_button_hover_bg: e.target.value })}
+                  className="w-9 h-9 rounded cursor-pointer border-0"
+                />
+                <Input
+                  value={form.secondary_button_hover_bg || "#111827"}
+                  onChange={(e) => setForm({ ...form, secondary_button_hover_bg: e.target.value })}
+                  className="flex-1 text-xs"
+                  maxLength={7}
+                />
+              </div>
+            </div>
+            <div>
+              <Label className="text-xs">Cor do texto (hover)</Label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={form.secondary_button_hover_text || "#ffffff"}
+                  onChange={(e) => setForm({ ...form, secondary_button_hover_text: e.target.value })}
+                  className="w-9 h-9 rounded cursor-pointer border-0"
+                />
+                <Input
+                  value={form.secondary_button_hover_text || "#ffffff"}
+                  onChange={(e) => setForm({ ...form, secondary_button_hover_text: e.target.value })}
+                  className="flex-1 text-xs"
+                  maxLength={7}
+                />
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Preview */}
         <div>
-          <p className="text-xs text-muted-foreground mb-2">Pré-visualização</p>
+          <p className="text-xs text-muted-foreground mb-2">Pré-visualização (passe o cursor sobre os botões para ver o estado de hover)</p>
           <div className="flex flex-wrap gap-2 rounded-md bg-muted/30 p-3">
             <button
               type="button"
-              className="rounded-md px-4 py-2 text-sm font-semibold shadow-sm"
-              style={{ background: form.primary_button_bg || "#6366f1", color: form.primary_button_text || "#ffffff" }}
+              className="rounded-md px-4 py-2 text-sm font-semibold shadow-sm transition-colors"
+              style={{
+                background: form.primary_button_bg || "#6366f1",
+                color: form.primary_button_text || "#ffffff",
+                ["--h-bg" as any]: form.primary_button_hover_bg || "#4f46e5",
+                ["--h-fg" as any]: form.primary_button_hover_text || "#ffffff",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = form.primary_button_hover_bg || "#4f46e5";
+                e.currentTarget.style.color = form.primary_button_hover_text || "#ffffff";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = form.primary_button_bg || "#6366f1";
+                e.currentTarget.style.color = form.primary_button_text || "#ffffff";
+              }}
             >
               Confirmar
             </button>
             <button
               type="button"
-              className="rounded-md px-4 py-2 text-sm font-semibold shadow-sm"
+              className="rounded-md px-4 py-2 text-sm font-semibold shadow-sm transition-colors"
               style={{ background: form.secondary_button_bg || "#1f2937", color: form.secondary_button_text || "#ffffff" }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = form.secondary_button_hover_bg || "#111827";
+                e.currentTarget.style.color = form.secondary_button_hover_text || "#ffffff";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = form.secondary_button_bg || "#1f2937";
+                e.currentTarget.style.color = form.secondary_button_text || "#ffffff";
+              }}
             >
               Cancelar
             </button>

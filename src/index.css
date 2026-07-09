@@ -211,6 +211,20 @@
 }
 
 /* ------------------------------------------------------------------
+   Ensure text follows admin-configured secondary token
+   whenever an element uses bg-secondary (static or on hover).
+   Prevents low-contrast (e.g. white text on yellow secondary).
+------------------------------------------------------------------- */
+@layer utilities {
+  .bg-secondary:not(input):not(textarea):not(select) {
+    color: hsl(var(--secondary-foreground));
+  }
+  .hover\:bg-secondary:hover {
+    color: hsl(var(--secondary-foreground));
+  }
+}
+
+/* ------------------------------------------------------------------
    Selection chips — driven by admin "Botões de seleção" branding vars
    (--selection-btn-bg / -text / -active-bg / -active-text).
    Apply `.selection-chip` to any multi-choice option; toggle

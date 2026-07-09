@@ -216,9 +216,6 @@
    Prevents low-contrast (e.g. white text on yellow secondary).
 ------------------------------------------------------------------- */
 @layer utilities {
-  .bg-secondary:not(input):not(textarea):not(select) {
-    color: hsl(var(--secondary-foreground));
-  }
   .hover\:bg-secondary:hover {
     color: hsl(var(--secondary-foreground));
   }

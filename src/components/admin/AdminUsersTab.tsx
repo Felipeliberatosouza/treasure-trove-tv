@@ -309,7 +309,7 @@ const AdminUsersTab = () => {
       {loading ? (
         <p className="text-sm text-muted-foreground">Carregando...</p>
       ) : (
-        <div className="rounded-lg border border-border overflow-auto max-h-[70vh]">
+        <div className="rounded-lg border border-border overflow-x-scroll overflow-y-scroll max-h-[70vh] scrollbar-always">
           <Table>
             <TableHeader>
               <TableRow>

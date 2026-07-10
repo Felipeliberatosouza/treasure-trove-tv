@@ -145,6 +145,32 @@
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
+
+  .scrollbar-always {
+    overflow: scroll;
+    scrollbar-width: auto;
+    -ms-overflow-style: auto;
+  }
+  .scrollbar-always::-webkit-scrollbar {
+    -webkit-appearance: none;
+    width: 10px;
+    height: 10px;
+  }
+  .scrollbar-always::-webkit-scrollbar-track {
+    background: hsl(var(--muted) / 0.4);
+    border-radius: 4px;
+  }
+  .scrollbar-always::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground) / 0.5);
+    border-radius: 4px;
+  }
+  .scrollbar-always::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.7);
+  }
+  .scrollbar-always::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+
 }
 
 /*

@@ -423,6 +423,11 @@ const BookLessonModal = ({
             {cfg.lesson_duration_minutes} minutos
             {resourcePrice !== null && ` · R$ ${resourcePrice.toFixed(2)}`}
           </DialogDescription>
+          {contentTitle && (
+            <p className="mt-1 text-sm font-medium text-foreground">
+              Disciplina: <span className="text-primary">{contentTitle}</span>
+            </p>
+          )}
         </DialogHeader>
 
         {loadingAvail ? (

@@ -35,6 +35,24 @@ const BookLessonSection = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const PENDING_KEY = "pending_book_lesson_selection";
+
+  useEffect(() => {
+    if (!user) return;
+    try {
+      const raw = sessionStorage.getItem(PENDING_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as SelectedContent;
+      if (parsed && parsed.id && parsed.teacher_id) {
+        setSelected(parsed);
+        setModalOpen(true);
+      }
+      sessionStorage.removeItem(PENDING_KEY);
+    } catch {
+      sessionStorage.removeItem(PENDING_KEY);
+    }
+  }, [user]);
+
   useEffect(() => {
     if (query.trim().length < 2) {
       setResults([]);
@@ -105,6 +123,13 @@ const BookLessonSection = () => {
 
   const handleStart = () => {
     if (!user) {
+      if (selected) {
+        try {
+          sessionStorage.setItem(PENDING_KEY, JSON.stringify(selected));
+        } catch {
+          /* ignore */
+        }
+      }
       navigate(`/login?returnTo=${encodeURIComponent("/minhas-aulas-agendadas#agendar-aula")}`);
       return;
     }

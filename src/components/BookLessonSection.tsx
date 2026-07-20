@@ -105,7 +105,7 @@ const BookLessonSection = () => {
 
   const handleStart = () => {
     if (!user) {
-      navigate("/login");
+      navigate(`/login?returnTo=${encodeURIComponent("/aulas-agendadas#agendar-aula")}`);
       return;
     }
     if (!selected) return;

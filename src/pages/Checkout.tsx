@@ -475,6 +475,8 @@ interface CheckoutFormProps {
   onSubmittingChange?: (submitting: boolean) => void;
   cashbackAmount?: number;
   onCashbackRejected?: (message: string) => void;
+  isMobile?: boolean;
+  keyboardOpen?: boolean;
 }
 
 function CheckoutForm({

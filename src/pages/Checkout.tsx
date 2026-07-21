@@ -294,6 +294,8 @@ const Checkout = () => {
                   setUseCashback(false);
                   void refreshCashbackAccount();
                 }}
+                isMobile={isMobile}
+                keyboardOpen={keyboardOpen}
               />
             </Elements>
           </div>

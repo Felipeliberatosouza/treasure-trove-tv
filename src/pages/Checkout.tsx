@@ -489,6 +489,8 @@ function CheckoutForm({
   onSubmittingChange,
   cashbackAmount = 0,
   onCashbackRejected,
+  isMobile = false,
+  keyboardOpen = false,
 }: CheckoutFormProps) {
   const stripe = useStripe();
   const elements = useElements();

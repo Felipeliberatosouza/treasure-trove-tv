@@ -294,6 +294,8 @@ const Checkout = () => {
                   setUseCashback(false);
                   void refreshCashbackAccount();
                 }}
+                isMobile={isMobile}
+                keyboardOpen={keyboardOpen}
               />
             </Elements>
           </div>
@@ -475,6 +477,8 @@ interface CheckoutFormProps {
   onSubmittingChange?: (submitting: boolean) => void;
   cashbackAmount?: number;
   onCashbackRejected?: (message: string) => void;
+  isMobile?: boolean;
+  keyboardOpen?: boolean;
 }
 
 function CheckoutForm({
@@ -487,6 +491,8 @@ function CheckoutForm({
   onSubmittingChange,
   cashbackAmount = 0,
   onCashbackRejected,
+  isMobile = false,
+  keyboardOpen = false,
 }: CheckoutFormProps) {
   const stripe = useStripe();
   const elements = useElements();
@@ -924,7 +930,13 @@ function CheckoutForm({
         onClick={handleSubmit}
         disabled={!stripe || submitting || redirecting}
         size="lg"
-        className="w-full font-display"
+        className={cn(
+          "w-full font-display",
+          // On mobile, the sticky footer already has the CTA. Hide the form
+          // button while the sticky bar is visible to avoid two identical
+          // "Confirmar e assinar" buttons on screen at the same time.
+          isMobile && !keyboardOpen && "hidden"
+        )}
       >
         {submitting || redirecting ? (
           <>

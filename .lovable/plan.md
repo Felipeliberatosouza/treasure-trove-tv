@@ -1,71 +1,51 @@
-# Player com thumbnails + pré-carregamento
+## Objetivo
 
-Adicionar pré-visualização de seek estilo Netflix/YouTube (sprite + arquivo WebVTT) gerado no upload, e reduzir o tempo até dar play usando `preload="metadata"` + prefetch da URL assinada quando o card entra na tela ou recebe hover.
+Tornar todo o app auto-adaptável ao **plano de fundo** escolhido em Configurações → Identidade Visual: quando o fundo for **claro**, textos, banners, caixas, botões e a logomarca ficam legíveis num tema claro; quando for **escuro**, tudo se ajusta ao tema escuro atual — sem precisar reconfigurar cada token individualmente.
 
-## O que muda para o usuário
+## Como vai funcionar
 
-- Ao passar o mouse na barra de progresso, aparece uma miniatura do trecho.
-- Vídeos abrem mais rápido: assim que o cartão fica visível ou recebe hover, a URL assinada começa a ser preparada em segundo plano e o player já pede só os metadados.
-- Vale para o player principal (assistir aula) e para a pré-visualização de 20%.
+1. **Detecção automática de modo (claro/escuro)** a partir da cor de fundo (`background_color`) usando luminância WCAG. O resultado é gravado no `<html>` como `data-theme="light"` ou `data-theme="dark"`.
 
-## Como será feito (detalhes técnicos)
+2. **Dois conjuntos completos de tokens semânticos** em `src/index.css`:
+   - Tokens atuais permanecem para `data-theme="dark"` (default).
+   - Novo bloco `[data-theme="light"]` com valores claros para: `--background`, `--foreground`, `--card`, `--card-foreground`, `--popover`, `--muted`, `--muted-foreground`, `--border`, `--input`, `--sidebar-*`, `--gradient-hero`, `--gradient-card-hover`, `--shadow-glow`.
+   - Componentes (banners, cards, inputs, modals, footer) já usam esses tokens, então herdam automaticamente.
 
-### 1. Banco e storage
-- Migration adicionando ao `lessons` e `exam_solutions`:
-  - `preview_sprite_url TEXT` (URL pública do sprite JPEG)
-  - `preview_vtt_url TEXT` (URL pública do WebVTT que aponta para o sprite com `#xywh=`)
-  - `preview_status TEXT DEFAULT 'pending'` (`pending|ready|failed`)
-- Novo bucket público `video-previews` (sprite + .vtt), com policies de leitura pública e escrita só para service role.
-- Reaproveitar `subtitles_url` se já existir; senão adicionar como TEXT também (a auditoria indicou divergência).
-- GRANTs e RLS conforme padrão do projeto.
+3. **Auto-contraste inteligente** em `DynamicBranding.tsx`:
+   - Se o admin definir apenas o fundo (sem `foreground`/`card`/`muted`), o sistema deriva automaticamente os tokens de texto e superfícies com contraste ≥ 4.5 (AA), usando as helpers `hexLuminance` e `ensureContrast` já existentes.
+   - Se o admin definir cores explícitas em Identidade Visual, elas prevalecem — mas o sistema valida contraste e faz fallback para preto/branco quando necessário (padrão que já usamos em `selection-chip`).
 
-### 2. Edge function `generate-video-preview`
-- Disparada pelo `ContentForm` logo após o upload do vídeo terminar, recebendo `{ table, id, storage_path }`.
-- Valida JWT manualmente, confere que o usuário é o `teacher_id` dono.
-- Baixa o vídeo do bucket `videos` via service role (range/stream).
-- Usa `ffmpeg` (camada Deno via `npm:@ffmpeg-installer/ffmpeg` + `npm:fluent-ffmpeg`) para:
-  - amostrar 1 frame a cada N segundos (N = `max(2, duração/40)` para limitar a ~40 frames)
-  - escalar para 160x90
-  - montar sprite 8 colunas (`tile=8xN`) em JPEG q=4
-- Gera `.vtt` com cues `mm:ss.mmm --> mm:ss.mmm` apontando para `sprite.jpg#xywh=col*160,row*90,160,90`.
-- Faz upload de `sprite.jpg` e `thumbs.vtt` em `video-previews/{lesson_id}/` e atualiza colunas `preview_sprite_url`, `preview_vtt_url`, `preview_status='ready'`.
-- Em erro, grava `preview_status='failed'` e retorna 200 com `{ ok:false }` (padrão do projeto).
+4. **Logomarca adaptativa**:
+   - Novo campo opcional em Configurações → Identidade Visual: **"Logomarca para fundo claro"** (upload de PNG).
+   - `Navbar`, `Footer` e e-mails escolhem automaticamente `logo_url_light` quando `data-theme="light"` e caem para `logo_url` no escuro.
+   - Se nenhuma versão clara for enviada, aplicamos um filtro `invert` como fallback e mostramos aviso no painel.
 
-### 3. Player (`src/components/VideoPlayer.tsx`)
-- Adicionar props `previewVttUrl?: string`, `posterUrl?: string`.
-- `<video preload="metadata" poster={posterUrl}>` (hoje não tem `preload` explícito).
-- Parser leve de WebVTT (sem dependências) que cacheia os cues parseados e, no `onMouseMove` da barra de progresso, mostra um `<div>` posicionado com `background-image: url(sprite)` + `background-position` derivado do `#xywh`.
-- Em mobile, mostra o thumbnail também durante drag do seek.
-- Fallback: se `previewVttUrl` ausente ou falhou de carregar, mantém o comportamento atual (sem thumb).
-- Respeitar `previewLimit` existente (não permitir hover-seek além de 20% para não autenticados).
+5. **Banners e caixas coloridas**:
+   - `HeroBanner`, `SecondaryBanner`, `FreeTrialBanner`, `SubscriptionUnavailableBanner`, `PastDueBillingAlert`, `LessonReminderPreferences` e o `SettingsAlertBox` passam a ler `--card`/`--muted` semânticos em vez de cores fixas.
+   - Onde há gradiente hero, o CSS `--gradient-hero` recalcula opacidade conforme o tema.
 
-### 4. Prefetch da URL assinada
-- Novo hook `useSignedVideoUrl(storagePath)` que encapsula a lógica hoje inline em `VideoPage.tsx` (`resolveVideoPlaybackUrl`).
-- Nos cards de vídeo da home/listagem (`ContentCard` / `VideoCard`), ao entrar no viewport (IntersectionObserver) **ou** ao receber `onMouseEnter`/`onFocus`, chamar uma versão "warm" que apenas gera a signed URL e a guarda em um `Map<lessonId, { url, expiresAt }>` em memória (TTL de 50 min).
-- `VideoPage` consome esse cache: se já existe URL válida, pula a geração e vai direto para `setVideoUrl`, reduzindo o TTFB do play.
-- Também adicionar `<link rel="preconnect">` para o domínio do storage no `index.html` para acelerar o handshake.
+6. **Preview no admin**:
+   - Em `SettingsBranding.tsx` acrescento um botão **"Prévia do tema"** que alterna `data-theme` só para o painel, para o admin ver antes de salvar.
+   - Aviso automático quando o contraste texto/fundo ficar abaixo de AA.
 
-### 5. Ingestão retroativa
-- Botão "Gerar pré-visualização" no painel admin de conteúdo (lista de moderação) que dispara `generate-video-preview` para vídeos com `preview_status != 'ready'`.
-- Sem job em massa automático — só sob demanda — para evitar custo inesperado.
+## Escopo dos arquivos
 
-## Arquivos afetados
+**Editar:**
+- `src/index.css` — bloco `[data-theme="light"]` completo.
+- `src/components/DynamicBranding.tsx` — set `data-theme` conforme luminância; derivar tokens quando faltantes; injetar logomarca clara.
+- `src/components/admin/settings/SettingsBranding.tsx` — novo upload `logo_url_light`, prévia de tema, indicadores de contraste.
+- `src/hooks/usePlatformSettings.ts` — expor `logo_url_light`.
+- `src/components/Navbar.tsx`, `src/components/Footer.tsx` — trocar logomarca conforme tema.
+- `src/components/HeroBanner.tsx`, `SecondaryBanner.tsx`, `FreeTrialBanner.tsx`, `SubscriptionUnavailableBanner.tsx`, `SettingsAlertBox.tsx`, `LessonReminderPreferences.tsx` — remover cores hard-coded e usar tokens.
 
-```text
-supabase/migrations/<timestamp>_video_preview_sprites.sql   (novo)
-supabase/functions/generate-video-preview/index.ts          (novo)
-src/components/VideoPlayer.tsx                              (props + hover thumb + preload)
-src/components/dashboard/ContentForm.tsx                    (chamar a função após upload)
-src/pages/VideoPage.tsx                                     (passar previewVttUrl, usar cache)
-src/hooks/useSignedVideoUrl.ts                              (novo)
-src/lib/signedUrlCache.ts                                   (novo, em memória)
-src/components/ContentCard.tsx (e similares)                (prefetch ao ver/hover)
-src/components/admin/...                                    (botão de regenerar preview)
-index.html                                                  (preconnect)
-```
+**Não muda:** lógica de negócio, tabelas do banco (só um novo campo JSON dentro de `platform_settings.branding`), rotas, e-mails transacionais (usarão a variante clara automaticamente pelo mesmo campo).
 
-## Fora de escopo
+## Nota técnica
 
-- HLS / qualidade adaptativa (descartado na pergunta inicial).
-- Captura no cliente como fallback de thumbnails (descartado).
-- Pipeline em massa para vídeos antigos — só botão manual no admin.
+Nenhuma migração SQL é necessária: `logo_url_light` entra no JSONB `branding` já existente. O contrato de contraste usa WCAG 2.1 AA (4.5:1 texto normal, 3:1 texto grande). O switch de tema é puramente CSS via atributo `data-theme`, sem re-render React em componentes.
+
+## Confirmação
+
+Como o escopo toca muitos componentes visuais, quer que eu implemente **tudo de uma vez** ou prefere fazer em duas fases:
+- **Fase 1:** motor de tema claro/escuro + auto-contraste + logomarca adaptativa (invisível até você escolher um fundo claro no admin).
+- **Fase 2:** varredura fina de banners/caixas restantes que ainda tenham cor fixa.

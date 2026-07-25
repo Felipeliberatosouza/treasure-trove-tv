@@ -101,6 +101,27 @@ const DynamicBranding = () => {
 
     const root = document.documentElement;
 
+    // Detecta modo claro/escuro a partir da cor de fundo escolhida pelo admin
+    // e grava o resultado em <html data-theme="..."> para que o bloco CSS
+    // `[data-theme="light"]` (src/index.css) reescreva automaticamente todos
+    // os tokens semânticos de superfície e texto quando o fundo for claro.
+    const bgLum = branding.background_color ? hexLuminance(branding.background_color) : null;
+    const themeMode: "light" | "dark" = bgLum != null && bgLum > 0.5 ? "light" : "dark";
+    root.setAttribute("data-theme", themeMode);
+
+    // Ajusta o foreground automaticamente para preto/branco conforme o fundo,
+    // garantindo contraste AA (só quando o admin não configurou explicitamente).
+    if (branding.background_color) {
+      const autoFg = autoContrastText(branding.background_color);
+      const autoFgHsl = hexToHSL(autoFg);
+      if (autoFgHsl) {
+        root.style.setProperty("--foreground", autoFgHsl);
+        root.style.setProperty("--card-foreground", autoFgHsl);
+        root.style.setProperty("--popover-foreground", autoFgHsl);
+        root.style.setProperty("--sidebar-foreground", autoFgHsl);
+      }
+    }
+
     // Favicon dinâmico: substitui o ícone da aba do navegador quando o admin
     // configurar um PNG customizado em Configurações → Identidade Visual.
     const faviconUrl = (settings.branding as { favicon_url?: string } | undefined)?.favicon_url;

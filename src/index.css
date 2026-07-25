@@ -58,6 +58,40 @@
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 5%;
   }
+
+  /*
+    Tema CLARO — ativado automaticamente por <DynamicBranding /> quando o
+    admin escolhe uma cor de fundo clara em Configurações → Identidade
+    Visual. Sobrescreve tokens semânticos de superfície e texto para que
+    componentes (cards, banners, inputs, modais, popovers, sidebar) fiquem
+    legíveis sem qualquer ajuste manual. `--background` continua vindo do
+    valor exato escolhido pelo admin (injetado inline por DynamicBranding).
+  */
+  :root[data-theme="light"] {
+    --foreground: 222 47% 11%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+
+    --muted: 210 20% 94%;
+    --muted-foreground: 215 16% 40%;
+
+    --border: 214 20% 86%;
+    --input: 214 20% 86%;
+
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 222 47% 11%;
+    --sidebar-accent: 210 20% 94%;
+    --sidebar-accent-foreground: 222 47% 11%;
+    --sidebar-border: 214 20% 86%;
+
+    --gradient-hero: linear-gradient(135deg, hsl(var(--primary) / 0.10), hsl(var(--accent) / 0.06), transparent);
+    --gradient-card-hover: linear-gradient(180deg, transparent 40%, hsl(var(--primary) / 0.08) 100%);
+    --shadow-glow: 0 0 40px hsl(var(--primary) / 0.15);
+  }
 }
 
 @layer base {

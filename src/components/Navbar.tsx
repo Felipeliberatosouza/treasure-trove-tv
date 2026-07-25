@@ -292,10 +292,14 @@ const Navbar = () => {
       <div className="flex items-center justify-between gap-3 px-4 py-3 md:px-12 lg:px-20">
         <Link to="/" className="flex flex-col items-center justify-center gap-0 leading-none shrink-0 self-center">
           {(() => {
-            const variant = branding?.default_logo_variant === "light_bg"
-              ? branding?.logo_url_light_bg
-              : branding?.logo_url_dark_bg;
-            const logoSrc = variant || branding?.logo_url;
+            // Escolhe a variante da logomarca de acordo com o plano de fundo
+            // configurado em Identidade Visual: fundo claro -> logo escura;
+            // fundo escuro -> logo clara. Cai para a logo legada se faltar.
+            const isLightBg = typeof document !== "undefined" &&
+              document.documentElement.getAttribute("data-theme") === "light";
+            const preferred = isLightBg ? branding?.logo_url_light_bg : branding?.logo_url_dark_bg;
+            const fallback = isLightBg ? branding?.logo_url_dark_bg : branding?.logo_url_light_bg;
+            const logoSrc = preferred || fallback || branding?.logo_url;
             return logoSrc && !branding?.use_text_logo ? (
             <img
               ref={logoRef}

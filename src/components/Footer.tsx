@@ -47,10 +47,11 @@ const Footer = () => {
       <div className="mx-auto flex max-w-6xl flex-col items-center gap-6 md:flex-row md:justify-between">
         <div className="flex flex-col items-center gap-0 leading-none">
           {(() => {
-            const variant = branding?.default_logo_variant === "light_bg"
-              ? branding?.logo_url_light_bg
-              : branding?.logo_url_dark_bg;
-            const logoSrc = variant || branding?.logo_url;
+            const isLightBg = typeof document !== "undefined" &&
+              document.documentElement.getAttribute("data-theme") === "light";
+            const preferred = isLightBg ? branding?.logo_url_light_bg : branding?.logo_url_dark_bg;
+            const fallback = isLightBg ? branding?.logo_url_dark_bg : branding?.logo_url_light_bg;
+            const logoSrc = preferred || fallback || branding?.logo_url;
             return logoSrc ? (
             <img
               ref={logoRef}

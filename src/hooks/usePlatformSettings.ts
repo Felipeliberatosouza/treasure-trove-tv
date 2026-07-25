@@ -90,6 +90,48 @@ export function resolveDefaultLogoUrl(
   return variant || branding.logo_url || "";
 }
 
+/** Luminância relativa (WCAG) de um HEX; retorna null quando inválido. */
+function hexLuminanceInternal(hex: string): number | null {
+  const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  if (!m) return null;
+  const ch = (v: number) => {
+    const s = v / 255;
+    return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+  };
+  return (
+    0.2126 * ch(parseInt(m[1], 16)) +
+    0.7152 * ch(parseInt(m[2], 16)) +
+    0.0722 * ch(parseInt(m[3], 16))
+  );
+}
+
+/** Retorna 'light' quando o HEX informado for uma cor clara, 'dark' caso
+ *  contrário. Usa o limite de 0.5 de luminância WCAG. */
+export function detectThemeMode(hex: string | undefined | null): "light" | "dark" {
+  if (!hex) return "dark";
+  const lum = hexLuminanceInternal(hex);
+  if (lum == null) return "dark";
+  return lum > 0.5 ? "light" : "dark";
+}
+
+/** Escolhe a variante da logomarca mais adequada ao plano de fundo atual do
+ *  site. Se a cor de fundo configurada em Identidade Visual for clara, usa a
+ *  logomarca "para fundo claro"; se for escura, usa a "para fundo escuro".
+ *  Cai para a logomarca legada (`logo_url`) quando a variante ideal não foi
+ *  enviada pelo admin. */
+export function resolveLogoForBackground(
+  branding: Pick<
+    BrandingSettings,
+    "logo_url" | "logo_url_dark_bg" | "logo_url_light_bg" | "background_color" | "default_logo_variant"
+  > | null | undefined,
+): string {
+  if (!branding) return "";
+  const mode = detectThemeMode(branding.background_color);
+  const preferred = mode === "light" ? branding.logo_url_light_bg : branding.logo_url_dark_bg;
+  const fallback = mode === "light" ? branding.logo_url_dark_bg : branding.logo_url_light_bg;
+  return preferred || fallback || branding.logo_url || "";
+}
+
 export interface ContactSettings {
   email: string;
   phone: string;

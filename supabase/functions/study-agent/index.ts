@@ -233,6 +233,9 @@ Deno.serve(async (req) => {
       messages,
       tools,
       stopWhen: stepCountIs(10),
+      onError: ({ error }) => {
+        console.error("study-agent stream error:", error);
+      },
     });
 
     const response = result.toUIMessageStreamResponse({

@@ -1,51 +1,144 @@
+# Plano: Agente de IA "Estudar com IA" (revisão de provas sob demanda)
+
 ## Objetivo
 
-Tornar todo o app auto-adaptável ao **plano de fundo** escolhido em Configurações → Identidade Visual: quando o fundo for **claro**, textos, banners, caixas, botões e a logomarca ficam legíveis num tema claro; quando for **escuro**, tudo se ajusta ao tema escuro atual — sem precisar reconfigurar cada token individualmente.
+Permitir que o aluno descreva, em linguagem natural, o conteúdo da prova
+(ex.: "Vou fazer uma prova sobre Análise SWOT, gere as perguntas mais
+frequentes e um vídeo explicativo com resumo") e receba, em uma conversa,
+um **simulado**, um **resumo** e um **vídeo de slides narrados** (slides +
+narração por IA). Tudo dentro do app Revisão Fácil atual, reaproveitando o
+gerador de materiais e o Lovable AI Gateway já existentes.
 
-## Como vai funcionar
+## Resumo da abordagem (resposta às suas dúvidas)
 
-1. **Detecção automática de modo (claro/escuro)** a partir da cor de fundo (`background_color`) usando luminância WCAG. O resultado é gravado no `<html>` como `data-theme="light"` ou `data-theme="dark"`.
+- **Não é um "novo agente" do zero.** É uma nova funcionalidade do app
+  atual, construída como um **agente conversacional com ferramentas
+  (tool-calling)** via AI SDK + Lovable AI Gateway. O agente decide sozinho
+  o que gerar a partir do pedido do aluno.
+- **Vídeo = slides narrados** (a opção de baixo custo): a IA gera um roteiro
+  de slides (título + bullets + texto de narração); o cliente renderiza os
+  slides em HTML e toca a narração por IA (text-to-speech) sincronizada.
+  **Não há geração de vídeo real (Veo)** — isso ficaria inviável no piloto.
+- **Piloto barato (<100 usuários):** modelo `google/gemini-3.1-flash-lite`
+  para o raciocínio do agente e geração de textos; TTS com
+  `openai/gpt-4o-mini-tts`; slides em texto puro (sem gerar imagens por IA
+  na fase 1). Tudo coberto por créditos do Lovable AI, sem chaves externas.
 
-2. **Dois conjuntos completos de tokens semânticos** em `src/index.css`:
-   - Tokens atuais permanecem para `data-theme="dark"` (default).
-   - Novo bloco `[data-theme="light"]` com valores claros para: `--background`, `--foreground`, `--card`, `--card-foreground`, `--popover`, `--muted`, `--muted-foreground`, `--border`, `--input`, `--sidebar-*`, `--gradient-hero`, `--gradient-card-hover`, `--shadow-glow`.
-   - Componentes (banners, cards, inputs, modals, footer) já usam esses tokens, então herdam automaticamente.
+## Arquitetura
 
-3. **Auto-contraste inteligente** em `DynamicBranding.tsx`:
-   - Se o admin definir apenas o fundo (sem `foreground`/`card`/`muted`), o sistema deriva automaticamente os tokens de texto e superfícies com contraste ≥ 4.5 (AA), usando as helpers `hexLuminance` e `ensureContrast` já existentes.
-   - Se o admin definir cores explícitas em Identidade Visual, elas prevalecem — mas o sistema valida contraste e faz fallback para preto/branco quando necessário (padrão que já usamos em `selection-chip`).
+```text
+Aluno (chat em /estudar-ia)
+   │  (fetch SSE + Authorization: Bearer <token>)
+   ▼
+Edge Function "study-agent" (Deno, verify_jwt=false, valida JWT no código)
+   │  AI SDK streamText + tools + stopWhen(stepCountIs(10))
+   │  Provider: @ai-sdk/openai-compatible → ai.gateway.lovable.dev
+   ▼
+Lovable AI Gateway  ──► gemini-3.1-flash-lite (agente/textos)
+                     ─► gpt-4o-mini-tts (narração, chamado pelo cliente por slide)
 
-4. **Logomarca adaptativa**:
-   - Novo campo opcional em Configurações → Identidade Visual: **"Logomarca para fundo claro"** (upload de PNG).
-   - `Navbar`, `Footer` e e-mails escolhem automaticamente `logo_url_light` quando `data-theme="light"` e caem para `logo_url` no escuro.
-   - Se nenhuma versão clara for enviada, aplicamos um filtro `invert` como fallback e mostramos aviso no painel.
+Ferramentas do agente (tools):
+  • gerar_resumo(tópico)        → texto resumido (reaproveita prompt de "description")
+  • gerar_questoes(tópico, n)   → simulado JSON (reaproveita TOOL_BY_KIND.simulado)
+  • gerar_slides_narrados(tópico) → deck JSON: [{ titulo, bullets[], narracao }]
+```
 
-5. **Banners e caixas coloridas**:
-   - `HeroBanner`, `SecondaryBanner`, `FreeTrialBanner`, `SubscriptionUnavailableBanner`, `PastDueBillingAlert`, `LessonReminderPreferences` e o `SettingsAlertBox` passam a ler `--card`/`--muted` semânticos em vez de cores fixas.
-   - Onde há gradiente hero, o CSS `--gradient-hero` recalcula opacidade conforme o tema.
+O cliente recebe o stream da conversa (markdown) + os resultados das
+ferramentas e renderiza cada artifact inline: card de simulado (reaproveita
+`SimuladoModal`), card de resumo e um **player de slides narrados**.
 
-6. **Preview no admin**:
-   - Em `SettingsBranding.tsx` acrescento um botão **"Prévia do tema"** que alterna `data-theme` só para o painel, para o admin ver antes de salvar.
-   - Aviso automático quando o contraste texto/fundo ficar abaixo de AA.
+### Player de slides narrados (o "vídeo" de baixo custo)
 
-## Escopo dos arquivos
+1. O agente retorna `gerar_slides_narrados` com um array de slides
+   `{ titulo, bullets[], narracao }` (5–8 slides).
+2. O cliente pede a narração de cada slide ao endpoint TTS (Edge Function
+   `study-tts`, SSE `pcm`) e toca com `AudioContext`, avançando o slide
+   quando o áudio termina — efeito de vídeo narrado, sem arquivo de vídeo.
+3. Slides são renderizados em HTML (texto + cores do tema) — sem custo de
+   imagem. (Fase 2 opcional: gerar 1 imagem por slide com modelo de imagem.)
 
-**Editar:**
-- `src/index.css` — bloco `[data-theme="light"]` completo.
-- `src/components/DynamicBranding.tsx` — set `data-theme` conforme luminância; derivar tokens quando faltantes; injetar logomarca clara.
-- `src/components/admin/settings/SettingsBranding.tsx` — novo upload `logo_url_light`, prévia de tema, indicadores de contraste.
-- `src/hooks/usePlatformSettings.ts` — expor `logo_url_light`.
-- `src/components/Navbar.tsx`, `src/components/Footer.tsx` — trocar logomarca conforme tema.
-- `src/components/HeroBanner.tsx`, `SecondaryBanner.tsx`, `FreeTrialBanner.tsx`, `SubscriptionUnavailableBanner.tsx`, `SettingsAlertBox.tsx`, `LessonReminderPreferences.tsx` — remover cores hard-coded e usar tokens.
+## Persistência e acesso
 
-**Não muda:** lógica de negócio, tabelas do banco (só um novo campo JSON dentro de `platform_settings.branding`), rotas, e-mails transacionais (usarão a variante clara automaticamente pelo mesmo campo).
+- Nova tabela `ai_study_sessions`:
+  `id uuid, user_id uuid, titulo text, mensagens jsonb, criado_em, atualizado_em`.
+  RLS: usuário só vê/cria suas próprias linhas (`user_id = auth.uid()`).
+  GRANT `SELECT,INSERT,UPDATE` para `authenticated`; `ALL` para
+  `service_role`. Migração única com `CREATE TABLE` + `GRANT` + `ENABLE RLS`
+  + `CREATE POLICY`.
+- Histórico: a cada turno o cliente envia as mensagens anteriores; o agente
+  é stateless (envia histórico completo). Sessões salvas para retomar.
+- Acesso: liberado para usuário com **assinatura ativa OU trial grátis**
+  (reaproveita `useBillingStatus` / `useFreeTrial`). Sem acesso anônimo.
+- Rate limit por dia: contador de sessões/turnos em `ai_study_sessions`
+  (ex.: 20 turnos/dia por usuário no piloto) + retorno 429 claro.
 
-## Nota técnica
+## Componentes a criar/alterar
 
-Nenhuma migração SQL é necessária: `logo_url_light` entra no JSONB `branding` já existente. O contrato de contraste usa WCAG 2.1 AA (4.5:1 texto normal, 3:1 texto grande). O switch de tema é puramente CSS via atributo `data-theme`, sem re-render React em componentes.
+**Backend (Supabase Edge Functions)**
+1. `supabase/functions/_shared/ai-gateway.ts` — helper
+   `createLovableAiGatewayProvider(key)` com
+   `@ai-sdk/openai-compatible` (`baseURL`
+   `https://ai.gateway.lovable.dev/v1`, header `Lovable-API-Key`).
+   Reutilizável por outras funções.
+2. `supabase/functions/study-agent/index.ts` — endpoint de chat streaming.
+   - Valida JWT (Bearer), exige `authenticated` (qualquer role de aluno).
+   - `streamText({ model: gateway("google/gemini-3.1-flash-lite"), system,
+     messages, tools, stopWhen: stepCountIs(10) })` →
+     `result.toUIMessageStreamResponse()` (CORS habilitado).
+   - Ferramentas chamam o gateway internamente (mesma técnica do
+     `generate-lesson-material`, mas dentro do `execute` da tool).
+3. `supabase/functions/study-tts/index.ts` — narração SSE de um texto
+   (chunked se longo). Reaproveita o padrão do conhecimento `ai-text-to-speech`.
+   Valida JWT. Retorna `text/event-stream`.
 
-## Confirmação
+**Banco**
+4. Migração: `ai_study_sessions` (com GRANT + RLS + policy).
 
-Como o escopo toca muitos componentes visuais, quer que eu implemente **tudo de uma vez** ou prefere fazer em duas fases:
-- **Fase 1:** motor de tema claro/escuro + auto-contraste + logomarca adaptativa (invisível até você escolher um fundo claro no admin).
-- **Fase 2:** varredura fina de banners/caixas restantes que ainda tenham cor fixa.
+**Frontend**
+5. `src/pages/EstudarIA.tsx` — página de chat (rote `/estudar-ia`),
+   protegida por assinatura/trial. Usa `useChat` (AI SDK) com
+   `DefaultChatTransport` apontando para a URL da function com o token.
+   Renderiza markdown (`react-markdown`) + artifacts das tools.
+6. `src/components/study/NarratedSlidesPlayer.tsx` — player de slides
+   sincronizados com TTS (AudioContext, avança slide a slide).
+7. `src/components/study/StudySimuladoCard.tsx` — card reusando
+   `SimuladoModal` para exibir as questões geradas.
+8. Entrada na navegação: link "Estudar com IA" no menu do aluno e no
+   StudentDashboard. Navbar dinâmico (Visitor vs Auth) recebe o item.
+9. `package.json`: adicionar `ai`, `@ai-sdk/openai-compatible`,
+   `react-markdown` (e `remark-gfm`).
+
+## Controle de custo (piloto <100)
+
+- Modelo do agente: `gemini-3.1-flash-lite` (mais barato do catálogo).
+- Sem geração de imagem na fase 1 (slides em texto).
+- TTS apenas sob demanda (o player pede narração ao clicar em "tocar"; não
+  gera áudio de todos os slides automaticamente).
+- Cache por tópico: se o mesmo tópico já foi gerado na sessão, reutiliza.
+- Rate limit + gate de assinatura/trial impedem uso indevido.
+
+## Fases de entrega
+
+1. **Migração + helper do gateway** (fundação).
+2. **Edge function `study-agent`** com a tool `gerar_resumo` primeiro
+   (validar streaming end-to-end com um prompt simples).
+3. **Página de chat** (`EstudarIA`) + integração com `useChat`.
+4. **Tools `gerar_questoes`** + card de simulado.
+5. **Tool `gerar_slides_narrados`** + `study-tts` + player de slides narrados.
+6. **Gate de acesso + rate limit** + entrada no menu.
+7. Testes: um fluxo real ("Análise SWOT") via Playwright, conferindo
+   resumo, simulado e player de narração.
+
+## Notas técnicas
+
+- Edge functions usam `npm:ai` e `npm:@ai-sdk/openai-compatible` (Deno
+  resolve via registro, sem build). `verify_jwt=false` com validação manual
+  do JWT e checagem de role (padrão já usado pelo projeto).
+- Cliente chama a function pela URL pública
+  (`https://<project>.functions.supabase.co/study-agent`) com
+  `Authorization: Bearer <access_token>` — não por `supabase.functions.invoke`
+  (que não faz streaming).
+- `openai/gpt-4o-mini-tts` exige `voice` (default `alloy`) e
+  `stream_format:"sse"` + `response_format:"pcm"` para tocar em tempo real.
+- Tratamento de erros do gateway: 429 (limite), 402 (créditos),
+  403 (bloqueio) exibidos como toast claro — sem retry de erros terminais.

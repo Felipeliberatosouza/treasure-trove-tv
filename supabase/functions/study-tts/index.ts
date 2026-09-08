@@ -46,8 +46,7 @@ Deno.serve(async (req) => {
         model: "openai/gpt-4o-mini-tts",
         input: chunk,
         voice: "alloy",
-        stream_format: "sse",
-        response_format: "pcm",
+        response_format: "mp3",
       }),
     });
 
@@ -69,9 +68,9 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Encaminha o SSE do gateway sem buffering.
+    // Retorna o áudio MP3 pronto para o player do navegador.
     return new Response(aiResp.body, {
-      headers: { ...corsHeaders, "Content-Type": "text/event-stream", "Cache-Control": "no-cache" },
+      headers: { ...corsHeaders, "Content-Type": "audio/mpeg", "Cache-Control": "no-cache" },
     });
   } catch (e) {
     console.error("study-tts error:", e);

@@ -124,7 +124,8 @@ const EstudarIA = () => {
     [],
   );
 
-  const { messages, sendMessage, status, stop, input, setInput } = useChat<UIMessage>({
+  const [input, setInput] = useState("");
+  const { messages, sendMessage, status, stop } = useChat<UIMessage>({
     transport,
   });
 

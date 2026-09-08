@@ -28,6 +28,7 @@ import MinhasTopQuestoes from "./pages/MinhasTopQuestoes.tsx";
 import MinhasColinhas from "./pages/MinhasColinhas.tsx";
 import MinhasDuvidas from "./pages/MinhasDuvidas.tsx";
 import MinhasAulasAgendadas from "./pages/MinhasAulasAgendadas.tsx";
+import EstudarIA from "./pages/EstudarIA.tsx";
 import ForgotPassword from "./pages/ForgotPassword.tsx";
 import ResetPassword from "./pages/ResetPassword.tsx";
 import VideoPage from "./pages/VideoPage.tsx";

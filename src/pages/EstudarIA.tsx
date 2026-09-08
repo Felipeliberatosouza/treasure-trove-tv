@@ -114,7 +114,6 @@ const EstudarIA = () => {
     () =>
       new DefaultChatTransport({
         api: AGENT_URL,
-        credentials: "include",
         headers: async () => {
           const { data } = await supabase.auth.getSession();
           const token = data.session?.access_token ?? "";

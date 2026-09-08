@@ -160,12 +160,13 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json();
-    const messages: CoreMessage[] = Array.isArray(body?.messages) ? body.messages : [];
-    if (messages.length === 0) {
+    const uiMessages: any[] = Array.isArray(body?.messages) ? body.messages : [];
+    if (uiMessages.length === 0) {
       return new Response(JSON.stringify({ error: "Mensagem vazia" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    const messages = convertToModelMessages(uiMessages);
 
     const apiKey = Deno.env.get("LOVABLE_API_KEY");
     if (!apiKey) throw new Error("LOVABLE_API_KEY não configurada");

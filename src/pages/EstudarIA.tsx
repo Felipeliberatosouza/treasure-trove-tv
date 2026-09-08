@@ -240,6 +240,7 @@ const EstudarIA = () => {
           ) : (
             <Button
               size="icon"
+              aria-label="Enviar mensagem"
               disabled={!input.trim()}
               onClick={() => sendMessage({ text: input })}
             >

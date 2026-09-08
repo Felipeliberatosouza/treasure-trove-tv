@@ -1,6 +1,6 @@
 // "Estudar com IA" — agente conversacional que gera resumo, simulado e slides
 // narrados a partir do pedido do aluno. Streaming via AI SDK + Lovable AI Gateway.
-import { streamText, tool, stepCountIs, type CoreMessage } from "npm:ai";
+import { streamText, tool, stepCountIs, convertToModelMessages } from "npm:ai";
 import { z } from "npm:zod";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 import { createLovableAiGatewayProvider, getLovableAiGatewayRunId, getLovableAiGatewayResponseHeaders } from "../_shared/ai-gateway.ts";

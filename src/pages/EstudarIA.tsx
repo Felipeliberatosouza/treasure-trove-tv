@@ -228,7 +228,10 @@ const EstudarIA = () => {
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
-                if (input.trim() && !sending) sendMessage({ text: input });
+                if (input.trim() && !sending) {
+                  sendMessage({ text: input });
+                  setInput("");
+                }
               }
             }}
           />

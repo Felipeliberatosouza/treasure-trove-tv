@@ -333,9 +333,7 @@ const Login = () => {
               if (hasTrialIntent) {
                 window.sessionStorage.setItem(PENDING_TRIAL_INTENT_KEY, "1");
               }
-            const result = await lovable.auth.signInWithOAuth("google", {
-              redirect_uri: `${window.location.origin}${returnTo}`,
-            });
+            const result = await signInWithGooglePopup(returnTo);
             if (result.error) {
               toast.error("Erro ao entrar com Google");
               return;

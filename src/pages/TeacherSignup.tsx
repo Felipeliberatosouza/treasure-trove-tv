@@ -241,9 +241,7 @@ const TeacherSignup = () => {
           size="lg"
           className="w-full font-display font-semibold gap-2"
           onClick={async () => {
-            const result = await lovable.auth.signInWithOAuth("google", {
-              redirect_uri: window.location.origin,
-            });
+            const result = await signInWithGooglePopup("/");
             if (result.error) {
               toast.error("Erro ao cadastrar com Google");
               return;

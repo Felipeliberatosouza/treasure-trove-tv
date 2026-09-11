@@ -5,7 +5,7 @@ import { Mail, Lock, Eye, EyeOff, ArrowLeft, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
+import { signInWithGooglePopup } from "@/lib/googleOAuthPopup";
 import { toast } from "sonner";
 import { translateAuthError } from "@/lib/translateAuthError";
 import TwoFactorChallenge from "@/components/TwoFactorChallenge";

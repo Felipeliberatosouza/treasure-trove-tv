@@ -5,7 +5,7 @@ import { Mail, Lock, Eye, EyeOff, ArrowLeft, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
+import { signInWithGooglePopup } from "@/lib/googleOAuthPopup";
 import { toast } from "sonner";
 import { translateAuthError } from "@/lib/translateAuthError";
 import TwoFactorChallenge from "@/components/TwoFactorChallenge";
@@ -333,9 +333,7 @@ const Login = () => {
               if (hasTrialIntent) {
                 window.sessionStorage.setItem(PENDING_TRIAL_INTENT_KEY, "1");
               }
-            const result = await lovable.auth.signInWithOAuth("google", {
-              redirect_uri: `${window.location.origin}${returnTo}`,
-            });
+            const result = await signInWithGooglePopup(returnTo);
             if (result.error) {
               toast.error("Erro ao entrar com Google");
               return;

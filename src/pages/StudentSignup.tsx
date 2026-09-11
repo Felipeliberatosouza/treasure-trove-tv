@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
+import { signInWithGooglePopup } from "@/lib/googleOAuthPopup";
 import { toast } from "sonner";
 import AreaSelector from "@/components/AreaSelector";
 import { translateAuthError } from "@/lib/translateAuthError";
@@ -281,9 +281,7 @@ const StudentSignup = () => {
           size="lg"
           className="w-full font-display font-semibold gap-2"
           onClick={async () => {
-            const result = await lovable.auth.signInWithOAuth("google", {
-              redirect_uri: `${window.location.origin}${returnTo}`,
-            });
+            const result = await signInWithGooglePopup(returnTo);
             if (result.error) {
               toast.error("Erro ao cadastrar com Google");
               return;

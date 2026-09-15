@@ -248,6 +248,18 @@
     color: rgba(17, 24, 39, 0.55);
   }
 
+  /* AI prompt fields — always white surface (overrides dynamic textarea_bg) */
+  textarea.ai-prompt-field {
+    background-color: #ffffff !important;
+    color: #111827 !important;
+    border-color: hsl(var(--border)) !important;
+  }
+  textarea.ai-prompt-field::placeholder {
+    color: rgba(17, 24, 39, 0.55) !important;
+    opacity: 1;
+  }
+
+
   /* Dark theme surfaces → light ink */
   input.bg-secondary,
   textarea.bg-secondary,

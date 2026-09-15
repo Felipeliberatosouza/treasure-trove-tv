@@ -16,6 +16,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Search, Loader2, Sparkles } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { AnimatePresence, motion } from "framer-motion";
 import type { Video } from "@/data/courses";
 
@@ -39,6 +40,7 @@ const Index = () => {
   const [teacherLessons, setTeacherLessons] = useState<Video[]>([]);
   const [teacherExams, setTeacherExams] = useState<Video[]>([]);
   const [loadingTeacherContent, setLoadingTeacherContent] = useState(false);
+  const [revisionTopic, setRevisionTopic] = useState("");
 
   const isTeacher = role === "teacher";
 
@@ -266,6 +268,46 @@ const Index = () => {
     <div className="min-h-screen bg-background text-foreground flex flex-col">
       <Navbar />
       <HeroBanner onVideoClick={handleVideoClick} onExploreClick={handleExploreClick} />
+      {!isTeacher && (
+        <section className="border-y border-border bg-card px-6 py-10 md:px-12 lg:px-20" aria-labelledby="revision-ai-title">
+          <div className="mx-auto max-w-4xl text-center">
+            <div className="mb-3 inline-flex items-center gap-2 text-sm font-semibold text-primary">
+              <Sparkles className="h-4 w-4" />
+              Kit de Revisão com IA
+            </div>
+            <h2 id="revision-ai-title" className="font-display text-2xl font-bold md:text-3xl">
+              {profile?.name
+                ? `Qual o assunto da sua próxima prova, ${profile.name.trim().split(" ")[0]}?`
+                : "Qual o assunto da sua próxima prova?"}
+            </h2>
+            <p className="mx-auto mt-3 max-w-2xl text-sm text-muted-foreground md:text-base">
+              Receba resumo, simulado, Top Questões, colinha, slides narrados e PDF em um único kit.
+            </p>
+            <form
+              className="mx-auto mt-6 flex max-w-2xl flex-col gap-3 sm:flex-row"
+              onSubmit={(event) => {
+                event.preventDefault();
+                if (revisionTopic.trim().length < 3) return;
+                navigate(`/revisao-ia?assunto=${encodeURIComponent(revisionTopic.trim())}`);
+              }}
+            >
+              <Input
+                value={revisionTopic}
+                onChange={(event) => setRevisionTopic(event.target.value)}
+                placeholder="Ex.: Administração Financeira — análise de investimentos"
+                maxLength={500}
+                className="h-11 flex-1"
+                aria-label="Assunto da próxima prova"
+              />
+              <Button type="submit" className="h-11" disabled={revisionTopic.trim().length < 3}>
+                <Sparkles className="mr-2 h-4 w-4" />
+                Gerar Kit de Revisão
+              </Button>
+            </form>
+            <p className="mt-3 text-xs text-muted-foreground">1ª revisão grátis, sem cadastro.</p>
+          </div>
+        </section>
+      )}
       {!isTeacher && <FreeTrialBanner />}
 
       <div className="space-y-12 py-12">

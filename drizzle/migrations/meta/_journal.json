@@ -15,6 +15,13 @@
       "when": 1789516032821,
       "tag": "0001_ai_revision_audiovisual_artifacts",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1789516069142,
+      "tag": "0002_ai_revision_media_storage_policies",
+      "breakpoints": true
     }
   ]
 }

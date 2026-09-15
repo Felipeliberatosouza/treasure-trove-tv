@@ -159,10 +159,10 @@ const PricingSection = () => {
           className="space-y-4"
         >
           <h2 className="font-display text-3xl font-bold md:text-4xl">
-            Acesso <span className="text-gradient">ilimitado</span> a todos os cursos
+            Acesso <span className="text-gradient">ilimitado</span> a todas as revisões
           </h2>
           <p className="text-muted-foreground">
-            Assine e tenha acesso completo a todos os cursos da plataforma
+            Assine e tenha acesso completo a todas as revisões dos melhores professores universitários do Brasil e a todo conteúdo de IA
           </p>
         </motion.div>
 

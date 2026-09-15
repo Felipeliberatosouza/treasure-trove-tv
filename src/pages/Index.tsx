@@ -1,6 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Navbar from "@/components/Navbar";
-import HeroBanner from "@/components/HeroBanner";
 import FreeTrialBanner from "@/components/FreeTrialBanner";
 import VideoCarousel from "@/components/VideoCarousel";
 import PricingSection from "@/components/PricingSection";
@@ -14,9 +13,10 @@ import { useHomepageAreas } from "@/hooks/useCourseAreas";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Search, Loader2, Sparkles } from "lucide-react";
+import { Search, Loader2, Sparkles, Plus, SlidersHorizontal, Send, BookOpen, FileQuestion, ListChecks, StickyNote } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { AnimatePresence, motion } from "framer-motion";
 import type { Video } from "@/data/courses";
 
@@ -256,58 +256,81 @@ const Index = () => {
     navigate(`/video/${id}`);
   };
 
-  const handleExploreClick = useCallback(() => {
-    setInlineSearchOpen(true);
-    setTimeout(() => {
-      popularSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-      setTimeout(() => inlineSearchRef.current?.focus(), 500);
-    }, 50);
-  }, []);
-
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
       <Navbar />
-      <HeroBanner onVideoClick={handleVideoClick} onExploreClick={handleExploreClick} />
       {!isTeacher && (
-        <section className="border-y border-border bg-card px-6 py-10 md:px-12 lg:px-20" aria-labelledby="revision-ai-title">
-          <div className="mx-auto max-w-4xl text-center">
-            <div className="mb-3 inline-flex items-center gap-2 text-sm font-semibold text-primary">
-              <Sparkles className="h-4 w-4" />
-              Kit de Revisão com IA
+        <section className="flex min-h-[calc(100svh-5rem)] items-center border-b border-border bg-background px-4 pb-16 pt-28 md:px-10 md:pb-20" aria-labelledby="revision-ai-title">
+          <div className="mx-auto w-full max-w-4xl text-center">
+            <div className="mb-8 inline-flex items-center gap-2 rounded-full bg-muted px-4 py-2 text-sm text-muted-foreground">
+              <Sparkles className="h-4 w-4 text-primary" />
+              Seu Kit de Revisão completo em poucos minutos
             </div>
-            <h2 id="revision-ai-title" className="font-display text-2xl font-bold md:text-3xl">
+            <h1 id="revision-ai-title" className="font-display text-3xl font-bold md:text-5xl">
               {profile?.name
                 ? `Qual o assunto da sua próxima prova, ${profile.name.trim().split(" ")[0]}?`
                 : "Qual o assunto da sua próxima prova?"}
-            </h2>
-            <p className="mx-auto mt-3 max-w-2xl text-sm text-muted-foreground md:text-base">
-              Receba resumo, simulado, Top Questões, colinha, slides narrados e PDF em um único kit.
-            </p>
+            </h1>
             <form
-              className="mx-auto mt-6 flex max-w-2xl flex-col gap-3 sm:flex-row"
+              className="mx-auto mt-10 max-w-3xl"
               onSubmit={(event) => {
                 event.preventDefault();
                 if (revisionTopic.trim().length < 3) return;
                 navigate(`/revisao-ia?assunto=${encodeURIComponent(revisionTopic.trim())}`);
               }}
             >
-              <Input
-                value={revisionTopic}
-                onChange={(event) => setRevisionTopic(event.target.value)}
-                placeholder="Ex.: Administração Financeira — análise de investimentos"
-                maxLength={500}
-                className="h-11 flex-1"
-                aria-label="Assunto da próxima prova"
-              />
-              <Button type="submit" className="h-11" disabled={revisionTopic.trim().length < 3}>
-                <Sparkles className="mr-2 h-4 w-4" />
-                Gerar Kit de Revisão
-              </Button>
+              <div className="rounded-2xl border border-border bg-card p-3 text-left shadow-lg transition-shadow focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 focus-within:ring-offset-background md:p-4">
+                <Textarea
+                  value={revisionTopic}
+                  onChange={(event) => setRevisionTopic(event.target.value)}
+                  placeholder="Digite o assunto, a disciplina ou os tópicos da sua prova..."
+                  maxLength={500}
+                  rows={3}
+                  className="min-h-[112px] resize-none border-0 bg-transparent px-2 text-base shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                  aria-label="Assunto da próxima prova"
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" && !event.shiftKey && revisionTopic.trim().length >= 3) {
+                      event.preventDefault();
+                      navigate(`/revisao-ia?assunto=${encodeURIComponent(revisionTopic.trim())}`);
+                    }
+                  }}
+                />
+                <div className="flex items-center justify-between gap-3 border-t border-border pt-3">
+                  <div className="flex items-center gap-1">
+                    <Button type="button" size="icon" variant="ghost" aria-label="Adicionar detalhes" title="Adicionar detalhes" onClick={() => navigate("/revisao-ia")}>
+                      <Plus className="h-5 w-5" />
+                    </Button>
+                    <Button type="button" variant="outline" size="sm" onClick={() => navigate("/revisao-ia")}>
+                      <SlidersHorizontal className="h-4 w-4" />
+                      Personalizar
+                    </Button>
+                  </div>
+                  <Button type="submit" size="icon" className="rounded-full" disabled={revisionTopic.trim().length < 3} aria-label="Gerar Kit de Revisão" title="Gerar Kit de Revisão">
+                    <Send className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
             </form>
-            <p className="mt-3 text-xs text-muted-foreground">1ª revisão grátis, sem cadastro.</p>
+            <div className="mt-6 flex flex-wrap justify-center gap-2">
+              {[
+                { label: "Criar resumo", icon: BookOpen },
+                { label: "Criar simulado", icon: FileQuestion },
+                { label: "Top Questões", icon: ListChecks },
+                { label: "Criar colinha", icon: StickyNote },
+              ].map(({ label, icon: Icon }) => (
+                <Button key={label} type="button" variant="outline" className="rounded-full bg-background" onClick={() => navigate("/revisao-ia")}>
+                  <Icon className="h-4 w-4" />
+                  {label}
+                </Button>
+              ))}
+            </div>
+            <p className="mt-5 text-xs text-muted-foreground">
+              1ª revisão grátis, sem cadastro. Conteúdo produzido com apoio de IA.
+            </p>
           </div>
         </section>
       )}
+      {isTeacher && <div className="pt-20" />}
       {!isTeacher && <FreeTrialBanner />}
 
       <div className="space-y-12 py-12">

@@ -267,7 +267,7 @@ Deno.serve(async (req) => {
     // 1) cache canônico primeiro — nunca consome crédito
     const { data: cached } = await admin
       .from("ai_canonical_contents")
-      .select("id, kit, status, visibility")
+      .select("id, kit, status, visibility, hits")
       .eq("cache_key", cacheKey)
       .eq("visibility", "public_canonical")
       .eq("status", "ready")
@@ -283,10 +283,9 @@ Deno.serve(async (req) => {
         })
         .select("id")
         .single();
-      await admin.rpc.bind(admin); // no-op guard
       await admin
         .from("ai_canonical_contents")
-        .update({ hits: (cached as any).hits ? (cached as any).hits + 1 : 1 })
+        .update({ hits: (cached.hits ?? 0) + 1 })
         .eq("id", cached.id);
       let balance: number | null = null;
       if (userId) balance = (await ensureCredits(userId)).balance;

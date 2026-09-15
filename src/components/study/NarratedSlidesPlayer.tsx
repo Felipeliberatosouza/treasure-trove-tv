@@ -1,28 +1,36 @@
-import { useState, useRef, useCallback, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { Play, Pause, Loader2, ChevronLeft, ChevronRight, Volume2 } from "lucide-react";
+import { Play, Pause, Loader2, ChevronLeft, ChevronRight, Volume2, Captions, CaptionsOff } from "lucide-react";
 import { toast } from "sonner";
+import professoraIa from "@/assets/professora-ia.jpg";
+import visualCiencia from "@/assets/slide-visual-ciencia.jpg";
+import visualHumanas from "@/assets/slide-visual-humanas.jpg";
+import visualExatas from "@/assets/slide-visual-exatas.jpg";
 
 export interface StudySlide {
   titulo: string;
   bullets: string[];
   narracao: string;
+  imagem_prompt?: string;
 }
 
 interface Props {
   topico: string;
   slides: StudySlide[];
+  canonicalId?: string | null;
+  disciplina?: string;
 }
 
-const ttsUrl = (texto: string) =>
-  `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/study-tts`;
+const ttsUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/study-tts`;
 
-const NarratedSlidesPlayer = ({ topico, slides }: Props) => {
+const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina }: Props) => {
   const [current, setCurrent] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [loading, setLoading] = useState(false);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [showCaptions, setShowCaptions] = useState(true);
+  const [caption, setCaption] = useState("");
+  const [started, setStarted] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const tokenRef = useRef<string>("");
 
@@ -40,17 +48,23 @@ const NarratedSlidesPlayer = ({ topico, slides }: Props) => {
       setLoading(true);
       try {
         if (!tokenRef.current) tokenRef.current = await getToken();
-        const resp = await fetch(ttsUrl(slide.narracao), {
+        const resp = await fetch(ttsUrl, {
           method: "POST",
           headers: {
             Authorization: `Bearer ${tokenRef.current}`,
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ texto: slide.narracao }),
+          body: JSON.stringify(canonicalId
+            ? { canonical_id: canonicalId, slide_index: index }
+            : { texto: slide.narracao }),
         });
         if (!resp.ok) {
           const err = await resp.json().catch(() => ({}));
           throw new Error(err?.error || `Falha (${resp.status})`);
+        }
+        if (canonicalId) {
+          const payload = await resp.json();
+          return typeof payload.audio_url === "string" ? payload.audio_url : null;
         }
         const blob = await resp.blob();
         return URL.createObjectURL(blob);
@@ -61,7 +75,7 @@ const NarratedSlidesPlayer = ({ topico, slides }: Props) => {
         setLoading(false);
       }
     },
-    [slides, getToken],
+    [slides, getToken, canonicalId],
   );
 
   const playFrom = useCallback(
@@ -76,6 +90,7 @@ const NarratedSlidesPlayer = ({ topico, slides }: Props) => {
         return url;
       });
       setPlaying(true);
+      setStarted(true);
     },
     [loadSlideAudio],
   );
@@ -112,43 +127,68 @@ const NarratedSlidesPlayer = ({ topico, slides }: Props) => {
   }, [audioUrl]);
 
   const slide = slides[current];
+  const slideImage = useMemo(() => {
+    const value = `${disciplina || ""} ${topico}`.toLowerCase();
+    if (/matem|físic|fisic|engenh|estat|cálc|calc|tecnolog|comput/.test(value)) return visualExatas;
+    if (/hist|direito|filos|soci|letras|geograf|admin|econom/.test(value)) return visualHumanas;
+    return visualCiencia;
+  }, [disciplina, topico]);
+
+  const updateCaption = useCallback(() => {
+    const audio = audioRef.current;
+    const text = slides[current]?.narracao || "";
+    if (!audio || !text || !audio.duration) return;
+    const words = text.split(/\s+/).filter(Boolean);
+    const wordsPerCaption = 9;
+    const progress = Math.min(audio.currentTime / audio.duration, 0.999);
+    const start = Math.floor((progress * words.length) / wordsPerCaption) * wordsPerCaption;
+    setCaption(words.slice(start, start + wordsPerCaption).join(" "));
+  }, [current, slides]);
+
+  if (!slides.length) {
+    return <div className="flex aspect-video items-center justify-center bg-secondary text-sm text-muted-foreground">Apresentação indisponível.</div>;
+  }
 
   return (
-    <Card className="overflow-hidden border-primary/20 bg-card/60 backdrop-blur">
-      <CardHeader className="flex-row items-center justify-between space-y-0">
-        <CardTitle className="flex items-center gap-2 text-base">
-          <Volume2 className="h-5 w-5 text-primary" />
-          Aula narrada: {topico}
-        </CardTitle>
-        <span className="text-xs text-muted-foreground">
-          Slide {current + 1} de {slides.length}
-        </span>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {/* slide */}
-        <div className="flex min-h-[200px] flex-col justify-center rounded-lg border bg-background/60 p-6">
-          {slide && (
-            <>
-              <h4 className="mb-3 text-xl font-semibold">{slide.titulo}</h4>
-              <ul className="space-y-2">
-                {slide.bullets.map((b, i) => (
-                  <li key={i} className="flex items-start gap-2 text-sm">
-                    <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
-                    <span>{b}</span>
+    <div className="relative aspect-video w-full overflow-hidden bg-secondary">
+      <img src={slideImage} alt="Ilustração didática da apresentação" className="absolute inset-0 h-full w-full object-cover" width={1536} height={864} />
+      <div className="absolute inset-0 bg-gradient-to-r from-background via-background/80 to-background/10" />
+      <div className="absolute inset-0 flex flex-col justify-between p-4 sm:p-7 md:p-10">
+        <div className="flex items-start justify-between gap-4">
+          <div className="max-w-[76%]">
+            <p className="mb-2 text-xs font-semibold uppercase text-primary">Revisão Fácil IA</p>
+            <h2 className="font-display text-xl font-bold leading-tight sm:text-3xl md:text-4xl">
+              {started ? slide?.titulo : topico}
+            </h2>
+            {started && slide && (
+              <ul className="mt-3 space-y-1.5 sm:mt-5 sm:space-y-2">
+                {slide.bullets.slice(0, 4).map((bullet, index) => (
+                  <li key={index} className="flex items-start gap-2 text-xs sm:text-sm md:text-base">
+                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
+                    <span>{bullet}</span>
                   </li>
                 ))}
               </ul>
-            </>
-          )}
+            )}
+          </div>
+          <div className="shrink-0 text-center">
+            <img src={professoraIa} alt="Professora virtual da Revisão Fácil" className="h-16 w-16 rounded-full border-2 border-primary object-cover shadow-lg sm:h-24 sm:w-24 md:h-32 md:w-32" width={1024} height={1024} />
+            <span className="mt-1 block text-[10px] font-medium sm:text-xs">Professora virtual</span>
+          </div>
         </div>
 
-        <audio ref={audioRef} onEnded={handleEnded} className="hidden" />
+        {showCaptions && started && caption && (
+          <div className="mx-auto max-w-2xl rounded bg-background/90 px-3 py-1.5 text-center text-xs shadow-lg sm:text-sm">
+            {caption}
+          </div>
+        )}
 
-        <div className="flex items-center gap-2">
+        <audio ref={audioRef} onEnded={handleEnded} onTimeUpdate={updateCaption} className="hidden" />
+        <div className="flex items-center justify-between gap-2 rounded bg-background/80 p-2 backdrop-blur-sm">
+          <div className="flex items-center gap-1">
           {!playing ? (
-            <Button onClick={() => playFrom(current)} disabled={loading} size="sm">
-              {loading ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Play className="mr-1 h-4 w-4" />}
-              {loading ? "Gerando narração..." : "Tocar narração"}
+            <Button onClick={() => playFrom(current)} disabled={loading} size="icon" aria-label="Reproduzir apresentação">
+              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
             </Button>
           ) : (
             <Button
@@ -156,10 +196,11 @@ const NarratedSlidesPlayer = ({ topico, slides }: Props) => {
                 setPlaying(false);
                 audioRef.current?.pause();
               }}
-              size="sm"
+              size="icon"
               variant="outline"
+              aria-label="Pausar apresentação"
             >
-              <Pause className="mr-1 h-4 w-4" /> Pausar
+              <Pause className="h-4 w-4" />
             </Button>
           )}
           <Button
@@ -168,6 +209,7 @@ const NarratedSlidesPlayer = ({ topico, slides }: Props) => {
             disabled={current === 0}
             onClick={() => {
               setPlaying(false);
+              audioRef.current?.pause();
               setCurrent((c) => Math.max(0, c - 1));
             }}
           >
@@ -179,14 +221,21 @@ const NarratedSlidesPlayer = ({ topico, slides }: Props) => {
             disabled={current >= slides.length - 1}
             onClick={() => {
               setPlaying(false);
+              audioRef.current?.pause();
               setCurrent((c) => Math.min(slides.length - 1, c + 1));
             }}
           >
             <ChevronRight className="h-4 w-4" />
           </Button>
+          <Volume2 className="ml-1 hidden h-4 w-4 text-muted-foreground sm:block" />
+          </div>
+          <span className="text-[10px] text-muted-foreground sm:text-xs">Slide {current + 1} de {slides.length}</span>
+          <Button variant="ghost" size="icon" onClick={() => setShowCaptions((value) => !value)} aria-label={showCaptions ? "Ocultar legendas" : "Mostrar legendas"}>
+            {showCaptions ? <Captions className="h-4 w-4" /> : <CaptionsOff className="h-4 w-4" />}
+          </Button>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
 

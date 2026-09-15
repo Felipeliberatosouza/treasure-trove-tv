@@ -103,15 +103,16 @@ const KIT_TOOL = {
         },
         slides: {
           type: "array",
-          description: "5 a 8 slides com narração.",
+          description: "5 a 8 slides didáticos com narração e direção visual.",
           items: {
             type: "object",
             properties: {
               titulo: { type: "string" },
               bullets: { type: "array", items: { type: "string" } },
               narracao: { type: "string" },
+              imagem_prompt: { type: "string", description: "Descrição objetiva da imagem didática que representa este slide, sem texto escrito." },
             },
-            required: ["titulo", "bullets", "narracao"],
+            required: ["titulo", "bullets", "narracao", "imagem_prompt"],
           },
         },
       },
@@ -136,7 +137,8 @@ Assunto informado pelo aluno: ${params.assunto}
 Disciplina: ${params.disciplina || "não informada"}
 Curso: ${params.curso || "não informado"}
 Instituição: ${params.instituicao || "não informada"}
-Profundidade: ${params.nivel === "aprofundado" ? "aprofundada" : "revisão rápida"}`;
+Profundidade: ${params.nivel === "aprofundado" ? "aprofundada" : "revisão rápida"}
+Nos slides, escreva uma narração fluida em português brasileiro e uma direção de imagem didática diretamente relacionada a cada tópico.`;
 
   const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",

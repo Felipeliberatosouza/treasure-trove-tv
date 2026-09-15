@@ -25,6 +25,7 @@ export interface KitSlide {
   titulo: string;
   bullets: string[];
   narracao: string;
+  imagem_prompt?: string;
 }
 export interface RevisionKit {
   titulo: string;
@@ -90,6 +91,18 @@ export async function fetchKitStatus(): Promise<KitStatus> {
   const { ok, payload } = await callFn({ action: "status" });
   if (!ok) return { authenticated: false, balance: 0, anon_free_left: 0 };
   return payload as KitStatus;
+}
+
+export async function fetchKitById(canonicalId: string): Promise<KitResponse | null> {
+  const { data, error } = await supabase
+    .from("ai_canonical_contents")
+    .select("id, kit")
+    .eq("id", canonicalId)
+    .eq("status", "ready")
+    .eq("visibility", "public_canonical")
+    .maybeSingle();
+  if (error || !data) return null;
+  return { source: "cache", canonical_id: data.id, kit: data.kit as unknown as RevisionKit };
 }
 
 export type KitError = { kind: "signup_required" | "paywall" | "error"; message: string };

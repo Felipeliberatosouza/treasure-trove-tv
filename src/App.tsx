@@ -30,6 +30,7 @@ import MinhasDuvidas from "./pages/MinhasDuvidas.tsx";
 import MinhasAulasAgendadas from "./pages/MinhasAulasAgendadas.tsx";
 import EstudarIA from "./pages/EstudarIA.tsx";
 import RevisaoIA from "./pages/RevisaoIA.tsx";
+import ConteudoIA from "./pages/ConteudoIA.tsx";
 import ForgotPassword from "./pages/ForgotPassword.tsx";
 import ResetPassword from "./pages/ResetPassword.tsx";
 import VideoPage from "./pages/VideoPage.tsx";
@@ -98,6 +99,7 @@ const App = () => (
             <Route path="/minhas-aulas-agendadas" element={<MinhasAulasAgendadas />} />
             <Route path="/revisao-ia" element={<RevisaoIA />} />
             <Route path="/ia" element={<RevisaoIA />} />
+            <Route path="/conteudo-ia/:id" element={<ConteudoIA />} />
             <Route path="/estudar-ia" element={<EstudarIA />} />
             <Route path="/video/:id" element={<VideoPage />} />
             <Route path="/checkout" element={<Checkout />} />

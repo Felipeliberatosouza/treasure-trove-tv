@@ -74,6 +74,56 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_content_artifacts: {
+        Row: {
+          artifact_type: string
+          canonical_id: string
+          created_at: string
+          error_message: string | null
+          id: string
+          metadata: Json
+          public_url: string | null
+          slide_index: number
+          status: string
+          storage_path: string | null
+          updated_at: string
+        }
+        Insert: {
+          artifact_type: string
+          canonical_id: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          metadata?: Json
+          public_url?: string | null
+          slide_index: number
+          status?: string
+          storage_path?: string | null
+          updated_at?: string
+        }
+        Update: {
+          artifact_type?: string
+          canonical_id?: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          metadata?: Json
+          public_url?: string | null
+          slide_index?: number
+          status?: string
+          storage_path?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_content_artifacts_canonical_id_fkey"
+            columns: ["canonical_id"]
+            isOneToOne: false
+            referencedRelation: "ai_canonical_contents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_content_feedback: {
         Row: {
           canonical_id: string | null
@@ -108,6 +158,50 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "ai_content_feedback_canonical_id_fkey"
+            columns: ["canonical_id"]
+            isOneToOne: false
+            referencedRelation: "ai_canonical_contents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_generation_jobs: {
+        Row: {
+          attempts: number
+          canonical_id: string
+          created_at: string
+          error_message: string | null
+          id: string
+          job_type: string
+          progress: number
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          attempts?: number
+          canonical_id: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          job_type: string
+          progress?: number
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          attempts?: number
+          canonical_id?: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          job_type?: string
+          progress?: number
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_generation_jobs_canonical_id_fkey"
             columns: ["canonical_id"]
             isOneToOne: false
             referencedRelation: "ai_canonical_contents"

@@ -57,7 +57,7 @@ const subscriberMenuItem: MenuItem = {
 };
 
 const loggedMenuItems: MenuItem[] = [
-  { label: "Estudar com IA", shortLabel: "IA", href: "/estudar-ia" },
+  { label: "Revisão com IA", shortLabel: "IA", href: "/revisao-ia" },
   { label: "Minhas Revisões", shortLabel: "Revisões", href: "/minhas-revisoes" },
   { label: "Meus Resumos", shortLabel: "Resumos", href: "/meus-resumos" },
   { label: "Meus Simulados", shortLabel: "Simulados", href: "/meus-simulados" },

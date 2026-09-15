@@ -260,7 +260,7 @@ const Index = () => {
     <div className="min-h-screen bg-background text-foreground flex flex-col">
       <Navbar />
       {!isTeacher && (
-        <section className="flex min-h-[calc(100svh-5rem)] items-center border-b border-border bg-background px-4 pb-16 pt-28 md:px-10 md:pb-20" aria-labelledby="revision-ai-title">
+        <section className="flex items-center border-b border-border bg-background px-4 pb-12 pt-28 md:px-10 md:pb-16 md:pt-32" aria-labelledby="revision-ai-title">
           <div className="mx-auto w-full max-w-4xl text-center">
             <div className="mb-8 inline-flex items-center gap-2 rounded-full bg-muted px-4 py-2 text-sm text-muted-foreground">
               <Sparkles className="h-4 w-4 text-primary" />

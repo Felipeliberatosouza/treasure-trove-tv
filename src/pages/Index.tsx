@@ -286,7 +286,7 @@ const Index = () => {
                   placeholder="Digite o assunto, a disciplina ou os tópicos da sua prova..."
                   maxLength={500}
                   rows={3}
-                  className="min-h-[112px] resize-none border-0 bg-transparent px-2 text-base text-neutral-900 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-neutral-500"
+                  className="ai-prompt-field min-h-[112px] resize-none border-0 px-2 text-base shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
                   aria-label="Assunto da próxima prova"
                   onKeyDown={(event) => {
                     if (event.key === "Enter" && !event.shiftKey && revisionTopic.trim().length >= 3) {

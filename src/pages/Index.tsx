@@ -279,14 +279,14 @@ const Index = () => {
                 navigate(`/revisao-ia?assunto=${encodeURIComponent(revisionTopic.trim())}`);
               }}
             >
-              <div className="rounded-2xl border border-border bg-card p-3 text-left shadow-lg transition-shadow focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 focus-within:ring-offset-background md:p-4">
+              <div className="rounded-2xl border border-border bg-white p-3 text-left text-foreground shadow-lg transition-shadow focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 focus-within:ring-offset-background md:p-4">
                 <Textarea
                   value={revisionTopic}
                   onChange={(event) => setRevisionTopic(event.target.value)}
                   placeholder="Digite o assunto, a disciplina ou os tópicos da sua prova..."
                   maxLength={500}
                   rows={3}
-                  className="min-h-[112px] resize-none border-0 bg-transparent px-2 text-base shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                  className="min-h-[112px] resize-none border-0 bg-transparent px-2 text-base text-neutral-900 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-neutral-500"
                   aria-label="Assunto da próxima prova"
                   onKeyDown={(event) => {
                     if (event.key === "Enter" && !event.shiftKey && revisionTopic.trim().length >= 3) {

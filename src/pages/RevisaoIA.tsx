@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -25,8 +25,9 @@ const STEPS = [
 const RevisaoIA = () => {
   const { user, profile } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
-  const [assunto, setAssunto] = useState("");
+  const [assunto, setAssunto] = useState(() => searchParams.get("assunto")?.slice(0, 500) || "");
   const [disciplina, setDisciplina] = useState("");
   const [curso, setCurso] = useState("");
   const [instituicao, setInstituicao] = useState("");

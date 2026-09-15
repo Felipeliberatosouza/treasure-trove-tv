@@ -7,10 +7,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Sparkles, Send, Loader2, CheckCircle2, Lock, ArrowLeft } from "lucide-react";
+import { Sparkles, Send, Loader2, CheckCircle2, Lock } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import KitResult from "@/components/revisao-ia/KitResult";
-import { fetchKitStatus, requestKit, type KitResponse, type KitStatus } from "@/lib/revisionKit";
+import { fetchKitStatus, requestKit, type KitStatus } from "@/lib/revisionKit";
 
 const STEPS = [
   "Entendendo o assunto informado",
@@ -38,7 +37,6 @@ const RevisaoIA = () => {
   const [status, setStatus] = useState<KitStatus | null>(null);
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(0);
-  const [result, setResult] = useState<KitResponse | null>(null);
   const [blocked, setBlocked] = useState<"signup_required" | "paywall" | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const submittingRef = useRef(false);
@@ -84,7 +82,10 @@ const RevisaoIA = () => {
       else setBlocked(error.kind);
       return;
     }
-    setResult(data!);
+    if (data?.canonical_id) {
+      navigate(`/conteudo-ia/${data.canonical_id}`);
+      return;
+    }
     refreshStatus();
   };
 
@@ -99,17 +100,7 @@ const RevisaoIA = () => {
       <Navbar />
       <main className="flex-1 px-4 pt-24 pb-16 md:px-10">
         <div className="mx-auto w-full max-w-3xl">
-          {result ? (
-            <>
-              <button
-                onClick={() => setResult(null)}
-                className="mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
-              >
-                <ArrowLeft className="h-4 w-4" /> Nova revisão
-              </button>
-              <KitResult result={result} onNewKit={() => { setResult(null); setAssunto(""); }} />
-            </>
-          ) : loading ? (
+          {loading ? (
             <Card className="mx-auto max-w-lg">
               <CardContent className="space-y-4 p-8">
                 <div className="flex items-center gap-2">

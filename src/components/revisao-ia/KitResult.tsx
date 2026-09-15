@@ -14,6 +14,9 @@ import NarratedSlidesPlayer from "@/components/study/NarratedSlidesPlayer";
 import { buildKitPdf, type KitResponse } from "@/lib/revisionKit";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import VideoShareButtons from "@/components/VideoShareButtons";
+import VLibrasWidget from "@/components/VLibrasWidget";
+import ForensicWatermark from "@/components/ForensicWatermark";
 
 interface Props {
   result: KitResponse;
@@ -51,12 +54,14 @@ const KitResult = ({ result, onNewKit }: Props) => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
+    <div className="relative space-y-6">
+      <ForensicWatermark variant="document" cols={3} rows={6} />
+      <VLibrasWidget enabled />
+      <div className="space-y-2">
         <div>
-          <h2 className="font-display text-2xl font-bold">{kit.titulo || kit.assunto}</h2>
+          <h1 className="font-display text-2xl font-bold">{kit.titulo || kit.assunto}</h1>
           <p className="text-sm text-muted-foreground">
-            {[kit.disciplina, kit.assunto].filter(Boolean).join(" • ")}
+            {["Professora virtual da Revisão Fácil", kit.disciplina, kit.assunto].filter(Boolean).join(" • ")}
           </p>
           <div className="mt-2 flex flex-wrap gap-2">
             <Badge variant="secondary">
@@ -65,7 +70,7 @@ const KitResult = ({ result, onNewKit }: Props) => {
             <Badge variant="outline">Produzido com apoio de IA — confira com seu professor</Badge>
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button variant="outline" onClick={handlePdf} disabled={downloading}>
             {downloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
             Baixar PDF
@@ -76,13 +81,22 @@ const KitResult = ({ result, onNewKit }: Props) => {
         </div>
       </div>
 
+      <div className="overflow-hidden rounded-xl bg-secondary shadow-xl">
+        <NarratedSlidesPlayer topico={kit.assunto} disciplina={kit.disciplina} slides={kit.slides ?? []} canonicalId={result.canonical_id} />
+      </div>
+
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <VideoShareButtons videoTitle={kit.titulo || kit.assunto} videoUrl={window.location.href} />
+        <Badge variant="outline">Áudio, imagens e legendas inclusos</Badge>
+      </div>
+
       <Tabs defaultValue="resumo">
         <TabsList className="flex w-full flex-wrap justify-start">
           <TabsTrigger value="resumo"><FileText className="mr-1 h-4 w-4" /> Resumo</TabsTrigger>
           <TabsTrigger value="simulado"><ListChecks className="mr-1 h-4 w-4" /> Simulado</TabsTrigger>
           <TabsTrigger value="top"><Trophy className="mr-1 h-4 w-4" /> Top Questões</TabsTrigger>
           <TabsTrigger value="colinha"><StickyNote className="mr-1 h-4 w-4" /> Colinha</TabsTrigger>
-          <TabsTrigger value="slides"><Presentation className="mr-1 h-4 w-4" /> Slides narrados</TabsTrigger>
+          <TabsTrigger value="slides"><Presentation className="mr-1 h-4 w-4" /> Apresentação</TabsTrigger>
         </TabsList>
 
         <TabsContent value="resumo" className="space-y-4 pt-4">
@@ -156,7 +170,7 @@ const KitResult = ({ result, onNewKit }: Props) => {
         </TabsContent>
 
         <TabsContent value="slides" className="pt-4">
-          <NarratedSlidesPlayer topico={kit.assunto} slides={kit.slides ?? []} />
+          <p className="text-sm text-muted-foreground">A apresentação audiovisual está disponível no player principal acima.</p>
         </TabsContent>
       </Tabs>
 

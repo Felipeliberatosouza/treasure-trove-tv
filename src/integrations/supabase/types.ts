@@ -14,6 +14,238 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_canonical_contents: {
+        Row: {
+          assunto: string
+          cache_key: string
+          created_at: string
+          created_by: string | null
+          disciplina: string | null
+          hits: number
+          id: string
+          idioma: string
+          kit: Json
+          model: string | null
+          nivel: string
+          prompt_version: string
+          status: string
+          subtopicos: string[] | null
+          template_version: string
+          updated_at: string
+          visibility: string
+        }
+        Insert: {
+          assunto: string
+          cache_key: string
+          created_at?: string
+          created_by?: string | null
+          disciplina?: string | null
+          hits?: number
+          id?: string
+          idioma?: string
+          kit?: Json
+          model?: string | null
+          nivel?: string
+          prompt_version?: string
+          status?: string
+          subtopicos?: string[] | null
+          template_version?: string
+          updated_at?: string
+          visibility?: string
+        }
+        Update: {
+          assunto?: string
+          cache_key?: string
+          created_at?: string
+          created_by?: string | null
+          disciplina?: string | null
+          hits?: number
+          id?: string
+          idioma?: string
+          kit?: Json
+          model?: string | null
+          nivel?: string
+          prompt_version?: string
+          status?: string
+          subtopicos?: string[] | null
+          template_version?: string
+          updated_at?: string
+          visibility?: string
+        }
+        Relationships: []
+      }
+      ai_content_feedback: {
+        Row: {
+          canonical_id: string | null
+          comment: string | null
+          created_at: string
+          helpful: boolean | null
+          id: string
+          report_reason: string | null
+          request_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          canonical_id?: string | null
+          comment?: string | null
+          created_at?: string
+          helpful?: boolean | null
+          id?: string
+          report_reason?: string | null
+          request_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          canonical_id?: string | null
+          comment?: string | null
+          created_at?: string
+          helpful?: boolean | null
+          id?: string
+          report_reason?: string | null
+          request_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_content_feedback_canonical_id_fkey"
+            columns: ["canonical_id"]
+            isOneToOne: false
+            referencedRelation: "ai_canonical_contents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_revision_credit_ledger: {
+        Row: {
+          balance_after: number | null
+          created_at: string
+          delta: number
+          id: string
+          reason: string
+          request_id: string | null
+          user_id: string
+        }
+        Insert: {
+          balance_after?: number | null
+          created_at?: string
+          delta: number
+          id?: string
+          reason: string
+          request_id?: string | null
+          user_id: string
+        }
+        Update: {
+          balance_after?: number | null
+          created_at?: string
+          delta?: number
+          id?: string
+          reason?: string
+          request_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      ai_revision_credits: {
+        Row: {
+          balance: number
+          created_at: string
+          signup_granted: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          balance?: number
+          created_at?: string
+          signup_granted?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          balance?: number
+          created_at?: string
+          signup_granted?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      ai_revision_requests: {
+        Row: {
+          anon_id: string | null
+          cache_key: string | null
+          canonical_id: string | null
+          created_at: string
+          credit_reserved: boolean
+          curso: string | null
+          disciplina: string | null
+          duration_ms: number | null
+          error_message: string | null
+          exam_date: string | null
+          id: string
+          idempotency_key: string | null
+          instituicao: string | null
+          ip_hash: string | null
+          nivel: string
+          prompt: string
+          source: string | null
+          status: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          anon_id?: string | null
+          cache_key?: string | null
+          canonical_id?: string | null
+          created_at?: string
+          credit_reserved?: boolean
+          curso?: string | null
+          disciplina?: string | null
+          duration_ms?: number | null
+          error_message?: string | null
+          exam_date?: string | null
+          id?: string
+          idempotency_key?: string | null
+          instituicao?: string | null
+          ip_hash?: string | null
+          nivel?: string
+          prompt: string
+          source?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          anon_id?: string | null
+          cache_key?: string | null
+          canonical_id?: string | null
+          created_at?: string
+          credit_reserved?: boolean
+          curso?: string | null
+          disciplina?: string | null
+          duration_ms?: number | null
+          error_message?: string | null
+          exam_date?: string | null
+          id?: string
+          idempotency_key?: string | null
+          instituicao?: string | null
+          ip_hash?: string | null
+          nivel?: string
+          prompt?: string
+          source?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_revision_requests_canonical_id_fkey"
+            columns: ["canonical_id"]
+            isOneToOne: false
+            referencedRelation: "ai_canonical_contents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_logs: {
         Row: {
           action: string

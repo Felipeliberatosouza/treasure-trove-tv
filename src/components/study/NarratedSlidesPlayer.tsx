@@ -7,6 +7,7 @@ import { usePlatformSettings, DEFAULT_AI_AVATAR, resolveAiAvatar } from "@/hooks
 import visualCiencia from "@/assets/slide-visual-ciencia.jpg";
 import visualHumanas from "@/assets/slide-visual-humanas.jpg";
 import visualExatas from "@/assets/slide-visual-exatas.jpg";
+import logoRevisaoFacil from "@/assets/logo-revisao-facil.png";
 
 export interface StudySlide {
   titulo: string;

@@ -128,10 +128,6 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina }: Props
         return next;
       }
       setPlaying(false);
-      setAudioUrl((prev) => {
-        if (prev) URL.revokeObjectURL(prev);
-        return null;
-      });
       return c;
     });
   }, [slides.length, playFrom]);
@@ -139,16 +135,19 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina }: Props
   useEffect(() => {
     const el = audioRef.current;
     if (!el || !audioUrl) return;
-    el.src = audioUrl;
+    if (el.src !== audioUrl) el.src = audioUrl;
     if (playing) void el.play().catch(() => setPlaying(false));
-    return () => {};
   }, [audioUrl, playing]);
 
   useEffect(() => {
+    const cache = cacheRef.current;
     return () => {
-      if (audioUrl) URL.revokeObjectURL(audioUrl);
+      cache.forEach((url) => {
+        if (url.startsWith("blob:")) URL.revokeObjectURL(url);
+      });
+      cache.clear();
     };
-  }, [audioUrl]);
+  }, []);
 
   const slide = slides[current];
 

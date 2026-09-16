@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Play, Pause, Loader2, ChevronLeft, ChevronRight, Volume2, Captions, CaptionsOff } from "lucide-react";
 import { toast } from "sonner";
 import professoraIa from "@/assets/professora-ia.jpg";
-import { usePlatformSettings, DEFAULT_AI_AVATAR } from "@/hooks/usePlatformSettings";
+import { usePlatformSettings, DEFAULT_AI_AVATAR, resolveAiAvatar } from "@/hooks/usePlatformSettings";
 import visualCiencia from "@/assets/slide-visual-ciencia.jpg";
 import visualHumanas from "@/assets/slide-visual-humanas.jpg";
 import visualExatas from "@/assets/slide-visual-exatas.jpg";
@@ -34,7 +34,12 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina }: Props
   const [started, setStarted] = useState(false);
   const [speaking, setSpeaking] = useState(false);
   const { data: avatarSettings } = usePlatformSettings("ai_avatar");
-  const avatar = { ...DEFAULT_AI_AVATAR, ...(avatarSettings || {}) };
+  const { data: aiParams } = usePlatformSettings("ai_generation_params");
+  const avatar = resolveAiAvatar(
+    aiParams,
+    { ...DEFAULT_AI_AVATAR, ...(avatarSettings || {}) },
+    { disciplina, contentType: "apresentacao" },
+  );
   const avatarImage = avatar.image_url || professoraIa;
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const tokenRef = useRef<string>("");

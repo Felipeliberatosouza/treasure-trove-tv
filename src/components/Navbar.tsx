@@ -443,7 +443,11 @@ const Navbar = () => {
                           className="w-full text-left px-3 py-2 text-sm hover:bg-secondary transition-colors flex items-center gap-2"
                         >
                           <span className="text-xs text-muted-foreground shrink-0">
-                            {result.type === "lesson" ? "📖 Aula" : "📝 Prova"}
+                            {result.type === "lesson"
+                              ? "📖 Aula"
+                              : result.type === "exam_solution"
+                              ? "📝 Prova"
+                              : "🤖 IA"}
                           </span>
                           <span className="truncate">{result.title}</span>
                         </button>

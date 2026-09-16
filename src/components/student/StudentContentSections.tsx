@@ -69,6 +69,7 @@ const StudentContentSections = ({
   const [watchedIds, setWatchedIds] = useState<Set<string>>(new Set());
   const [ratings, setRatings] = useState<Record<string, { average: number; count: number }>>({});
   const [continueWatching, setContinueWatching] = useState<Array<Video & { _progress: number }>>([]);
+  const [aiKits, setAiKits] = useState<Video[]>([]);
 
   const studentAreas = useMemo<string[]>(
     () => ((profile as any)?.areas as string[] | undefined) ?? [],
@@ -213,6 +214,43 @@ const StudentContentSections = ({
     };
   }, [user, studentAreas, materialFilter]);
 
+  // Revisões geradas por IA vinculadas às áreas de interesse do aluno.
+  useEffect(() => {
+    if (materialFilter) {
+      setAiKits([]);
+      return;
+    }
+    let cancelled = false;
+    const run = async () => {
+      let q: any = supabase
+        .from("ai_canonical_contents")
+        .select("id, assunto, disciplina, areas, kit")
+        .eq("status", "ready")
+        .eq("visibility", "public_canonical")
+        .order("updated_at", { ascending: false })
+        .limit(20);
+      if (studentAreas.length > 0) q = q.overlaps("areas", studentAreas);
+      const { data } = await q;
+      if (cancelled) return;
+      setAiKits(
+        (data || []).map((row: any): Video => ({
+          id: row.id,
+          title: (row.kit?.titulo as string) || row.assunto,
+          description: row.disciplina || "Revisão gerada com apoio de IA",
+          thumbnail: "/placeholder.svg",
+          duration: "Aula com Professor Virtual",
+          category: (row.areas || [])[0] || row.disciplina || "",
+          instructor: "Revisão Fácil IA",
+          lessons: Array.isArray(row.kit?.slides) ? row.kit.slides.length : 0,
+        })),
+      );
+    };
+    void run();
+    return () => {
+      cancelled = true;
+    };
+  }, [studentAreas, materialFilter]);
+
   const onVideoClick = (id: string) => navigate(`/video/${id}`);
 
   if (loading) {
@@ -259,6 +297,16 @@ const StudentContentSections = ({
         watchedIds={watchedIds}
         emptyText="Nenhum conteúdo encontrado para suas áreas de interesse."
       />
+      {aiKits.length > 0 && (
+        <Section
+          title="🤖 Revisões com IA nas suas áreas"
+          videos={aiKits}
+          onVideoClick={(id) => navigate(`/conteudo-ia/${id}`)}
+          ratings={ratings}
+          watchedIds={watchedIds}
+          emptyText=""
+        />
+      )}
       <Section
         title={examsLabel}
         videos={exams}

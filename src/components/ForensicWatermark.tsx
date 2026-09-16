@@ -1,5 +1,9 @@
-import { useAuth } from "@/contexts/AuthContext";
-import { useEffect, useState } from "react";
+/**
+ * Marca d'água — sobreposta ao conteúdo protegido. Função DISSUASIVA.
+ *
+ * Renderizada em grade repetida com baixa opacidade. Não-interativa
+ * (`pointer-events-none`) e marcada com `select-none`.
+ */
 
 /**
  * Marca d'água forense — sobreposta ao conteúdo protegido com identificação

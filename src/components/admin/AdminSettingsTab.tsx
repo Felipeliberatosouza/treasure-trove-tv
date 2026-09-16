@@ -21,11 +21,9 @@ import SettingsAulaParticular from "./settings/SettingsAulaParticular";
 import SettingsCashback from "./settings/SettingsCashback";
 import SettingsFooter from "./settings/SettingsFooter";
 import SettingsAlertBox from "./settings/SettingsAlertBox";
-import SettingsAiAvatar from "./settings/SettingsAiAvatar";
 import SettingsAiGeneration from "./settings/SettingsAiGeneration";
 
 const SECTIONS_RAW = [
-  { id: "ai_avatar", label: "Avatar da IA", icon: Sparkles },
   { id: "ai_generation", label: "Parâmetros de IA", icon: Sparkles },
   { id: "alert_box", label: "Caixa de Alerta", icon: AlertTriangle },
   { id: "aula_particular", label: "Aula Particular", icon: CalendarClock },
@@ -139,7 +137,6 @@ const AdminSettingsTab = () => {
       {activeSection === "twilio" && <SettingsTwilio />}
       {activeSection === "retention" && <SettingsRetentionCoupon />}
       {activeSection === "alert_box" && <SettingsAlertBox />}
-      {activeSection === "ai_avatar" && <SettingsAiAvatar />}
       {activeSection === "ai_generation" && <SettingsAiGeneration />}
     </div>
   );

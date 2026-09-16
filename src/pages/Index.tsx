@@ -73,7 +73,7 @@ const Index = () => {
           title: kit.titulo || row.assunto,
           description: row.disciplina || "Revisão gerada com apoio de IA",
           thumbnail: aiKitCover,
-          duration: "Apresentação narrada",
+          duration: "Aula com Professor Virtual",
           category: row.disciplina || "Revisão com IA",
           instructor: "Revisão Fácil IA",
           lessons: Array.isArray(kit.slides) ? kit.slides.length : 0,

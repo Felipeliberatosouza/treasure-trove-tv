@@ -88,7 +88,7 @@ const KitResult = ({ result, onNewKit }: Props) => {
           <Link to="/revisoes">
             <Video className="mr-3 h-5 w-5 shrink-0" />
             <span>
-              <span className="block font-semibold">Ver aulas gravadas</span>
+              <span className="block font-semibold">Ver Aulas Gravadas por Professor</span>
               <span className="block text-xs text-muted-foreground">
                 Pelos melhores professores universitários do Brasil
               </span>
@@ -116,7 +116,7 @@ const KitResult = ({ result, onNewKit }: Props) => {
           <TabsTrigger value="simulado"><ListChecks className="mr-1 h-4 w-4" /> Simulado</TabsTrigger>
           <TabsTrigger value="top"><Trophy className="mr-1 h-4 w-4" /> Top Questões</TabsTrigger>
           <TabsTrigger value="colinha"><StickyNote className="mr-1 h-4 w-4" /> Colinha</TabsTrigger>
-          <TabsTrigger value="slides"><Presentation className="mr-1 h-4 w-4" /> Apresentação</TabsTrigger>
+          <TabsTrigger value="slides"><Presentation className="mr-1 h-4 w-4" /> Aula com Professor Virtual</TabsTrigger>
         </TabsList>
 
         <TabsContent value="resumo" className="space-y-4 pt-4">
@@ -206,7 +206,7 @@ const KitResult = ({ result, onNewKit }: Props) => {
               <Link to="/minhas-aulas-agendadas"><GraduationCap className="mr-2 h-4 w-4" /> Agendar aula</Link>
             </Button>
             <Button asChild variant="outline">
-              <Link to="/revisoes"><Video className="mr-2 h-4 w-4" /> Ver aulas gravadas</Link>
+              <Link to="/revisoes"><Video className="mr-2 h-4 w-4" /> Ver Aulas Gravadas por Professor</Link>
             </Button>
             <Button asChild variant="ghost">
               <Link to="/#pricing">Conhecer os planos</Link>

@@ -251,7 +251,7 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina }: Props
         <div className="flex items-center justify-between gap-2 rounded bg-background/80 p-2 backdrop-blur-sm">
           <div className="flex items-center gap-1">
           {!playing ? (
-            <Button onClick={() => playFrom(current)} disabled={loading} size="icon" aria-label="Reproduzir apresentação">
+            <Button onClick={() => playFrom(current)} disabled={loading} size="icon" className="ai-slide-btn" aria-label="Reproduzir apresentação">
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
             </Button>
           ) : (
@@ -262,6 +262,7 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina }: Props
               }}
               size="icon"
               variant="outline"
+              className="ai-slide-btn"
               aria-label="Pausar apresentação"
             >
               <Pause className="h-4 w-4" />
@@ -270,6 +271,7 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina }: Props
           <Button
             variant="ghost"
             size="sm"
+            className="ai-slide-btn"
             disabled={current === 0}
             onClick={() => {
               setPlaying(false);
@@ -282,6 +284,7 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina }: Props
           <Button
             variant="ghost"
             size="sm"
+            className="ai-slide-btn"
             disabled={current >= slides.length - 1}
             onClick={() => {
               setPlaying(false);
@@ -294,7 +297,7 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina }: Props
           <Volume2 className="ml-1 hidden h-4 w-4 text-muted-foreground sm:block" />
           </div>
           <span className="text-[10px] text-muted-foreground sm:text-xs">Slide {current + 1} de {slides.length}</span>
-          <Button variant="ghost" size="icon" onClick={() => setShowCaptions((value) => !value)} aria-label={showCaptions ? "Ocultar legendas" : "Mostrar legendas"}>
+          <Button variant="ghost" size="icon" className="ai-slide-btn" onClick={() => setShowCaptions((value) => !value)} aria-label={showCaptions ? "Ocultar legendas" : "Mostrar legendas"}>
             {showCaptions ? <Captions className="h-4 w-4" /> : <CaptionsOff className="h-4 w-4" />}
           </Button>
         </div>

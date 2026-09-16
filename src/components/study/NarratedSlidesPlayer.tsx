@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Play, Pause, Loader2, ChevronLeft, ChevronRight, Volume2, Captions, CaptionsOff } from "lucide-react";
 import { toast } from "sonner";
 import professoraIa from "@/assets/professora-ia.jpg";
-import { usePlatformSettings, DEFAULT_AI_AVATAR, resolveAiAvatar, resolveLogoForBackground } from "@/hooks/usePlatformSettings";
+import { usePlatformSettings, DEFAULT_AI_AVATAR, resolveAiAvatar, resolveLogoForBackground, aiRoleLabel } from "@/hooks/usePlatformSettings";
 import visualCiencia from "@/assets/slide-visual-ciencia.jpg";
 import visualHumanas from "@/assets/slide-visual-humanas.jpg";
 import visualExatas from "@/assets/slide-visual-exatas.jpg";
@@ -36,15 +36,22 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina }: Props
   const [speaking, setSpeaking] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+  // Duração de cada slide (estimada pela narração e corrigida quando o áudio carrega),
+  // usada para montar uma barra de tempo única para toda a apresentação.
+  const [durations, setDurations] = useState<number[]>(() =>
+    slides.map((s) => Math.max(3, (s?.narracao || "").split(/\s+/).filter(Boolean).length / 2.6)),
+  );
+  const pendingSeekRef = useRef<number | null>(null);
   const { data: avatarSettings } = usePlatformSettings("ai_avatar");
   const { data: aiParams } = usePlatformSettings("ai_generation_params");
   const { data: branding } = usePlatformSettings("branding");
   const brandLogo = resolveLogoForBackground(branding as any) || logoRevisaoFacil;
-  const avatar = resolveAiAvatar(
+  const resolved = resolveAiAvatar(
     aiParams,
     { ...DEFAULT_AI_AVATAR, ...(avatarSettings || {}) },
     { disciplina, contentType: "apresentacao" },
   );
+  const avatar = { ...resolved, role_label: aiRoleLabel(resolved.gender) };
   const avatarImage = avatar.image_url || professoraIa;
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const tokenRef = useRef<string>("");
@@ -177,7 +184,20 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina }: Props
     const text = slides[current]?.narracao || "";
     if (!audio) return;
     setCurrentTime(audio.currentTime || 0);
-    setDuration(Number.isFinite(audio.duration) ? audio.duration : 0);
+    const real = Number.isFinite(audio.duration) ? audio.duration : 0;
+    setDuration(real);
+    if (real > 0) {
+      setDurations((list) => {
+        if (Math.abs((list[current] ?? 0) - real) < 0.05) return list;
+        const next = [...list];
+        next[current] = real;
+        return next;
+      });
+      if (pendingSeekRef.current != null) {
+        audio.currentTime = Math.min(pendingSeekRef.current, real - 0.1);
+        pendingSeekRef.current = null;
+      }
+    }
     if (!text || !audio.duration) return;
     const words = text.split(/\s+/).filter(Boolean);
     const wordsPerCaption = 9;
@@ -193,6 +213,34 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina }: Props
   const isIntro = current === 0;
   const isOutro = current === slides.length - 1 && slides.length > 1;
   const avatarOnly = isIntro || isOutro;
+
+  // Barra de tempo única: soma as durações de todos os slides.
+  const slideDurations = slides.map(
+    (s, i) => durations[i] || Math.max(3, (s?.narracao || "").split(/\s+/).filter(Boolean).length / 2.6),
+  );
+  const offsets = slideDurations.reduce<number[]>((acc, d, i) => {
+    acc[i] = i === 0 ? 0 : acc[i - 1] + slideDurations[i - 1];
+    return acc;
+  }, []);
+  const totalDuration = slideDurations.reduce((sum, d) => sum + d, 0);
+  const globalTime = Math.min(offsets[current] + currentTime, totalDuration);
+
+  const seekGlobal = (value: number) => {
+    let index = 0;
+    for (let i = 0; i < slides.length; i += 1) {
+      if (value >= offsets[i]) index = i;
+    }
+    const offset = Math.max(0, value - offsets[index]);
+    if (index === current) {
+      if (audioRef.current) audioRef.current.currentTime = offset;
+      setCurrentTime(offset);
+      return;
+    }
+    pendingSeekRef.current = offset;
+    setCurrent(index);
+    setCurrentTime(offset);
+    void playFrom(index);
+  };
 
   const brandOverlay = (
     <div className="pointer-events-none absolute bottom-2 right-2 z-10 flex flex-col items-end gap-0.5 sm:bottom-3 sm:right-3">
@@ -334,33 +382,30 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina }: Props
         onLoadedMetadata={updateCaption}
         className="hidden"
       />
-      <div className="flex items-center gap-2 border-t border-border bg-background/90 px-2 pt-2">
-        <span className="w-9 shrink-0 text-right text-[10px] tabular-nums text-muted-foreground">{formatTime(currentTime)}</span>
+      <div className="flex items-center gap-2 border-t border-border bg-background/90 px-2 pb-1 pt-2">
+        <span className="w-9 shrink-0 text-right text-[10px] tabular-nums text-muted-foreground">{formatTime(globalTime)}</span>
         <div className="relative flex-1">
           <input
             type="range"
             min={0}
-            max={duration || 0}
+            max={totalDuration || 0}
             step={0.1}
-            value={Math.min(currentTime, duration || 0)}
-            onChange={(event) => {
-              const value = Number(event.target.value);
-              if (audioRef.current) audioRef.current.currentTime = value;
-              setCurrentTime(value);
-            }}
-            aria-label="Barra de progresso da narração"
+            value={Math.min(globalTime, totalDuration || 0)}
+            onChange={(event) => seekGlobal(Number(event.target.value))}
+            aria-label="Barra de progresso da apresentação"
             className="ai-slide-progress h-1.5 w-full cursor-pointer appearance-none rounded-full bg-muted accent-primary"
           />
-          <div className="pointer-events-none absolute inset-x-0 -bottom-2 flex justify-between">
+          <div className="pointer-events-none absolute inset-x-0 -bottom-2 h-1">
             {slides.map((_, index) => (
               <span
                 key={index}
-                className={`h-1 w-1 rounded-full ${index <= current ? "bg-primary" : "bg-muted-foreground/40"}`}
+                style={{ left: `${totalDuration ? (offsets[index] / totalDuration) * 100 : 0}%` }}
+                className={`absolute h-1 w-1 -translate-x-1/2 rounded-full ${index <= current ? "bg-primary" : "bg-muted-foreground/40"}`}
               />
             ))}
           </div>
         </div>
-        <span className="w-9 shrink-0 text-[10px] tabular-nums text-muted-foreground">{formatTime(duration)}</span>
+        <span className="w-9 shrink-0 text-[10px] tabular-nums text-muted-foreground">{formatTime(totalDuration)}</span>
       </div>
       <div className="flex items-center justify-between gap-2 border-t border-border bg-background/90 p-2 backdrop-blur-sm">
         <div className="flex items-center gap-1">

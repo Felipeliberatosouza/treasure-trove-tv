@@ -420,9 +420,13 @@ export interface AiAvatarSettings {
   gender: "female" | "male";
   /** Imagem do avatar. Vazio = imagem padrão da plataforma. */
   image_url: string;
-  /** Legenda curta abaixo do nome (ex.: "Professora virtual"). */
+  /** Legenda derivada do gênero — nunca editável pelo administrador. */
   role_label: string;
 }
+
+/** Legenda fixa do avatar, derivada do gênero (voz) escolhido. */
+export const aiRoleLabel = (gender: "female" | "male") =>
+  gender === "male" ? "Professor virtual" : "Professora virtual";
 
 export const DEFAULT_AI_AVATAR: AiAvatarSettings = {
   name: "Professora Ana",
@@ -505,7 +509,7 @@ export function resolveAiAvatar(
     name: chosen.name,
     gender: chosen.gender,
     image_url: chosen.image_url,
-    role_label: chosen.role_label,
+    role_label: aiRoleLabel(chosen.gender),
   };
 }
 

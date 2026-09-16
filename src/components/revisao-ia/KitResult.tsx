@@ -82,6 +82,30 @@ const KitResult = ({ result, onNewKit }: Props) => {
         <NarratedSlidesPlayer topico={kit.assunto} disciplina={kit.disciplina} slides={kit.slides ?? []} canonicalId={result.canonical_id} />
       </div>
 
+      {/* Destaque junto à apresentação: aulas gravadas e aula particular */}
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Button asChild size="lg" variant="outline" className="h-auto justify-start whitespace-normal px-4 py-3 text-left">
+          <Link to="/revisoes">
+            <Video className="mr-3 h-5 w-5 shrink-0" />
+            <span>
+              <span className="block font-semibold">Ver aulas gravadas</span>
+              <span className="block text-xs text-muted-foreground">
+                Pelos melhores professores universitários do Brasil
+              </span>
+            </span>
+          </Link>
+        </Button>
+        <Button asChild size="lg" className="h-auto justify-start whitespace-normal px-4 py-3 text-left">
+          <Link to="/minhas-aulas-agendadas">
+            <GraduationCap className="mr-3 h-5 w-5 shrink-0" />
+            <span>
+              <span className="block font-semibold">Agendar uma aula</span>
+              <span className="block text-xs opacity-90">Com um professor especialista no assunto</span>
+            </span>
+          </Link>
+        </Button>
+      </div>
+
       <div className="flex flex-wrap items-center justify-between gap-2">
         <VideoShareButtons videoTitle={kit.titulo || kit.assunto} videoUrl={window.location.href} />
       </div>

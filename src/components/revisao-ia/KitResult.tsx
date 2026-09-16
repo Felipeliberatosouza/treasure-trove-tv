@@ -84,7 +84,6 @@ const KitResult = ({ result, onNewKit }: Props) => {
 
       <div className="flex flex-wrap items-center justify-between gap-2">
         <VideoShareButtons videoTitle={kit.titulo || kit.assunto} videoUrl={window.location.href} />
-        <Badge variant="outline">Áudio, imagens e legendas inclusos</Badge>
       </div>
 
       <Tabs defaultValue="resumo">

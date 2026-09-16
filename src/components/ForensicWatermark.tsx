@@ -4,15 +4,6 @@
  * Renderizada em grade repetida com baixa opacidade. Não-interativa
  * (`pointer-events-none`) e marcada com `select-none`.
  */
-
-/**
- * Marca d'água forense — sobreposta ao conteúdo protegido com identificação
- * do usuário (e-mail + id curto + timestamp). Função puramente DISSUASIVA:
- * se o conteúdo vazar via print/celular, é possível rastrear a origem.
- *
- * Renderizada em grade repetida com baixa opacidade. Não-interativa
- * (`pointer-events-none`) e marcada com `select-none`.
- */
 interface Props {
   /** Variante visual: por cima de vídeo (claro) ou de texto (escuro). */
   variant?: "video" | "document";
@@ -22,15 +13,6 @@ interface Props {
 }
 
 const ForensicWatermark = ({ variant = "video", cols = 3, rows = 4 }: Props) => {
-  const { user } = useAuth();
-  const [now, setNow] = useState(() => new Date());
-
-  useEffect(() => {
-    // Atualiza a cada minuto: aumenta a granularidade forense sem custo.
-    const t = setInterval(() => setNow(new Date()), 60_000);
-    return () => clearInterval(t);
-  }, []);
-
   const label = "Revisão Fácil. Todos os direitos reservados. revisaofacil.com";
 
   const cells = Array.from({ length: cols * rows }, (_, i) => i);

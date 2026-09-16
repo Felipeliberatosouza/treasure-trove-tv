@@ -47,6 +47,8 @@ export interface KitResponse {
   request_id?: string;
   canonical_id?: string | null;
   kit: RevisionKit;
+  /** Áreas de curso vinculadas ao material (classificação automática/admin). */
+  areas?: string[];
   balance?: number | null;
 }
 
@@ -96,13 +98,18 @@ export async function fetchKitStatus(): Promise<KitStatus> {
 export async function fetchKitById(canonicalId: string): Promise<KitResponse | null> {
   const { data, error } = await supabase
     .from("ai_canonical_contents")
-    .select("id, kit")
+    .select("id, kit, areas")
     .eq("id", canonicalId)
     .eq("status", "ready")
     .eq("visibility", "public_canonical")
     .maybeSingle();
   if (error || !data) return null;
-  return { source: "cache", canonical_id: data.id, kit: data.kit as unknown as RevisionKit };
+  return {
+    source: "cache",
+    canonical_id: data.id,
+    areas: ((data as { areas?: string[] | null }).areas ?? []) as string[],
+    kit: data.kit as unknown as RevisionKit,
+  };
 }
 
 export type KitError = { kind: "signup_required" | "paywall" | "error"; message: string };

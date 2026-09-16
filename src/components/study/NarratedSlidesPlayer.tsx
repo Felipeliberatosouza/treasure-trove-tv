@@ -166,13 +166,31 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina }: Props
     return <div className="flex aspect-video items-center justify-center bg-muted text-sm text-muted-foreground">Apresentação indisponível.</div>;
   }
 
+  const isIntro = current === 0;
+  const isOutro = current === slides.length - 1 && slides.length > 1;
+  const avatarOnly = isIntro || isOutro;
+
+  const brandOverlay = (
+    <div className="pointer-events-none absolute bottom-2 right-2 z-10 flex flex-col items-end gap-0.5 sm:bottom-3 sm:right-3">
+      <img src={logoRevisaoFacil} alt="Revisão Fácil" className="h-5 w-auto opacity-90 sm:h-7" />
+      <span className="text-[8px] text-muted-foreground sm:text-[10px]">revisaofacil.com.br</span>
+    </div>
+  );
+
+  const legalNotice = (
+    <p className="border-t border-border bg-background/90 px-2 py-1 text-center text-[9px] text-muted-foreground sm:text-[10px]">
+      Conteúdo de responsabilidade do professor, de acordo com a Lei 12.965/2014.
+    </p>
+  );
+
   // Capa da apresentação (equivalente à capa do vídeo do professor)
   if (!started) {
     return (
       <div className="ai-slide-player relative aspect-[4/5] w-full overflow-hidden bg-muted sm:aspect-video">
         <img src={coverImage} alt={`Capa da apresentação sobre ${topico}`} className="absolute inset-0 h-full w-full object-cover" width={1536} height={864} />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-background/30" />
-        <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-3 p-4 text-center sm:gap-4 sm:p-6">
+        {brandOverlay}
+        <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-2 p-4 text-center sm:gap-3 sm:p-6">
           <img
             src={avatarImage}
             alt={`${avatar.name}, ${avatar.role_label.toLowerCase()} da Revisão Fácil`}
@@ -180,7 +198,10 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina }: Props
             width={1024}
             height={1024}
           />
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-primary sm:text-xs">Revisão Fácil IA</p>
+          <div>
+            <p className="text-xs font-semibold sm:text-sm">{avatar.name}</p>
+            <p className="text-[10px] text-muted-foreground sm:text-xs">{avatar.role_label}</p>
+          </div>
           <h2 className="max-w-3xl font-display text-lg font-bold leading-tight sm:text-4xl">{topico}</h2>
           {disciplina && <p className="text-xs text-muted-foreground sm:text-sm">{disciplina}</p>}
           <p className="text-[10px] text-muted-foreground sm:text-xs">Apresentação narrada em {slides.length} slides</p>

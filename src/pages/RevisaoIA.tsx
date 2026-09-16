@@ -46,6 +46,8 @@ const RevisaoIA = () => {
     return n.length > 14 ? `${n.slice(0, 14)}…` : n;
   }, [profile?.name]);
 
+  const autoStartedRef = useRef(false);
+
   const refreshStatus = async () => setStatus(await fetchKitStatus());
 
   useEffect(() => {
@@ -88,6 +90,15 @@ const RevisaoIA = () => {
     }
     refreshStatus();
   };
+
+  useEffect(() => {
+    if (autoStartedRef.current) return;
+    if (searchParams.get("auto") !== "1") return;
+    if (assunto.trim().length < 3) return;
+    autoStartedRef.current = true;
+    void handleSubmit();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, assunto]);
 
   const saldoLabel = status?.authenticated
     ? `${status.balance} ${status.balance === 1 ? "crédito de IA" : "créditos de IA"}`

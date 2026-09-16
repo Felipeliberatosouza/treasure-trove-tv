@@ -214,6 +214,34 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina }: Props
   const isOutro = current === slides.length - 1 && slides.length > 1;
   const avatarOnly = isIntro || isOutro;
 
+  // Barra de tempo única: soma as durações de todos os slides.
+  const slideDurations = slides.map(
+    (s, i) => durations[i] || Math.max(3, (s?.narracao || "").split(/\s+/).filter(Boolean).length / 2.6),
+  );
+  const offsets = slideDurations.reduce<number[]>((acc, d, i) => {
+    acc[i] = i === 0 ? 0 : acc[i - 1] + slideDurations[i - 1];
+    return acc;
+  }, []);
+  const totalDuration = slideDurations.reduce((sum, d) => sum + d, 0);
+  const globalTime = Math.min(offsets[current] + currentTime, totalDuration);
+
+  const seekGlobal = (value: number) => {
+    let index = 0;
+    for (let i = 0; i < slides.length; i += 1) {
+      if (value >= offsets[i]) index = i;
+    }
+    const offset = Math.max(0, value - offsets[index]);
+    if (index === current) {
+      if (audioRef.current) audioRef.current.currentTime = offset;
+      setCurrentTime(offset);
+      return;
+    }
+    pendingSeekRef.current = offset;
+    setCurrent(index);
+    setCurrentTime(offset);
+    void playFrom(index);
+  };
+
   const brandOverlay = (
     <div className="pointer-events-none absolute bottom-2 right-2 z-10 flex flex-col items-end gap-0.5 sm:bottom-3 sm:right-3">
       <img src={brandLogo} alt="Revisão Fácil" className="h-5 w-auto opacity-90 sm:h-7" />

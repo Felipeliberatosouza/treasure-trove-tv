@@ -228,7 +228,7 @@ const Navbar = () => {
     const timeout = setTimeout(async () => {
       setSearching(true);
       const term = `%${searchQuery.trim()}%`;
-      const [lessonsRes, examsRes] = await Promise.all([
+      const [lessonsRes, examsRes, aiRes] = await Promise.all([
         supabase
           .from("lessons")
           .select("id, title")
@@ -243,10 +243,22 @@ const Navbar = () => {
           .eq("admin_approved", true)
           .ilike("title", term)
           .limit(5),
+        supabase
+          .from("ai_canonical_contents")
+          .select("id, assunto, disciplina, kit")
+          .eq("status", "ready")
+          .eq("visibility", "public_canonical")
+          .or(`assunto.ilike.${term},disciplina.ilike.${term}`)
+          .limit(5),
       ]);
       const results: SearchResult[] = [
         ...(lessonsRes.data || []).map((l) => ({ id: l.id, title: l.title, type: "lesson" as const })),
         ...(examsRes.data || []).map((e) => ({ id: e.id, title: e.title, type: "exam_solution" as const })),
+        ...((aiRes.data as any[]) || []).map((k) => ({
+          id: k.id,
+          title: (k.kit as any)?.titulo || k.assunto,
+          type: "ai_kit" as const,
+        })),
       ];
       setSearchResults(results);
       setSearching(false);
@@ -255,7 +267,7 @@ const Navbar = () => {
   }, [searchQuery]);
 
   const handleResultClick = (result: SearchResult) => {
-    navigate(`/video/${result.id}`);
+    navigate(result.type === "ai_kit" ? `/conteudo-ia/${result.id}` : `/video/${result.id}`);
     setSearchOpen(false);
     setSearchQuery("");
     setSearchResults([]);

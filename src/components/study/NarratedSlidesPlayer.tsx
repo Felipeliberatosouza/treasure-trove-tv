@@ -362,6 +362,7 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina }: Props
           {showCaptions ? <Captions className="h-4 w-4" /> : <CaptionsOff className="h-4 w-4" />}
         </Button>
       </div>
+      {legalNotice}
     </div>
   );
 };

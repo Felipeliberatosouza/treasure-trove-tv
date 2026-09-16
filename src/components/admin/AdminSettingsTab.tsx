@@ -140,6 +140,7 @@ const AdminSettingsTab = () => {
       {activeSection === "retention" && <SettingsRetentionCoupon />}
       {activeSection === "alert_box" && <SettingsAlertBox />}
       {activeSection === "ai_avatar" && <SettingsAiAvatar />}
+      {activeSection === "ai_generation" && <SettingsAiGeneration />}
     </div>
   );
 };

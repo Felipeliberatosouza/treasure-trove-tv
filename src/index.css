@@ -267,11 +267,27 @@
     75% { transform: translateY(-1px) scale(1.01); }
   }
   .avatar-talking {
-    animation: avatar-talk 0.9s ease-in-out infinite;
-    box-shadow: 0 0 0 4px hsl(var(--primary) / 0.25);
+    animation: avatar-talk 0.75s ease-in-out infinite;
+    box-shadow: 0 0 0 5px hsl(var(--primary) / 0.3);
   }
+  @keyframes avatar-voice {
+    0%, 100% { transform: scaleY(0.35); }
+    50% { transform: scaleY(1); }
+  }
+  .avatar-voice-bar {
+    display: block;
+    width: 3px;
+    height: 12px;
+    border-radius: 2px;
+    background: hsl(var(--primary));
+    transform-origin: bottom;
+    animation: avatar-voice 0.6s ease-in-out infinite;
+  }
+  .avatar-voice-bar:nth-child(2) { animation-delay: 0.15s; }
+  .avatar-voice-bar:nth-child(3) { animation-delay: 0.3s; }
   @media (prefers-reduced-motion: reduce) {
     .avatar-talking { animation: none; }
+    .avatar-voice-bar { animation: none; }
   }
 
 

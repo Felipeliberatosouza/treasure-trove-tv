@@ -188,7 +188,7 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina }: Props
   }
 
   return (
-    <div className="relative aspect-video w-full overflow-hidden bg-muted">
+    <div className="ai-slide-player relative aspect-video w-full overflow-hidden bg-muted">
       <img src={slideImage} alt="Ilustração didática da apresentação" className="absolute inset-0 h-full w-full object-cover" width={1536} height={864} />
       <div className="absolute inset-0 bg-gradient-to-r from-background via-background/80 to-background/10" />
       <div className="absolute inset-0 flex flex-col justify-between p-4 sm:p-7 md:p-10">
@@ -210,7 +210,7 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina }: Props
             )}
           </div>
           <div className="shrink-0 text-center">
-            <div className="relative inline-block">
+            <div className={`relative inline-block ${speaking ? "avatar-speaking-stage" : ""}`}>
               <img
                 src={avatarImage}
                 alt={`${avatar.name}, ${avatar.role_label.toLowerCase()} da Revisão Fácil`}

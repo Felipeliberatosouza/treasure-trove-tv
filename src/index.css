@@ -261,14 +261,31 @@
 
   /* Avatar da professora virtual em movimento durante a narração */
   @keyframes avatar-talk {
-    0%, 100% { transform: translateY(0) scale(1); }
-    25% { transform: translateY(-2px) scale(1.02); }
-    50% { transform: translateY(0) scale(1.035); }
-    75% { transform: translateY(-1px) scale(1.01); }
+    0%, 100% { transform: translateY(0) rotate(0deg) scale(1); }
+    20% { transform: translateY(-7px) rotate(-1.5deg) scale(1.035); }
+    45% { transform: translateY(1px) rotate(1deg) scale(1.06); }
+    70% { transform: translateY(-5px) rotate(-0.75deg) scale(1.025); }
   }
   .avatar-talking {
-    animation: avatar-talk 0.75s ease-in-out infinite;
-    box-shadow: 0 0 0 5px hsl(var(--primary) / 0.3);
+    animation: avatar-talk 0.9s ease-in-out infinite;
+    box-shadow: 0 0 0 6px hsl(var(--primary) / 0.38), 0 10px 24px hsl(var(--background) / 0.35);
+    transform-origin: center bottom;
+    will-change: transform;
+  }
+  .avatar-speaking-stage::before,
+  .avatar-speaking-stage::after {
+    content: '';
+    position: absolute;
+    inset: -8px;
+    border: 2px solid hsl(var(--primary) / 0.55);
+    border-radius: 9999px;
+    animation: avatar-speaking-ring 1.2s ease-out infinite;
+    pointer-events: none;
+  }
+  .avatar-speaking-stage::after { animation-delay: 0.4s; }
+  @keyframes avatar-speaking-ring {
+    0% { opacity: 0.8; transform: scale(0.9); }
+    100% { opacity: 0; transform: scale(1.18); }
   }
   @keyframes avatar-voice {
     0%, 100% { transform: scaleY(0.35); }
@@ -287,11 +304,10 @@
   .avatar-voice-bar:nth-child(3) { animation-delay: 0.3s; }
   @media (prefers-reduced-motion: reduce) {
     .avatar-talking { animation: none; }
+    .avatar-speaking-stage::before,
+    .avatar-speaking-stage::after { animation: none; opacity: 0; }
     .avatar-voice-bar { animation: none; }
   }
-
-
-
 
   /* Dark theme surfaces → light ink */
   input.bg-secondary,

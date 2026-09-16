@@ -18,7 +18,7 @@ import { useStudentAlerts } from "@/hooks/useStudentAlerts";
 interface SearchResult {
   id: string;
   title: string;
-  type: "lesson" | "exam_solution";
+  type: "lesson" | "exam_solution" | "ai_kit";
 }
 
 type AlertKey =

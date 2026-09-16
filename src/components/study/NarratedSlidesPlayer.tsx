@@ -34,7 +34,12 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina }: Props
   const [started, setStarted] = useState(false);
   const [speaking, setSpeaking] = useState(false);
   const { data: avatarSettings } = usePlatformSettings("ai_avatar");
-  const avatar = { ...DEFAULT_AI_AVATAR, ...(avatarSettings || {}) };
+  const { data: aiParams } = usePlatformSettings("ai_generation_params");
+  const avatar = resolveAiAvatar(
+    aiParams,
+    { ...DEFAULT_AI_AVATAR, ...(avatarSettings || {}) },
+    { disciplina, contentType: "apresentacao" },
+  );
   const avatarImage = avatar.image_url || professoraIa;
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const tokenRef = useRef<string>("");

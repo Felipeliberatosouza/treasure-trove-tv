@@ -163,10 +163,10 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina }: Props
   // Capa da apresentação (equivalente à capa do vídeo do professor)
   if (!started) {
     return (
-      <div className="relative aspect-video w-full overflow-hidden bg-muted">
+      <div className="ai-slide-player relative aspect-video w-full overflow-hidden bg-muted">
         <img src={coverImage} alt={`Capa da apresentação sobre ${topico}`} className="absolute inset-0 h-full w-full object-cover" width={1536} height={864} />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-background/30" />
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 p-6 text-center">
+        <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-4 p-6 text-center">
           <img
             src={avatarImage}
             alt={`${avatar.name}, ${avatar.role_label.toLowerCase()} da Revisão Fácil`}
@@ -178,7 +178,7 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina }: Props
           <h2 className="max-w-3xl font-display text-2xl font-bold leading-tight sm:text-4xl">{topico}</h2>
           {disciplina && <p className="text-sm text-muted-foreground">{disciplina}</p>}
           <p className="text-xs text-muted-foreground">Apresentação narrada em {slides.length} slides</p>
-          <Button size="lg" onClick={() => playFrom(0)} disabled={loading} className="rounded-full">
+          <Button size="lg" onClick={() => playFrom(0)} disabled={loading} className="ai-slide-btn pointer-events-auto rounded-full">
             {loading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Play className="mr-2 h-5 w-5" />}
             Assistir apresentação
           </Button>
@@ -192,7 +192,7 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina }: Props
       <img src={slideImage} alt="Ilustração didática da apresentação" className="absolute inset-0 h-full w-full object-cover" width={1536} height={864} />
       <div className="absolute inset-0 bg-gradient-to-r from-background via-background/80 to-background/10" />
       <div className="absolute inset-0 flex flex-col justify-between p-4 sm:p-7 md:p-10">
-        <div className="flex items-start justify-between gap-4">
+        <div className="pointer-events-none flex items-start justify-between gap-4">
           <div className="max-w-[76%]">
             <p className="mb-2 text-xs font-semibold uppercase text-primary">Revisão Fácil IA</p>
             <h2 className="font-display text-xl font-bold leading-tight sm:text-3xl md:text-4xl">
@@ -232,7 +232,7 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina }: Props
         </div>
 
         {showCaptions && caption && (
-          <div className="mx-auto max-w-2xl rounded bg-background/90 px-3 py-1.5 text-center text-xs shadow-lg sm:text-sm">
+          <div className="pointer-events-none mx-auto max-w-2xl rounded bg-background/90 px-3 py-1.5 text-center text-xs shadow-lg sm:text-sm">
             {caption}
           </div>
         )}
@@ -251,7 +251,7 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina }: Props
         <div className="flex items-center justify-between gap-2 rounded bg-background/80 p-2 backdrop-blur-sm">
           <div className="flex items-center gap-1">
           {!playing ? (
-            <Button onClick={() => playFrom(current)} disabled={loading} size="icon" aria-label="Reproduzir apresentação">
+            <Button onClick={() => playFrom(current)} disabled={loading} size="icon" className="ai-slide-btn" aria-label="Reproduzir apresentação">
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
             </Button>
           ) : (
@@ -262,6 +262,7 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina }: Props
               }}
               size="icon"
               variant="outline"
+              className="ai-slide-btn"
               aria-label="Pausar apresentação"
             >
               <Pause className="h-4 w-4" />
@@ -270,6 +271,7 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina }: Props
           <Button
             variant="ghost"
             size="sm"
+            className="ai-slide-btn"
             disabled={current === 0}
             onClick={() => {
               setPlaying(false);
@@ -282,6 +284,7 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina }: Props
           <Button
             variant="ghost"
             size="sm"
+            className="ai-slide-btn"
             disabled={current >= slides.length - 1}
             onClick={() => {
               setPlaying(false);
@@ -294,7 +297,7 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina }: Props
           <Volume2 className="ml-1 hidden h-4 w-4 text-muted-foreground sm:block" />
           </div>
           <span className="text-[10px] text-muted-foreground sm:text-xs">Slide {current + 1} de {slides.length}</span>
-          <Button variant="ghost" size="icon" onClick={() => setShowCaptions((value) => !value)} aria-label={showCaptions ? "Ocultar legendas" : "Mostrar legendas"}>
+          <Button variant="ghost" size="icon" className="ai-slide-btn" onClick={() => setShowCaptions((value) => !value)} aria-label={showCaptions ? "Ocultar legendas" : "Mostrar legendas"}>
             {showCaptions ? <Captions className="h-4 w-4" /> : <CaptionsOff className="h-4 w-4" />}
           </Button>
         </div>

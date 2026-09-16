@@ -331,8 +331,37 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina }: Props
         onPlay={() => setSpeaking(true)}
         onPause={() => setSpeaking(false)}
         onTimeUpdate={updateCaption}
+        onLoadedMetadata={updateCaption}
         className="hidden"
       />
+      <div className="flex items-center gap-2 border-t border-border bg-background/90 px-2 pt-2">
+        <span className="w-9 shrink-0 text-right text-[10px] tabular-nums text-muted-foreground">{formatTime(currentTime)}</span>
+        <div className="relative flex-1">
+          <input
+            type="range"
+            min={0}
+            max={duration || 0}
+            step={0.1}
+            value={Math.min(currentTime, duration || 0)}
+            onChange={(event) => {
+              const value = Number(event.target.value);
+              if (audioRef.current) audioRef.current.currentTime = value;
+              setCurrentTime(value);
+            }}
+            aria-label="Barra de progresso da narração"
+            className="ai-slide-progress h-1.5 w-full cursor-pointer appearance-none rounded-full bg-muted accent-primary"
+          />
+          <div className="pointer-events-none absolute inset-x-0 -bottom-2 flex justify-between">
+            {slides.map((_, index) => (
+              <span
+                key={index}
+                className={`h-1 w-1 rounded-full ${index <= current ? "bg-primary" : "bg-muted-foreground/40"}`}
+              />
+            ))}
+          </div>
+        </div>
+        <span className="w-9 shrink-0 text-[10px] tabular-nums text-muted-foreground">{formatTime(duration)}</span>
+      </div>
       <div className="flex items-center justify-between gap-2 border-t border-border bg-background/90 p-2 backdrop-blur-sm">
         <div className="flex items-center gap-1">
           {!playing ? (

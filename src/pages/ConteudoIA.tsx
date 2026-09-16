@@ -34,11 +34,11 @@ const ConteudoIA = () => {
               <Loader2 className="h-5 w-5 animate-spin" /> Abrindo sua revisão…
             </div>
           ) : result ? (
-            <KitResult result={result} onNewKit={() => navigate("/revisao-ia")} />
+            <KitResult result={result} onNewKit={() => navigate("/")} />
           ) : (
             <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4 text-center">
               <h1 className="font-display text-2xl font-bold">Revisão não encontrada</h1>
-              <Button onClick={() => navigate("/revisao-ia")}>Criar nova revisão</Button>
+              <Button onClick={() => navigate("/")}>Criar nova revisão</Button>
             </div>
           )}
         </div>

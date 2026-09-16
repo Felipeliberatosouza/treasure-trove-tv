@@ -83,14 +83,21 @@ Deno.serve(async (req) => {
     const apiKey = Deno.env.get("LOVABLE_API_KEY");
     if (!apiKey) throw new Error("LOVABLE_API_KEY não configurada");
 
+    // Voz coerente com o avatar: feminino por padrão (professora virtual).
+    const avatarGender = body.avatar_gender === "male" ? "male" : "female";
+    const voice = avatarGender === "male" ? "onyx" : "shimmer";
+    const instructions = avatarGender === "male"
+      ? "Fale em português brasileiro, com voz masculina, como um professor universitário acolhedor e didático, com ritmo claro e pausas naturais."
+      : "Fale em português brasileiro, com voz feminina, como uma professora universitária acolhedora e didática, com ritmo claro e pausas naturais.";
+
     const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/audio/speech", {
       method: "POST",
       headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         model: "openai/gpt-4o-mini-tts",
         input: texto,
-        voice: "alloy",
-        instructions: "Fale em português brasileiro, como uma professora universitária acolhedora e didática, com ritmo claro e pausas naturais.",
+        voice,
+        instructions,
         response_format: "mp3",
         stream_format: "audio",
       }),
@@ -127,7 +134,7 @@ Deno.serve(async (req) => {
         artifact_type: "audio",
         status: "ready",
         storage_path: storagePath,
-        metadata: { voice: "alloy", model: "openai/gpt-4o-mini-tts" },
+        metadata: { voice, model: "openai/gpt-4o-mini-tts" },
       }, { onConflict: "canonical_id,slide_index,artifact_type" });
       const { data: signed } = await admin.storage.from("ai-revision-media").createSignedUrl(storagePath, 3600);
       return new Response(JSON.stringify({ audio_url: signed?.signedUrl, cached: false }), {

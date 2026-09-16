@@ -11,8 +11,8 @@ const corsHeaders = {
 };
 
 const GEN_MODEL = "google/gemini-3.7-flash";
-const TEMPLATE_VERSION = "v3";
-const PROMPT_VERSION = "v3";
+const TEMPLATE_VERSION = "v4";
+const PROMPT_VERSION = "v4";
 const SIGNUP_CREDITS = 2;
 const ANON_FREE_USES = 1;
 

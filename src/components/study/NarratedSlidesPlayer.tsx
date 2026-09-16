@@ -48,6 +48,7 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina }: Props
   const avatarImage = avatar.image_url || professoraIa;
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const tokenRef = useRef<string>("");
+  const cacheRef = useRef<Map<number, string>>(new Map());
 
   const getToken = useCallback(async () => {
     const { supabase } = await import("@/integrations/supabase/client");
@@ -55,11 +56,12 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina }: Props
     return data.session?.access_token ?? "";
   }, []);
 
-  const loadSlideAudio = useCallback(
-    async (index: number) => {
+  const fetchSlideAudio = useCallback(
+    async (index: number, silent = false): Promise<string | null> => {
       const slide = slides[index];
       if (!slide?.narracao) return null;
-      setLoading(true);
+      const cached = cacheRef.current.get(index);
+      if (cached) return cached;
       try {
         if (!tokenRef.current) tokenRef.current = await getToken();
         const resp = await fetch(ttsUrl, {
@@ -76,37 +78,46 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina }: Props
           const err = await resp.json().catch(() => ({}));
           throw new Error(err?.error || `Falha (${resp.status})`);
         }
+        let url: string | null = null;
         if (canonicalId) {
           const payload = await resp.json();
-          return typeof payload.audio_url === "string" ? payload.audio_url : null;
+          url = typeof payload.audio_url === "string" ? payload.audio_url : null;
+        } else {
+          url = URL.createObjectURL(await resp.blob());
         }
-        const blob = await resp.blob();
-        return URL.createObjectURL(blob);
+        if (url) cacheRef.current.set(index, url);
+        return url;
       } catch (e: any) {
-        toast.error(e?.message || "Falha ao gerar narração");
+        if (!silent) toast.error(e?.message || "Falha ao gerar narração");
         return null;
-      } finally {
-        setLoading(false);
       }
     },
     [slides, getToken, canonicalId, avatar.gender],
   );
 
+  const prefetch = useCallback(
+    (index: number) => {
+      if (index < slides.length && !cacheRef.current.has(index)) void fetchSlideAudio(index, true);
+    },
+    [fetchSlideAudio, slides.length],
+  );
+
   const playFrom = useCallback(
     async (index: number) => {
-      const url = await loadSlideAudio(index);
+      const cached = cacheRef.current.get(index);
+      if (!cached) setLoading(true);
+      const url = cached ?? (await fetchSlideAudio(index));
+      setLoading(false);
       if (!url) {
         setPlaying(false);
         return;
       }
-      setAudioUrl((prev) => {
-        if (prev) URL.revokeObjectURL(prev);
-        return url;
-      });
+      setAudioUrl(url);
       setPlaying(true);
       setStarted(true);
+      prefetch(index + 1);
     },
-    [loadSlideAudio],
+    [fetchSlideAudio, prefetch],
   );
 
   const handleEnded = useCallback(() => {

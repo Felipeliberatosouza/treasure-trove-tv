@@ -248,7 +248,7 @@ const Navbar = () => {
           .select("id, assunto, disciplina, kit")
           .eq("status", "ready")
           .eq("visibility", "public_canonical")
-          .or(`assunto.ilike.${term},disciplina.ilike.${term}`)
+          .or(`assunto.ilike.${term},disciplina.ilike.${term},kit->>titulo.ilike.${term}`)
           .limit(5),
       ]);
       const results: SearchResult[] = [

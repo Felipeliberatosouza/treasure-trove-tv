@@ -361,10 +361,41 @@ Deno.serve(async (req) => {
     if (!apiKey) return json({ error: "Serviço de IA indisponível." }, 500);
 
     try {
+      // Áreas de curso cadastradas no painel administrativo — base da classificação automática.
+      const { data: areaRows } = await admin
+        .from("course_areas")
+        .select("name")
+        .eq("active", true)
+        .order("sort_order", { ascending: true });
+      const areaNames: string[] = (areaRows ?? []).map((a: { name: string }) => a.name).filter(Boolean);
+
       const kit = await generateKit(apiKey, {
         assunto, disciplina: disciplina || undefined, curso: curso || undefined,
-        instituicao: instituicao || undefined, nivel,
+        instituicao: instituicao || undefined, nivel, areasDisponiveis: areaNames,
       });
+
+      // Normaliza o que a IA devolveu contra os nomes reais das áreas cadastradas.
+      const suggested: string[] = Array.isArray(kit.areas) ? kit.areas.map((a: unknown) => String(a)) : [];
+      const matched = new Set<string>();
+      for (const s of suggested) {
+        const ns = normalize(s);
+        const hit = areaNames.find((n) => {
+          const nn = normalize(n);
+          return nn === ns || nn.includes(ns) || ns.includes(nn);
+        });
+        if (hit) matched.add(hit);
+      }
+      // Reforço: cruza também disciplina e curso informados pelo aluno.
+      for (const extra of [disciplina, curso]) {
+        if (!extra) continue;
+        const ne = normalize(extra);
+        const hit = areaNames.find((n) => {
+          const nn = normalize(n);
+          return nn === ne || nn.includes(ne) || ne.includes(nn);
+        });
+        if (hit) matched.add(hit);
+      }
+      const areas = Array.from(matched).slice(0, 5);
 
       const { data: saved } = await admin
         .from("ai_canonical_contents")
@@ -372,6 +403,7 @@ Deno.serve(async (req) => {
           cache_key: cacheKey,
           disciplina,
           assunto,
+          areas,
           subtopicos: Array.isArray(kit.subtopicos) ? kit.subtopicos.slice(0, 20) : null,
           nivel,
           model: GEN_MODEL,

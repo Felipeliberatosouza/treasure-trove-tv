@@ -509,7 +509,7 @@ export function resolveAiAvatar(
     name: chosen.name,
     gender: chosen.gender,
     image_url: chosen.image_url,
-    role_label: chosen.role_label,
+    role_label: aiRoleLabel(chosen.gender),
   };
 }
 

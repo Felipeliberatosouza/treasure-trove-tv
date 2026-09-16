@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -29,7 +29,7 @@ import MinhasColinhas from "./pages/MinhasColinhas.tsx";
 import MinhasDuvidas from "./pages/MinhasDuvidas.tsx";
 import MinhasAulasAgendadas from "./pages/MinhasAulasAgendadas.tsx";
 import EstudarIA from "./pages/EstudarIA.tsx";
-import RevisaoIA from "./pages/RevisaoIA.tsx";
+
 import ConteudoIA from "./pages/ConteudoIA.tsx";
 import ForgotPassword from "./pages/ForgotPassword.tsx";
 import ResetPassword from "./pages/ResetPassword.tsx";
@@ -97,8 +97,8 @@ const App = () => (
             <Route path="/minhas-colinhas" element={<MinhasColinhas />} />
             <Route path="/minhas-duvidas" element={<MinhasDuvidas />} />
             <Route path="/minhas-aulas-agendadas" element={<MinhasAulasAgendadas />} />
-            <Route path="/revisao-ia" element={<RevisaoIA />} />
-            <Route path="/ia" element={<RevisaoIA />} />
+            <Route path="/revisao-ia" element={<Navigate to="/" replace />} />
+            <Route path="/ia" element={<Navigate to="/" replace />} />
             <Route path="/conteudo-ia/:id" element={<ConteudoIA />} />
             <Route path="/estudar-ia" element={<EstudarIA />} />
             <Route path="/video/:id" element={<VideoPage />} />

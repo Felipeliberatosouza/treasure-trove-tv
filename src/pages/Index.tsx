@@ -41,7 +41,7 @@ const Index = () => {
   const [teacherLessons, setTeacherLessons] = useState<Video[]>([]);
   const [teacherExams, setTeacherExams] = useState<Video[]>([]);
   const [loadingTeacherContent, setLoadingTeacherContent] = useState(false);
-  const [revisionTopic, setRevisionTopic] = useState("");
+  
 
   const isTeacher = role === "teacher";
 

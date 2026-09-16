@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { AnimatePresence, motion } from "framer-motion";
+import HomeKitGenerator from "@/components/revisao-ia/HomeKitGenerator";
 import type { Video } from "@/data/courses";
 
 interface SearchResult {
@@ -261,73 +262,7 @@ const Index = () => {
       <Navbar />
       {!isTeacher && (
         <section className="flex items-center border-b border-border bg-background px-4 pb-12 pt-28 md:px-10 md:pb-16 md:pt-32" aria-labelledby="revision-ai-title">
-          <div className="mx-auto w-full max-w-4xl text-center">
-            <div className="mb-8 inline-flex items-center gap-2 rounded-full bg-muted px-4 py-2 text-sm text-muted-foreground">
-              <Sparkles className="h-4 w-4 text-primary" />
-              Seu Kit de Revisão completo em poucos minutos
-            </div>
-            <h1 id="revision-ai-title" className="font-display text-3xl font-bold md:text-5xl">
-              {profile?.name
-                ? `Qual o assunto da sua próxima prova, ${profile.name.trim().split(" ")[0]}?`
-                : "Qual o assunto da sua próxima prova?"}
-            </h1>
-            <form
-              className="mx-auto mt-10 max-w-3xl"
-              onSubmit={(event) => {
-                event.preventDefault();
-                if (revisionTopic.trim().length < 3) return;
-                navigate(`/revisao-ia?assunto=${encodeURIComponent(revisionTopic.trim())}&auto=1`);
-              }}
-            >
-              <div className="rounded-2xl border border-border bg-white p-3 text-left text-foreground shadow-lg transition-shadow focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 focus-within:ring-offset-background md:p-4">
-                <Textarea
-                  value={revisionTopic}
-                  onChange={(event) => setRevisionTopic(event.target.value)}
-                  placeholder="Digite o assunto, a disciplina ou os tópicos da sua prova..."
-                  maxLength={500}
-                  rows={3}
-                  className="ai-prompt-field min-h-[112px] resize-none border-0 px-2 text-base shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
-                  aria-label="Assunto da próxima prova"
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter" && !event.shiftKey && revisionTopic.trim().length >= 3) {
-                      event.preventDefault();
-                      navigate(`/revisao-ia?assunto=${encodeURIComponent(revisionTopic.trim())}&auto=1`);
-                    }
-                  }}
-                />
-                <div className="flex items-center justify-between gap-3 border-t border-border pt-3">
-                  <div className="flex items-center gap-1">
-                    <Button type="button" size="icon" variant="ghost" aria-label="Adicionar detalhes" title="Adicionar detalhes" onClick={() => navigate("/revisao-ia")}>
-                      <Plus className="h-5 w-5" />
-                    </Button>
-                    <Button type="button" variant="outline" size="sm" onClick={() => navigate("/revisao-ia")}>
-                      <SlidersHorizontal className="h-4 w-4" />
-                      Personalizar
-                    </Button>
-                  </div>
-                  <Button type="submit" size="icon" className="rounded-full" disabled={revisionTopic.trim().length < 3} aria-label="Gerar Kit de Revisão" title="Gerar Kit de Revisão">
-                    <Send className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </form>
-            <div className="mt-6 flex flex-wrap justify-center gap-2">
-              {[
-                { label: "Criar resumo", icon: BookOpen },
-                { label: "Criar simulado", icon: FileQuestion },
-                { label: "Top Questões", icon: ListChecks },
-                { label: "Criar colinha", icon: StickyNote },
-              ].map(({ label, icon: Icon }) => (
-                <Button key={label} type="button" variant="outline" className="rounded-full bg-background" onClick={() => navigate("/revisao-ia")}>
-                  <Icon className="h-4 w-4" />
-                  {label}
-                </Button>
-              ))}
-            </div>
-            <p className="mt-5 text-xs text-muted-foreground">
-              1ª revisão grátis, sem cadastro. Conteúdo produzido com apoio de IA.
-            </p>
-          </div>
+          <HomeKitGenerator />
         </section>
       )}
       {isTeacher && <div className="pt-20" />}

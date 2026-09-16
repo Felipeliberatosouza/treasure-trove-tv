@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Play, Pause, Loader2, ChevronLeft, ChevronRight, Volume2, Captions, CaptionsOff } from "lucide-react";
 import { toast } from "sonner";
 import professoraIa from "@/assets/professora-ia.jpg";
-import { usePlatformSettings, DEFAULT_AI_AVATAR, resolveAiAvatar, resolveLogoForBackground } from "@/hooks/usePlatformSettings";
+import { usePlatformSettings, DEFAULT_AI_AVATAR, resolveAiAvatar, resolveLogoForBackground, aiRoleLabel } from "@/hooks/usePlatformSettings";
 import visualCiencia from "@/assets/slide-visual-ciencia.jpg";
 import visualHumanas from "@/assets/slide-visual-humanas.jpg";
 import visualExatas from "@/assets/slide-visual-exatas.jpg";

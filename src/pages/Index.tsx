@@ -436,14 +436,6 @@ const Index = () => {
               )}
             </div>
 
-            {aiKits.length > 0 && (
-              <VideoCarousel
-                title="🤖 Revisões geradas com IA"
-                videos={aiKits}
-                onVideoClick={handleVideoClick}
-              />
-            )}
-
             {loadingAreas && areas.length > 0 ? (
               <div className="flex items-center justify-center py-16 gap-2 text-muted-foreground">
                 <Loader2 className="h-5 w-5 animate-spin" />

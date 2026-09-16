@@ -79,7 +79,17 @@ const VideoCard = ({ video, index, onClick, rating, showTrialBadge, watched }: V
           <h3 className="font-display text-sm font-semibold leading-tight line-clamp-2">
             {video.title}
           </h3>
-          <p className="text-xs text-muted-foreground">{video.instructor}</p>
+          {video.instructorHref ? (
+            <a
+              href={video.instructorHref}
+              onClick={(e) => e.stopPropagation()}
+              className="block text-xs text-muted-foreground transition-colors hover:text-primary hover:underline"
+            >
+              {video.instructor}
+            </a>
+          ) : (
+            <p className="text-xs text-muted-foreground">{video.instructor}</p>
+          )}
           <div className="flex items-center gap-3 text-xs text-muted-foreground">
             <span className="flex items-center gap-1">
               <BookOpen className="h-3 w-3" />

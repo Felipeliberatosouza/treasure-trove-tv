@@ -11,8 +11,8 @@ const corsHeaders = {
 };
 
 const GEN_MODEL = "google/gemini-3.7-flash";
-const TEMPLATE_VERSION = "v2";
-const PROMPT_VERSION = "v2";
+const TEMPLATE_VERSION = "v3";
+const PROMPT_VERSION = "v3";
 const SIGNUP_CREDITS = 2;
 const ANON_FREE_USES = 1;
 
@@ -140,6 +140,7 @@ REGRAS DE LINGUAGEM (obrigatórias):
 PADRÃO DA NARRAÇÃO DOS SLIDES (obrigatório):
 - Slide 1 (introdução): narração no estilo "Olá, pessoal! Sejam bem-vindos a este rápido resumo essencial para a sua prova de [assunto]. Em poucos minutos vamos revisar os pontos-chave que você precisa dominar e arrebentar na prova! Vamos lá? Cola aqui que você vai bem!". Deixe claro que é uma revisão com os pontos essenciais para a prova.
 - Slides do meio: conceitos-chave e conteúdos de prova, sempre com exemplos reais do dia a dia (não só teoria) e com frases descontraídas espalhadas, como "Isso tem alta chance de cair na sua prova...", "Presta atenção aqui, dica de prova!", "Atenção a esse ponto, cai sempre em provas...".
+- TOP QUESTÕES (obrigatório): antes do slide de encerramento, inclua slides dedicados às Top Questões. Cada Top Questão gerada no campo top_questoes deve aparecer na narração de um desses slides, lida por completo e seguida da resolução comentada passo a passo (raciocínio, pegadinhas e o porquê da resposta). Os bullets desses slides trazem o enunciado resumido e os passos da resolução.
 - Último slide (encerramento): reforce os pontos mais importantes do conteúdo, peça para o aluno deixar a dúvida (um professor responde), compartilhar a revisão com os colegas e avaliar o vídeo, e sugira fazer o simulado, ver as Top Questões resolvidas e marcar uma aula com um professor. Termine com "Boa prova!".`;
   const user = `Monte um Kit de Revisão completo.
 Assunto informado pelo aluno: ${params.assunto}

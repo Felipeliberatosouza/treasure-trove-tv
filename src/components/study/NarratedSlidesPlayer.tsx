@@ -36,15 +36,22 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina }: Props
   const [speaking, setSpeaking] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+  // Duração de cada slide (estimada pela narração e corrigida quando o áudio carrega),
+  // usada para montar uma barra de tempo única para toda a apresentação.
+  const [durations, setDurations] = useState<number[]>(() =>
+    slides.map((s) => Math.max(3, (s?.narracao || "").split(/\s+/).filter(Boolean).length / 2.6)),
+  );
+  const pendingSeekRef = useRef<number | null>(null);
   const { data: avatarSettings } = usePlatformSettings("ai_avatar");
   const { data: aiParams } = usePlatformSettings("ai_generation_params");
   const { data: branding } = usePlatformSettings("branding");
   const brandLogo = resolveLogoForBackground(branding as any) || logoRevisaoFacil;
-  const avatar = resolveAiAvatar(
+  const resolved = resolveAiAvatar(
     aiParams,
     { ...DEFAULT_AI_AVATAR, ...(avatarSettings || {}) },
     { disciplina, contentType: "apresentacao" },
   );
+  const avatar = { ...resolved, role_label: aiRoleLabel(resolved.gender) };
   const avatarImage = avatar.image_url || professoraIa;
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const tokenRef = useRef<string>("");

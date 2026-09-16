@@ -309,19 +309,6 @@
     .avatar-voice-bar { animation: none; }
   }
 
-  /* O conteúdo audiovisual é estável: passar o mouse não altera cores. */
-  .ai-slide-shell:hover,
-  .ai-slide-player:hover,
-  .ai-slide-player:hover h2,
-  .ai-slide-player:hover p,
-  .ai-slide-player:hover li,
-  .ai-slide-player:hover span {
-    color: inherit;
-  }
-
-
-
-
   /* Dark theme surfaces → light ink */
   input.bg-secondary,
   textarea.bg-secondary,

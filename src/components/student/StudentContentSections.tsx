@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { usePlatformSettings, DEFAULT_AI_AVATAR, resolveAiAvatar, aiRoleLabel } from "@/hooks/usePlatformSettings";
 import { useNavigate } from "react-router-dom";
 import { Loader2, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -43,14 +44,20 @@ const META_MATERIAL_TYPE: Record<
   colinha: "colinha",
 };
 
-const mapToVideo = (l: any): Video => ({
+const mapToVideo = (
+  l: any,
+  teacherMap?: Map<string, { name: string; slug: string | null }>,
+): Video => ({
   id: l.id,
   title: l.title,
   description: l.description || "",
   thumbnail: l.thumbnail_url || l.carousel_cover_url || "/placeholder.svg",
   duration: "",
   category: ((l.areas as string[]) || [])[0] || "",
-  instructor: "",
+  instructor: teacherMap?.get(l.teacher_id)?.name || "",
+  instructorHref: teacherMap?.get(l.teacher_id)?.slug
+    ? `/${teacherMap.get(l.teacher_id)!.slug}`
+    : undefined,
   lessons: 1,
   videoUrl: l.video_url || undefined,
 });
@@ -70,6 +77,8 @@ const StudentContentSections = ({
   const [ratings, setRatings] = useState<Record<string, { average: number; count: number }>>({});
   const [continueWatching, setContinueWatching] = useState<Array<Video & { _progress: number }>>([]);
   const [aiKits, setAiKits] = useState<Video[]>([]);
+  const { data: aiAvatarSettings } = usePlatformSettings("ai_avatar");
+  const { data: aiParams } = usePlatformSettings("ai_generation_params");
 
   const studentAreas = useMemo<string[]>(
     () => ((profile as any)?.areas as string[] | undefined) ?? [],
@@ -188,6 +197,19 @@ const StudentContentSections = ({
         return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
       };
 
+      // Nome e página do professor real de cada conteúdo.
+      const teacherIds = Array.from(
+        new Set([...lessonsRows, ...examsRows].map((r: any) => r.teacher_id).filter(Boolean)),
+      );
+      const teacherMap = new Map<string, { name: string; slug: string | null }>();
+      if (teacherIds.length > 0) {
+        const { data: tProfiles } = await supabase
+          .from("profiles")
+          .select("user_id, name, slug")
+          .in("user_id", teacherIds as string[]);
+        (tProfiles || []).forEach((p: any) => teacherMap.set(p.user_id, { name: p.name, slug: p.slug }));
+      }
+
       lessonsRows.sort(sortBy);
       examsRows.sort(sortBy);
 
@@ -198,13 +220,13 @@ const StudentContentSections = ({
         .filter(({ progress }) => progress >= 5 && progress < 95)
         .sort((a, b) => b.progress - a.progress)
         .slice(0, 30)
-        .map(({ row, progress }) => ({ ...mapToVideo(row), _progress: progress }));
+        .map(({ row, progress }) => ({ ...mapToVideo(row, teacherMap), _progress: progress }));
 
       setContinueWatching(inProgress);
       setRatings(ratingsMap);
       setWatchedIds(watched);
-      setLessons(lessonsRows.map(mapToVideo));
-      setExams(examsRows.map(mapToVideo));
+      setLessons(lessonsRows.map((r) => mapToVideo(r, teacherMap)));
+      setExams(examsRows.map((r) => mapToVideo(r, teacherMap)));
       setLoading(false);
     };
 
@@ -240,7 +262,14 @@ const StudentContentSections = ({
           thumbnail: "/placeholder.svg",
           duration: "Aula com Professor Virtual",
           category: (row.areas || [])[0] || row.disciplina || "",
-          instructor: "Revisão Fácil IA",
+          instructor: (() => {
+            const avatar = resolveAiAvatar(
+              aiParams,
+              { ...DEFAULT_AI_AVATAR, ...(aiAvatarSettings || {}) },
+              { disciplina: row.disciplina, areas: (row.areas as string[] | null) || [], contentType: "apresentacao" },
+            );
+            return `${aiRoleLabel(avatar.gender)} ${avatar.name}`.trim();
+          })(),
           lessons: Array.isArray(row.kit?.slides) ? row.kit.slides.length : 0,
         })),
       );
@@ -249,7 +278,7 @@ const StudentContentSections = ({
     return () => {
       cancelled = true;
     };
-  }, [studentAreas, materialFilter]);
+  }, [studentAreas, materialFilter, aiAvatarSettings, aiParams]);
 
   const onVideoClick = (id: string) => navigate(`/video/${id}`);
 

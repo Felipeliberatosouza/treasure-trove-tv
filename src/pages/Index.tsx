@@ -450,25 +450,26 @@ const Index = () => {
                 <span className="text-sm">Carregando conteúdos por área...</span>
               </div>
             ) : (
-              areas.map((area) =>
-                areaLessons[area.name] && areaLessons[area.name].length > 0 ? (
+              areas.map((area) => {
+                const lessonsForArea = areaLessons[area.name] || [];
+                // Vínculo oficial: áreas gravadas no material de IA (classificação automática/admin).
+                const kitsForArea = aiKits.filter((kit) =>
+                  (aiKitAreas[kit.id] || []).some(
+                    (a) => a.trim().toLowerCase() === area.name.trim().toLowerCase(),
+                  ),
+                );
+                if (lessonsForArea.length === 0 && kitsForArea.length === 0) return null;
+                return (
                   <VideoCarousel
                     key={area.id}
                     title={`📚 ${area.name}`}
-                    videos={[
-                      ...areaLessons[area.name],
-                      ...aiKits.filter(
-                        (kit) =>
-                          (kit.category || "").toLowerCase().includes(area.name.toLowerCase()) ||
-                          area.name.toLowerCase().includes((kit.category || "—").toLowerCase()),
-                      ),
-                    ]}
+                    videos={[...lessonsForArea, ...kitsForArea]}
                     onVideoClick={handleVideoClick}
                     showTrialBadge={showTrialBadge}
                     watchedIds={watchedIds}
                   />
-                ) : null
-              )
+                );
+              })
             )}
           </>
         )}

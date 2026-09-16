@@ -184,7 +184,20 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina }: Props
     const text = slides[current]?.narracao || "";
     if (!audio) return;
     setCurrentTime(audio.currentTime || 0);
-    setDuration(Number.isFinite(audio.duration) ? audio.duration : 0);
+    const real = Number.isFinite(audio.duration) ? audio.duration : 0;
+    setDuration(real);
+    if (real > 0) {
+      setDurations((list) => {
+        if (Math.abs((list[current] ?? 0) - real) < 0.05) return list;
+        const next = [...list];
+        next[current] = real;
+        return next;
+      });
+      if (pendingSeekRef.current != null) {
+        audio.currentTime = Math.min(pendingSeekRef.current, real - 0.1);
+        pendingSeekRef.current = null;
+      }
+    }
     if (!text || !audio.duration) return;
     const words = text.split(/\s+/).filter(Boolean);
     const wordsPerCaption = 9;

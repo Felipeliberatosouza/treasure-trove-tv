@@ -46,6 +46,8 @@ const RevisaoIA = () => {
     return n.length > 14 ? `${n.slice(0, 14)}…` : n;
   }, [profile?.name]);
 
+  const autoStartedRef = useRef(false);
+
   const refreshStatus = async () => setStatus(await fetchKitStatus());
 
   useEffect(() => {

@@ -8,6 +8,8 @@ export interface Video {
   instructor: string;
   lessons: number;
   featured?: boolean;
+  /** Link para a página do professor (conteúdo de professor real). */
+  instructorHref?: string;
   videoUrl?: string;
 }
 

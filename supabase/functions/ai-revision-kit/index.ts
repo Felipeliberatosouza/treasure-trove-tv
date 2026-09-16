@@ -103,7 +103,7 @@ const KIT_TOOL = {
         },
         slides: {
           type: "array",
-          description: "6 a 8 slides: o primeiro é a introdução e o último o encerramento, seguindo o padrão pedido.",
+          description: "8 a 12 slides: o primeiro é a introdução, os do meio trazem os conceitos, em seguida um slide por Top Questão com a resolução comentada na narração, e o último é o encerramento.",
           items: {
             type: "object",
             properties: {
@@ -148,8 +148,7 @@ Disciplina: ${params.disciplina || "não informada"}
 Curso: ${params.curso || "não informado"}
 Instituição: ${params.instituicao || "não informada"}
 Profundidade: ${params.nivel === "aprofundado" ? "aprofundada" : "revisão rápida"}
-Gere de 6 a 8 slides seguindo exatamente o padrão de narração: slide 1 de introdução, slides do meio com conceitos-chave e conteúdos de prova (com exemplos do dia a dia e frases descontraídas de dica de prova) e o último slide de encerramento.
-Nos slides do meio, relacione os pontos com as questões mais prováveis, no mesmo espírito das Top Questões.
+Gere de 8 a 12 slides seguindo exatamente o padrão de narração: slide 1 de introdução, slides do meio com conceitos-chave e conteúdos de prova (com exemplos do dia a dia e frases descontraídas de dica de prova), depois um slide para cada Top Questão gerada em top_questoes — com o enunciado e a resolução comentada na narração — e o último slide de encerramento.
 Em cada slide, escreva uma narração fluida em português brasileiro informal e uma direção de imagem didática diretamente relacionada ao tópico (no primeiro e no último slide a imagem é apenas de ambiente, sem conteúdo escrito).`;
 
   const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {

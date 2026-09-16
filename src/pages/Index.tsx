@@ -75,13 +75,16 @@ const Index = () => {
           description: row.disciplina || "Revisão gerada com apoio de IA",
           thumbnail: aiKitCover,
           duration: "Aula com Professor Virtual",
-          category: row.disciplina || "Revisão com IA",
+          category: ((row.areas as string[] | null) || [])[0] || row.disciplina || "Revisão com IA",
           instructor: "Revisão Fácil IA",
           lessons: Array.isArray(kit.slides) ? kit.slides.length : 0,
         };
       });
       setAiKits(mapped);
       setAiKitIds(new Set(mapped.map((m) => m.id)));
+      setAiKitAreas(
+        Object.fromEntries((data || []).map((row) => [row.id, ((row.areas as string[] | null) || [])])),
+      );
     };
     void fetchAiKits();
   }, []);

@@ -779,6 +779,10 @@ const VideoPage = () => {
             )}
           </div>
 
+          <p className="mt-2 text-center text-[11px] text-muted-foreground">
+            Conteúdo de responsabilidade do professor, de acordo com a Lei 12.965/2014.
+          </p>
+
           <div className="mt-6 space-y-5">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <VideoShareButtons videoTitle={video.title} videoUrl={window.location.href} />

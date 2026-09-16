@@ -259,6 +259,23 @@
     opacity: 1;
   }
 
+  /* Avatar da professora virtual em movimento durante a narração */
+  @keyframes avatar-talk {
+    0%, 100% { transform: translateY(0) scale(1); }
+    25% { transform: translateY(-2px) scale(1.02); }
+    50% { transform: translateY(0) scale(1.035); }
+    75% { transform: translateY(-1px) scale(1.01); }
+  }
+  .avatar-talking {
+    animation: avatar-talk 0.9s ease-in-out infinite;
+    box-shadow: 0 0 0 4px hsl(var(--primary) / 0.25);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .avatar-talking { animation: none; }
+  }
+
+
+
 
   /* Dark theme surfaces → light ink */
   input.bg-secondary,

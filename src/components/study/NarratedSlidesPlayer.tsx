@@ -34,7 +34,6 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina }: Props
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const tokenRef = useRef<string>("");
 
-  // token atual (busca sob demanda ao tocar)
   const getToken = useCallback(async () => {
     const { supabase } = await import("@/integrations/supabase/client");
     const { data } = await supabase.auth.getSession();
@@ -55,8 +54,8 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina }: Props
             "Content-Type": "application/json",
           },
           body: JSON.stringify(canonicalId
-            ? { canonical_id: canonicalId, slide_index: index }
-            : { texto: slide.narracao }),
+            ? { canonical_id: canonicalId, slide_index: index, avatar_gender: "female" }
+            : { texto: slide.narracao, avatar_gender: "female" }),
         });
         if (!resp.ok) {
           const err = await resp.json().catch(() => ({}));
@@ -95,7 +94,6 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina }: Props
     [loadSlideAudio],
   );
 
-  // quando o áudio do slide termina, avança
   const handleEnded = useCallback(() => {
     setCurrent((c) => {
       const next = c + 1;
@@ -127,12 +125,20 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina }: Props
   }, [audioUrl]);
 
   const slide = slides[current];
-  const slideImage = useMemo(() => {
+
+  const themeImages = useMemo(() => {
     const value = `${disciplina || ""} ${topico}`.toLowerCase();
-    if (/matem|físic|fisic|engenh|estat|cálc|calc|tecnolog|comput/.test(value)) return visualExatas;
-    if (/hist|direito|filos|soci|letras|geograf|admin|econom/.test(value)) return visualHumanas;
-    return visualCiencia;
+    if (/matem|físic|fisic|engenh|estat|cálc|calc|tecnolog|comput/.test(value)) {
+      return [visualExatas, visualCiencia, visualHumanas];
+    }
+    if (/hist|direito|filos|soci|letras|geograf|admin|econom/.test(value)) {
+      return [visualHumanas, visualCiencia, visualExatas];
+    }
+    return [visualCiencia, visualExatas, visualHumanas];
   }, [disciplina, topico]);
+
+  const coverImage = themeImages[0];
+  const slideImage = themeImages[current % themeImages.length];
 
   const updateCaption = useCallback(() => {
     const audio = audioRef.current;
@@ -149,6 +155,33 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina }: Props
     return <div className="flex aspect-video items-center justify-center bg-secondary text-sm text-muted-foreground">Apresentação indisponível.</div>;
   }
 
+  // Capa da apresentação (equivalente à capa do vídeo do professor)
+  if (!started) {
+    return (
+      <div className="relative aspect-video w-full overflow-hidden bg-secondary">
+        <img src={coverImage} alt={`Capa da apresentação sobre ${topico}`} className="absolute inset-0 h-full w-full object-cover" width={1536} height={864} />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-background/30" />
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 p-6 text-center">
+          <img
+            src={professoraIa}
+            alt="Professora virtual da Revisão Fácil"
+            className="h-20 w-20 rounded-full border-2 border-primary object-cover shadow-lg sm:h-28 sm:w-28"
+            width={1024}
+            height={1024}
+          />
+          <p className="text-xs font-semibold uppercase tracking-wide text-primary">Revisão Fácil IA</p>
+          <h2 className="max-w-3xl font-display text-2xl font-bold leading-tight sm:text-4xl">{topico}</h2>
+          {disciplina && <p className="text-sm text-muted-foreground">{disciplina}</p>}
+          <p className="text-xs text-muted-foreground">Apresentação narrada em {slides.length} slides</p>
+          <Button size="lg" onClick={() => playFrom(0)} disabled={loading} className="rounded-full">
+            {loading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Play className="mr-2 h-5 w-5" />}
+            Assistir apresentação
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="relative aspect-video w-full overflow-hidden bg-secondary">
       <img src={slideImage} alt="Ilustração didática da apresentação" className="absolute inset-0 h-full w-full object-cover" width={1536} height={864} />
@@ -158,9 +191,9 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina }: Props
           <div className="max-w-[76%]">
             <p className="mb-2 text-xs font-semibold uppercase text-primary">Revisão Fácil IA</p>
             <h2 className="font-display text-xl font-bold leading-tight sm:text-3xl md:text-4xl">
-              {started ? slide?.titulo : topico}
+              {slide?.titulo}
             </h2>
-            {started && slide && (
+            {slide && (
               <ul className="mt-3 space-y-1.5 sm:mt-5 sm:space-y-2">
                 {slide.bullets.slice(0, 4).map((bullet, index) => (
                   <li key={index} className="flex items-start gap-2 text-xs sm:text-sm md:text-base">
@@ -172,12 +205,18 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina }: Props
             )}
           </div>
           <div className="shrink-0 text-center">
-            <img src={professoraIa} alt="Professora virtual da Revisão Fácil" className="h-16 w-16 rounded-full border-2 border-primary object-cover shadow-lg sm:h-24 sm:w-24 md:h-32 md:w-32" width={1024} height={1024} />
+            <img
+              src={professoraIa}
+              alt="Professora virtual da Revisão Fácil"
+              className={`h-16 w-16 rounded-full border-2 border-primary object-cover shadow-lg sm:h-24 sm:w-24 md:h-32 md:w-32 ${playing ? "avatar-talking" : ""}`}
+              width={1024}
+              height={1024}
+            />
             <span className="mt-1 block text-[10px] font-medium sm:text-xs">Professora virtual</span>
           </div>
         </div>
 
-        {showCaptions && started && caption && (
+        {showCaptions && caption && (
           <div className="mx-auto max-w-2xl rounded bg-background/90 px-3 py-1.5 text-center text-xs shadow-lg sm:text-sm">
             {caption}
           </div>

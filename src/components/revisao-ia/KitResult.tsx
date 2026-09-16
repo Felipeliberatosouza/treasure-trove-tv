@@ -64,9 +64,6 @@ const KitResult = ({ result, onNewKit }: Props) => {
             {["Professora virtual da Revisão Fácil", kit.disciplina, kit.assunto].filter(Boolean).join(" • ")}
           </p>
           <div className="mt-2 flex flex-wrap gap-2">
-            <Badge variant="secondary">
-              {result.source === "cache" ? "Revisão pronta reaproveitada (sem gastar crédito)" : "Revisão gerada agora"}
-            </Badge>
             <Badge variant="outline">Produzido com apoio de IA — confira com seu professor</Badge>
           </div>
         </div>

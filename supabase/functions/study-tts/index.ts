@@ -20,16 +20,21 @@ Deno.serve(async (req) => {
     const slideIndex = Number.isInteger(body.slide_index) ? body.slide_index : null;
     let texto = typeof body.texto === "string" ? body.texto.trim() : "";
 
+    // Voz coerente com o avatar configurado no painel administrativo.
+    const avatarGender = body.avatar_gender === "male" ? "male" : "female";
+    const voice = avatarGender === "male" ? "onyx" : "nova";
+
     if (canonicalId && slideIndex !== null && slideIndex >= 0) {
       const { data: existing } = await admin
         .from("ai_content_artifacts")
-        .select("storage_path")
+        .select("storage_path, metadata")
         .eq("canonical_id", canonicalId)
         .eq("slide_index", slideIndex)
         .eq("artifact_type", "audio")
         .eq("status", "ready")
         .maybeSingle();
-      if (existing?.storage_path) {
+      const cachedVoice = (existing?.metadata as Record<string, unknown> | null)?.voice;
+      if (existing?.storage_path && cachedVoice === voice) {
         const { data: signed } = await admin.storage.from("ai-revision-media").createSignedUrl(existing.storage_path, 3600);
         if (signed?.signedUrl) {
           return new Response(JSON.stringify({ audio_url: signed.signedUrl, cached: true }), {
@@ -83,9 +88,6 @@ Deno.serve(async (req) => {
     const apiKey = Deno.env.get("LOVABLE_API_KEY");
     if (!apiKey) throw new Error("LOVABLE_API_KEY não configurada");
 
-    // Voz coerente com o avatar: feminino por padrão (professora virtual).
-    const avatarGender = body.avatar_gender === "male" ? "male" : "female";
-    const voice = avatarGender === "male" ? "onyx" : "shimmer";
     const instructions = avatarGender === "male"
       ? "Fale em português brasileiro, com voz masculina, como um professor universitário acolhedor e didático, com ritmo claro e pausas naturais."
       : "Fale em português brasileiro, com voz feminina, como uma professora universitária acolhedora e didática, com ritmo claro e pausas naturais.";

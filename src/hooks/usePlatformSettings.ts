@@ -409,6 +409,7 @@ type SettingsMap = {
   footer: FooterSettings;
   alert_box: AlertBoxSettings;
   ai_avatar: AiAvatarSettings;
+  ai_generation_params: AiGenerationParamsSettings;
 };
 
 /** Avatar da professora/professor virtual usado nos slides gerados por IA. */
@@ -429,6 +430,84 @@ export const DEFAULT_AI_AVATAR: AiAvatarSettings = {
   image_url: "",
   role_label: "Professora virtual",
 };
+
+/** Tipos de conteúdo gerados por IA aos quais um avatar pode ser vinculado. */
+export const AI_CONTENT_TYPES = [
+  { id: "apresentacao", label: "Apresentação narrada (slides)" },
+  { id: "resumo", label: "Resumo" },
+  { id: "simulado", label: "Simulado" },
+  { id: "top_questoes", label: "Top Questões" },
+  { id: "colinha", label: "Colinha" },
+] as const;
+
+export type AiContentTypeId = (typeof AI_CONTENT_TYPES)[number]["id"];
+
+/** Avatar vinculado a disciplinas e tipos de conteúdo gerados por IA. */
+export interface AiDisciplineAvatar extends AiAvatarSettings {
+  id: string;
+  /** Disciplinas/áreas atendidas por este avatar. Vazio = todas. */
+  disciplines: string[];
+  /** Tipos de conteúdo atendidos por este avatar. Vazio = todos. */
+  content_types: AiContentTypeId[];
+}
+
+export interface AiGenerationParamsSettings {
+  avatars: AiDisciplineAvatar[];
+}
+
+export const DEFAULT_AI_GENERATION_PARAMS: AiGenerationParamsSettings = {
+  avatars: [],
+};
+
+export const emptyAiDisciplineAvatar = (): AiDisciplineAvatar => ({
+  id: crypto.randomUUID(),
+  name: "",
+  gender: "female",
+  image_url: "",
+  role_label: "Professora virtual",
+  disciplines: [],
+  content_types: [],
+});
+
+/**
+ * Escolhe o avatar mais adequado para a disciplina e o tipo de conteúdo.
+ * Cai no avatar padrão quando nenhum avatar específico combina.
+ */
+export function resolveAiAvatar(
+  params: AiGenerationParamsSettings | null | undefined,
+  fallback: AiAvatarSettings,
+  options: { disciplina?: string | null; contentType?: AiContentTypeId } = {},
+): AiAvatarSettings {
+  const list = params?.avatars ?? [];
+  if (!list.length) return fallback;
+  const disciplina = (options.disciplina || "").toLowerCase().trim();
+
+  const matches = list.filter((avatar) => {
+    if (!avatar.name?.trim()) return false;
+    const typeOk =
+      !avatar.content_types?.length ||
+      !options.contentType ||
+      avatar.content_types.includes(options.contentType);
+    if (!typeOk) return false;
+    if (!avatar.disciplines?.length) return true;
+    if (!disciplina) return false;
+    return avatar.disciplines.some((d) => {
+      const term = d.toLowerCase().trim();
+      return term.length > 0 && (disciplina.includes(term) || term.includes(disciplina));
+    });
+  });
+
+  if (!matches.length) return fallback;
+  // Prioriza o avatar com vínculo específico de disciplina.
+  const specific = matches.find((a) => a.disciplines?.length);
+  const chosen = specific || matches[0];
+  return {
+    name: chosen.name,
+    gender: chosen.gender,
+    image_url: chosen.image_url,
+    role_label: chosen.role_label,
+  };
+}
 
 export interface TwilioConfigSettings {
   sms_from_number: string;

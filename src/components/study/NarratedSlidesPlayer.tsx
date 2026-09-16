@@ -196,14 +196,14 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina }: Props
 
   const brandOverlay = (
     <div className="pointer-events-none absolute bottom-2 right-2 z-10 flex flex-col items-end gap-0.5 sm:bottom-3 sm:right-3">
-      <img src={logoRevisaoFacil} alt="Revisão Fácil" className="h-5 w-auto opacity-90 sm:h-7" />
+      <img src={brandLogo} alt="Revisão Fácil" className="h-5 w-auto opacity-90 sm:h-7" />
       <span className="text-[8px] text-muted-foreground sm:text-[10px]">revisaofacil.com.br</span>
     </div>
   );
 
   const legalNotice = (
     <p className="border-t border-border bg-background/90 px-2 py-1 text-center text-[9px] text-muted-foreground sm:text-[10px]">
-      Conteúdo de responsabilidade do professor, de acordo com a Lei 12.965/2014.
+      Conteúdo produzido com apoio de IA: são tópicos prioritários e questões para praticar, não uma previsão da prova. Agende uma aula com um professor.
     </p>
   );
 

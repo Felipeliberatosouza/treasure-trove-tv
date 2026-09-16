@@ -24,7 +24,7 @@ import SettingsAlertBox from "./settings/SettingsAlertBox";
 import SettingsAiGeneration from "./settings/SettingsAiGeneration";
 
 const SECTIONS_RAW = [
-  { id: "ai_generation", label: "Parâmetros de IA", icon: Sparkles },
+  { id: "ai_generation", label: "Gestão de IA", icon: Sparkles },
   { id: "alert_box", label: "Caixa de Alerta", icon: AlertTriangle },
   { id: "aula_particular", label: "Aula Particular", icon: CalendarClock },
   { id: "areas", label: "Áreas de Cursos", icon: FolderOpen },

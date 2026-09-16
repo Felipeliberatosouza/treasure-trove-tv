@@ -163,21 +163,21 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina }: Props
   // Capa da apresentação (equivalente à capa do vídeo do professor)
   if (!started) {
     return (
-      <div className="ai-slide-player relative aspect-video w-full overflow-hidden bg-muted">
+      <div className="ai-slide-player relative aspect-[4/5] w-full overflow-hidden bg-muted sm:aspect-video">
         <img src={coverImage} alt={`Capa da apresentação sobre ${topico}`} className="absolute inset-0 h-full w-full object-cover" width={1536} height={864} />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-background/30" />
-        <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-4 p-6 text-center">
+        <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-3 p-4 text-center sm:gap-4 sm:p-6">
           <img
             src={avatarImage}
             alt={`${avatar.name}, ${avatar.role_label.toLowerCase()} da Revisão Fácil`}
-            className="h-20 w-20 rounded-full border-2 border-primary object-cover shadow-lg sm:h-28 sm:w-28"
+            className="h-16 w-16 rounded-full border-2 border-primary object-cover shadow-lg sm:h-28 sm:w-28"
             width={1024}
             height={1024}
           />
-          <p className="text-xs font-semibold uppercase tracking-wide text-primary">Revisão Fácil IA</p>
-          <h2 className="max-w-3xl font-display text-2xl font-bold leading-tight sm:text-4xl">{topico}</h2>
-          {disciplina && <p className="text-sm text-muted-foreground">{disciplina}</p>}
-          <p className="text-xs text-muted-foreground">Apresentação narrada em {slides.length} slides</p>
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-primary sm:text-xs">Revisão Fácil IA</p>
+          <h2 className="max-w-3xl font-display text-lg font-bold leading-tight sm:text-4xl">{topico}</h2>
+          {disciplina && <p className="text-xs text-muted-foreground sm:text-sm">{disciplina}</p>}
+          <p className="text-[10px] text-muted-foreground sm:text-xs">Apresentação narrada em {slides.length} slides</p>
           <Button size="lg" onClick={() => playFrom(0)} disabled={loading} className="ai-slide-btn pointer-events-auto rounded-full">
             {loading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Play className="mr-2 h-5 w-5" />}
             Assistir apresentação
@@ -188,68 +188,71 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina }: Props
   }
 
   return (
-    <div className="ai-slide-player relative aspect-video w-full overflow-hidden bg-muted">
-      <img src={slideImage} alt="Ilustração didática da apresentação" className="absolute inset-0 h-full w-full object-cover" width={1536} height={864} />
-      <div className="absolute inset-0 bg-gradient-to-r from-background via-background/80 to-background/10" />
-      <div className="absolute inset-0 flex flex-col justify-between p-4 sm:p-7 md:p-10">
-        <div className="pointer-events-none flex items-start justify-between gap-4">
-          <div className="max-w-[76%]">
-            <p className="mb-2 text-xs font-semibold uppercase text-primary">Revisão Fácil IA</p>
-            <h2 className="font-display text-xl font-bold leading-tight sm:text-3xl md:text-4xl">
-              {slide?.titulo}
-            </h2>
-            {slide && (
-              <ul className="mt-3 space-y-1.5 sm:mt-5 sm:space-y-2">
-                {slide.bullets.slice(0, 4).map((bullet, index) => (
-                  <li key={index} className="flex items-start gap-2 text-xs sm:text-sm md:text-base">
-                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
-                    <span>{bullet}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-          <div className="shrink-0 text-center">
-            <div className={`relative inline-block ${speaking ? "avatar-speaking-stage" : ""}`}>
-              <img
-                src={avatarImage}
-                alt={`${avatar.name}, ${avatar.role_label.toLowerCase()} da Revisão Fácil`}
-                className={`h-16 w-16 rounded-full border-2 border-primary object-cover shadow-lg sm:h-24 sm:w-24 md:h-32 md:w-32 ${speaking ? "avatar-talking" : ""}`}
-                width={1024}
-                height={1024}
-              />
-              {speaking && (
-                <span className="absolute -bottom-1 left-1/2 flex -translate-x-1/2 items-end gap-0.5 rounded-full bg-background/90 px-2 py-1 shadow" aria-hidden="true">
-                  <i className="avatar-voice-bar" />
-                  <i className="avatar-voice-bar" />
-                  <i className="avatar-voice-bar" />
-                </span>
+    <div className="ai-slide-player w-full bg-muted">
+      <div className="relative aspect-[4/5] w-full overflow-hidden sm:aspect-video">
+        <img src={slideImage} alt="Ilustração didática da apresentação" className="absolute inset-0 h-full w-full object-cover" width={1536} height={864} />
+        <div className="absolute inset-0 bg-gradient-to-b from-background via-background/85 to-background/40 sm:bg-gradient-to-r sm:from-background sm:via-background/80 sm:to-background/10" />
+        <div className="absolute inset-0 flex flex-col justify-between gap-2 p-3 sm:p-7 md:p-10">
+          <div className="pointer-events-none flex min-h-0 flex-1 items-start justify-between gap-2 sm:gap-4">
+            <div className="min-w-0 flex-1 overflow-y-auto sm:max-w-[76%] sm:flex-none">
+              <p className="mb-1 text-[10px] font-semibold uppercase text-primary sm:mb-2 sm:text-xs">Revisão Fácil IA</p>
+              <h2 className="font-display text-base font-bold leading-tight sm:text-3xl md:text-4xl">
+                {slide?.titulo}
+              </h2>
+              {slide && (
+                <ul className="mt-2 space-y-1 sm:mt-5 sm:space-y-2">
+                  {slide.bullets.slice(0, 4).map((bullet, index) => (
+                    <li key={index} className="flex items-start gap-2 text-[11px] leading-snug sm:text-sm md:text-base">
+                      <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
+                      <span>{bullet}</span>
+                    </li>
+                  ))}
+                </ul>
               )}
             </div>
-            <span className="mt-2 block text-[10px] font-medium sm:text-xs">{avatar.name}</span>
-            <span className="block text-[10px] text-muted-foreground">{avatar.role_label}</span>
+            <div className="shrink-0 text-center">
+              <div className={`relative inline-block ${speaking ? "avatar-speaking-stage" : ""}`}>
+                <img
+                  src={avatarImage}
+                  alt={`${avatar.name}, ${avatar.role_label.toLowerCase()} da Revisão Fácil`}
+                  className={`h-12 w-12 rounded-full border-2 border-primary object-cover shadow-lg sm:h-24 sm:w-24 md:h-32 md:w-32 ${speaking ? "avatar-talking" : ""}`}
+                  width={1024}
+                  height={1024}
+                />
+                {speaking && (
+                  <span className="absolute -bottom-1 left-1/2 flex -translate-x-1/2 items-end gap-0.5 rounded-full bg-background/90 px-1.5 py-1 shadow" aria-hidden="true">
+                    <i className="avatar-voice-bar" />
+                    <i className="avatar-voice-bar" />
+                    <i className="avatar-voice-bar" />
+                  </span>
+                )}
+              </div>
+              <span className="mt-2 block text-[10px] font-medium sm:text-xs">{avatar.name}</span>
+              <span className="hidden text-[10px] text-muted-foreground sm:block">{avatar.role_label}</span>
+            </div>
           </div>
+
+          {showCaptions && caption && (
+            <div className="pointer-events-none mx-auto max-w-2xl shrink-0 rounded bg-background/90 px-2 py-1 text-center text-[11px] shadow-lg sm:px-3 sm:py-1.5 sm:text-sm">
+              {caption}
+            </div>
+          )}
         </div>
+      </div>
 
-        {showCaptions && caption && (
-          <div className="pointer-events-none mx-auto max-w-2xl rounded bg-background/90 px-3 py-1.5 text-center text-xs shadow-lg sm:text-sm">
-            {caption}
-          </div>
-        )}
-
-        <audio
-          ref={audioRef}
-          onEnded={() => {
-            setSpeaking(false);
-            handleEnded();
-          }}
-          onPlay={() => setSpeaking(true)}
-          onPause={() => setSpeaking(false)}
-          onTimeUpdate={updateCaption}
-          className="hidden"
-        />
-        <div className="flex items-center justify-between gap-2 rounded bg-background/80 p-2 backdrop-blur-sm">
-          <div className="flex items-center gap-1">
+      <audio
+        ref={audioRef}
+        onEnded={() => {
+          setSpeaking(false);
+          handleEnded();
+        }}
+        onPlay={() => setSpeaking(true)}
+        onPause={() => setSpeaking(false)}
+        onTimeUpdate={updateCaption}
+        className="hidden"
+      />
+      <div className="flex items-center justify-between gap-2 border-t border-border bg-background/90 p-2 backdrop-blur-sm">
+        <div className="flex items-center gap-1">
           {!playing ? (
             <Button onClick={() => playFrom(current)} disabled={loading} size="icon" className="ai-slide-btn" aria-label="Reproduzir apresentação">
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
@@ -295,12 +298,11 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina }: Props
             <ChevronRight className="h-4 w-4" />
           </Button>
           <Volume2 className="ml-1 hidden h-4 w-4 text-muted-foreground sm:block" />
-          </div>
-          <span className="text-[10px] text-muted-foreground sm:text-xs">Slide {current + 1} de {slides.length}</span>
-          <Button variant="ghost" size="icon" className="ai-slide-btn" onClick={() => setShowCaptions((value) => !value)} aria-label={showCaptions ? "Ocultar legendas" : "Mostrar legendas"}>
-            {showCaptions ? <Captions className="h-4 w-4" /> : <CaptionsOff className="h-4 w-4" />}
-          </Button>
         </div>
+        <span className="text-[10px] text-muted-foreground sm:text-xs">Slide {current + 1} de {slides.length}</span>
+        <Button variant="ghost" size="icon" className="ai-slide-btn" onClick={() => setShowCaptions((value) => !value)} aria-label={showCaptions ? "Ocultar legendas" : "Mostrar legendas"}>
+          {showCaptions ? <Captions className="h-4 w-4" /> : <CaptionsOff className="h-4 w-4" />}
+        </Button>
       </div>
     </div>
   );

@@ -12,7 +12,7 @@ const corsHeaders = {
 
 const GEN_MODEL = "google/gemini-3.7-flash";
 const TEMPLATE_VERSION = "v4";
-const PROMPT_VERSION = "v4";
+const PROMPT_VERSION = "v5";
 const SIGNUP_CREDITS = 2;
 const ANON_FREE_USES = 1;
 
@@ -115,8 +115,13 @@ const KIT_TOOL = {
             required: ["titulo", "bullets", "narracao", "imagem_prompt"],
           },
         },
+        areas: {
+          type: "array",
+          items: { type: "string" },
+          description: "Áreas de curso às quais este conteúdo pertence. Use SOMENTE nomes exatos da lista de áreas cadastradas informada no pedido. Pode indicar mais de uma área quando o conteúdo for relevante para várias.",
+        },
       },
-      required: ["titulo", "assunto", "resumo", "conceitos_chave", "colinha", "simulado", "top_questoes", "slides"],
+      required: ["titulo", "assunto", "resumo", "conceitos_chave", "colinha", "simulado", "top_questoes", "slides", "areas"],
     },
   },
 };

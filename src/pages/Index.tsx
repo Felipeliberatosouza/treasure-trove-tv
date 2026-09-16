@@ -8,7 +8,7 @@ import WhatsAppFloat from "@/components/WhatsAppFloat";
 import SecondaryBanner from "@/components/SecondaryBanner";
 import TeacherHomeStats from "@/components/teacher/TeacherHomeStats";
 import BookLessonSection from "@/components/BookLessonSection";
-import { usePlatformSettings } from "@/hooks/usePlatformSettings";
+import { usePlatformSettings, DEFAULT_AI_AVATAR, resolveAiAvatar, aiRoleLabel } from "@/hooks/usePlatformSettings";
 import { useHomepageAreas } from "@/hooks/useCourseAreas";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -32,6 +32,8 @@ const Index = () => {
   const navigate = useNavigate();
   const { user, profile, role } = useAuth();
   const { data: trialSettings } = usePlatformSettings("free_trial");
+  const { data: aiAvatarSettings } = usePlatformSettings("ai_avatar");
+  const { data: aiParams } = usePlatformSettings("ai_generation_params");
   const showTrialBadge = trialSettings?.enabled ?? false;
   const { areas } = useHomepageAreas();
   const [areaLessons, setAreaLessons] = useState<Record<string, Video[]>>({});
@@ -76,7 +78,14 @@ const Index = () => {
           thumbnail: aiKitCover,
           duration: "Aula com Professor Virtual",
           category: ((row.areas as string[] | null) || [])[0] || row.disciplina || "Revisão com IA",
-          instructor: "Revisão Fácil IA",
+          instructor: (() => {
+            const avatar = resolveAiAvatar(
+              aiParams,
+              { ...DEFAULT_AI_AVATAR, ...(aiAvatarSettings || {}) },
+              { disciplina: row.disciplina, areas: (row.areas as string[] | null) || [], contentType: "apresentacao" },
+            );
+            return `${aiRoleLabel(avatar.gender)} ${avatar.name}`.trim();
+          })(),
           lessons: Array.isArray(kit.slides) ? kit.slides.length : 0,
         };
       });
@@ -87,7 +96,7 @@ const Index = () => {
       );
     };
     void fetchAiKits();
-  }, []);
+  }, [aiAvatarSettings, aiParams]);
 
   // Fetch watched video IDs for logged-in students
   useEffect(() => {
@@ -219,6 +228,8 @@ const Index = () => {
     const fetchAreaLessons = async () => {
       setLoadingAreas(true);
       const result: Record<string, Video[]> = {};
+      const rowsByArea: Record<string, any[]> = {};
+      const teacherIds = new Set<string>();
       for (const area of areas) {
         const { data } = await supabase
           .from("lessons")
@@ -227,21 +238,41 @@ const Index = () => {
           .eq("admin_approved", true)
           .contains("areas", [area.name])
           .limit(20);
-
         if (data && data.length > 0) {
-          result[area.name] = data.map((l) => ({
+          rowsByArea[area.name] = data;
+          data.forEach((l: any) => l.teacher_id && teacherIds.add(l.teacher_id));
+        }
+      }
+
+      // Nome e página do professor real de cada conteúdo.
+      const teacherMap = new Map<string, { name: string; slug: string | null }>();
+      if (teacherIds.size > 0) {
+        const { data: tProfiles } = await supabase
+          .from("profiles")
+          .select("user_id, name, slug")
+          .in("user_id", Array.from(teacherIds));
+        (tProfiles || []).forEach((p: any) =>
+          teacherMap.set(p.user_id, { name: p.name, slug: p.slug }),
+        );
+      }
+
+      for (const [areaName, rows] of Object.entries(rowsByArea)) {
+        result[areaName] = rows.map((l: any) => {
+          const teacher = l.teacher_id ? teacherMap.get(l.teacher_id) : undefined;
+          return {
             id: l.id,
             title: l.title,
             description: l.description || "",
             thumbnail: l.thumbnail_url || "/placeholder.svg",
             duration: "",
             category: (l.areas as string[] || [])[0] || "",
-            instructor: "",
+            instructor: teacher?.name || "",
+            instructorHref: teacher?.slug ? `/${teacher.slug}` : undefined,
             lessons: 1,
             level: "Iniciante" as const,
             videoUrl: l.video_url || undefined,
-          }));
-        }
+          };
+        });
       }
       setAreaLessons(result);
       setLoadingAreas(false);

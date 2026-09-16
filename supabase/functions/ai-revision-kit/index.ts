@@ -11,8 +11,8 @@ const corsHeaders = {
 };
 
 const GEN_MODEL = "google/gemini-3.7-flash";
-const TEMPLATE_VERSION = "v2";
-const PROMPT_VERSION = "v2";
+const TEMPLATE_VERSION = "v3";
+const PROMPT_VERSION = "v3";
 const SIGNUP_CREDITS = 2;
 const ANON_FREE_USES = 1;
 
@@ -103,7 +103,7 @@ const KIT_TOOL = {
         },
         slides: {
           type: "array",
-          description: "6 a 8 slides: o primeiro é a introdução e o último o encerramento, seguindo o padrão pedido.",
+          description: "8 a 12 slides: o primeiro é a introdução, os do meio trazem os conceitos, em seguida um slide por Top Questão com a resolução comentada na narração, e o último é o encerramento.",
           items: {
             type: "object",
             properties: {
@@ -140,6 +140,7 @@ REGRAS DE LINGUAGEM (obrigatórias):
 PADRÃO DA NARRAÇÃO DOS SLIDES (obrigatório):
 - Slide 1 (introdução): narração no estilo "Olá, pessoal! Sejam bem-vindos a este rápido resumo essencial para a sua prova de [assunto]. Em poucos minutos vamos revisar os pontos-chave que você precisa dominar e arrebentar na prova! Vamos lá? Cola aqui que você vai bem!". Deixe claro que é uma revisão com os pontos essenciais para a prova.
 - Slides do meio: conceitos-chave e conteúdos de prova, sempre com exemplos reais do dia a dia (não só teoria) e com frases descontraídas espalhadas, como "Isso tem alta chance de cair na sua prova...", "Presta atenção aqui, dica de prova!", "Atenção a esse ponto, cai sempre em provas...".
+- TOP QUESTÕES (obrigatório): antes do slide de encerramento, inclua slides dedicados às Top Questões. Cada Top Questão gerada no campo top_questoes deve aparecer na narração de um desses slides, lida por completo e seguida da resolução comentada passo a passo (raciocínio, pegadinhas e o porquê da resposta). Os bullets desses slides trazem o enunciado resumido e os passos da resolução.
 - Último slide (encerramento): reforce os pontos mais importantes do conteúdo, peça para o aluno deixar a dúvida (um professor responde), compartilhar a revisão com os colegas e avaliar o vídeo, e sugira fazer o simulado, ver as Top Questões resolvidas e marcar uma aula com um professor. Termine com "Boa prova!".`;
   const user = `Monte um Kit de Revisão completo.
 Assunto informado pelo aluno: ${params.assunto}
@@ -147,8 +148,7 @@ Disciplina: ${params.disciplina || "não informada"}
 Curso: ${params.curso || "não informado"}
 Instituição: ${params.instituicao || "não informada"}
 Profundidade: ${params.nivel === "aprofundado" ? "aprofundada" : "revisão rápida"}
-Gere de 6 a 8 slides seguindo exatamente o padrão de narração: slide 1 de introdução, slides do meio com conceitos-chave e conteúdos de prova (com exemplos do dia a dia e frases descontraídas de dica de prova) e o último slide de encerramento.
-Nos slides do meio, relacione os pontos com as questões mais prováveis, no mesmo espírito das Top Questões.
+Gere de 8 a 12 slides seguindo exatamente o padrão de narração: slide 1 de introdução, slides do meio com conceitos-chave e conteúdos de prova (com exemplos do dia a dia e frases descontraídas de dica de prova), depois um slide para cada Top Questão gerada em top_questoes — com o enunciado e a resolução comentada na narração — e o último slide de encerramento.
 Em cada slide, escreva uma narração fluida em português brasileiro informal e uma direção de imagem didática diretamente relacionada ao tópico (no primeiro e no último slide a imagem é apenas de ambiente, sem conteúdo escrito).`;
 
   const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {

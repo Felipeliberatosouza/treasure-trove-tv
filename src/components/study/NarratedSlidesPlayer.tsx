@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Play, Pause, Loader2, ChevronLeft, ChevronRight, Volume2, Captions, CaptionsOff } from "lucide-react";
 import { toast } from "sonner";
 import professoraIa from "@/assets/professora-ia.jpg";
-import { usePlatformSettings, DEFAULT_AI_AVATAR, resolveAiAvatar } from "@/hooks/usePlatformSettings";
+import { usePlatformSettings, DEFAULT_AI_AVATAR, resolveAiAvatar, resolveLogoForBackground } from "@/hooks/usePlatformSettings";
 import visualCiencia from "@/assets/slide-visual-ciencia.jpg";
 import visualHumanas from "@/assets/slide-visual-humanas.jpg";
 import visualExatas from "@/assets/slide-visual-exatas.jpg";
@@ -34,8 +34,12 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina }: Props
   const [caption, setCaption] = useState("");
   const [started, setStarted] = useState(false);
   const [speaking, setSpeaking] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
   const { data: avatarSettings } = usePlatformSettings("ai_avatar");
   const { data: aiParams } = usePlatformSettings("ai_generation_params");
+  const { data: branding } = usePlatformSettings("branding");
+  const brandLogo = resolveLogoForBackground(branding as any) || logoRevisaoFacil;
   const avatar = resolveAiAvatar(
     aiParams,
     { ...DEFAULT_AI_AVATAR, ...(avatarSettings || {}) },
@@ -44,6 +48,7 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina }: Props
   const avatarImage = avatar.image_url || professoraIa;
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const tokenRef = useRef<string>("");
+  const cacheRef = useRef<Map<number, string>>(new Map());
 
   const getToken = useCallback(async () => {
     const { supabase } = await import("@/integrations/supabase/client");
@@ -51,11 +56,12 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina }: Props
     return data.session?.access_token ?? "";
   }, []);
 
-  const loadSlideAudio = useCallback(
-    async (index: number) => {
+  const fetchSlideAudio = useCallback(
+    async (index: number, silent = false): Promise<string | null> => {
       const slide = slides[index];
       if (!slide?.narracao) return null;
-      setLoading(true);
+      const cached = cacheRef.current.get(index);
+      if (cached) return cached;
       try {
         if (!tokenRef.current) tokenRef.current = await getToken();
         const resp = await fetch(ttsUrl, {
@@ -72,37 +78,46 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina }: Props
           const err = await resp.json().catch(() => ({}));
           throw new Error(err?.error || `Falha (${resp.status})`);
         }
+        let url: string | null = null;
         if (canonicalId) {
           const payload = await resp.json();
-          return typeof payload.audio_url === "string" ? payload.audio_url : null;
+          url = typeof payload.audio_url === "string" ? payload.audio_url : null;
+        } else {
+          url = URL.createObjectURL(await resp.blob());
         }
-        const blob = await resp.blob();
-        return URL.createObjectURL(blob);
+        if (url) cacheRef.current.set(index, url);
+        return url;
       } catch (e: any) {
-        toast.error(e?.message || "Falha ao gerar narração");
+        if (!silent) toast.error(e?.message || "Falha ao gerar narração");
         return null;
-      } finally {
-        setLoading(false);
       }
     },
     [slides, getToken, canonicalId, avatar.gender],
   );
 
+  const prefetch = useCallback(
+    (index: number) => {
+      if (index < slides.length && !cacheRef.current.has(index)) void fetchSlideAudio(index, true);
+    },
+    [fetchSlideAudio, slides.length],
+  );
+
   const playFrom = useCallback(
     async (index: number) => {
-      const url = await loadSlideAudio(index);
+      const cached = cacheRef.current.get(index);
+      if (!cached) setLoading(true);
+      const url = cached ?? (await fetchSlideAudio(index));
+      setLoading(false);
       if (!url) {
         setPlaying(false);
         return;
       }
-      setAudioUrl((prev) => {
-        if (prev) URL.revokeObjectURL(prev);
-        return url;
-      });
+      setAudioUrl(url);
       setPlaying(true);
       setStarted(true);
+      prefetch(index + 1);
     },
-    [loadSlideAudio],
+    [fetchSlideAudio, prefetch],
   );
 
   const handleEnded = useCallback(() => {
@@ -113,10 +128,6 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina }: Props
         return next;
       }
       setPlaying(false);
-      setAudioUrl((prev) => {
-        if (prev) URL.revokeObjectURL(prev);
-        return null;
-      });
       return c;
     });
   }, [slides.length, playFrom]);
@@ -124,16 +135,19 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina }: Props
   useEffect(() => {
     const el = audioRef.current;
     if (!el || !audioUrl) return;
-    el.src = audioUrl;
+    if (el.src !== audioUrl) el.src = audioUrl;
     if (playing) void el.play().catch(() => setPlaying(false));
-    return () => {};
   }, [audioUrl, playing]);
 
   useEffect(() => {
+    const cache = cacheRef.current;
     return () => {
-      if (audioUrl) URL.revokeObjectURL(audioUrl);
+      cache.forEach((url) => {
+        if (url.startsWith("blob:")) URL.revokeObjectURL(url);
+      });
+      cache.clear();
     };
-  }, [audioUrl]);
+  }, []);
 
   const slide = slides[current];
 
@@ -151,10 +165,20 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina }: Props
   const coverImage = themeImages[0];
   const slideImage = themeImages[current % themeImages.length];
 
+  const formatTime = (value: number) => {
+    if (!Number.isFinite(value) || value < 0) return "0:00";
+    const m = Math.floor(value / 60);
+    const s = Math.floor(value % 60);
+    return `${m}:${String(s).padStart(2, "0")}`;
+  };
+
   const updateCaption = useCallback(() => {
     const audio = audioRef.current;
     const text = slides[current]?.narracao || "";
-    if (!audio || !text || !audio.duration) return;
+    if (!audio) return;
+    setCurrentTime(audio.currentTime || 0);
+    setDuration(Number.isFinite(audio.duration) ? audio.duration : 0);
+    if (!text || !audio.duration) return;
     const words = text.split(/\s+/).filter(Boolean);
     const wordsPerCaption = 9;
     const progress = Math.min(audio.currentTime / audio.duration, 0.999);
@@ -172,14 +196,14 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina }: Props
 
   const brandOverlay = (
     <div className="pointer-events-none absolute bottom-2 right-2 z-10 flex flex-col items-end gap-0.5 sm:bottom-3 sm:right-3">
-      <img src={logoRevisaoFacil} alt="Revisão Fácil" className="h-5 w-auto opacity-90 sm:h-7" />
+      <img src={brandLogo} alt="Revisão Fácil" className="h-5 w-auto opacity-90 sm:h-7" />
       <span className="text-[8px] text-muted-foreground sm:text-[10px]">revisaofacil.com.br</span>
     </div>
   );
 
   const legalNotice = (
     <p className="border-t border-border bg-background/90 px-2 py-1 text-center text-[9px] text-muted-foreground sm:text-[10px]">
-      Conteúdo de responsabilidade do professor, de acordo com a Lei 12.965/2014.
+      Conteúdo produzido com apoio de IA: são tópicos prioritários e questões para praticar, não uma previsão da prova. Agende uma aula com um professor.
     </p>
   );
 
@@ -307,8 +331,37 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina }: Props
         onPlay={() => setSpeaking(true)}
         onPause={() => setSpeaking(false)}
         onTimeUpdate={updateCaption}
+        onLoadedMetadata={updateCaption}
         className="hidden"
       />
+      <div className="flex items-center gap-2 border-t border-border bg-background/90 px-2 pt-2">
+        <span className="w-9 shrink-0 text-right text-[10px] tabular-nums text-muted-foreground">{formatTime(currentTime)}</span>
+        <div className="relative flex-1">
+          <input
+            type="range"
+            min={0}
+            max={duration || 0}
+            step={0.1}
+            value={Math.min(currentTime, duration || 0)}
+            onChange={(event) => {
+              const value = Number(event.target.value);
+              if (audioRef.current) audioRef.current.currentTime = value;
+              setCurrentTime(value);
+            }}
+            aria-label="Barra de progresso da narração"
+            className="ai-slide-progress h-1.5 w-full cursor-pointer appearance-none rounded-full bg-muted accent-primary"
+          />
+          <div className="pointer-events-none absolute inset-x-0 -bottom-2 flex justify-between">
+            {slides.map((_, index) => (
+              <span
+                key={index}
+                className={`h-1 w-1 rounded-full ${index <= current ? "bg-primary" : "bg-muted-foreground/40"}`}
+              />
+            ))}
+          </div>
+        </div>
+        <span className="w-9 shrink-0 text-[10px] tabular-nums text-muted-foreground">{formatTime(duration)}</span>
+      </div>
       <div className="flex items-center justify-between gap-2 border-t border-border bg-background/90 p-2 backdrop-blur-sm">
         <div className="flex items-center gap-1">
           {!playing ? (

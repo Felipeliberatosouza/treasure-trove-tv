@@ -147,7 +147,9 @@ Disciplina: ${params.disciplina || "não informada"}
 Curso: ${params.curso || "não informado"}
 Instituição: ${params.instituicao || "não informada"}
 Profundidade: ${params.nivel === "aprofundado" ? "aprofundada" : "revisão rápida"}
-Nos slides, escreva uma narração fluida em português brasileiro e uma direção de imagem didática diretamente relacionada a cada tópico.`;
+Gere de 6 a 8 slides seguindo exatamente o padrão de narração: slide 1 de introdução, slides do meio com conceitos-chave e conteúdos de prova (com exemplos do dia a dia e frases descontraídas de dica de prova) e o último slide de encerramento.
+Nos slides do meio, relacione os pontos com as questões mais prováveis, no mesmo espírito das Top Questões.
+Em cada slide, escreva uma narração fluida em português brasileiro informal e uma direção de imagem didática diretamente relacionada ao tópico (no primeiro e no último slide a imagem é apenas de ambiente, sem conteúdo escrito).`;
 
   const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",

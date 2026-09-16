@@ -27,10 +27,7 @@ const ForensicWatermark = ({ variant = "video", cols = 3, rows = 4 }: Props) => 
     return () => clearInterval(t);
   }, []);
 
-  const email = user?.email ?? "anônimo";
-  const shortId = user?.id ? user.id.slice(0, 8) : "—";
-  const stamp = now.toISOString().slice(0, 16).replace("T", " ");
-  const label = `${email} · ${shortId} · ${stamp}`;
+  const label = "Revisão Fácil. Todos os direitos reservados. revisaofacil.com";
 
   const cells = Array.from({ length: cols * rows }, (_, i) => i);
   const colorClass = variant === "video" ? "text-white/15" : "text-foreground/10";

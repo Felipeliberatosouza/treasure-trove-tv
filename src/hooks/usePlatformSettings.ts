@@ -408,6 +408,26 @@ type SettingsMap = {
   aula_particular_config: AulaParticularConfigSettings;
   footer: FooterSettings;
   alert_box: AlertBoxSettings;
+  ai_avatar: AiAvatarSettings;
+};
+
+/** Avatar da professora/professor virtual usado nos slides gerados por IA. */
+export interface AiAvatarSettings {
+  /** Nome exibido nos slides (editável pelo administrador). */
+  name: string;
+  /** Gênero do avatar — define a voz da narração. */
+  gender: "female" | "male";
+  /** Imagem do avatar. Vazio = imagem padrão da plataforma. */
+  image_url: string;
+  /** Legenda curta abaixo do nome (ex.: "Professora virtual"). */
+  role_label: string;
+}
+
+export const DEFAULT_AI_AVATAR: AiAvatarSettings = {
+  name: "Professora Ana",
+  gender: "female",
+  image_url: "",
+  role_label: "Professora virtual",
 };
 
 export interface TwilioConfigSettings {

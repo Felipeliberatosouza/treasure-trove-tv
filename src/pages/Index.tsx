@@ -20,6 +20,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { AnimatePresence, motion } from "framer-motion";
 import HomeKitGenerator from "@/components/revisao-ia/HomeKitGenerator";
 import type { Video } from "@/data/courses";
+import aiKitCover from "@/assets/slide-visual-ciencia.jpg";
 
 interface SearchResult {
   id: string;
@@ -38,6 +39,8 @@ const Index = () => {
   const [popularVideos, setPopularVideos] = useState<Video[]>([]);
   const [loadingPopular, setLoadingPopular] = useState(false);
   const [watchedIds, setWatchedIds] = useState<Set<string>>(new Set());
+  const [aiKits, setAiKits] = useState<Video[]>([]);
+  const [aiKitIds, setAiKitIds] = useState<Set<string>>(new Set());
   const [teacherLessons, setTeacherLessons] = useState<Video[]>([]);
   const [teacherExams, setTeacherExams] = useState<Video[]>([]);
   const [loadingTeacherContent, setLoadingTeacherContent] = useState(false);
@@ -52,6 +55,35 @@ const Index = () => {
   const [inlineSearching, setInlineSearching] = useState(false);
   const inlineSearchRef = useRef<HTMLInputElement>(null);
   const popularSectionRef = useRef<HTMLDivElement>(null);
+
+  // Revisões geradas por IA já armazenadas na plataforma (acervo canônico)
+  useEffect(() => {
+    const fetchAiKits = async () => {
+      const { data } = await supabase
+        .from("ai_canonical_contents")
+        .select("id, assunto, disciplina, kit, updated_at")
+        .eq("status", "ready")
+        .eq("visibility", "public_canonical")
+        .order("updated_at", { ascending: false })
+        .limit(20);
+      const mapped: Video[] = (data || []).map((row) => {
+        const kit = (row.kit || {}) as { titulo?: string; slides?: unknown[]; resumo?: unknown };
+        return {
+          id: row.id,
+          title: kit.titulo || row.assunto,
+          description: row.disciplina || "Revisão gerada com apoio de IA",
+          thumbnail: aiKitCover,
+          duration: "Apresentação narrada",
+          category: row.disciplina || "Revisão com IA",
+          instructor: "Revisão Fácil IA",
+          lessons: Array.isArray(kit.slides) ? kit.slides.length : 0,
+        };
+      });
+      setAiKits(mapped);
+      setAiKitIds(new Set(mapped.map((m) => m.id)));
+    };
+    void fetchAiKits();
+  }, []);
 
   // Fetch watched video IDs for logged-in students
   useEffect(() => {
@@ -254,6 +286,10 @@ const Index = () => {
   }, [inlineSearchOpen]);
 
   const handleVideoClick = (id: string) => {
+    if (aiKitIds.has(id)) {
+      navigate(`/conteudo-ia/${id}`);
+      return;
+    }
     navigate(`/video/${id}`);
   };
 
@@ -396,6 +432,14 @@ const Index = () => {
               )}
             </div>
 
+            {aiKits.length > 0 && (
+              <VideoCarousel
+                title="🤖 Revisões geradas com IA"
+                videos={aiKits}
+                onVideoClick={handleVideoClick}
+              />
+            )}
+
             {loadingAreas && areas.length > 0 ? (
               <div className="flex items-center justify-center py-16 gap-2 text-muted-foreground">
                 <Loader2 className="h-5 w-5 animate-spin" />
@@ -407,7 +451,14 @@ const Index = () => {
                   <VideoCarousel
                     key={area.id}
                     title={`📚 ${area.name}`}
-                    videos={areaLessons[area.name]}
+                    videos={[
+                      ...areaLessons[area.name],
+                      ...aiKits.filter(
+                        (kit) =>
+                          (kit.category || "").toLowerCase().includes(area.name.toLowerCase()) ||
+                          area.name.toLowerCase().includes((kit.category || "—").toLowerCase()),
+                      ),
+                    ]}
                     onVideoClick={handleVideoClick}
                     showTrialBadge={showTrialBadge}
                     watchedIds={watchedIds}

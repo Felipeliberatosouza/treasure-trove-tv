@@ -11,14 +11,22 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { requestKit } from "@/lib/revisionKit";
 
-const STEPS = [
-  "Entendendo o assunto informado",
-  "Procurando conteúdos já existentes",
-  "Organizando os tópicos prioritários",
-  "Preparando o resumo",
-  "Montando o simulado",
-  "Criando o material visual",
-  "Finalizando o Kit de Revisão",
+const buildSteps = (assunto: string, disciplina: string, nivel: string) => [
+  `Lendo o seu pedido: "${assunto}"`,
+  disciplina
+    ? `Confirmando a disciplina informada: ${disciplina}`
+    : "Identificando a disciplina e a área do conhecimento do assunto",
+  `Definindo a profundidade do material (${nivel === "aprofundado" ? "revisão aprofundada" : "revisão rápida"})`,
+  "Consultando o acervo da Revisão Fácil para reaproveitar material equivalente",
+  "Separando os tópicos que mais aparecem em provas sobre esse assunto",
+  "Escrevendo o resumo estruturado em seções",
+  "Elaborando as questões do simulado com gabarito comentado",
+  "Selecionando as Top Questões e escrevendo os comentários",
+  "Condensando a colinha em tópicos de última hora",
+  "Roteirizando os slides e a narração da professora virtual",
+  "Preparando o PDF para download",
+  "Conferindo a consistência de todo o Kit de Revisão",
+  "Abrindo sua revisão",
 ];
 
 const CHIPS = [
@@ -42,6 +50,7 @@ const HomeKitGenerator = () => {
 
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(0);
+  const [steps, setSteps] = useState<string[]>([]);
   const [blocked, setBlocked] = useState<"signup_required" | "paywall" | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const submittingRef = useRef(false);
@@ -49,15 +58,16 @@ const HomeKitGenerator = () => {
   const firstName = useMemo(() => (profile?.name || "").trim().split(" ")[0] || "", [profile?.name]);
 
   useEffect(() => {
-    if (!loading) return;
-    setStep(0);
-    const t = setInterval(() => setStep((s) => Math.min(s + 1, STEPS.length - 1)), 2200);
+    if (!loading || steps.length === 0) return;
+    const t = setInterval(() => setStep((s) => Math.min(s + 1, steps.length - 1)), 1600);
     return () => clearInterval(t);
-  }, [loading]);
+  }, [loading, steps.length]);
 
   const handleSubmit = async () => {
     if (submittingRef.current || assunto.trim().length < 3) return;
     submittingRef.current = true;
+    setSteps(buildSteps(assunto.trim(), disciplina.trim(), nivel));
+    setStep(0);
     setLoading(true);
     setErrorMsg(null);
     setBlocked(null);
@@ -79,33 +89,6 @@ const HomeKitGenerator = () => {
     }
     if (data?.canonical_id) navigate(`/conteudo-ia/${data.canonical_id}`);
   };
-
-  if (loading) {
-    return (
-      <Card className="mx-auto max-w-lg text-left">
-        <CardContent className="space-y-4 p-8">
-          <div className="flex items-center gap-2">
-            <Loader2 className="h-5 w-5 animate-spin text-primary" />
-            <p className="font-semibold">Montando seu Kit de Revisão…</p>
-          </div>
-          <ul className="space-y-2">
-            {STEPS.map((s, i) => (
-              <li key={s} className={`flex items-center gap-2 text-sm ${i <= step ? "text-foreground" : "text-muted-foreground/50"}`}>
-                {i < step ? (
-                  <CheckCircle2 className="h-4 w-4 text-primary" />
-                ) : i === step ? (
-                  <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                ) : (
-                  <span className="h-4 w-4 rounded-full border" />
-                )}
-                {s}
-              </li>
-            ))}
-          </ul>
-        </CardContent>
-      </Card>
-    );
-  }
 
   if (blocked) {
     return (
@@ -186,7 +169,7 @@ const HomeKitGenerator = () => {
                 Personalizar
               </Button>
             </div>
-            <Button type="submit" size="icon" className="rounded-full" disabled={assunto.trim().length < 3} aria-label="Gerar Kit de Revisão" title="Gerar Kit de Revisão">
+            <Button type="submit" size="icon" className="rounded-full" disabled={loading || assunto.trim().length < 3} aria-label="Gerar Kit de Revisão" title="Gerar Kit de Revisão">
               <Send className="h-4 w-4" />
             </Button>
           </div>
@@ -210,6 +193,32 @@ const HomeKitGenerator = () => {
         </div>
       </form>
 
+      {loading && (
+        <Card className="mx-auto mt-6 max-w-3xl text-left">
+          <CardContent className="space-y-3 p-5">
+            <div className="flex items-center gap-2">
+              <Loader2 className="h-4 w-4 animate-spin text-primary" />
+              <p className="text-sm font-semibold">Agente de IA trabalhando na sua revisão</p>
+            </div>
+            <ol className="space-y-2" aria-live="polite">
+              {steps.slice(0, step + 1).map((s, i) => (
+                <li key={s} className="flex items-start gap-2 text-sm">
+                  {i < step ? (
+                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                  ) : (
+                    <Loader2 className="mt-0.5 h-4 w-4 shrink-0 animate-spin text-primary" />
+                  )}
+                  <span className={i < step ? "text-muted-foreground" : "text-foreground"}>{s}</span>
+                </li>
+              ))}
+            </ol>
+            <p className="text-xs text-muted-foreground">
+              Você pode acompanhar aqui mesmo — assim que terminar, a revisão abre automaticamente.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
       {errorMsg && <p className="mt-4 text-sm text-destructive">{errorMsg}</p>}
 
       <div className="mt-6 flex flex-wrap justify-center gap-2">
@@ -228,8 +237,8 @@ const HomeKitGenerator = () => {
       </div>
 
       <p className="mt-5 text-xs text-muted-foreground">
-        1ª revisão grátis, sem cadastro. Conteúdo produzido com apoio de IA: são tópicos prioritários
-        e questões para praticar, não uma previsão da prova.
+        Conteúdo produzido com apoio de IA: são tópicos prioritários e questões para praticar,
+        não uma previsão da prova.
       </p>
     </div>
   );

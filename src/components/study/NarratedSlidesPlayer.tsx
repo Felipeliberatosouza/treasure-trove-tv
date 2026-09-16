@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Play, Pause, Loader2, ChevronLeft, ChevronRight, Volume2, Captions, CaptionsOff } from "lucide-react";
 import { toast } from "sonner";
 import professoraIa from "@/assets/professora-ia.jpg";
+import { usePlatformSettings, DEFAULT_AI_AVATAR } from "@/hooks/usePlatformSettings";
 import visualCiencia from "@/assets/slide-visual-ciencia.jpg";
 import visualHumanas from "@/assets/slide-visual-humanas.jpg";
 import visualExatas from "@/assets/slide-visual-exatas.jpg";
@@ -31,6 +32,10 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina }: Props
   const [showCaptions, setShowCaptions] = useState(true);
   const [caption, setCaption] = useState("");
   const [started, setStarted] = useState(false);
+  const [speaking, setSpeaking] = useState(false);
+  const { data: avatarSettings } = usePlatformSettings("ai_avatar");
+  const avatar = { ...DEFAULT_AI_AVATAR, ...(avatarSettings || {}) };
+  const avatarImage = avatar.image_url || professoraIa;
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const tokenRef = useRef<string>("");
 
@@ -54,8 +59,8 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina }: Props
             "Content-Type": "application/json",
           },
           body: JSON.stringify(canonicalId
-            ? { canonical_id: canonicalId, slide_index: index, avatar_gender: "female" }
-            : { texto: slide.narracao, avatar_gender: "female" }),
+            ? { canonical_id: canonicalId, slide_index: index, avatar_gender: avatar.gender }
+            : { texto: slide.narracao, avatar_gender: avatar.gender }),
         });
         if (!resp.ok) {
           const err = await resp.json().catch(() => ({}));
@@ -74,7 +79,7 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina }: Props
         setLoading(false);
       }
     },
-    [slides, getToken, canonicalId],
+    [slides, getToken, canonicalId, avatar.gender],
   );
 
   const playFrom = useCallback(
@@ -152,19 +157,19 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina }: Props
   }, [current, slides]);
 
   if (!slides.length) {
-    return <div className="flex aspect-video items-center justify-center bg-secondary text-sm text-muted-foreground">Apresentação indisponível.</div>;
+    return <div className="flex aspect-video items-center justify-center bg-muted text-sm text-muted-foreground">Apresentação indisponível.</div>;
   }
 
   // Capa da apresentação (equivalente à capa do vídeo do professor)
   if (!started) {
     return (
-      <div className="relative aspect-video w-full overflow-hidden bg-secondary">
+      <div className="relative aspect-video w-full overflow-hidden bg-muted">
         <img src={coverImage} alt={`Capa da apresentação sobre ${topico}`} className="absolute inset-0 h-full w-full object-cover" width={1536} height={864} />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-background/30" />
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 p-6 text-center">
           <img
-            src={professoraIa}
-            alt="Professora virtual da Revisão Fácil"
+            src={avatarImage}
+            alt={`${avatar.name}, ${avatar.role_label.toLowerCase()} da Revisão Fácil`}
             className="h-20 w-20 rounded-full border-2 border-primary object-cover shadow-lg sm:h-28 sm:w-28"
             width={1024}
             height={1024}
@@ -183,7 +188,7 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina }: Props
   }
 
   return (
-    <div className="relative aspect-video w-full overflow-hidden bg-secondary">
+    <div className="relative aspect-video w-full overflow-hidden bg-muted">
       <img src={slideImage} alt="Ilustração didática da apresentação" className="absolute inset-0 h-full w-full object-cover" width={1536} height={864} />
       <div className="absolute inset-0 bg-gradient-to-r from-background via-background/80 to-background/10" />
       <div className="absolute inset-0 flex flex-col justify-between p-4 sm:p-7 md:p-10">
@@ -205,14 +210,24 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina }: Props
             )}
           </div>
           <div className="shrink-0 text-center">
-            <img
-              src={professoraIa}
-              alt="Professora virtual da Revisão Fácil"
-              className={`h-16 w-16 rounded-full border-2 border-primary object-cover shadow-lg sm:h-24 sm:w-24 md:h-32 md:w-32 ${playing ? "avatar-talking" : ""}`}
-              width={1024}
-              height={1024}
-            />
-            <span className="mt-1 block text-[10px] font-medium sm:text-xs">Professora virtual</span>
+            <div className="relative inline-block">
+              <img
+                src={avatarImage}
+                alt={`${avatar.name}, ${avatar.role_label.toLowerCase()} da Revisão Fácil`}
+                className={`h-16 w-16 rounded-full border-2 border-primary object-cover shadow-lg sm:h-24 sm:w-24 md:h-32 md:w-32 ${speaking ? "avatar-talking" : ""}`}
+                width={1024}
+                height={1024}
+              />
+              {speaking && (
+                <span className="absolute -bottom-1 left-1/2 flex -translate-x-1/2 items-end gap-0.5 rounded-full bg-background/90 px-2 py-1 shadow" aria-hidden="true">
+                  <i className="avatar-voice-bar" />
+                  <i className="avatar-voice-bar" />
+                  <i className="avatar-voice-bar" />
+                </span>
+              )}
+            </div>
+            <span className="mt-2 block text-[10px] font-medium sm:text-xs">{avatar.name}</span>
+            <span className="block text-[10px] text-muted-foreground">{avatar.role_label}</span>
           </div>
         </div>
 
@@ -222,7 +237,17 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina }: Props
           </div>
         )}
 
-        <audio ref={audioRef} onEnded={handleEnded} onTimeUpdate={updateCaption} className="hidden" />
+        <audio
+          ref={audioRef}
+          onEnded={() => {
+            setSpeaking(false);
+            handleEnded();
+          }}
+          onPlay={() => setSpeaking(true)}
+          onPause={() => setSpeaking(false)}
+          onTimeUpdate={updateCaption}
+          className="hidden"
+        />
         <div className="flex items-center justify-between gap-2 rounded bg-background/80 p-2 backdrop-blur-sm">
           <div className="flex items-center gap-1">
           {!playing ? (

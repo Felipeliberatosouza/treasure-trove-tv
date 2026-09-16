@@ -276,7 +276,7 @@ const Index = () => {
               onSubmit={(event) => {
                 event.preventDefault();
                 if (revisionTopic.trim().length < 3) return;
-                navigate(`/revisao-ia?assunto=${encodeURIComponent(revisionTopic.trim())}`);
+                navigate(`/revisao-ia?assunto=${encodeURIComponent(revisionTopic.trim())}&auto=1`);
               }}
             >
               <div className="rounded-2xl border border-border bg-white p-3 text-left text-foreground shadow-lg transition-shadow focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 focus-within:ring-offset-background md:p-4">
@@ -291,7 +291,7 @@ const Index = () => {
                   onKeyDown={(event) => {
                     if (event.key === "Enter" && !event.shiftKey && revisionTopic.trim().length >= 3) {
                       event.preventDefault();
-                      navigate(`/revisao-ia?assunto=${encodeURIComponent(revisionTopic.trim())}`);
+                      navigate(`/revisao-ia?assunto=${encodeURIComponent(revisionTopic.trim())}&auto=1`);
                     }
                   }}
                 />

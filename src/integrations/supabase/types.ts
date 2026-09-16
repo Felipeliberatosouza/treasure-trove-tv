@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       ai_canonical_contents: {
         Row: {
+          areas: string[]
           assunto: string
           cache_key: string
           created_at: string
@@ -35,6 +36,7 @@ export type Database = {
           visibility: string
         }
         Insert: {
+          areas?: string[]
           assunto: string
           cache_key: string
           created_at?: string
@@ -54,6 +56,7 @@ export type Database = {
           visibility?: string
         }
         Update: {
+          areas?: string[]
           assunto?: string
           cache_key?: string
           created_at?: string

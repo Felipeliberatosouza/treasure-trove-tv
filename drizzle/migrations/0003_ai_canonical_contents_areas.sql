@@ -1,0 +1,2 @@
+ALTER TABLE public.ai_canonical_contents ADD COLUMN IF NOT EXISTS areas text[] NOT NULL DEFAULT '{}'::text[];
+CREATE INDEX IF NOT EXISTS ai_canonical_contents_areas_idx ON public.ai_canonical_contents USING gin (areas);

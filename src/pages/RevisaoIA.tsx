@@ -180,6 +180,7 @@ const RevisaoIA = () => {
                   rows={3}
                   maxLength={500}
                   placeholder="Ex.: Administração Financeira — análise de investimentos"
+                  className="ai-prompt-field"
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && !e.shiftKey) {
                       e.preventDefault();

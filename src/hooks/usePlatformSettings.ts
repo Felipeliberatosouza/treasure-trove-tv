@@ -437,7 +437,7 @@ export const DEFAULT_AI_AVATAR: AiAvatarSettings = {
 
 /** Tipos de conteúdo gerados por IA aos quais um avatar pode ser vinculado. */
 export const AI_CONTENT_TYPES = [
-  { id: "apresentacao", label: "Apresentação narrada (slides)" },
+  { id: "apresentacao", label: "Aula com Professor Virtual (slides)" },
   { id: "resumo", label: "Resumo" },
   { id: "simulado", label: "Simulado" },
   { id: "top_questoes", label: "Top Questões" },

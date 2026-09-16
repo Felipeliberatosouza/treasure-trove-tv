@@ -207,7 +207,7 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina }: Props
   }, [current, slides]);
 
   if (!slides.length) {
-    return <div className="flex aspect-video items-center justify-center bg-muted text-sm text-muted-foreground">Apresentação indisponível.</div>;
+    return <div className="flex aspect-video items-center justify-center bg-muted text-sm text-muted-foreground">Aula com professor virtual indisponível.</div>;
   }
 
   const isIntro = current === 0;
@@ -276,10 +276,10 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina }: Props
           </div>
           <h2 className="max-w-3xl font-display text-lg font-bold leading-tight sm:text-4xl">{topico}</h2>
           {disciplina && <p className="text-xs text-muted-foreground sm:text-sm">{disciplina}</p>}
-          <p className="text-[10px] text-muted-foreground sm:text-xs">Apresentação narrada em {slides.length} slides</p>
+          <p className="text-[10px] text-muted-foreground sm:text-xs">Aula com professor virtual em {slides.length} slides</p>
           <Button size="lg" onClick={() => playFrom(0)} disabled={loading} className="ai-slide-btn pointer-events-auto rounded-full">
             {loading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Play className="mr-2 h-5 w-5" />}
-            Assistir apresentação
+            Assistir aula com professor virtual
           </Button>
         </div>
       </div>

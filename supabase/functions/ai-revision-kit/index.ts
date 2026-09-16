@@ -11,8 +11,8 @@ const corsHeaders = {
 };
 
 const GEN_MODEL = "google/gemini-3.7-flash";
-const TEMPLATE_VERSION = "v1";
-const PROMPT_VERSION = "v1";
+const TEMPLATE_VERSION = "v2";
+const PROMPT_VERSION = "v2";
 const SIGNUP_CREDITS = 2;
 const ANON_FREE_USES = 1;
 
@@ -103,7 +103,7 @@ const KIT_TOOL = {
         },
         slides: {
           type: "array",
-          description: "5 a 8 slides didáticos com narração e direção visual.",
+          description: "6 a 8 slides: o primeiro é a introdução e o último o encerramento, seguindo o padrão pedido.",
           items: {
             type: "object",
             properties: {

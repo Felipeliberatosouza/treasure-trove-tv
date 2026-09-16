@@ -41,6 +41,7 @@ const Index = () => {
   const [watchedIds, setWatchedIds] = useState<Set<string>>(new Set());
   const [aiKits, setAiKits] = useState<Video[]>([]);
   const [aiKitIds, setAiKitIds] = useState<Set<string>>(new Set());
+  const [aiKitAreas, setAiKitAreas] = useState<Record<string, string[]>>({});
   const [teacherLessons, setTeacherLessons] = useState<Video[]>([]);
   const [teacherExams, setTeacherExams] = useState<Video[]>([]);
   const [loadingTeacherContent, setLoadingTeacherContent] = useState(false);
@@ -61,7 +62,7 @@ const Index = () => {
     const fetchAiKits = async () => {
       const { data } = await supabase
         .from("ai_canonical_contents")
-        .select("id, assunto, disciplina, kit, updated_at")
+        .select("id, assunto, disciplina, areas, kit, updated_at")
         .eq("status", "ready")
         .eq("visibility", "public_canonical")
         .order("updated_at", { ascending: false })

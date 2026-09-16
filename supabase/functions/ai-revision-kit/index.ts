@@ -132,6 +132,7 @@ async function generateKit(apiKey: string, params: {
   curso?: string;
   instituicao?: string;
   nivel: string;
+  areasDisponiveis: string[];
 }) {
   const system = `Você é um professor virtual brasileiro da Revisão Fácil que grava revisões rápidas para provas de graduação.
 Escreva em português brasileiro, com linguagem informal, leve e direcionada a universitários.
@@ -154,7 +155,12 @@ Curso: ${params.curso || "não informado"}
 Instituição: ${params.instituicao || "não informada"}
 Profundidade: ${params.nivel === "aprofundado" ? "aprofundada" : "revisão rápida"}
 Gere de 8 a 12 slides seguindo exatamente o padrão de narração: slide 1 de introdução, slides do meio com conceitos-chave e conteúdos de prova (com exemplos do dia a dia e frases descontraídas de dica de prova), depois um slide para cada Top Questão gerada em top_questoes — com o enunciado e a resolução comentada na narração — e o último slide de encerramento.
-Em cada slide, escreva uma narração fluida em português brasileiro informal e uma direção de imagem didática diretamente relacionada ao tópico (no primeiro e no último slide a imagem é apenas de ambiente, sem conteúdo escrito).`;
+Em cada slide, escreva uma narração fluida em português brasileiro informal e uma direção de imagem didática diretamente relacionada ao tópico (no primeiro e no último slide a imagem é apenas de ambiente, sem conteúdo escrito).
+
+CLASSIFICAÇÃO POR ÁREA (obrigatória): no campo "areas", escolha entre 1 e 3 áreas desta lista de áreas de curso cadastradas na plataforma, copiando o nome EXATAMENTE como aparece:
+${params.areasDisponiveis.map((a) => `- ${a}`).join("\n") || "- (nenhuma área cadastrada)"}
+Se o conteúdo for relevante para mais de uma área, indique todas as que fizerem sentido. Nunca invente nomes de área fora da lista.`;
+
 
   const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",

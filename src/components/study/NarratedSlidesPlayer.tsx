@@ -165,10 +165,20 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina }: Props
   const coverImage = themeImages[0];
   const slideImage = themeImages[current % themeImages.length];
 
+  const formatTime = (value: number) => {
+    if (!Number.isFinite(value) || value < 0) return "0:00";
+    const m = Math.floor(value / 60);
+    const s = Math.floor(value % 60);
+    return `${m}:${String(s).padStart(2, "0")}`;
+  };
+
   const updateCaption = useCallback(() => {
     const audio = audioRef.current;
     const text = slides[current]?.narracao || "";
-    if (!audio || !text || !audio.duration) return;
+    if (!audio) return;
+    setCurrentTime(audio.currentTime || 0);
+    setDuration(Number.isFinite(audio.duration) ? audio.duration : 0);
+    if (!text || !audio.duration) return;
     const words = text.split(/\s+/).filter(Boolean);
     const wordsPerCaption = 9;
     const progress = Math.min(audio.currentTime / audio.duration, 0.999);

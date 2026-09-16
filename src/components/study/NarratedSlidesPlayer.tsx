@@ -163,7 +163,7 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina }: Props
   // Capa da apresentação (equivalente à capa do vídeo do professor)
   if (!started) {
     return (
-      <div className="relative aspect-video w-full overflow-hidden bg-muted">
+      <div className="ai-slide-player relative aspect-video w-full overflow-hidden bg-muted">
         <img src={coverImage} alt={`Capa da apresentação sobre ${topico}`} className="absolute inset-0 h-full w-full object-cover" width={1536} height={864} />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-background/30" />
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-4 p-6 text-center">

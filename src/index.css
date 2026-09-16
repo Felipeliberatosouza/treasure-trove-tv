@@ -370,3 +370,21 @@
     cursor: not-allowed;
   }
 }
+
+/* Slides da revisão por IA: nenhuma mudança de cor ao passar o mouse */
+.ai-slide-player button.ai-slide-btn,
+.ai-slide-player button.ai-slide-btn:hover,
+.ai-slide-player button.ai-slide-btn:focus-visible {
+  transition: none !important;
+}
+.ai-slide-player button.ai-slide-btn:hover {
+  background-color: inherit;
+}
+.ai-slide-player button.ai-slide-btn.bg-primary:hover {
+  background-color: hsl(var(--primary)) !important;
+  color: hsl(var(--primary-foreground)) !important;
+}
+.ai-slide-player button.ai-slide-btn:not(.bg-primary):hover {
+  background-color: transparent !important;
+  color: hsl(var(--foreground)) !important;
+}

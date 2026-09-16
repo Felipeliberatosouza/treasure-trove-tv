@@ -41,6 +41,7 @@ const Index = () => {
   const [watchedIds, setWatchedIds] = useState<Set<string>>(new Set());
   const [aiKits, setAiKits] = useState<Video[]>([]);
   const [aiKitIds, setAiKitIds] = useState<Set<string>>(new Set());
+  const [aiKitAreas, setAiKitAreas] = useState<Record<string, string[]>>({});
   const [teacherLessons, setTeacherLessons] = useState<Video[]>([]);
   const [teacherExams, setTeacherExams] = useState<Video[]>([]);
   const [loadingTeacherContent, setLoadingTeacherContent] = useState(false);
@@ -61,7 +62,7 @@ const Index = () => {
     const fetchAiKits = async () => {
       const { data } = await supabase
         .from("ai_canonical_contents")
-        .select("id, assunto, disciplina, kit, updated_at")
+        .select("id, assunto, disciplina, areas, kit, updated_at")
         .eq("status", "ready")
         .eq("visibility", "public_canonical")
         .order("updated_at", { ascending: false })
@@ -74,13 +75,16 @@ const Index = () => {
           description: row.disciplina || "Revisão gerada com apoio de IA",
           thumbnail: aiKitCover,
           duration: "Aula com Professor Virtual",
-          category: row.disciplina || "Revisão com IA",
+          category: ((row.areas as string[] | null) || [])[0] || row.disciplina || "Revisão com IA",
           instructor: "Revisão Fácil IA",
           lessons: Array.isArray(kit.slides) ? kit.slides.length : 0,
         };
       });
       setAiKits(mapped);
       setAiKitIds(new Set(mapped.map((m) => m.id)));
+      setAiKitAreas(
+        Object.fromEntries((data || []).map((row) => [row.id, ((row.areas as string[] | null) || [])])),
+      );
     };
     void fetchAiKits();
   }, []);
@@ -446,25 +450,26 @@ const Index = () => {
                 <span className="text-sm">Carregando conteúdos por área...</span>
               </div>
             ) : (
-              areas.map((area) =>
-                areaLessons[area.name] && areaLessons[area.name].length > 0 ? (
+              areas.map((area) => {
+                const lessonsForArea = areaLessons[area.name] || [];
+                // Vínculo oficial: áreas gravadas no material de IA (classificação automática/admin).
+                const kitsForArea = aiKits.filter((kit) =>
+                  (aiKitAreas[kit.id] || []).some(
+                    (a) => a.trim().toLowerCase() === area.name.trim().toLowerCase(),
+                  ),
+                );
+                if (lessonsForArea.length === 0 && kitsForArea.length === 0) return null;
+                return (
                   <VideoCarousel
                     key={area.id}
                     title={`📚 ${area.name}`}
-                    videos={[
-                      ...areaLessons[area.name],
-                      ...aiKits.filter(
-                        (kit) =>
-                          (kit.category || "").toLowerCase().includes(area.name.toLowerCase()) ||
-                          area.name.toLowerCase().includes((kit.category || "—").toLowerCase()),
-                      ),
-                    ]}
+                    videos={[...lessonsForArea, ...kitsForArea]}
                     onVideoClick={handleVideoClick}
                     showTrialBadge={showTrialBadge}
                     watchedIds={watchedIds}
                   />
-                ) : null
-              )
+                );
+              })
             )}
           </>
         )}

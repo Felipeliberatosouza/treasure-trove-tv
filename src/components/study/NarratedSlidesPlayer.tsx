@@ -21,11 +21,13 @@ interface Props {
   slides: StudySlide[];
   canonicalId?: string | null;
   disciplina?: string;
+  /** Áreas de curso vinculadas ao material — definem o avatar quando cadastrado por área. */
+  areas?: string[];
 }
 
 const ttsUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/study-tts`;
 
-const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina }: Props) => {
+const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina, areas }: Props) => {
   const [current, setCurrent] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -49,7 +51,7 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina }: Props
   const resolved = resolveAiAvatar(
     aiParams,
     { ...DEFAULT_AI_AVATAR, ...(avatarSettings || {}) },
-    { disciplina, contentType: "apresentacao" },
+    { disciplina, areas, contentType: "apresentacao" },
   );
   const avatar = { ...resolved, role_label: aiRoleLabel(resolved.gender) };
   const avatarImage = avatar.image_url || professoraIa;

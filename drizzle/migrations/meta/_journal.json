@@ -22,6 +22,13 @@
       "when": 1789516069142,
       "tag": "0002_ai_revision_media_storage_policies",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1789572078831,
+      "tag": "0003_ai_canonical_contents_areas",
+      "breakpoints": true
     }
   ]
 }

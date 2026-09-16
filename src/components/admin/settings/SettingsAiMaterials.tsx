@@ -19,6 +19,8 @@ import {
 import { Loader2, Pencil, Trash2, Save, ExternalLink, Search } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
+import { Checkbox } from "@/components/ui/checkbox";
+import { useCourseAreas } from "@/hooks/useCourseAreas";
 
 interface KitSlide {
   titulo?: string;
@@ -39,6 +41,7 @@ interface MaterialRow {
   id: string;
   assunto: string;
   disciplina: string | null;
+  areas: string[];
   status: string;
   visibility: string;
   updated_at: string;
@@ -48,6 +51,7 @@ interface MaterialRow {
 
 /** Gestão dos materiais já gerados por IA: edição (inclusive da narração) e exclusão. */
 const SettingsAiMaterials = () => {
+  const { areas: courseAreas } = useCourseAreas();
   const [rows, setRows] = useState<MaterialRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -59,7 +63,7 @@ const SettingsAiMaterials = () => {
     setLoading(true);
     const { data, error } = await supabase
       .from("ai_canonical_contents")
-      .select("id, assunto, disciplina, status, visibility, updated_at, hits, kit")
+      .select("id, assunto, disciplina, areas, status, visibility, updated_at, hits, kit")
       .order("updated_at", { ascending: false })
       .limit(200);
     setLoading(false);
@@ -70,6 +74,7 @@ const SettingsAiMaterials = () => {
     setRows(
       (data ?? []).map((r) => ({
         ...r,
+        areas: ((r as { areas?: string[] | null }).areas ?? []) as string[],
         kit: (r.kit ?? {}) as KitData,
       })) as MaterialRow[],
     );
@@ -106,6 +111,7 @@ const SettingsAiMaterials = () => {
       .update({
         assunto: editing.assunto.trim(),
         disciplina: editing.disciplina?.trim() || null,
+        areas: editing.areas,
         kit: editing.kit as never,
       })
       .eq("id", editing.id);
@@ -186,6 +192,37 @@ const SettingsAiMaterials = () => {
                 })
               }
             />
+          </div>
+          <div className="space-y-2 sm:col-span-2">
+            <Label>Áreas de curso vinculadas</Label>
+            <p className="text-xs text-muted-foreground">
+              Define o avatar usado, a faixa da área na página inicial e a entrega para alunos
+              interessados na área. A classificação inicial é automática.
+            </p>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {courseAreas.map((area) => {
+                const checked = editing.areas.includes(area.name);
+                return (
+                  <label key={area.id} className="flex items-center gap-2 text-sm">
+                    <Checkbox
+                      checked={checked}
+                      onCheckedChange={(v) =>
+                        setEditing({
+                          ...editing,
+                          areas: v
+                            ? [...editing.areas, area.name]
+                            : editing.areas.filter((a) => a !== area.name),
+                        })
+                      }
+                    />
+                    {area.name}
+                  </label>
+                );
+              })}
+              {courseAreas.length === 0 && (
+                <p className="text-sm text-muted-foreground">Nenhuma área de curso cadastrada.</p>
+              )}
+            </div>
           </div>
         </div>
 
@@ -280,6 +317,10 @@ const SettingsAiMaterials = () => {
                 <div className="mt-1 flex flex-wrap gap-1">
                   <Badge variant={row.status === "ready" ? "secondary" : "outline"}>{row.status}</Badge>
                   <Badge variant="outline">{row.visibility}</Badge>
+                  {row.areas.map((a) => (
+                    <Badge key={a} variant="secondary">{a}</Badge>
+                  ))}
+                  {row.areas.length === 0 && <Badge variant="outline">sem área</Badge>}
                 </div>
               </div>
               <div className="flex gap-2">

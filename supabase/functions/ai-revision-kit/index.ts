@@ -12,7 +12,7 @@ const corsHeaders = {
 
 const GEN_MODEL = "google/gemini-3.7-flash";
 const TEMPLATE_VERSION = "v4";
-const PROMPT_VERSION = "v4";
+const PROMPT_VERSION = "v5";
 const SIGNUP_CREDITS = 2;
 const ANON_FREE_USES = 1;
 
@@ -115,8 +115,13 @@ const KIT_TOOL = {
             required: ["titulo", "bullets", "narracao", "imagem_prompt"],
           },
         },
+        areas: {
+          type: "array",
+          items: { type: "string" },
+          description: "Áreas de curso às quais este conteúdo pertence. Use SOMENTE nomes exatos da lista de áreas cadastradas informada no pedido. Pode indicar mais de uma área quando o conteúdo for relevante para várias.",
+        },
       },
-      required: ["titulo", "assunto", "resumo", "conceitos_chave", "colinha", "simulado", "top_questoes", "slides"],
+      required: ["titulo", "assunto", "resumo", "conceitos_chave", "colinha", "simulado", "top_questoes", "slides", "areas"],
     },
   },
 };
@@ -127,6 +132,7 @@ async function generateKit(apiKey: string, params: {
   curso?: string;
   instituicao?: string;
   nivel: string;
+  areasDisponiveis: string[];
 }) {
   const system = `Você é um professor virtual brasileiro da Revisão Fácil que grava revisões rápidas para provas de graduação.
 Escreva em português brasileiro, com linguagem informal, leve e direcionada a universitários.
@@ -149,7 +155,12 @@ Curso: ${params.curso || "não informado"}
 Instituição: ${params.instituicao || "não informada"}
 Profundidade: ${params.nivel === "aprofundado" ? "aprofundada" : "revisão rápida"}
 Gere de 8 a 12 slides seguindo exatamente o padrão de narração: slide 1 de introdução, slides do meio com conceitos-chave e conteúdos de prova (com exemplos do dia a dia e frases descontraídas de dica de prova), depois um slide para cada Top Questão gerada em top_questoes — com o enunciado e a resolução comentada na narração — e o último slide de encerramento.
-Em cada slide, escreva uma narração fluida em português brasileiro informal e uma direção de imagem didática diretamente relacionada ao tópico (no primeiro e no último slide a imagem é apenas de ambiente, sem conteúdo escrito).`;
+Em cada slide, escreva uma narração fluida em português brasileiro informal e uma direção de imagem didática diretamente relacionada ao tópico (no primeiro e no último slide a imagem é apenas de ambiente, sem conteúdo escrito).
+
+CLASSIFICAÇÃO POR ÁREA (obrigatória): no campo "areas", escolha entre 1 e 3 áreas desta lista de áreas de curso cadastradas na plataforma, copiando o nome EXATAMENTE como aparece:
+${params.areasDisponiveis.map((a) => `- ${a}`).join("\n") || "- (nenhuma área cadastrada)"}
+Se o conteúdo for relevante para mais de uma área, indique todas as que fizerem sentido. Nunca invente nomes de área fora da lista.`;
+
 
   const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
@@ -350,10 +361,41 @@ Deno.serve(async (req) => {
     if (!apiKey) return json({ error: "Serviço de IA indisponível." }, 500);
 
     try {
+      // Áreas de curso cadastradas no painel administrativo — base da classificação automática.
+      const { data: areaRows } = await admin
+        .from("course_areas")
+        .select("name")
+        .eq("active", true)
+        .order("sort_order", { ascending: true });
+      const areaNames: string[] = (areaRows ?? []).map((a: { name: string }) => a.name).filter(Boolean);
+
       const kit = await generateKit(apiKey, {
         assunto, disciplina: disciplina || undefined, curso: curso || undefined,
-        instituicao: instituicao || undefined, nivel,
+        instituicao: instituicao || undefined, nivel, areasDisponiveis: areaNames,
       });
+
+      // Normaliza o que a IA devolveu contra os nomes reais das áreas cadastradas.
+      const suggested: string[] = Array.isArray(kit.areas) ? kit.areas.map((a: unknown) => String(a)) : [];
+      const matched = new Set<string>();
+      for (const s of suggested) {
+        const ns = normalize(s);
+        const hit = areaNames.find((n) => {
+          const nn = normalize(n);
+          return nn === ns || nn.includes(ns) || ns.includes(nn);
+        });
+        if (hit) matched.add(hit);
+      }
+      // Reforço: cruza também disciplina e curso informados pelo aluno.
+      for (const extra of [disciplina, curso]) {
+        if (!extra) continue;
+        const ne = normalize(extra);
+        const hit = areaNames.find((n) => {
+          const nn = normalize(n);
+          return nn === ne || nn.includes(ne) || ne.includes(nn);
+        });
+        if (hit) matched.add(hit);
+      }
+      const areas = Array.from(matched).slice(0, 5);
 
       const { data: saved } = await admin
         .from("ai_canonical_contents")
@@ -361,6 +403,7 @@ Deno.serve(async (req) => {
           cache_key: cacheKey,
           disciplina,
           assunto,
+          areas,
           subtopicos: Array.isArray(kit.subtopicos) ? kit.subtopicos.slice(0, 20) : null,
           nivel,
           model: GEN_MODEL,

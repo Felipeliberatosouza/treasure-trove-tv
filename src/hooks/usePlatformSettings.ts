@@ -480,11 +480,12 @@ export const emptyAiDisciplineAvatar = (): AiDisciplineAvatar => ({
 export function resolveAiAvatar(
   params: AiGenerationParamsSettings | null | undefined,
   fallback: AiAvatarSettings,
-  options: { disciplina?: string | null; contentType?: AiContentTypeId } = {},
+  options: { disciplina?: string | null; areas?: string[] | null; contentType?: AiContentTypeId } = {},
 ): AiAvatarSettings {
   const list = params?.avatars ?? [];
   if (!list.length) return fallback;
   const disciplina = (options.disciplina || "").toLowerCase().trim();
+  const areas = (options.areas || []).map((a) => (a || "").toLowerCase().trim()).filter(Boolean);
 
   const matches = list.filter((avatar) => {
     if (!avatar.name?.trim()) return false;
@@ -494,10 +495,12 @@ export function resolveAiAvatar(
       avatar.content_types.includes(options.contentType);
     if (!typeOk) return false;
     if (!avatar.disciplines?.length) return true;
-    if (!disciplina) return false;
+    const targets = [disciplina, ...areas].filter(Boolean);
+    if (!targets.length) return false;
     return avatar.disciplines.some((d) => {
       const term = d.toLowerCase().trim();
-      return term.length > 0 && (disciplina.includes(term) || term.includes(disciplina));
+      if (!term) return false;
+      return targets.some((t) => t.includes(term) || term.includes(t));
     });
   });
 

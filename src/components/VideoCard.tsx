@@ -42,7 +42,7 @@ const VideoCard = ({ video, index, onClick, rating, showTrialBadge, watched }: V
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: index * 0.08 }}
-      className="group relative min-w-[240px] cursor-pointer md:min-w-[280px]"
+      className="group relative w-[240px] min-w-[240px] flex-none cursor-pointer md:w-[280px] md:min-w-[280px]"
       onClick={() => onClick(video.id)}
       onMouseEnter={handlePrefetch}
       onFocus={handlePrefetch}

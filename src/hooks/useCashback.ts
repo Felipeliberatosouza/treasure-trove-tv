@@ -17,6 +17,11 @@ export interface CashbackProgramConfig {
   min_purchase_amount: number;
   referral_percent: number;
   referral_min_purchase: number;
+  /** Prêmio em acessos quando o amigo indicado entra pelo link do convite */
+  referral_access_enabled: boolean;
+  referral_access_grants: ReferralAccessGrants;
+  /** 0 = sem limite de indicações premiadas por aluno */
+  referral_access_max_rewards: number;
   tiers: CashbackTier[];
 }
 

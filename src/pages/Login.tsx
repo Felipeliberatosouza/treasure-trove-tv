@@ -157,7 +157,7 @@ const Login = () => {
           .gte("attempted_at", new Date(Date.now() - 15 * 60 * 1000).toISOString());
 
         if (count && count >= 3) {
-          supabase.functions.invoke("send-transactional-email", {
+          supabase.functions.invoke("send-app-email", {
             body: {
               templateName: "suspicious-login-admin-notify",
               recipientEmail: "admin",

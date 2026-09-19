@@ -216,7 +216,7 @@ const AdminPaymentsTab = () => {
         n.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
       const fmtDate = (d: string) => (d ? new Date(d).toLocaleDateString("pt-BR") : "");
 
-      await supabase.functions.invoke("send-transactional-email", {
+      await supabase.functions.invoke("send-app-email", {
         body: {
           templateName: "teacher-payment-paid",
           recipientEmail: profile.email,

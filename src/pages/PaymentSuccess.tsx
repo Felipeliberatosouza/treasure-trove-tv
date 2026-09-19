@@ -112,7 +112,7 @@ const PaymentSuccess = () => {
           : "—";
         const paymentDate = new Date().toLocaleDateString("pt-BR");
 
-        await supabase.functions.invoke("send-transactional-email", {
+        await supabase.functions.invoke("send-app-email", {
           body: {
             templateName: "payment-confirmation",
             recipientEmail: profile?.email || user.email,

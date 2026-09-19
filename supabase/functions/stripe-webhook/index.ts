@@ -266,7 +266,7 @@ serve(async (req) => {
       const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 
       const emailRes = await fetch(
-        `${supabaseUrl}/functions/v1/send-transactional-email`,
+        `${supabaseUrl}/functions/v1/send-app-email`,
         {
           method: "POST",
           headers: {

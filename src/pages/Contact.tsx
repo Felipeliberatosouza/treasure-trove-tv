@@ -61,7 +61,7 @@ const Contact = () => {
     const inboxEmail = (contact?.email || "").trim();
     if (inboxEmail) {
       const { error: emailError } = await supabase.functions.invoke(
-        "send-transactional-email",
+        "send-app-email",
         {
           body: {
             templateName: "contact-message",

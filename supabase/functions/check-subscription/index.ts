@@ -279,7 +279,7 @@ serve(async (req) => {
             console.warn("[check-sub] receipt gen failed", e);
           }
 
-          await fetch(`${supabaseUrl}/functions/v1/send-transactional-email`, {
+          await fetch(`${supabaseUrl}/functions/v1/send-app-email`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",

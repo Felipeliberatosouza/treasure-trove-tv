@@ -93,7 +93,7 @@ const StudentCashbackTab = () => {
     }
     setSendingEmail(true);
     try {
-      const { error } = await supabase.functions.invoke("send-transactional-email", {
+      const { error } = await supabase.functions.invoke("send-app-email", {
         body: {
           templateName: "cashback-referral-share",
           recipientEmail: user.email,

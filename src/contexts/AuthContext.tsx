@@ -234,7 +234,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             .select("name")
             .eq("user_id", u.id)
             .maybeSingle();
-          await supabase.functions.invoke("send-transactional-email", {
+          await supabase.functions.invoke("send-app-email", {
             body: {
               templateName,
               recipientEmail: u.email,

@@ -121,7 +121,7 @@ const AdminDoubtsTab = () => {
       .single();
 
     if (teacherProfile?.email) {
-      await supabase.functions.invoke("send-transactional-email", {
+      await supabase.functions.invoke("send-app-email", {
         body: {
           templateName: "doubt-approved",
           recipientEmail: teacherProfile.email,
@@ -144,7 +144,7 @@ const AdminDoubtsTab = () => {
       .single();
 
     if (studentProfile?.email) {
-      await supabase.functions.invoke("send-transactional-email", {
+      await supabase.functions.invoke("send-app-email", {
         body: {
           templateName: "doubt-question-approved",
           recipientEmail: studentProfile.email,
@@ -188,7 +188,7 @@ const AdminDoubtsTab = () => {
       .single();
 
     if (studentProfile?.email) {
-      await supabase.functions.invoke("send-transactional-email", {
+      await supabase.functions.invoke("send-app-email", {
         body: {
           templateName: "doubt-answered",
           recipientEmail: studentProfile.email,

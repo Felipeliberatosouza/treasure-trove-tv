@@ -60,7 +60,7 @@ const EmailConfirmationHandler = () => {
           .select("name")
           .eq("user_id", user.id)
           .maybeSingle();
-        await supabase.functions.invoke("send-transactional-email", {
+        await supabase.functions.invoke("send-app-email", {
           body: {
             templateName,
             recipientEmail: user.email,

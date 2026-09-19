@@ -219,7 +219,7 @@ const AdminUsersTab = () => {
         day: "2-digit", month: "2-digit", year: "numeric",
         hour: "2-digit", minute: "2-digit",
       });
-      await supabase.functions.invoke("send-transactional-email", {
+      await supabase.functions.invoke("send-app-email", {
         body: {
           templateName: "password_changed_admin",
           recipientEmail: pwdUser.email,

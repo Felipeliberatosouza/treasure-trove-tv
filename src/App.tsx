@@ -37,7 +37,6 @@ import ResetPassword from "./pages/ResetPassword.tsx";
 import VideoPage from "./pages/VideoPage.tsx";
 import TeacherProfile from "./pages/TeacherProfile.tsx";
 import CookieConsent from "./components/CookieConsent.tsx";
-import Unsubscribe from "./pages/Unsubscribe.tsx";
 import EmailSecurityNotification from "./pages/EmailSecurityNotification.tsx";
 import PaymentSuccess from "./pages/PaymentSuccess.tsx";
 import PaymentCanceled from "./pages/PaymentCanceled.tsx";
@@ -107,7 +106,6 @@ const App = () => (
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/payment-success" element={<PaymentSuccess />} />
             <Route path="/payment-canceled" element={<PaymentCanceled />} />
-            <Route path="/unsubscribe" element={<Unsubscribe />} />
             <Route path="/email-seguranca" element={<EmailSecurityNotification />} />
             <Route path="/preview/plan-change" element={<PreviewPlanChange />} />
             {!import.meta.env.PROD && (

@@ -124,7 +124,7 @@ serve(async (req) => {
         month: "2-digit",
         year: "numeric",
       });
-      await sb.functions.invoke("send-transactional-email", {
+      await sb.functions.invoke("send-app-email", {
         body: {
           templateName: "commitment-penalty-refunded",
           recipientEmail: profile.email,

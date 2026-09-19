@@ -60,7 +60,7 @@ const DoubtForm = ({ contentId, contentType, teacherId, title, placeholder }: Do
         .single();
 
       if (studentProfile?.email) {
-        await supabase.functions.invoke("send-transactional-email", {
+        await supabase.functions.invoke("send-app-email", {
           body: {
             templateName: "doubt-sent-confirmation",
             recipientEmail: studentProfile.email,

@@ -231,7 +231,7 @@ const StudentSignup = () => {
             .in("user_id", adminRoles.map((r) => r.user_id));
           if (adminProfiles) {
             for (const admin of adminProfiles) {
-              await supabase.functions.invoke("send-transactional-email", {
+              await supabase.functions.invoke("send-app-email", {
                 body: {
                   templateName: "new-student-admin-notify",
                   recipientEmail: admin.email,

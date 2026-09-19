@@ -12,31 +12,56 @@ import { useAuth } from "@/contexts/AuthContext";
 import { requestKit } from "@/lib/revisionKit";
 import InviteFriendsPanel from "@/components/referral/InviteFriendsPanel";
 
-const buildSteps = (assunto: string, disciplina: string, nivel: string) => [
-  `Lendo o seu pedido: "${assunto}"`,
-  disciplina
-    ? `Confirmando a disciplina informada: ${disciplina}`
-    : "Identificando a disciplina e a área do conhecimento do assunto",
-  `Definindo a profundidade do material (${nivel === "aprofundado" ? "revisão aprofundada" : "revisão rápida"})`,
-  "Consultando o acervo da Revisão Fácil para reaproveitar material equivalente",
-  "Separando os tópicos que mais aparecem em provas sobre esse assunto",
-  "Escrevendo o resumo estruturado em seções",
-  "Elaborando as questões do simulado com gabarito comentado",
-  "Selecionando as Top Questões e escrevendo os comentários",
-  "Condensando a colinha em tópicos de última hora",
-  "Roteirizando os slides e a narração da professora virtual",
-  "Preparando o PDF para download",
-  "Conferindo a consistência de todo o Kit de Revisão",
-  "Abrindo sua revisão",
+interface GenPhase {
+  label: string;
+  tasks: string[];
+}
+
+const buildPhases = (assunto: string, disciplina: string, nivel: string): GenPhase[] => [
+  {
+    label: "Pesquisando",
+    tasks: [
+      `Lendo o seu pedido: "${assunto}"`,
+      disciplina
+        ? `Confirmando a disciplina informada: ${disciplina}`
+        : "Identificando a disciplina e a área do conhecimento do assunto",
+      `Definindo a profundidade do material (${nivel === "aprofundado" ? "revisão aprofundada" : "revisão rápida"})`,
+      "Consultando o acervo da Revisão Fácil sobre esse assunto",
+      "Separando os tópicos que mais aparecem em provas sobre esse assunto",
+    ],
+  },
+  {
+    label: "Trabalhando",
+    tasks: [
+      "Escrevendo o resumo estruturado em seções",
+      "Elaborando as questões do simulado com gabarito comentado",
+      "Selecionando as Top Questões e escrevendo os comentários",
+      "Condensando a colinha em tópicos de última hora",
+      "Roteirizando os slides e a narração da professora virtual",
+    ],
+  },
+  {
+    label: "Entregando",
+    tasks: [
+      "Preparando o PDF para download",
+      "Conferindo a consistência de todo o Kit de Revisão",
+      "Abrindo sua revisão",
+    ],
+  },
 ];
 
-/** Fase geral do processamento, exibida acima das tarefas. */
-const phaseLabel = (step: number, total: number) => {
-  if (total === 0) return "Pensando";
-  if (step < Math.ceil(total * 0.3)) return "Pensando";
-  if (step < total - 2) return "Trabalhando";
-  return "Entregando";
+/** Achata as fases em uma lista de passos com a fase de origem. */
+const flattenPhases = (phases: GenPhase[]) =>
+  phases.flatMap((p, pi) => p.tasks.map((t) => ({ phase: pi, label: p.label, task: t })));
+
+const STEP_MS = 1800;
+const FAST_STEP_MS = 500;
+
+const formatCountdown = (ms: number) => {
+  const total = Math.max(0, Math.ceil(ms / 1000));
+  return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
 };
+
 
 /** Três pontinhos animados. */
 const Dots = () => (

@@ -6,6 +6,8 @@ export interface BrandingSettings {
   platform_name: string;
   slogan: string;
   logo_url: string;
+  /** Domínio comercial divulgado nos vídeos, slides e demais conteúdos gerados. */
+  commercial_domain?: string;
   /** Favicon PNG do site (ícone exibido na aba do navegador, favoritos e
    *  atalhos). Recomenda-se PNG quadrado de 512×512. Quando ausente, o
    *  favicon padrão embarcado no build é utilizado. */

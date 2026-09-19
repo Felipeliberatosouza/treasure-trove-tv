@@ -439,6 +439,12 @@
   .ai-board-operacao { font-size: 1.3rem; }
   .ai-virtual-board.is-child .ai-board-step { font-size: 1.2rem; }
 }
+/* Linhas já escritas continuam visíveis; a última fica em destaque. */
+.ai-board-step.is-previous { opacity: 0.6; font-size: 0.72rem; }
+.ai-virtual-board.is-child .ai-board-step.is-previous { font-size: 0.85rem; }
+.ai-board-step.is-current { opacity: 1; }
+/* Tópicos entram um a um conforme a narração. */
+.ai-slide-bullet { animation: ai-board-write 260ms ease-out both; }
 @media (prefers-reduced-motion: reduce) {
-  .ai-keyword, .ai-board-step { animation: none; transition: none; }
+  .ai-keyword, .ai-board-step, .ai-slide-bullet { animation: none; transition: none; }
 }

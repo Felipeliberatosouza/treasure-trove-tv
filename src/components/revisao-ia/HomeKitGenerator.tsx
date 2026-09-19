@@ -188,9 +188,20 @@ const HomeKitGenerator = () => {
     void handleSubmit(novoPedido);
   };
 
+  const blockedRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (!blocked) return;
+    const id = window.setTimeout(() => {
+      blockedRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 50);
+    return () => window.clearTimeout(id);
+  }, [blocked]);
+
+
+
   if (blocked) {
     return (
-      <Card className="mx-auto max-w-lg text-center">
+      <Card ref={blockedRef} className="mx-auto max-w-lg scroll-mt-28 text-center">
         <CardContent className="space-y-4 p-8">
           <Lock className="mx-auto h-8 w-8 text-primary" />
           {blocked === "signup_required" ? (

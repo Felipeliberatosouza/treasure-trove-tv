@@ -68,7 +68,7 @@ Deno.serve(async (req) => {
     const response = await fetch("https://ai.gateway.lovable.dev/v1/images/generations", {
       method: "POST",
       headers: { "Lovable-API-Key": apiKey, "Content-Type": "application/json" },
-      body: JSON.stringify({ model: "openai/gpt-image-2.5-sunburst", prompt, size: "1536x1024", response_format: "b64_json" }),
+      body: JSON.stringify({ model: "openai/gpt-image-2.5-sunburst", prompt, size: "1536x1024" }),
     });
     if (response.status === 429) return json({ error: "Limite de imagens atingido. Tente novamente mais tarde." }, 429);
     if (response.status === 402) return json({ error: "Créditos de IA esgotados." }, 402);

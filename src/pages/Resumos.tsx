@@ -1,13 +1,5 @@
-import MaterialShowcase from "@/components/MaterialShowcase";
-import { FileText } from "lucide-react";
+import SectionCatalog from "@/components/sections/SectionCatalog";
 
-const Resumos = () => (
-  <MaterialShowcase
-    title="Resumos"
-    description="Resumos objetivos para agilizar seus estudos."
-    icon={FileText}
-    materialType="resumo"
-  />
-);
+const Resumos = () => <SectionCatalog sectionKey="resumo" />;
 
 export default Resumos;

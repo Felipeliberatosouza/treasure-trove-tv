@@ -1,14 +1,17 @@
 import { useState } from "react";
-import { Users, Activity } from "lucide-react";
+import { Users, Activity, MessageCircle } from "lucide-react";
 import AdminUsersTab from "./AdminUsersTab";
 import AdminUsageHistoryTab from "./AdminUsageHistoryTab";
+import AdminLeadsTab from "./AdminLeadsTab";
 
 const sections = [
   { id: "list", label: "Lista de Usuários", icon: Users },
   { id: "usage", label: "Histórico de Uso", icon: Activity },
+  { id: "leads", label: "Leads do WhatsApp", icon: MessageCircle },
 ] as const;
 
 type SectionId = (typeof sections)[number]["id"];
+
 
 const AdminUsersWrapperTab = () => {
   const [activeSection, setActiveSection] = useState<SectionId>("list");

@@ -166,10 +166,12 @@ const HomeKitGenerator = () => {
               </div>
             </>
           )}
+          <InviteFriendsPanel variant="compact" eyebrow="Ganhe cashback indicando amigos" />
         </CardContent>
       </Card>
     );
   }
+
 
   return (
     <div className="mx-auto w-full max-w-4xl text-center">

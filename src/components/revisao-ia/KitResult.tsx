@@ -188,7 +188,8 @@ const KitResult = ({ result, onNewKit, initialTab }: Props) => {
           ))}
         </TabsContent>
 
-        <TabsContent value="colinha" className="pt-4">
+        <TabsContent value="colinha" className="space-y-3 pt-4">
+          <BrandStamp />
           <Card>
             <CardContent className="p-4">
               <ul className="space-y-2 text-sm">

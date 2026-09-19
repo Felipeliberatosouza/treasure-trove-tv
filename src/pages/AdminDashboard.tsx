@@ -27,6 +27,7 @@ import AdminCancellationsTab from "@/components/admin/AdminCancellationsTab";
 import AdminUsageHistoryTab from "@/components/admin/AdminUsageHistoryTab";
 import AdminSupportTicketsTab from "@/components/admin/AdminSupportTicketsTab";
 import AdminProfileApprovalsTab from "@/components/admin/AdminProfileApprovalsTab";
+import AdminLeadsTab from "@/components/admin/AdminLeadsTab";
 import PersonalDataTab from "@/components/dashboard/PersonalDataTab";
 import LoginDataTab from "@/components/dashboard/LoginDataTab";
 

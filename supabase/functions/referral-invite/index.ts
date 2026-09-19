@@ -254,7 +254,7 @@ Deno.serve(async (req) => {
     }
 
     if (channel === "email") {
-      const { error } = await admin.functions.invoke("send-transactional-email", {
+      const { error } = await admin.functions.invoke("send-app-email", {
         body: {
           templateName: "cashback-referral-share",
           recipientEmail: email,

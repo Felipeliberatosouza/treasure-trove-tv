@@ -901,7 +901,7 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
               .eq("user_id", admin.user_id)
               .maybeSingle();
             if (adminProfile?.email) {
-              supabase.functions.invoke("send-transactional-email", {
+              supabase.functions.invoke("send-app-email", {
                 body: {
                   templateName: "content-edited-admin-notify",
                   recipientEmail: adminProfile.email,

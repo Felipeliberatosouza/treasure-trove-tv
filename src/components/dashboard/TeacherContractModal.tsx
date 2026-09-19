@@ -155,7 +155,7 @@ const TeacherContractModal = ({ open, onClose, onSigned }: TeacherContractModalP
 
       // Send contract signed email
       const maskedCpf = teacherCpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '***.$2.***-$4');
-      await supabase.functions.invoke('send-transactional-email', {
+      await supabase.functions.invoke('send-app-email', {
         body: {
           templateName: 'contract-signed',
           recipientEmail: profile?.email || user.email,

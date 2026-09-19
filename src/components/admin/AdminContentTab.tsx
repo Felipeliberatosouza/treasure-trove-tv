@@ -74,7 +74,7 @@ const AdminContentTab = () => {
   const sendDecisionEmail = async (item: ContentItem, approved: boolean, reason?: string) => {
     if (!item.teacher_email) return;
 
-    const { error } = await supabase.functions.invoke("send-transactional-email", {
+    const { error } = await supabase.functions.invoke("send-app-email", {
       body: {
         templateName: approved ? "content-approved" : "content-rejected",
         recipientEmail: item.teacher_email,

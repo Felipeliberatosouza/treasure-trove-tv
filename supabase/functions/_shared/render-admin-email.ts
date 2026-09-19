@@ -3,7 +3,7 @@
 // pré-visualização do admin (SettingsEmailTemplates.tsx).
 //
 // Usado por:
-//   - send-transactional-email (todos os templates transacionais)
+//   - send-app-email (todos os templates transacionais)
 //   - auth-email-hook (signup, recovery, etc., mapeados para template_key)
 //
 // Retorna `null` quando não há linha em `email_templates` ou o body_html

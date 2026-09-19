@@ -230,7 +230,7 @@ export default function StudentSubscriptionTab() {
           : "Sem saldo a ajustar";
 
     try {
-      await supabase.functions.invoke("send-transactional-email", {
+      await supabase.functions.invoke("send-app-email", {
         body: {
           templateName: "plan-changed",
           recipientEmail: user.email,
@@ -266,7 +266,7 @@ export default function StudentSubscriptionTab() {
           .in("user_id", admins.map(a => a.user_id));
 
         for (const admin of adminProfiles || []) {
-          await supabase.functions.invoke("send-transactional-email", {
+          await supabase.functions.invoke("send-app-email", {
             body: {
               templateName: "subscription-change-admin-notify",
               recipientEmail: admin.email,
@@ -385,7 +385,7 @@ export default function StudentSubscriptionTab() {
           console.warn("[cancel] receipt generation failed", e);
         }
 
-        await supabase.functions.invoke("send-transactional-email", {
+        await supabase.functions.invoke("send-app-email", {
           body: {
             templateName: "subscription-cancelled",
             recipientEmail: user.email,
@@ -418,7 +418,7 @@ export default function StudentSubscriptionTab() {
             .in("user_id", admins.map(a => a.user_id));
 
           for (const admin of adminProfiles || []) {
-            await supabase.functions.invoke("send-transactional-email", {
+            await supabase.functions.invoke("send-app-email", {
               body: {
                 templateName: "subscription-change-admin-notify",
                 recipientEmail: admin.email,

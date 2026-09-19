@@ -125,10 +125,10 @@ Deno.serve(async (req) => {
     )
   }
 
-  // Dispara o template via send-transactional-email (usa from_email/from_name configurados)
+  // Dispara o template via send-app-email (usa from_email/from_name configurados)
   try {
     const idempotencyKey = `pwd-recovery-${email}-${Date.now()}`
-    const sendUrl = `${supabaseUrl}/functions/v1/send-transactional-email`
+    const sendUrl = `${supabaseUrl}/functions/v1/send-app-email`
     const resp = await fetch(sendUrl, {
       method: 'POST',
       headers: {
@@ -149,10 +149,10 @@ Deno.serve(async (req) => {
     })
     if (!resp.ok) {
       const txt = await resp.text()
-      console.error('send-transactional-email failed', resp.status, txt)
+      console.error('send-app-email failed', resp.status, txt)
     }
   } catch (e) {
-    console.error('send-transactional-email threw', e)
+    console.error('send-app-email threw', e)
   }
 
   return new Response(

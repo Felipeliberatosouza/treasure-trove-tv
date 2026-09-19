@@ -79,6 +79,7 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina, areas, 
   const { data: aiParams } = usePlatformSettings("ai_generation_params");
   const { data: branding } = usePlatformSettings("branding");
   const brandLogo = resolveLogoForBackground(branding as any) || logoRevisaoFacil;
+  const commercialDomain = ((branding as any)?.commercial_domain || "").trim() || DEFAULT_COMMERCIAL_DOMAIN;
   const resolved = resolveAiAvatar(
     aiParams,
     { ...DEFAULT_AI_AVATAR, ...(avatarSettings || {}) },

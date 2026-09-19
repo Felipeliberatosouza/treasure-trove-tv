@@ -3,6 +3,18 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+const CURSO_OPCOES = [
+  "Ensino Infantil",
+  "Ensino Fundamental I",
+  "Ensino Fundamental II",
+  "Ensino Médio",
+  "Graduação",
+  "Pós-graduação Latu Sensu (Especialização)",
+  "Mestrado",
+  "Doutorado",
+];
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Sparkles, Send, Loader2, CheckCircle2, Lock, Plus, SlidersHorizontal,
@@ -91,6 +103,7 @@ interface KitDraft {
   assunto: string;
   disciplina: string;
   curso: string;
+  serie: string;
   instituicao: string;
   examDate: string;
   nivel: "rapido" | "aprofundado";
@@ -113,11 +126,12 @@ const HomeKitGenerator = () => {
   const [assunto, setAssunto] = useState(draft.assunto || "");
   const [disciplina, setDisciplina] = useState(draft.disciplina || "");
   const [curso, setCurso] = useState(draft.curso || "");
+  const [serie, setSerie] = useState(draft.serie || "");
   const [instituicao, setInstituicao] = useState(draft.instituicao || "");
   const [examDate, setExamDate] = useState(draft.examDate || "");
   const [nivel, setNivel] = useState<"rapido" | "aprofundado">(draft.nivel === "aprofundado" ? "aprofundado" : "rapido");
   const [showExtras, setShowExtras] = useState(
-    Boolean(draft.disciplina || draft.curso || draft.instituicao || draft.examDate),
+    Boolean(draft.disciplina || draft.curso || draft.serie || draft.instituicao || draft.examDate),
   );
 
   const [loading, setLoading] = useState(false);
@@ -139,18 +153,18 @@ const HomeKitGenerator = () => {
   // Mantém o pedido salvo enquanto o usuário navega (login, criar conta, planos).
   useEffect(() => {
     try {
-      if (assunto.trim() || disciplina || curso || instituicao || examDate) {
+      if (assunto.trim() || disciplina || curso || serie || instituicao || examDate) {
         localStorage.setItem(
           DRAFT_KEY,
-          JSON.stringify({ assunto, disciplina, curso, instituicao, examDate, nivel }),
+          JSON.stringify({ assunto, disciplina, curso, serie, instituicao, examDate, nivel }),
         );
       } else {
         localStorage.removeItem(DRAFT_KEY);
       }
     } catch {
-      /* armazenamento indisponível */
+      /* ignore */
     }
-  }, [assunto, disciplina, curso, instituicao, examDate, nivel]);
+  }, [assunto, disciplina, curso, serie, instituicao, examDate, nivel]);
 
   // Avança as tarefas uma a uma; acelera quando o material já está pronto.
   useEffect(() => {
@@ -223,6 +237,7 @@ const HomeKitGenerator = () => {
       assunto: pedido,
       disciplina: disciplina.trim() || undefined,
       curso: curso.trim() || undefined,
+      serie: serie.trim() || undefined,
       instituicao: instituicao.trim() || undefined,
       exam_date: examDate || undefined,
       nivel,
@@ -363,7 +378,26 @@ const HomeKitGenerator = () => {
           {showExtras && (
             <div className="mt-3 grid gap-3 border-t border-border pt-3 sm:grid-cols-2">
               <Input placeholder="Disciplina" value={disciplina} disabled={loading} onChange={(e) => setDisciplina(e.target.value)} />
-              <Input placeholder="Curso" value={curso} disabled={loading} onChange={(e) => setCurso(e.target.value)} />
+              <Select value={curso} disabled={loading} onValueChange={setCurso}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Curso" />
+                </SelectTrigger>
+                <SelectContent>
+                  {CURSO_OPCOES.map((op) => (
+                    <SelectItem key={op} value={op}>{op}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Input
+                type="number"
+                min={1}
+                step={1}
+                inputMode="numeric"
+                placeholder="Série (número)"
+                value={serie}
+                disabled={loading}
+                onChange={(e) => setSerie(e.target.value.replace(/\D/g, ""))}
+              />
               <Input placeholder="Instituição" value={instituicao} disabled={loading} onChange={(e) => setInstituicao(e.target.value)} />
               <Input type="date" value={examDate} disabled={loading} onChange={(e) => setExamDate(e.target.value)} />
               <div className="flex gap-2 sm:col-span-2">

@@ -65,6 +65,7 @@ const TEMPLATE_LABELS: Record<string, string> = {
   subscription_expiring: "Lembrete de Vencimento",
   subscription_cancelled: "Assinatura Cancelada/Expirada",
   cashback_referral_share: "Link de Indicação (Cashback)",
+  referral_access_invite: "Convite de Indicação (para o amigo indicado)",
 };
 
 const TEMPLATE_DESCRIPTIONS: Record<string, string> = {
@@ -92,6 +93,7 @@ const TEMPLATE_DESCRIPTIONS: Record<string, string> = {
   subscription_expiring: "Enviado automaticamente alguns dias antes do vencimento da assinatura do aluno.",
   subscription_cancelled: "Enviado ao aluno quando sua assinatura é cancelada ou expira.",
   cashback_referral_share: "Enviado ao aluno quando ele solicita o envio do seu link/código de indicação de amigos por e-mail (programa de cashback).",
+  referral_access_invite: "Enviado ao AMIGO INDICADO quando o aluno envia um convite por e-mail. O texto é escrito do ponto de vista de quem recebe o convite.",
 };
 
 const TEMPLATE_VARS: Record<string, string[]> = {
@@ -119,6 +121,7 @@ const TEMPLATE_VARS: Record<string, string[]> = {
   subscription_expiring: ["{{name}}", "{{plan_name}}", "{{days_remaining}}", "{{expiry_date}}", "{{subscription_status}}", "{{renew_link}}"],
   subscription_cancelled: ["{{name}}", "{{plan_name}}", "{{expiry_date}}", "{{reason}}", "{{renew_link}}"],
   cashback_referral_share: ["{{name}}", "{{referral_code}}", "{{referral_link}}", "{{share_text}}", "{{referral_percent}}", "{{platform_name}}"],
+  referral_access_invite: ["{{referrer_name}}", "{{invite_link}}", "{{invite_code}}", "{{message}}", "{{platform_name}}"],
 };
 
 const FONT_OPTIONS = [

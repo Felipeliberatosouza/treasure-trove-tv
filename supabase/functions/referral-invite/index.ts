@@ -256,17 +256,15 @@ Deno.serve(async (req) => {
     if (channel === "email") {
       const { error } = await admin.functions.invoke("send-app-email", {
         body: {
-          templateName: "cashback-referral-share",
+          templateName: "referral-access-invite",
           recipientEmail: email,
           idempotencyKey: `referral-invite-${token}-${Date.now()}`,
           templateData: {
-            name: referrerName,
-            referral_code: token,
-            referral_link: inviteLink,
-            share_text: message,
-            referralCode: token,
-            referralLink: inviteLink,
-            shareText: message,
+            referrer_name: referrerName || "Um amigo",
+            platform_name: platformName,
+            invite_link: inviteLink,
+            message,
+            invite_code: token,
           },
         },
       });

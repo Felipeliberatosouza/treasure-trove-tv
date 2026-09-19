@@ -91,6 +91,9 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina, areas, 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const tokenRef = useRef<string>("");
   const cacheRef = useRef<Map<number, string>>(new Map());
+  const requestedImagesRef = useRef<Set<number>>(new Set());
+  // Maior progresso já atingido em cada slide: garante que o quadro só preencha, nunca apague.
+  const maxProgressRef = useRef<Record<number, number>>({});
 
   const getToken = useCallback(async () => {
     const { supabase } = await import("@/integrations/supabase/client");
@@ -193,6 +196,11 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina, areas, 
 
   const slide = slides[current];
 
+  // Ao trocar de slide, o quadro começa vazio (ou no ponto já preenchido, se for uma volta).
+  useEffect(() => {
+    setSlideProgress(maxProgressRef.current[current] ?? 0);
+  }, [current]);
+
   const themeImages = useMemo(() => {
     const value = `${disciplina || ""} ${topico}`.toLowerCase();
     if (/matem|físic|fisic|engenh|estat|cálc|calc|tecnolog|comput/.test(value)) {
@@ -204,32 +212,54 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina, areas, 
     return [visualCiencia, visualExatas, visualHumanas];
   }, [disciplina, topico]);
 
-  const coverImage = themeImages[0];
   const slideImage = themeImages[current % themeImages.length];
 
-  useEffect(() => {
-    if (!canonicalId || !slide?.imagem_prompt || generatedImages[current]) return;
-    let active = true;
-    void (async () => {
+  // Busca (e guarda no servidor) a imagem exclusiva da capa ou de um slide.
+  const fetchImage = useCallback(
+    async (index: number) => {
+      if (!canonicalId) return;
+      let done = false;
+      setGeneratedImages((images) => {
+        if (images[index]) done = true;
+        return images;
+      });
+      if (done || requestedImagesRef.current.has(index)) return;
+      requestedImagesRef.current.add(index);
       try {
         if (!tokenRef.current) tokenRef.current = await getToken();
         const response = await fetch(imageUrl, {
           method: "POST",
           headers: { Authorization: `Bearer ${tokenRef.current}`, "Content-Type": "application/json" },
-          body: JSON.stringify({ canonical_id: canonicalId, slide_index: current }),
+          body: JSON.stringify({ canonical_id: canonicalId, slide_index: index }),
         });
-        if (!response.ok) return;
+        if (!response.ok) {
+          requestedImagesRef.current.delete(index);
+          return;
+        }
         const payload = await response.json();
-        if (active && typeof payload.image_url === "string") {
-          setGeneratedImages((images) => ({ ...images, [current]: payload.image_url }));
+        if (typeof payload.image_url === "string") {
+          setGeneratedImages((images) => ({ ...images, [index]: payload.image_url }));
         }
       } catch {
         // Mantém a imagem temática local se a geração ainda não estiver pronta.
+        requestedImagesRef.current.delete(index);
       }
-    })();
-    return () => { active = false; };
-  }, [canonicalId, current, generatedImages, getToken, slide?.imagem_prompt]);
+    },
+    [canonicalId, getToken],
+  );
 
+  // Capa exclusiva do material (índice -1).
+  useEffect(() => {
+    void fetchImage(-1);
+  }, [fetchImage]);
+
+  // Imagem do slide atual e pré-carregamento do próximo.
+  useEffect(() => {
+    void fetchImage(current);
+    if (current + 1 < slides.length) void fetchImage(current + 1);
+  }, [fetchImage, current, slides.length]);
+
+  const coverImage = generatedImages[-1] || themeImages[0];
   const effectiveSlideImage = generatedImages[current] || slideImage;
 
   const formatTime = (value: number) => {
@@ -262,7 +292,10 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina, areas, 
     const words = text.split(/\s+/).filter(Boolean);
     const wordsPerCaption = 9;
     const progress = Math.min(audio.currentTime / audio.duration, 0.999);
-    setSlideProgress(progress);
+    // O quadro só avança: mantém o que já foi escrito mesmo com pausa ou rebobinagem.
+    const revealed = Math.max(maxProgressRef.current[current] ?? 0, progress);
+    maxProgressRef.current[current] = revealed;
+    setSlideProgress(revealed);
     const start = Math.floor((progress * words.length) / wordsPerCaption) * wordsPerCaption;
     setCaption(words.slice(start, start + wordsPerCaption).join(" "));
   }, [current, slides]);
@@ -283,7 +316,10 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina, areas, 
     slideProgress >= anchorProgress(slide?.narracao || "", step.ancora, (index + 1) / (list.length + 1)),
   );
   const boardMode = slide?.modo_visual === "lousa" && (slide.lousa_passos?.length ?? 0) > 0;
-  const oneBoardStep = faixaEtaria === "criancas_0_9";
+  const highlightLastStep = faixaEtaria === "criancas_0_9";
+  // Tópicos entram um a um, acompanhando a narração.
+  const allBullets = (slide?.bullets ?? []).slice(0, 4);
+  const visibleBullets = allBullets.filter((_, index) => slideProgress >= index / (allBullets.length + 1));
 
   // Barra de tempo única: soma as durações de todos os slides.
   const slideDurations = slides.map(
@@ -410,8 +446,11 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina, areas, 
                 )}
                 {boardMode ? (
                   <div className={`ai-virtual-board mt-2 sm:mt-4 ${faixaEtaria === "criancas_0_9" ? "is-child" : ""}`} aria-label="Lousa virtual com explicação passo a passo">
-                    {(oneBoardStep ? visibleBoardSteps.slice(-1) : visibleBoardSteps).map((step, index) => (
-                      <div key={`${step.conteudo}-${index}`} className={`ai-board-step ai-board-${step.tipo}`}>
+                    {visibleBoardSteps.map((step, index, list) => (
+                      <div
+                        key={`${step.conteudo}-${index}`}
+                        className={`ai-board-step ai-board-${step.tipo} ${highlightLastStep && index < list.length - 1 ? "is-previous" : ""} ${index === list.length - 1 ? "is-current" : ""}`}
+                      >
                         {step.tipo === "seta" && <span aria-hidden="true">→</span>}
                         <HighlightedText text={step.conteudo} terms={step.destaque ? [step.destaque] : []} activeTerm={step.destaque} />
                       </div>
@@ -419,8 +458,8 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina, areas, 
                   </div>
                 ) : slide && (
                   <ul className="mt-2 space-y-1 sm:mt-5 sm:space-y-2">
-                    {slide.bullets.slice(0, 4).map((bullet, index) => (
-                      <li key={index} className="flex items-start gap-2 text-[11px] leading-snug sm:text-sm md:text-base">
+                    {visibleBullets.map((bullet, index) => (
+                      <li key={index} className="ai-slide-bullet flex items-start gap-2 text-[11px] leading-snug sm:text-sm md:text-base">
                         <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
                         <span><HighlightedText text={bullet} terms={keywords.map((item) => item.termo)} activeTerm={activeKeyword} /></span>
                       </li>

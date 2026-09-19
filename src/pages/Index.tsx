@@ -22,6 +22,7 @@ import HomeKitGenerator from "@/components/revisao-ia/HomeKitGenerator";
 import InviteFriendsPanel from "@/components/referral/InviteFriendsPanel";
 import type { Video } from "@/data/courses";
 import aiKitCover from "@/assets/slide-visual-ciencia.jpg";
+import { useAiKitCovers } from "@/hooks/useAiKitCovers";
 
 interface SearchResult {
   id: string;

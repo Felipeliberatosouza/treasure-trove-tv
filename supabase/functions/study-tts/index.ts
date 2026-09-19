@@ -123,7 +123,8 @@ Deno.serve(async (req) => {
       headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         model: "openai/gpt-4o-mini-tts",
-        input: texto,
+        // O ponto final extra evita que a última frase (ex.: "Boa prova!") seja cortada.
+        input: `${texto}${/[.!?…]$/.test(texto) ? "" : "."} `,
         voice,
         instructions,
         response_format: "mp3",

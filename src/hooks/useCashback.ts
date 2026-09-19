@@ -44,6 +44,33 @@ export const DEFAULT_REFERRAL_ACCESS_GRANTS: ReferralAccessGrants = {
   ai_credits: 1,
 };
 
+/** Onde os créditos ganhos por indicação podem ser usados. */
+export type ReferralCreditScope = "ambos" | "ia" | "professor" | "nenhum";
+
+export const REFERRAL_SCOPE_LABELS: Record<ReferralCreditScope, string> = {
+  ambos: "Conteúdo de IA e de professores",
+  ia: "Somente conteúdo de IA",
+  professor: "Somente conteúdo de professores",
+  nenhum: "Não pode ser usado com créditos",
+};
+
+export type ReferralAccessScopes = Record<keyof ReferralAccessGrants, ReferralCreditScope>;
+
+export const DEFAULT_REFERRAL_ACCESS_SCOPES: ReferralAccessScopes = {
+  revisao: "ambos",
+  resumo: "ambos",
+  simulado: "ambos",
+  top_questoes: "ambos",
+  colinha: "ambos",
+  duvida: "ambos",
+  aula_particular: "professor",
+  ai_credits: "ia",
+};
+
+/** Texto padrão do convite enviado por e-mail, WhatsApp ou SMS. */
+export const DEFAULT_REFERRAL_INVITE_MESSAGE =
+  "{nome} te convidou para estudar na {plataforma}! Revisões, resumos, simulados, colinhas e aulas com professores em um só lugar. Acesse pelo link: {link}";
+
 export interface CashbackProgramConfig {
   enabled: boolean;
   grace_period_days: number;

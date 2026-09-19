@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { requestKit } from "@/lib/revisionKit";
+import InviteFriendsPanel from "@/components/referral/InviteFriendsPanel";
 
 const buildSteps = (assunto: string, disciplina: string, nivel: string) => [
   `Lendo o seu pedido: "${assunto}"`,
@@ -166,10 +167,12 @@ const HomeKitGenerator = () => {
               </div>
             </>
           )}
+          <InviteFriendsPanel variant="compact" eyebrow="Ganhe cashback indicando amigos" />
         </CardContent>
       </Card>
     );
   }
+
 
   return (
     <div className="mx-auto w-full max-w-4xl text-center">

@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { AnimatePresence, motion } from "framer-motion";
 import HomeKitGenerator from "@/components/revisao-ia/HomeKitGenerator";
+import InviteFriendsPanel from "@/components/referral/InviteFriendsPanel";
 import type { Video } from "@/data/courses";
 import aiKitCover from "@/assets/slide-visual-ciencia.jpg";
 
@@ -508,6 +509,7 @@ const Index = () => {
           <BookLessonSection />
         </div>
       )}
+      {!isTeacher && <InviteFriendsPanel />}
       <SecondaryBanner />
       <Footer />
       <WhatsAppFloat />

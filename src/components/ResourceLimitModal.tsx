@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, ArrowUpCircle, ShoppingCart, Sparkles, Gift } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import InviteFriendsPanel from "@/components/referral/InviteFriendsPanel";
 
 const RESOURCE_LABELS: Record<string, string> = {
   revisao: "Revisão",
@@ -42,7 +43,7 @@ export default function ResourceLimitModal({
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-center gap-2 mb-1">
             <AlertTriangle className="h-5 w-5 text-destructive" />
@@ -113,6 +114,11 @@ export default function ResourceLimitModal({
               </div>
             </div>
           )}
+
+          <InviteFriendsPanel
+            variant="compact"
+            eyebrow="Ganhe mais acessos sem pagar"
+          />
         </div>
       </DialogContent>
     </Dialog>

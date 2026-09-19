@@ -240,9 +240,14 @@ Deno.serve(async (req) => {
     const platformName =
       ((brandingRow?.value as Record<string, string>)?.platform_name) || "Revisão Fácil";
 
-    const message =
-      `${referrerName ? referrerName + " te convidou" : "Você foi convidado"} para estudar na ${platformName}! ` +
-      `Revisões, resumos, simulados, colinhas e aulas com professores. Acesse: ${inviteLink}`;
+    const template =
+      (typeof cfg.referral_invite_message === "string" && cfg.referral_invite_message.trim()) ||
+      "{nome} te convidou para estudar na {plataforma}! Revisões, resumos, simulados, colinhas e aulas com professores em um só lugar. Acesse pelo link: {link}";
+
+    const message = template
+      .replaceAll("{nome}", referrerName || "Um amigo")
+      .replaceAll("{plataforma}", platformName)
+      .replaceAll("{link}", inviteLink);
 
     if (channel === "link") {
       return respond({ ok: true, token, inviteLink, message });

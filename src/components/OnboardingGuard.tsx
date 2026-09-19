@@ -21,7 +21,6 @@ const EXEMPT_PREFIXES = [
   "/dashboard",
   "/payment-success",
   "/payment-canceled",
-  "/unsubscribe",
   "/email-seguranca",
 ];
 

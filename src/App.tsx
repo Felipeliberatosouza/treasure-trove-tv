@@ -101,6 +101,7 @@ const App = () => (
             <Route path="/revisao-ia" element={<Navigate to="/" replace />} />
             <Route path="/ia" element={<Navigate to="/" replace />} />
             <Route path="/conteudo-ia/:id" element={<ConteudoIA />} />
+            <Route path="/convite/:token" element={<ConviteIndicacao />} />
             <Route path="/estudar-ia" element={<EstudarIA />} />
             <Route path="/video/:id" element={<VideoPage />} />
             <Route path="/checkout" element={<Checkout />} />

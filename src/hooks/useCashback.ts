@@ -9,6 +9,41 @@ export interface CashbackTier {
   percent: number;
 }
 
+/** Quantidade de acessos liberados por indicação, para cada tipo de conteúdo. */
+export interface ReferralAccessGrants {
+  revisao: number;
+  resumo: number;
+  simulado: number;
+  top_questoes: number;
+  colinha: number;
+  duvida: number;
+  aula_particular: number;
+  /** Créditos de geração de material com IA */
+  ai_credits: number;
+}
+
+export const REFERRAL_ACCESS_LABELS: Record<keyof ReferralAccessGrants, string> = {
+  revisao: "Revisões",
+  resumo: "Resumos",
+  simulado: "Simulados",
+  top_questoes: "Top Questões",
+  colinha: "Colinhas",
+  duvida: "Dúvidas",
+  aula_particular: "Aula particular",
+  ai_credits: "Créditos de IA",
+};
+
+export const DEFAULT_REFERRAL_ACCESS_GRANTS: ReferralAccessGrants = {
+  revisao: 1,
+  resumo: 1,
+  simulado: 1,
+  top_questoes: 1,
+  colinha: 1,
+  duvida: 0,
+  aula_particular: 0,
+  ai_credits: 1,
+};
+
 export interface CashbackProgramConfig {
   enabled: boolean;
   grace_period_days: number;

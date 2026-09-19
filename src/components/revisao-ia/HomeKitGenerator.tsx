@@ -54,7 +54,7 @@ const buildPhases = (assunto: string, disciplina: string, nivel: string): GenPha
 const flattenPhases = (phases: GenPhase[]) =>
   phases.flatMap((p, pi) => p.tasks.map((t) => ({ phase: pi, label: p.label, task: t })));
 
-const STEP_MS = 1800;
+const STEP_MS = 8000;
 const FAST_STEP_MS = 500;
 
 const formatCountdown = (ms: number) => {

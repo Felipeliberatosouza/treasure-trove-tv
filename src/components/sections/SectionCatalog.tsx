@@ -177,11 +177,18 @@ const SectionCatalog = ({ sectionKey }: Props) => {
         if (p > (progressMap.get(v.content_id) || 0)) progressMap.set(v.content_id, p);
       });
 
+      const sectionTitle = (raw: string) => {
+        const clean = (raw || "").trim();
+        if (sectionKey === "revisoes") return clean;
+        const already = normalize(clean).startsWith(normalize(section.itemPrefix));
+        return already ? clean : `${section.itemPrefix}: ${clean}`;
+      };
+
       const mapTeacher = (r: any, type: "lesson" | "exam_solution"): Item => {
         const t = r.teacher_id ? teacherMap.get(r.teacher_id) : undefined;
         return {
           id: r.id,
-          title: r.title,
+          title: sectionTitle(r.title),
           description: r.description || "",
           thumbnail: r.thumbnail_url || r.carousel_cover_url || "/placeholder.svg",
           duration: "",
@@ -198,6 +205,29 @@ const SectionCatalog = ({ sectionKey }: Props) => {
         };
       };
 
+      const sectionCount = (kit: any): number => {
+        const list =
+          sectionKey === "revisoes"
+            ? kit?.slides
+            : sectionKey === "resumo"
+            ? kit?.resumo
+            : sectionKey === "simulado"
+            ? kit?.simulado
+            : sectionKey === "top_questoes"
+            ? kit?.top_questoes
+            : kit?.colinha;
+        return Array.isArray(list) ? list.length : 0;
+      };
+
+      const countLabel = (n: number) => {
+        if (n <= 0) return "";
+        if (sectionKey === "revisoes") return `${n} slides`;
+        if (sectionKey === "simulado") return `${n} questões`;
+        if (sectionKey === "top_questoes") return `${n} questões comentadas`;
+        if (sectionKey === "colinha") return `${n} tópicos`;
+        return `${n} pontos`;
+      };
+
       const aiItems: Item[] = ((aiRes.data as any[]) || [])
         .filter((row) => kitHasSection(row.kit, sectionKey))
         .map((row) => {
@@ -207,15 +237,16 @@ const SectionCatalog = ({ sectionKey }: Props) => {
             { ...DEFAULT_AI_AVATAR, ...(aiAvatarSettings || {}) },
             { disciplina: row.disciplina, areas, contentType: "apresentacao" },
           );
+          const total = sectionCount(row.kit);
           return {
             id: row.id,
-            title: (row.kit?.titulo as string) || row.assunto,
-            description: row.disciplina || "Conteúdo produzido com apoio de IA",
+            title: sectionTitle(row.assunto || (row.kit?.titulo as string) || ""),
+            description: [row.disciplina, countLabel(total)].filter(Boolean).join(" • "),
             thumbnail: aiKitCover,
-            duration: sectionKey === "revisoes" ? "Aula com Professor Virtual" : "",
+            duration: sectionKey === "revisoes" ? "Aula com Professor Virtual" : countLabel(total),
             category: areas[0] || row.disciplina || "",
             instructor: `${aiRoleLabel(avatar.gender)} ${avatar.name}`.trim(),
-            lessons: Array.isArray(row.kit?.slides) ? row.kit.slides.length : 1,
+            lessons: total || 1,
             _areas: areas,
             _origin: "ai" as const,
             _contentType: "ai" as const,

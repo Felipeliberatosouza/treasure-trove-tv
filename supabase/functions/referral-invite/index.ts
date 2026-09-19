@@ -159,8 +159,8 @@ Deno.serve(async (req) => {
       return respond({ ok: true, rewarded: true, referralCode });
     }
 
-    /* ---------------- SEND (autenticado) ---------------- */
-    if (action !== "send") return respond({ ok: false, error: "Ação inválida." }, 400);
+    /* ---------------- SEND / RESEND (autenticado) ---------------- */
+    if (action !== "send" && action !== "resend") return respond({ ok: false, error: "Ação inválida." }, 400);
 
     const authHeader = req.headers.get("Authorization") ?? "";
     if (!authHeader.startsWith("Bearer ")) return respond({ ok: false, error: "Faça login para enviar convites." }, 401);

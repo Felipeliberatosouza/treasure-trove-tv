@@ -10,6 +10,7 @@ import { fetchKitById, type KitResponse } from "@/lib/revisionKit";
 const ConteudoIA = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [result, setResult] = useState<KitResponse | null>(null);
   const [loading, setLoading] = useState(true);
 

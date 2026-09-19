@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { Copy, Gift, Send, Loader2, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { useCashbackAccount, useCashbackConfig } from "@/hooks/useCashback";
+import { useCashbackAccount, useCashbackConfig, getReferralDiscount } from "@/hooks/useCashback";
 import {
   useAllPlatformSettings,
   type BrandingSettings,
@@ -48,6 +48,7 @@ const InviteFriendsPanel = ({ variant = "hero", className, eyebrow }: Props) => 
   const { user, profile } = useAuth();
   const { account } = useCashbackAccount();
   const { config } = useCashbackConfig();
+  const [rewardedCount, setRewardedCount] = useState(0);
   const { settings } = useAllPlatformSettings();
   const branding = settings.branding as BrandingSettings | undefined;
   const contact = settings.contact as ContactSettings | undefined;
@@ -125,7 +126,19 @@ const InviteFriendsPanel = ({ variant = "hero", className, eyebrow }: Props) => 
       .order("created_at", { ascending: false })
       .limit(8);
     setInvites((data ?? []) as InviteRow[]);
+
+    const { count } = await supabase
+      .from("referral_invites")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "rewarded");
+    setRewardedCount(count ?? 0);
   }, [user]);
+
+  /** Faixa de desconto na renovação conforme as indicações já premiadas. */
+  const discountInfo = useMemo(
+    () => getReferralDiscount(config.referral_discount_tiers, rewardedCount),
+    [config.referral_discount_tiers, rewardedCount]
+  );
 
   useEffect(() => {
     void loadInvites();

@@ -210,20 +210,35 @@ Em cada slide, escreva uma narração fluida em português brasileiro informal e
 CLASSIFICAÇÃO POR ÁREA (obrigatória): no campo "areas", escolha entre 1 e 3 áreas desta lista de áreas de curso cadastradas na plataforma, copiando o nome EXATAMENTE como aparece:
 ${params.areasDisponiveis.map((a) => `- ${a}`).join("\n") || "- (nenhuma área cadastrada)"}
 Se o conteúdo for relevante para mais de uma área, indique todas as que fizerem sentido. Nunca invente nomes de área fora da lista.`;
-  const runIdFetch = createLovableAiGatewayRunIdFetch();
-  const lovable = createOpenAI({
-    baseURL: "https://ai.gateway.lovable.dev/v1",
-    apiKey,
-    headers: { "Lovable-API-Key": apiKey, "X-Lovable-AIG-SDK": "vercel-ai-sdk" },
-    fetch: runIdFetch.fetch,
+  // Chamada direta (sem SDK de streaming): o parsing de stream consumia CPU
+  // suficiente para estourar o limite da edge function ("CPU Time exceeded").
+  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model: GEN_MODEL,
+      stream: false,
+      response_format: { type: "json_object" },
+      messages: [
+        { role: "system", content: system },
+        {
+          role: "user",
+          content: `${user}\n\nResponda somente com um objeto JSON válido que siga este esquema: ${JSON.stringify(KIT_TOOL.function.parameters)}.`,
+        },
+      ],
+    }),
   });
-  const result = streamText({
-    model: lovable.responses(GEN_MODEL),
-    system,
-    prompt: `${user}\n\nResponda somente com um objeto JSON válido que siga este esquema: ${JSON.stringify(KIT_TOOL.function.parameters)}.`,
-    providerOptions: { openai: { forceReasoning: true, reasoningEffort: "medium", reasoningSummary: "auto", store: false, include: ["reasoning.encrypted_content"] } },
-  });
-  const text = await result.text;
+  if (!res.ok) {
+    const detail = await res.text().catch(() => "");
+    console.error("ai-revision-kit gateway error", res.status, detail.slice(0, 500));
+    if (res.status === 429) throw new Error("Muitos pedidos agora. Aguarde um instante e tente novamente.");
+    throw new Error("Não foi possível gerar o material agora. Tente novamente em instantes.");
+  }
+  const payload = await res.json();
+  const text: string = payload?.choices?.[0]?.message?.content ?? "";
   const clean = text.trim().replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
   if (!clean) throw new Error("A IA não retornou o Kit de Revisão.");
   try { return JSON.parse(clean); } catch { throw new Error("A IA retornou um material inválido. Tente novamente."); }

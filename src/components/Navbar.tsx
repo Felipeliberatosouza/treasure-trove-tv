@@ -493,7 +493,32 @@ const Navbar = () => {
           className="fixed inset-0 z-[9999] flex flex-col bg-background/95 backdrop-blur-xl"
         >
           <div className="flex shrink-0 items-center justify-between border-b border-border/60 px-4 py-3 md:px-8">
-            <span className="font-display text-lg font-semibold text-foreground">Menu</span>
+            <Link
+              to="/"
+              onClick={() => setMobileOpen(false)}
+              className="flex items-center gap-3 min-w-0"
+            >
+              {(() => {
+                const isLightBg =
+                  typeof document !== "undefined" &&
+                  document.documentElement.getAttribute("data-theme") === "light";
+                const preferred = isLightBg ? branding?.logo_url_light_bg : branding?.logo_url_dark_bg;
+                const fallback = isLightBg ? branding?.logo_url_dark_bg : branding?.logo_url_light_bg;
+                const menuLogo = preferred || fallback || branding?.logo_url;
+                return menuLogo && !branding?.use_text_logo ? (
+                  <img
+                    src={menuLogo}
+                    alt={branding?.platform_name || "Logo"}
+                    className="h-9 max-w-[180px] object-contain"
+                  />
+                ) : (
+                  <span className="font-display text-lg font-bold text-gradient">
+                    {branding?.platform_name || "Revisão Fácil"}
+                  </span>
+                );
+              })()}
+              <span className="font-display text-lg font-semibold text-foreground">Menu</span>
+            </Link>
             <button
               type="button"
               className="rounded-full p-2 transition-colors hover:bg-secondary"

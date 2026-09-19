@@ -26,7 +26,9 @@ import {
   DEFAULT_REFERRAL_ACCESS_SCOPES,
   DEFAULT_REFERRAL_INVITE_MESSAGE,
   REFERRAL_SCOPE_LABELS,
+  DEFAULT_REFERRAL_DISCOUNT_TIERS,
   type ReferralCreditScope,
+  type ReferralDiscountTier,
 } from "@/hooks/useCashback";
 
 const SettingsCashback = () => {

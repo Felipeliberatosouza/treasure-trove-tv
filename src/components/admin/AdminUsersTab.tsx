@@ -447,7 +447,17 @@ const AdminUsersTab = () => {
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-1">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-8 shrink-0 gap-1 border-primary/40 text-primary hover:text-primary"
+                        onClick={() => { setCreditUser(u); setCreditValues({}); }}
+                        title="Conceder créditos por recurso"
+                      >
+                        <Coins className="h-4 w-4" /> Créditos
+                      </Button>
                       <Select value={u.role} onValueChange={(val) => handleRoleChange(u.user_id, val)}>
+
                         <SelectTrigger className="w-[110px] h-8 text-xs">
                           <SelectValue />
                         </SelectTrigger>

@@ -1,13 +1,5 @@
-import MaterialShowcase from "@/components/MaterialShowcase";
-import { Trophy } from "lucide-react";
+import SectionCatalog from "@/components/sections/SectionCatalog";
 
-const TopQuestoes = () => (
-  <MaterialShowcase
-    title="Top Questões de Provas"
-    description="As perguntas abertas mais cobradas, com respostas elaboradas pelos professores."
-    icon={Trophy}
-    materialType="top_questoes"
-  />
-);
+const TopQuestoes = () => <SectionCatalog sectionKey="top_questoes" />;
 
 export default TopQuestoes;

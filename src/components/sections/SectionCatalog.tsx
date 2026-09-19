@@ -15,6 +15,7 @@ import {
 } from "@/hooks/usePlatformSettings";
 import { CONTENT_SECTIONS, getSection, type SectionKey } from "@/lib/contentSections";
 import type { Video } from "@/data/courses";
+import aiKitCover from "@/assets/slide-visual-ciencia.jpg";
 
 interface Props {
   sectionKey: SectionKey;
@@ -210,7 +211,7 @@ const SectionCatalog = ({ sectionKey }: Props) => {
             id: row.id,
             title: (row.kit?.titulo as string) || row.assunto,
             description: row.disciplina || "Conteúdo produzido com apoio de IA",
-            thumbnail: "/placeholder.svg",
+            thumbnail: aiKitCover,
             duration: sectionKey === "revisoes" ? "Aula com Professor Virtual" : "",
             category: areas[0] || row.disciplina || "",
             instructor: `${aiRoleLabel(avatar.gender)} ${avatar.name}`.trim(),

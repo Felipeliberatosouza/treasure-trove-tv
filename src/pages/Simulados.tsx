@@ -1,13 +1,5 @@
-import MaterialShowcase from "@/components/MaterialShowcase";
-import { ClipboardList } from "lucide-react";
+import SectionCatalog from "@/components/sections/SectionCatalog";
 
-const Simulados = () => (
-  <MaterialShowcase
-    title="Simulados"
-    description="Teste seus conhecimentos com simulados interativos. Responda e veja seu desempenho com gabarito completo."
-    icon={ClipboardList}
-    materialType="simulado"
-  />
-);
+const Simulados = () => <SectionCatalog sectionKey="simulado" />;
 
 export default Simulados;

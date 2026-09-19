@@ -1,13 +1,5 @@
-import MaterialShowcase from "@/components/MaterialShowcase";
-import { StickyNote } from "lucide-react";
+import SectionCatalog from "@/components/sections/SectionCatalog";
 
-const Colinhas = () => (
-  <MaterialShowcase
-    title="Colinhas"
-    description="Bullets rápidos para relembrar o conteúdo essencial em segundos."
-    icon={StickyNote}
-    materialType="colinhas"
-  />
-);
+const Colinhas = () => <SectionCatalog sectionKey="colinha" />;
 
 export default Colinhas;

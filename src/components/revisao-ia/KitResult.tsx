@@ -21,9 +21,19 @@ import ForensicWatermark from "@/components/ForensicWatermark";
 interface Props {
   result: KitResponse;
   onNewKit: () => void;
+  /** Aba aberta ao chegar de uma seção (resumo, simulado, top_questoes, colinha, revisoes). */
+  initialTab?: string | null;
 }
 
-const KitResult = ({ result, onNewKit }: Props) => {
+const TAB_BY_SECTION: Record<string, string> = {
+  resumo: "resumo",
+  simulado: "simulado",
+  top_questoes: "top",
+  colinha: "colinha",
+  revisoes: "slides",
+};
+
+const KitResult = ({ result, onNewKit, initialTab }: Props) => {
   const kit = result.kit;
   const { user } = useAuth();
   const [downloading, setDownloading] = useState(false);
@@ -110,7 +120,7 @@ const KitResult = ({ result, onNewKit }: Props) => {
         <VideoShareButtons videoTitle={kit.titulo || kit.assunto} videoUrl={window.location.href} />
       </div>
 
-      <Tabs defaultValue="resumo">
+      <Tabs defaultValue={(initialTab && TAB_BY_SECTION[initialTab]) || "resumo"}>
         <TabsList className="flex w-full flex-wrap justify-start">
           <TabsTrigger value="resumo"><FileText className="mr-1 h-4 w-4" /> Resumo</TabsTrigger>
           <TabsTrigger value="simulado"><ListChecks className="mr-1 h-4 w-4" /> Simulado</TabsTrigger>

@@ -246,6 +246,73 @@ const SettingsCashback = () => {
             nome da plataforma e <strong>{"{link}"}</strong> para o link exclusivo do convite.
           </p>
         </div>
+
+        <div className="space-y-2">
+          <Label className="flex items-center gap-2">
+            <Percent className="h-4 w-4" /> Desconto na renovação por indicações
+          </Label>
+          <p className="text-xs text-muted-foreground">
+            Defina quantas indicações premiadas o aluno precisa acumular para ganhar cada % de desconto
+            na renovação da assinatura. O aluno vê essa meta na tela de convite.
+          </p>
+          {(cfg.referral_discount_tiers ?? DEFAULT_REFERRAL_DISCOUNT_TIERS).map((t, i) => {
+            const list = [...(cfg.referral_discount_tiers ?? DEFAULT_REFERRAL_DISCOUNT_TIERS)];
+            const update = (patch: Partial<ReferralDiscountTier>) => {
+              list[i] = { ...list[i], ...patch };
+              setCfg({ ...cfg, referral_discount_tiers: list });
+            };
+            return (
+              <div key={i} className="flex items-end gap-2">
+                <div className="flex-1">
+                  <Label className="text-xs">Indicações</Label>
+                  <Input
+                    type="number"
+                    min={1}
+                    value={t.invites}
+                    onChange={(e) => update({ invites: Number(e.target.value) })}
+                  />
+                </div>
+                <div className="flex-1">
+                  <Label className="text-xs">Desconto (%)</Label>
+                  <Input
+                    type="number"
+                    min={0}
+                    max={100}
+                    value={t.percent}
+                    onChange={(e) => update({ percent: Number(e.target.value) })}
+                  />
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() =>
+                    setCfg({
+                      ...cfg,
+                      referral_discount_tiers: list.filter((_, idx) => idx !== i),
+                    })
+                  }
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            );
+          })}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() =>
+              setCfg({
+                ...cfg,
+                referral_discount_tiers: [
+                  ...(cfg.referral_discount_tiers ?? DEFAULT_REFERRAL_DISCOUNT_TIERS),
+                  { invites: 1, percent: 5 },
+                ],
+              })
+            }
+          >
+            <Plus className="h-4 w-4 mr-1" /> Adicionar faixa
+          </Button>
+        </div>
       </Card>
 
       <Card className="p-4 space-y-4">

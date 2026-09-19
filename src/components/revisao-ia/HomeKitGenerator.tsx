@@ -188,6 +188,17 @@ const HomeKitGenerator = () => {
     void handleSubmit(novoPedido);
   };
 
+  const blockedRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (!blocked) return;
+    const id = window.setTimeout(() => {
+      blockedRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 50);
+    return () => window.clearTimeout(id);
+  }, [blocked]);
+
+
+
   if (blocked) {
     return (
       <Card ref={blockedRef} className="mx-auto max-w-lg scroll-mt-28 text-center">

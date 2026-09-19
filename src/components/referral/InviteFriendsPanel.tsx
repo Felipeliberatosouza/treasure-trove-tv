@@ -198,20 +198,86 @@ const InviteFriendsPanel = ({ variant = "hero", className, eyebrow }: Props) => 
       </div>
 
       <div className="space-y-2">
-        <p className="text-sm font-medium">Enviar convite por e-mail</p>
+        <p className="text-sm font-medium">Enviar convite direto para o seu amigo</p>
         <div className="flex gap-2">
           <Input
             type="email"
             value={friendEmail}
             onChange={(e) => setFriendEmail(e.target.value)}
-            placeholder="Digite o e-mail do seu amigo"
+            placeholder="E-mail do seu amigo"
             aria-label="E-mail do amigo"
           />
-          <Button variant="secondary" className="gap-2 shrink-0" onClick={sendInvite} disabled={sending}>
-            {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-            Enviar
+          <Button
+            variant="secondary"
+            className="gap-2 shrink-0"
+            onClick={() => sendInvite("email")}
+            disabled={sending !== null}
+          >
+            {sending === "email" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+            E-mail
           </Button>
         </div>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <Input
+            type="tel"
+            inputMode="numeric"
+            value={friendPhone}
+            onChange={(e) => setFriendPhone(maskPhone(e.target.value))}
+            placeholder="(11) 91234-5678"
+            aria-label="Celular do amigo"
+          />
+          <div className="flex gap-2">
+            <Button
+              variant="secondary"
+              className="gap-2 flex-1 sm:flex-none"
+              onClick={() => sendInvite("whatsapp")}
+              disabled={sending !== null}
+            >
+              {sending === "whatsapp" ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Send className="h-4 w-4" />
+              )}
+              WhatsApp
+            </Button>
+            <Button
+              variant="secondary"
+              className="gap-2 flex-1 sm:flex-none"
+              onClick={() => sendInvite("sms")}
+              disabled={sending !== null}
+            >
+              {sending === "sms" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+              SMS
+            </Button>
+          </div>
+        </div>
+        {user && invites.length > 0 && (
+          <div className="space-y-1 rounded-lg border border-border/60 p-2">
+            <p className="text-xs font-medium text-muted-foreground">Convites enviados</p>
+            {invites.map((i) => (
+              <div key={i.id} className="flex items-center justify-between gap-2 text-xs">
+                <span className="truncate">{i.contact_email || i.contact_phone || "Link"}</span>
+                <span
+                  className={
+                    i.status === "rewarded"
+                      ? "text-primary font-medium"
+                      : i.status === "visited"
+                        ? "text-foreground"
+                        : "text-muted-foreground"
+                  }
+                >
+                  {i.status === "rewarded"
+                    ? "Premiado"
+                    : i.status === "visited"
+                      ? "Acessado"
+                      : i.status === "expired"
+                        ? "Expirado"
+                        : "Enviado"}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
         {!user && (
           <p className="text-xs text-muted-foreground">
             <Link to="/login" className="text-primary underline">

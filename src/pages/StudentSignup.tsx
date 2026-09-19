@@ -188,6 +188,7 @@ const StudentSignup = () => {
         toast.error(translateAuthError(msg));
       }
     } else {
+      if (referralCode) localStorage.removeItem("rf_referral_code");
       // Upload avatar if provided
       if (signUpData?.user && avatarFile) {
         const ext = avatarFile.name.split(".").pop();

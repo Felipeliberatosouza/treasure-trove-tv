@@ -18,6 +18,7 @@ import VideoShareButtons from "@/components/VideoShareButtons";
 import VLibrasWidget from "@/components/VLibrasWidget";
 import ForensicWatermark from "@/components/ForensicWatermark";
 import BrandStamp from "@/components/branding/BrandStamp";
+import DoubtForm from "@/components/DoubtForm";
 
 interface Props {
   result: KitResponse;
@@ -92,6 +93,16 @@ const KitResult = ({ result, onNewKit, initialTab }: Props) => {
       <div className="ai-slide-shell overflow-hidden rounded-xl bg-muted shadow-xl">
         <NarratedSlidesPlayer topico={kit.assunto} disciplina={kit.disciplina} slides={kit.slides ?? []} canonicalId={result.canonical_id} areas={result.areas} faixaEtaria={kit.faixa_etaria} />
       </div>
+
+      {/* Dúvidas sobre a aula com professor virtual: vão para a equipe da plataforma. */}
+      <DoubtForm
+        contentId={result.canonical_id ?? undefined}
+        contentType="ai_content"
+        title="Enviar Dúvida sobre esta aula"
+        placeholder="Descreva sua dúvida sobre esta aula com professor virtual..."
+      />
+
+
 
       {/* Destaque junto à apresentação: aulas gravadas e aula particular */}
       <div className="grid gap-3 sm:grid-cols-2">

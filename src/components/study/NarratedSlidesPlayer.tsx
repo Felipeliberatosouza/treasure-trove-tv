@@ -91,6 +91,9 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina, areas, 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const tokenRef = useRef<string>("");
   const cacheRef = useRef<Map<number, string>>(new Map());
+  const requestedImagesRef = useRef<Set<number>>(new Set());
+  // Maior progresso já atingido em cada slide: garante que o quadro só preencha, nunca apague.
+  const maxProgressRef = useRef<Record<number, number>>({});
 
   const getToken = useCallback(async () => {
     const { supabase } = await import("@/integrations/supabase/client");

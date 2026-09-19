@@ -163,6 +163,17 @@ const SettingsBranding = () => {
         <Input value={form.slogan} onChange={(e) => setForm({ ...form, slogan: e.target.value })} />
       </div>
       <div>
+        <Label>Domínio Comercial</Label>
+        <Input
+          value={form.commercial_domain ?? ""}
+          onChange={(e) => setForm({ ...form, commercial_domain: e.target.value })}
+          placeholder="revisaofacil.com"
+        />
+        <p className="mt-1 text-xs text-muted-foreground">
+          Endereço divulgado nos vídeos, nos slides e nos demais conteúdos gerados (professores e IA).
+        </p>
+      </div>
+      <div>
         <Label>Cor do Slogan</Label>
         <div className="flex items-center gap-2">
           <input

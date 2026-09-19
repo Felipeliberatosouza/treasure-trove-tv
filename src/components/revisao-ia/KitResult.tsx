@@ -167,11 +167,13 @@ const KitResult = ({ result, onNewKit, initialTab }: Props) => {
           ) : null}
         </TabsContent>
 
-        <TabsContent value="simulado" className="pt-4">
+        <TabsContent value="simulado" className="space-y-3 pt-4">
+          <BrandStamp />
           <KitQuiz questoes={kit.simulado ?? []} />
         </TabsContent>
 
         <TabsContent value="top" className="space-y-3 pt-4">
+          <BrandStamp />
           {(kit.top_questoes ?? []).map((q, i) => (
             <Card key={i}>
               <CardContent className="space-y-2 p-4">

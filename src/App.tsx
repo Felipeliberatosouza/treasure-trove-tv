@@ -31,6 +31,7 @@ import MinhasAulasAgendadas from "./pages/MinhasAulasAgendadas.tsx";
 import EstudarIA from "./pages/EstudarIA.tsx";
 
 import ConteudoIA from "./pages/ConteudoIA.tsx";
+import ConviteIndicacao from "./pages/ConviteIndicacao.tsx";
 import ForgotPassword from "./pages/ForgotPassword.tsx";
 import ResetPassword from "./pages/ResetPassword.tsx";
 import VideoPage from "./pages/VideoPage.tsx";

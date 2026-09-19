@@ -57,6 +57,7 @@ interface MaterialRow {
   kit: KitData;
   faixa_etaria: AgeGroup;
   confianca_faixa_etaria: number;
+  cache_key: string;
 }
 
 const AGE_LABELS: Record<AgeGroup, string> = {
@@ -82,7 +83,7 @@ const SettingsAiMaterials = () => {
     setLoading(true);
     const { data, error } = await supabase
       .from("ai_canonical_contents")
-      .select("id, assunto, disciplina, areas, status, visibility, updated_at, hits, kit, faixa_etaria, confianca_faixa_etaria")
+      .select("id, assunto, disciplina, areas, status, visibility, updated_at, hits, kit, faixa_etaria, confianca_faixa_etaria, cache_key")
       .order("updated_at", { ascending: false })
       .limit(200);
     setLoading(false);
@@ -125,6 +126,10 @@ const SettingsAiMaterials = () => {
   const handleSave = async () => {
     if (!editing) return;
     setSaving(true);
+    const original = rows.find((row) => row.id === editing.id);
+    const cacheKey = original && original.faixa_etaria !== editing.faixa_etaria
+      ? editing.cache_key.replace(`|${original.faixa_etaria}|`, `|${editing.faixa_etaria}|`)
+      : editing.cache_key;
     const { error } = await supabase
       .from("ai_canonical_contents")
       .update({
@@ -132,6 +137,7 @@ const SettingsAiMaterials = () => {
         disciplina: editing.disciplina?.trim() || null,
         areas: editing.areas,
         faixa_etaria: editing.faixa_etaria,
+        cache_key: cacheKey,
         kit: editing.kit as never,
       })
       .eq("id", editing.id);
@@ -140,6 +146,7 @@ const SettingsAiMaterials = () => {
       toast.error("Não foi possível salvar as alterações.");
       return;
     }
+    await supabase.from("ai_content_artifacts").delete().eq("canonical_id", editing.id);
     toast.success("Material atualizado.");
     setEditing(null);
     void load();

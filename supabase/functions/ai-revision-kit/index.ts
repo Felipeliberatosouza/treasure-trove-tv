@@ -48,7 +48,7 @@ const AGE_GUIDANCE: Record<AgeGroup, string> = {
 
 function detectAgeGroup(value: string): { group: AgeGroup; confidence: number } {
   const text = normalize(value);
-  const ageMatch = text.match(/(?:idade|anos?|para|tem)\s*(?:de\s*)?(\d{1,2})/);
+  const ageMatch = text.match(/\b(\d{1,2})\s*anos?\b/) || text.match(/(?:idade|para|tem)\s*(?:de\s*)?(\d{1,2})/);
   const age = ageMatch ? Number(ageMatch[1]) : null;
   if (age !== null && age >= 0 && age <= 120) {
     if (age <= 9) return { group: "criancas_0_9", confidence: 0.99 };

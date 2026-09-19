@@ -514,6 +514,7 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina, areas, 
             variant="ghost"
             size="sm"
             className="ai-slide-btn"
+            aria-label="Slide anterior"
             disabled={current === 0}
             onClick={() => {
               setPlaying(false);
@@ -527,6 +528,7 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina, areas, 
             variant="ghost"
             size="sm"
             className="ai-slide-btn"
+            aria-label="Próximo slide"
             disabled={current >= slides.length - 1}
             onClick={() => {
               setPlaying(false);

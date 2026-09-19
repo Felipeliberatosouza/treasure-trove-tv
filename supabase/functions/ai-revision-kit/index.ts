@@ -346,13 +346,37 @@ Deno.serve(async (req) => {
     }
 
     // 1) cache canônico primeiro — nunca consome crédito
-    const { data: cached } = await admin
+    let { data: cached } = await admin
       .from("ai_canonical_contents")
       .select("id, kit, status, visibility, hits")
       .eq("cache_key", cacheKey)
       .eq("visibility", "public_canonical")
       .eq("status", "ready")
       .maybeSingle();
+
+    // 1b) busca aproximada no acervo: mesmo assunto já produzido (com ou sem a mesma disciplina)
+    if (!cached) {
+      const alvo = normalize(assunto);
+      const { data: candidatos } = await admin
+        .from("ai_canonical_contents")
+        .select("id, kit, assunto, disciplina, nivel, faixa_etaria, hits")
+        .eq("visibility", "public_canonical")
+        .eq("status", "ready")
+        .eq("faixa_etaria", faixaEtaria)
+        .ilike("assunto", `%${assunto.slice(0, 60)}%`)
+        .order("hits", { ascending: false })
+        .limit(10);
+      const escolhido = (candidatos ?? []).find((c: any) => {
+        const na = normalize(String(c.assunto || ""));
+        if (!na) return false;
+        const mesmoAssunto = na === alvo || na.includes(alvo) || alvo.includes(na);
+        if (!mesmoAssunto) return false;
+        if (disciplina && c.disciplina) return normalize(String(c.disciplina)) === normalize(disciplina);
+        return true;
+      });
+      if (escolhido) cached = escolhido as typeof cached;
+    }
+
 
     if (cached) {
       const { data: reqRow } = await admin

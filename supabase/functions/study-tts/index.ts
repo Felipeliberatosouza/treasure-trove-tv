@@ -158,7 +158,7 @@ Deno.serve(async (req) => {
         artifact_type: "audio",
         status: "ready",
         storage_path: storagePath,
-        metadata: { voice, model: "openai/gpt-4o-mini-tts" },
+        metadata: { voice, model: "openai/gpt-4o-mini-tts", text_signature: signature || textSignature(texto) },
       }, { onConflict: "canonical_id,slide_index,artifact_type" });
       const { data: signed } = await admin.storage.from("ai-revision-media").createSignedUrl(storagePath, 3600);
       return new Response(JSON.stringify({ audio_url: signed?.signedUrl, cached: false }), {

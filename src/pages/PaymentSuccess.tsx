@@ -5,6 +5,7 @@ import { CheckCircle2, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import InviteFriendsPanel from "@/components/referral/InviteFriendsPanel";
 
 const PaymentSuccess = () => {
   const navigate = useNavigate();
@@ -175,6 +176,11 @@ const PaymentSuccess = () => {
             <Button onClick={() => navigate(isUnitPurchase && contentId ? `/video/${contentId}` : "/dashboard/student")}>
               {isUnitPurchase ? "Ir para a aula" : "Ir para o Painel"}
             </Button>
+            <InviteFriendsPanel
+              variant="compact"
+              className="mt-8 text-left"
+              eyebrow="Ganhe cashback indicando amigos"
+            />
           </>
         )}
       </motion.div>

@@ -37,6 +37,12 @@ const imageUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/study-slide-
 
 const normalizeText = (value: string) => value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 
+/** Divide a narração em frases para que a legenda mostre exatamente o que está sendo falado. */
+const splitPhrases = (value: string): string[] => {
+  const parts = value.match(/[^.!?…]+[.!?…]*/g)?.map((p) => p.trim()).filter(Boolean) ?? [];
+  return parts.length ? parts : [value.trim()].filter(Boolean);
+};
+
 const anchorProgress = (narration: string, anchor: string, fallback: number) => {
   const text = normalizeText(narration);
   const needle = normalizeText(anchor).trim();

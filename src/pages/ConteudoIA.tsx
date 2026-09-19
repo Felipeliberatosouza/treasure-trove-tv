@@ -15,6 +15,8 @@ const ConteudoIA = () => {
   const [searchParams] = useSearchParams();
   const [result, setResult] = useState<KitResponse | null>(null);
   const [loading, setLoading] = useState(true);
+  const secao = searchParams.get("secao");
+  const sectionKey = (CONTENT_SECTIONS.find((s) => s.key === secao)?.key ?? null) as SectionKey | null;
 
   useEffect(() => {
     if (!id) {

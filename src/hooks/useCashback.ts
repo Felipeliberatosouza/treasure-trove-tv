@@ -133,6 +133,7 @@ export const DEFAULT_CASHBACK_CONFIG: CashbackProgramConfig = {
   referral_access_max_rewards: 0,
   referral_access_scopes: DEFAULT_REFERRAL_ACCESS_SCOPES,
   referral_invite_message: DEFAULT_REFERRAL_INVITE_MESSAGE,
+  referral_discount_tiers: DEFAULT_REFERRAL_DISCOUNT_TIERS,
   tiers: [
     { id: "bronze", name: "Bronze", min_spent_12m: 0, percent: 2 },
     { id: "silver", name: "Prata", min_spent_12m: 300, percent: 4 },

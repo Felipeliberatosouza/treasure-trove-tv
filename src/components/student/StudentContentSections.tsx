@@ -322,22 +322,17 @@ const StudentContentSections = ({
 
       <Section
         title={lessonsLabel}
-        videos={lessons}
-        onVideoClick={onVideoClick}
+        videos={[
+          ...lessons,
+          ...aiKits.map((k) => (aiCovers[k.id] ? { ...k, thumbnail: aiCovers[k.id] } : k)),
+        ]}
+        onVideoClick={(id) =>
+          aiKits.some((k) => k.id === id) ? navigate(`/conteudo-ia/${id}`) : onVideoClick(id)
+        }
         ratings={ratings}
         watchedIds={watchedIds}
         emptyText="Nenhum conteúdo encontrado para suas áreas de interesse."
       />
-      {aiKits.length > 0 && (
-        <Section
-          title="🤖 Revisões com IA nas suas áreas"
-          videos={aiKits}
-          onVideoClick={(id) => navigate(`/conteudo-ia/${id}`)}
-          ratings={ratings}
-          watchedIds={watchedIds}
-          emptyText=""
-        />
-      )}
       <Section
         title={examsLabel}
         videos={exams}

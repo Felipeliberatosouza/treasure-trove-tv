@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { User, LogOut, LayoutDashboard, ChevronDown } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePlatformSettings, BrandingSettings } from "@/hooks/usePlatformSettings";
+import { useReferralCredits } from "@/hooks/useReferralCredits";
 
 const UserMenu = forwardRef<HTMLDivElement>((_, forwardedRef) => {
   const { user, role, profile, signOut } = useAuth();
@@ -11,6 +12,8 @@ const UserMenu = forwardRef<HTMLDivElement>((_, forwardedRef) => {
   const ref = useRef<HTMLDivElement>(null);
   const { data: branding } = usePlatformSettings("branding");
   const accentColor = (branding as BrandingSettings | null)?.accent_color || "#f59e0b";
+  const { totalRemaining, aiCredits } = useReferralCredits();
+  const totalCredits = totalRemaining + aiCredits;
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {

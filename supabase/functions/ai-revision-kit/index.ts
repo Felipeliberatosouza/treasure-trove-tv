@@ -3,6 +3,9 @@
 //   { action: "status", anon_id }            -> saldo/elegibilidade
 //   { action: "generate", ...campos }        -> entrega kit (cache ou geração)
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
+import { createOpenAI } from "npm:@ai-sdk/openai";
+import { streamText } from "npm:ai";
+import { createLovableAiGatewayRunIdFetch } from "../_shared/ai-gateway.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -10,9 +13,9 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-const GEN_MODEL = "google/gemini-3.7-flash";
-const TEMPLATE_VERSION = "v4";
-const PROMPT_VERSION = "v5";
+const GEN_MODEL = "openai/gpt-6-astra";
+const TEMPLATE_VERSION = "v5";
+const PROMPT_VERSION = "v6";
 const SIGNUP_CREDITS = 2;
 const ANON_FREE_USES = 1;
 
@@ -32,12 +35,44 @@ function normalize(s: string) {
     .trim();
 }
 
-function buildCacheKey(input: { disciplina?: string; assunto: string; nivel: string }) {
+type AgeGroup = "criancas_0_9" | "pre_adolescentes_10_13" | "adolescentes_14_17" | "jovens_18_25" | "adultos_26_45" | "adultos_46_mais";
+
+const AGE_GUIDANCE: Record<AgeGroup, string> = {
+  criancas_0_9: "crianças de 0 a 9 anos: frases muito curtas, palavras simples, repetição positiva, exemplos concretos, ilustrações lúdicas e apenas um passo visual por vez",
+  pre_adolescentes_10_13: "pré-adolescentes de 10 a 13 anos: linguagem simples sem infantilização, desafios curtos, exemplos escolares e lousa guiada",
+  adolescentes_14_17: "adolescentes de 14 a 17 anos: linguagem direta, exemplos de estudo e cotidiano, dicas de prova e raciocínio progressivo",
+  jovens_18_25: "jovens universitários de 18 a 25 anos: linguagem informal universitária, termos técnicos explicados, exemplos práticos e foco em prova",
+  adultos_26_45: "adultos de 26 a 45 anos: linguagem objetiva, aplicações profissionais e cotidianas e poucos elementos lúdicos",
+  adultos_46_mais: "adultos maduros acima de 46 anos: ritmo calmo, alta legibilidade, frases claras, poucos elementos simultâneos e exemplos familiares",
+};
+
+function detectAgeGroup(value: string): { group: AgeGroup; confidence: number } {
+  const text = normalize(value);
+  const ageMatch = text.match(/\b(\d{1,2})\s*anos?\b/) || text.match(/(?:idade|para|tem)\s*(?:de\s*)?(\d{1,2})/);
+  const age = ageMatch ? Number(ageMatch[1]) : null;
+  if (age !== null && age >= 0 && age <= 120) {
+    if (age <= 9) return { group: "criancas_0_9", confidence: 0.99 };
+    if (age <= 13) return { group: "pre_adolescentes_10_13", confidence: 0.99 };
+    if (age <= 17) return { group: "adolescentes_14_17", confidence: 0.99 };
+    if (age <= 25) return { group: "jovens_18_25", confidence: 0.99 };
+    if (age <= 45) return { group: "adultos_26_45", confidence: 0.99 };
+    return { group: "adultos_46_mais", confidence: 0.99 };
+  }
+  if (/crianca|infantil|educacao infantil|alfabetizacao/.test(text)) return { group: "criancas_0_9", confidence: 0.9 };
+  if (/pre adolescente|fundamental ii|sexto ano|setimo ano/.test(text)) return { group: "pre_adolescentes_10_13", confidence: 0.86 };
+  if (/adolescente|ensino medio|vestibular|enem/.test(text)) return { group: "adolescentes_14_17", confidence: 0.84 };
+  if (/adulto maduro|terceira idade|idoso|acima de 46/.test(text)) return { group: "adultos_46_mais", confidence: 0.86 };
+  if (/adulto|profissional|trabalho/.test(text)) return { group: "adultos_26_45", confidence: 0.72 };
+  return { group: "jovens_18_25", confidence: 0.5 };
+}
+
+function buildCacheKey(input: { disciplina?: string; assunto: string; nivel: string; faixaEtaria: AgeGroup }) {
   return [
     normalize(input.disciplina || "geral"),
     normalize(input.assunto),
     "pt-br",
     normalize(input.nivel || "rapido"),
+    input.faixaEtaria,
     TEMPLATE_VERSION,
     PROMPT_VERSION,
   ].join("|");
@@ -111,8 +146,12 @@ const KIT_TOOL = {
               bullets: { type: "array", items: { type: "string" } },
               narracao: { type: "string" },
               imagem_prompt: { type: "string", description: "Descrição objetiva da imagem didática que representa este slide, sem texto escrito." },
+              frase_didatica: { type: "string", description: "Frase curta exibida no slide para reforçar a explicação." },
+              palavras_chave: { type: "array", description: "Uma a três palavras importantes, cada uma ligada a uma frase-âncora literal da narração.", items: { type: "object", properties: { termo: { type: "string" }, ancora: { type: "string" } }, required: ["termo", "ancora"] } },
+              modo_visual: { type: "string", description: "Use avatar na introdução/encerramento, lousa quando houver raciocínio passo a passo e conteudo nos demais." },
+              lousa_passos: { type: "array", description: "Passos seguros para a lousa virtual. Vazio quando não for útil.", items: { type: "object", properties: { tipo: { type: "string" }, conteudo: { type: "string" }, ancora: { type: "string" }, destaque: { type: "string" } }, required: ["tipo", "conteudo", "ancora", "destaque"] } },
             },
-            required: ["titulo", "bullets", "narracao", "imagem_prompt"],
+            required: ["titulo", "bullets", "narracao", "imagem_prompt", "frase_didatica", "palavras_chave", "modo_visual", "lousa_passos"],
           },
         },
         areas: {
@@ -133,9 +172,11 @@ async function generateKit(apiKey: string, params: {
   instituicao?: string;
   nivel: string;
   areasDisponiveis: string[];
+  faixaEtaria: AgeGroup;
+  confiancaFaixaEtaria: number;
 }) {
-  const system = `Você é um professor virtual brasileiro da Revisão Fácil que grava revisões rápidas para provas de graduação.
-Escreva em português brasileiro, com linguagem informal, leve e direcionada a universitários.
+  const system = `Você é um professor virtual brasileiro da Revisão Fácil que cria aulas didáticas para diferentes idades.
+Escreva em português brasileiro e adapte rigorosamente toda a aula para ${AGE_GUIDANCE[params.faixaEtaria]}.
 Não invente fontes nem dados específicos de instituições.
 
 REGRAS DE LINGUAGEM (obrigatórias):
@@ -147,44 +188,45 @@ PADRÃO DA NARRAÇÃO DOS SLIDES (obrigatório):
 - Slide 1 (introdução): narração no estilo "Olá, pessoal! Sejam bem-vindos a este rápido resumo essencial para a sua prova de [assunto]. Em poucos minutos vamos revisar os pontos-chave que você precisa dominar e arrebentar na prova! Vamos lá? Cola aqui que você vai bem!". Deixe claro que é uma revisão com os pontos essenciais para a prova.
 - Slides do meio: conceitos-chave e conteúdos de prova, sempre com exemplos reais do dia a dia (não só teoria) e com frases descontraídas espalhadas, como "Isso tem alta chance de cair na sua prova...", "Presta atenção aqui, dica de prova!", "Atenção a esse ponto, cai sempre em provas...".
 - TOP QUESTÕES (obrigatório): antes do slide de encerramento, inclua slides dedicados às Top Questões. Cada Top Questão gerada no campo top_questoes deve aparecer na narração de um desses slides, lida por completo e seguida da resolução comentada passo a passo (raciocínio, pegadinhas e o porquê da resposta). Os bullets desses slides trazem o enunciado resumido e os passos da resolução.
-- Último slide (encerramento): reforce os pontos mais importantes do conteúdo, peça para o aluno deixar a dúvida (um professor responde), compartilhar a revisão com os colegas e avaliar o vídeo, e sugira fazer o simulado que está disponibilizado aqui e marcar uma aula com um professor. Nunca sugira "ver as Top Questões resolvidas" no encerramento. Termine com "Boa prova!".`;
+- Último slide (encerramento): reforce os pontos mais importantes do conteúdo, peça para o aluno deixar a dúvida (um professor responde), compartilhar a revisão com os colegas e avaliar o vídeo, e sugira fazer o simulado que está disponibilizado aqui e marcar uma aula com um professor. Nunca sugira "ver as Top Questões resolvidas" no encerramento. Termine com "Boa prova!".
+
+RECURSOS DIDÁTICOS (obrigatórios):
+- Em cada slide selecione somente 1 a 3 palavras_chave realmente importantes. Cada ancora deve copiar literalmente um pequeno trecho da narração onde o termo é explicado.
+- Escreva uma frase_didatica curta que contenha as palavras_chave e possa aparecer na tela durante a fala.
+- Use modo_visual "lousa" quando houver conta, fórmula, sequência, comparação ou raciocínio passo a passo; use "avatar" na introdução e encerramento; use "conteudo" nos demais.
+- Na lousa, use somente os tipos texto, operacao, seta, linha, circulo ou desenho. Cada passo deve ter conteúdo curto, uma ancora literal da narração e destaque. Não gere HTML, SVG ou código.
+- A imagem_prompt deve refletir o assunto e a faixa etária. Para crianças, use ilustração educativa amigável e lúdica; para adultos, visual didático mais sóbrio.
+- Não use lousa apenas como decoração: o que surge na lousa deve acompanhar a explicação falada.`;
   const user = `Monte um Kit de Revisão completo.
 Assunto informado pelo aluno: ${params.assunto}
 Disciplina: ${params.disciplina || "não informada"}
 Curso: ${params.curso || "não informado"}
 Instituição: ${params.instituicao || "não informada"}
 Profundidade: ${params.nivel === "aprofundado" ? "aprofundada" : "revisão rápida"}
+Público detectado: ${AGE_GUIDANCE[params.faixaEtaria]} (confiança ${Math.round(params.confiancaFaixaEtaria * 100)}%).
 Gere de 8 a 12 slides seguindo exatamente o padrão de narração: slide 1 de introdução, slides do meio com conceitos-chave e conteúdos de prova (com exemplos do dia a dia e frases descontraídas de dica de prova), depois um slide para cada Top Questão gerada em top_questoes — com o enunciado e a resolução comentada na narração — e o último slide de encerramento.
 Em cada slide, escreva uma narração fluida em português brasileiro informal e uma direção de imagem didática diretamente relacionada ao tópico (no primeiro e no último slide a imagem é apenas de ambiente, sem conteúdo escrito).
 
 CLASSIFICAÇÃO POR ÁREA (obrigatória): no campo "areas", escolha entre 1 e 3 áreas desta lista de áreas de curso cadastradas na plataforma, copiando o nome EXATAMENTE como aparece:
 ${params.areasDisponiveis.map((a) => `- ${a}`).join("\n") || "- (nenhuma área cadastrada)"}
 Se o conteúdo for relevante para mais de uma área, indique todas as que fizerem sentido. Nunca invente nomes de área fora da lista.`;
-
-
-  const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: GEN_MODEL,
-      messages: [
-        { role: "system", content: system },
-        { role: "user", content: user },
-      ],
-      tools: [KIT_TOOL],
-      tool_choice: { type: "function", function: { name: "entregar_kit_revisao" } },
-    }),
+  const runIdFetch = createLovableAiGatewayRunIdFetch();
+  const lovable = createOpenAI({
+    baseURL: "https://ai.gateway.lovable.dev/v1",
+    apiKey,
+    headers: { "Lovable-API-Key": apiKey, "X-Lovable-AIG-SDK": "vercel-ai-sdk" },
+    fetch: runIdFetch.fetch,
   });
-  if (resp.status === 429) throw new Error("Limite de uso da IA atingido. Tente novamente em instantes.");
-  if (resp.status === 402) throw new Error("Créditos de IA da plataforma esgotados.");
-  if (!resp.ok) {
-    console.error("gateway error", resp.status, await resp.text().catch(() => ""));
-    throw new Error("Falha ao gerar o Kit de Revisão.");
-  }
-  const data = await resp.json();
-  const args = data?.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments;
-  if (!args) throw new Error("A IA não retornou o Kit de Revisão.");
-  return JSON.parse(args);
+  const result = streamText({
+    model: lovable.responses(GEN_MODEL),
+    system,
+    prompt: `${user}\n\nResponda somente com um objeto JSON válido que siga este esquema: ${JSON.stringify(KIT_TOOL.function.parameters)}.`,
+    providerOptions: { openai: { forceReasoning: true, reasoningEffort: "medium", reasoningSummary: "auto", store: false, include: ["reasoning.encrypted_content"] } },
+  });
+  const text = await result.text;
+  const clean = text.trim().replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
+  if (!clean) throw new Error("A IA não retornou o Kit de Revisão.");
+  try { return JSON.parse(clean); } catch { throw new Error("A IA retornou um material inválido. Tente novamente."); }
 }
 
 Deno.serve(async (req) => {
@@ -267,7 +309,10 @@ Deno.serve(async (req) => {
     const nivel = body.nivel === "aprofundado" ? "aprofundado" : "rapido";
     const idempotencyKey = typeof body.idempotency_key === "string" ? body.idempotency_key.slice(0, 80) : null;
 
-    const cacheKey = buildCacheKey({ disciplina: disciplina || undefined, assunto, nivel });
+    const ageDetection = detectAgeGroup([assunto, disciplina, curso].filter(Boolean).join(" "));
+    const faixaEtaria = ageDetection.group;
+    const confiancaFaixaEtaria = ageDetection.confidence;
+    const cacheKey = buildCacheKey({ disciplina: disciplina || undefined, assunto, nivel, faixaEtaria });
 
     // Idempotência: mesmo clique duplicado devolve o mesmo pedido.
     if (idempotencyKey) {
@@ -303,6 +348,7 @@ Deno.serve(async (req) => {
         .insert({
           user_id: userId, anon_id: anonId, prompt: assunto, disciplina, curso, instituicao,
           exam_date: examDate, nivel, cache_key: cacheKey, canonical_id: cached.id,
+          faixa_etaria: faixaEtaria, confianca_faixa_etaria: confiancaFaixaEtaria,
           source: "cache", status: "ready", idempotency_key: idempotencyKey,
         })
         .select("id")
@@ -335,6 +381,7 @@ Deno.serve(async (req) => {
       .insert({
         user_id: userId, anon_id: anonId, prompt: assunto, disciplina, curso, instituicao,
         exam_date: examDate, nivel, cache_key: cacheKey, source: "generated",
+        faixa_etaria: faixaEtaria, confianca_faixa_etaria: confiancaFaixaEtaria,
         status: "processing", idempotency_key: idempotencyKey,
       })
       .select("id")
@@ -372,7 +419,10 @@ Deno.serve(async (req) => {
       const kit = await generateKit(apiKey, {
         assunto, disciplina: disciplina || undefined, curso: curso || undefined,
         instituicao: instituicao || undefined, nivel, areasDisponiveis: areaNames,
+        faixaEtaria, confiancaFaixaEtaria,
       });
+      kit.faixa_etaria = faixaEtaria;
+      kit.confianca_faixa_etaria = confiancaFaixaEtaria;
 
       // Normaliza o que a IA devolveu contra os nomes reais das áreas cadastradas.
       const suggested: string[] = Array.isArray(kit.areas) ? kit.areas.map((a: unknown) => String(a)) : [];
@@ -406,6 +456,8 @@ Deno.serve(async (req) => {
           areas,
           subtopicos: Array.isArray(kit.subtopicos) ? kit.subtopicos.slice(0, 20) : null,
           nivel,
+          faixa_etaria: faixaEtaria,
+          confianca_faixa_etaria: confiancaFaixaEtaria,
           model: GEN_MODEL,
           kit,
           status: "ready",

@@ -88,9 +88,16 @@ Deno.serve(async (req) => {
     const apiKey = Deno.env.get("LOVABLE_API_KEY");
     if (!apiKey) throw new Error("LOVABLE_API_KEY não configurada");
 
-    const instructions = avatarGender === "male"
-      ? "Fale em português brasileiro, com voz masculina, como um professor universitário acolhedor e didático, com ritmo claro e pausas naturais."
-      : "Fale em português brasileiro, com voz feminina, como uma professora universitária acolhedora e didática, com ritmo claro e pausas naturais.";
+    const ageInstructions: Record<string, string> = {
+      criancas_0_9: "Use ritmo alegre, frases simples, pausas claras e entonação acolhedora para crianças.",
+      pre_adolescentes_10_13: "Use ritmo vivo, linguagem simples e tom encorajador para pré-adolescentes.",
+      adolescentes_14_17: "Use ritmo direto, natural e motivador para adolescentes.",
+      jovens_18_25: "Use ritmo claro, informal e didático para jovens universitários.",
+      adultos_26_45: "Use ritmo objetivo, natural e didático para adultos.",
+      adultos_46_mais: "Use ritmo mais calmo, articulação nítida e pausas confortáveis.",
+    };
+    const faixaEtaria = typeof body.faixa_etaria === "string" ? body.faixa_etaria : "jovens_18_25";
+    const instructions = `${avatarGender === "male" ? "Fale com voz masculina, como um professor acolhedor." : "Fale com voz feminina, como uma professora acolhedora."} ${ageInstructions[faixaEtaria] || ageInstructions.jovens_18_25}`;
 
     const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/audio/speech", {
       method: "POST",

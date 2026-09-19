@@ -39,6 +39,8 @@ const VideoPlayer = ({
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
+  const brandLogo = useBrandLogo();
+  const commercialDomain = useCommercialDomain();
   // Protege a sessão enquanto o player está montado (atalhos, copy, devtools, prints).
   useContentProtection({ context: `video:${contentType}:${contentId}` });
   const [isPlaying, setIsPlaying] = useState(false);

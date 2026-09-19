@@ -190,7 +190,7 @@ const HomeKitGenerator = () => {
 
   if (blocked) {
     return (
-      <Card className="mx-auto max-w-lg text-center">
+      <Card ref={blockedRef} className="mx-auto max-w-lg scroll-mt-28 text-center">
         <CardContent className="space-y-4 p-8">
           <Lock className="mx-auto h-8 w-8 text-primary" />
           {blocked === "signup_required" ? (

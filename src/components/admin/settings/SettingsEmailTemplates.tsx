@@ -65,6 +65,7 @@ const TEMPLATE_LABELS: Record<string, string> = {
   subscription_expiring: "Lembrete de Vencimento",
   subscription_cancelled: "Assinatura Cancelada/Expirada",
   cashback_referral_share: "Link de Indicação (Cashback)",
+  referral_access_invite: "Convite de Indicação (para o amigo indicado)",
 };
 
 const TEMPLATE_DESCRIPTIONS: Record<string, string> = {

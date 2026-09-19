@@ -218,12 +218,14 @@ export function useResourceLimit() {
       }));
       return true;
     },
-    [user, referralCredits]
+    [user, referralCredits, canUseReferralCredit]
   );
 
   return {
     checkLimit,
     consumeReferralCredit,
+    canUseReferralCredit,
+    referralCredits,
     loaded,
     subscriptionId,
     planName: (plan?.name as string) || null,

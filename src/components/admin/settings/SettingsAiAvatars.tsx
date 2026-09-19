@@ -95,12 +95,14 @@ const SettingsAiAvatars = () => {
         ...avatar,
         name: avatar.name.trim(),
         role_label: aiRoleLabel(avatar.gender),
+        voice: avatar.voice || defaultVoiceForGender(avatar.gender),
       }),
       updateParams({
         avatars: params.avatars.map((a) => ({
           ...a,
           name: a.name.trim(),
           role_label: aiRoleLabel(a.gender),
+          voice: a.voice || defaultVoiceForGender(a.gender),
           disciplines: a.disciplines.map((d) => d.trim()).filter(Boolean),
         })),
       }),

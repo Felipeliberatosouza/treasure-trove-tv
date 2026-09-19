@@ -289,15 +289,25 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina, areas, 
       }
     }
     if (!text || !audio.duration) return;
-    const words = text.split(/\s+/).filter(Boolean);
-    const wordsPerCaption = 9;
     const progress = Math.min(audio.currentTime / audio.duration, 0.999);
     // O quadro só avança: mantém o que já foi escrito mesmo com pausa ou rebobinagem.
     const revealed = Math.max(maxProgressRef.current[current] ?? 0, progress);
     maxProgressRef.current[current] = revealed;
     setSlideProgress(revealed);
-    const start = Math.floor((progress * words.length) / wordsPerCaption) * wordsPerCaption;
-    setCaption(words.slice(start, start + wordsPerCaption).join(" "));
+    // A legenda acompanha a narração frase a frase: a fala e o texto exibido são o mesmo conteúdo.
+    const phrases = splitPhrases(text);
+    const totalChars = phrases.reduce((sum, phrase) => sum + phrase.length, 0) || 1;
+    const spoken = progress * totalChars;
+    let consumed = 0;
+    let active = phrases[phrases.length - 1] ?? "";
+    for (const phrase of phrases) {
+      consumed += phrase.length;
+      if (spoken < consumed) {
+        active = phrase;
+        break;
+      }
+    }
+    setCaption(active);
   }, [current, slides]);
 
   if (!slides.length) {

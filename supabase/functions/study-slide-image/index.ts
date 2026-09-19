@@ -97,13 +97,13 @@ Deno.serve(async (req) => {
     const b64 = payload?.data?.[0]?.b64_json;
     if (typeof b64 !== "string") return json({ error: "A imagem não foi retornada." }, 502);
     const bytes = Uint8Array.from(atob(b64), (char) => char.charCodeAt(0));
-    const storagePath = `${canonicalId}/slides/${slideIndex}.png`;
+    const storagePath = isCover ? `${canonicalId}/capa.png` : `${canonicalId}/slides/${slideIndex}.png`;
     const { error: uploadError } = await admin.storage.from("ai-revision-media").upload(storagePath, bytes, { contentType: "image/png", upsert: true });
     if (uploadError) throw uploadError;
     await admin.from("ai_content_artifacts").upsert({
       canonical_id: canonicalId,
-      slide_index: slideIndex,
-      artifact_type: "image",
+      slide_index: dbIndex,
+      artifact_type: artifactType,
       status: "ready",
       storage_path: storagePath,
       metadata: { model: "openai/gpt-image-2.5-sunburst", faixa_etaria: canonical.faixa_etaria },

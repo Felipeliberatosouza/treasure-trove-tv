@@ -9,8 +9,9 @@ import { useDoubtLimits } from "@/hooks/useDoubtLimits";
 
 interface DoubtFormProps {
   contentId?: string;
-  contentType?: "lesson" | "exam_solution" | "teacher_profile";
-  teacherId: string;
+  contentType?: "lesson" | "exam_solution" | "teacher_profile" | "ai_content";
+  /** Ausente nos conteúdos de IA: a dúvida vai direto para a equipe (administração). */
+  teacherId?: string | null;
   title?: string;
   placeholder?: string;
 }
@@ -40,7 +41,7 @@ const DoubtForm = ({ contentId, contentType, teacherId, title, placeholder }: Do
     const { error } = await supabase.from("student_doubts").insert({
       id: doubtId,
       student_id: user.id,
-      teacher_id: teacherId,
+      teacher_id: teacherId ?? null,
       content_id: contentId ?? null,
       content_type: contentType ?? "teacher_profile",
       question: question.trim(),

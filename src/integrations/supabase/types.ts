@@ -2226,7 +2226,7 @@ export type Database = {
           questions_used: number
           status: string
           student_id: string
-          teacher_id: string
+          teacher_id: string | null
           updated_at: string
         }
         Insert: {
@@ -2242,7 +2242,7 @@ export type Database = {
           questions_used?: number
           status?: string
           student_id: string
-          teacher_id: string
+          teacher_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -2258,7 +2258,7 @@ export type Database = {
           questions_used?: number
           status?: string
           student_id?: string
-          teacher_id?: string
+          teacher_id?: string | null
           updated_at?: string
         }
         Relationships: []

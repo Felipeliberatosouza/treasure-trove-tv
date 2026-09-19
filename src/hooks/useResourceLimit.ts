@@ -105,17 +105,35 @@ export function useResourceLimit() {
 
   const checkLimit = useCallback(
     (resourceType: ResourceType): LimitResult => {
+      const bonus = referralCredits[resourceType] || 0;
+
       if (!plan) {
-        return { allowed: false, used: 0, total: 0, remaining: 0, hasSubscription: false, individualPrice: resourcePrices[resourceType] ?? null };
+        return {
+          allowed: bonus > 0,
+          used: 0,
+          total: bonus,
+          remaining: bonus,
+          hasSubscription: false,
+          individualPrice: resourcePrices[resourceType] ?? null,
+          referralCredits: bonus,
+        };
       }
 
       const serviceKey = SERVICE_KEY_MAP[resourceType];
       const enabled = plan[serviceKey] as boolean;
       if (!enabled) {
-        return { allowed: false, used: 0, total: 0, remaining: 0, hasSubscription: true, individualPrice: resourcePrices[resourceType] ?? null };
+        return {
+          allowed: bonus > 0,
+          used: 0,
+          total: bonus,
+          remaining: bonus,
+          hasSubscription: true,
+          individualPrice: resourcePrices[resourceType] ?? null,
+          referralCredits: bonus,
+        };
       }
 
-      const total = (plan[`${serviceKey}_qty`] as number) || 0;
+      const total = ((plan[`${serviceKey}_qty`] as number) || 0) + bonus;
       const used = usageCounts[resourceType] || 0;
       const remaining = Math.max(0, total - used);
 
@@ -126,10 +144,34 @@ export function useResourceLimit() {
         remaining,
         hasSubscription: true,
         individualPrice: resourcePrices[resourceType] ?? null,
+        referralCredits: bonus,
       };
     },
-    [plan, usageCounts, resourcePrices]
+    [plan, usageCounts, resourcePrices, referralCredits]
   );
 
-  return { checkLimit, loaded, subscriptionId, planName: (plan?.name as string) || null };
+  /** Consome um acesso ganho por indicação antes de cobrar do aluno. */
+  const consumeReferralCredit = useCallback(
+    async (resourceType: ResourceType): Promise<boolean> => {
+      if (!user || (referralCredits[resourceType] || 0) <= 0) return false;
+      const { data, error } = await supabase.rpc("consume_referral_content_credit", {
+        _resource_type: resourceType,
+      });
+      if (error || !data) return false;
+      setReferralCredits((prev) => ({
+        ...prev,
+        [resourceType]: Math.max(0, (prev[resourceType] || 0) - 1),
+      }));
+      return true;
+    },
+    [user, referralCredits]
+  );
+
+  return {
+    checkLimit,
+    consumeReferralCredit,
+    loaded,
+    subscriptionId,
+    planName: (plan?.name as string) || null,
+  };
 }

@@ -112,7 +112,11 @@ Deno.serve(async (req) => {
       adultos_46_mais: "Use ritmo mais calmo, articulação nítida e pausas confortáveis.",
     };
     const faixaEtaria = typeof body.faixa_etaria === "string" ? body.faixa_etaria : "jovens_18_25";
-    const instructions = `${avatarGender === "male" ? "Fale com voz masculina, como um professor acolhedor." : "Fale com voz feminina, como uma professora acolhedora."} ${ageInstructions[faixaEtaria] || ageInstructions.jovens_18_25}`;
+    const instructions = [
+      avatarGender === "male" ? "Fale com voz masculina, como um professor acolhedor." : "Fale com voz feminina, como uma professora acolhedora.",
+      ageInstructions[faixaEtaria] || ageInstructions.jovens_18_25,
+      "Leia o texto inteiro, do começo ao fim, incluindo a última frase de despedida. Não resuma, não pule e não corte nenhuma frase.",
+    ].join(" ");
 
     const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/audio/speech", {
       method: "POST",

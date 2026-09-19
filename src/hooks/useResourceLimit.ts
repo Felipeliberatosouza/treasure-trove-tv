@@ -99,6 +99,17 @@ export function useResourceLimit() {
       });
       setResourcePrices(priceMap);
 
+      // Acessos ganhos por indicação de amigos (saldo extra ao plano)
+      const { data: referral } = await supabase
+        .from("referral_content_credits")
+        .select("resource_type, granted, used")
+        .eq("user_id", user.id);
+      const referralMap: Record<string, number> = {};
+      (referral || []).forEach((r) => {
+        referralMap[r.resource_type] = Math.max(0, (r.granted || 0) - (r.used || 0));
+      });
+      setReferralCredits(referralMap);
+
       setLoaded(true);
     };
     load();

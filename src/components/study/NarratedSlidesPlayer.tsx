@@ -204,32 +204,54 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina, areas, 
     return [visualCiencia, visualExatas, visualHumanas];
   }, [disciplina, topico]);
 
-  const coverImage = themeImages[0];
   const slideImage = themeImages[current % themeImages.length];
 
-  useEffect(() => {
-    if (!canonicalId || !slide?.imagem_prompt || generatedImages[current]) return;
-    let active = true;
-    void (async () => {
+  // Busca (e guarda no servidor) a imagem exclusiva da capa ou de um slide.
+  const fetchImage = useCallback(
+    async (index: number) => {
+      if (!canonicalId) return;
+      let done = false;
+      setGeneratedImages((images) => {
+        if (images[index]) done = true;
+        return images;
+      });
+      if (done || requestedImagesRef.current.has(index)) return;
+      requestedImagesRef.current.add(index);
       try {
         if (!tokenRef.current) tokenRef.current = await getToken();
         const response = await fetch(imageUrl, {
           method: "POST",
           headers: { Authorization: `Bearer ${tokenRef.current}`, "Content-Type": "application/json" },
-          body: JSON.stringify({ canonical_id: canonicalId, slide_index: current }),
+          body: JSON.stringify({ canonical_id: canonicalId, slide_index: index }),
         });
-        if (!response.ok) return;
+        if (!response.ok) {
+          requestedImagesRef.current.delete(index);
+          return;
+        }
         const payload = await response.json();
-        if (active && typeof payload.image_url === "string") {
-          setGeneratedImages((images) => ({ ...images, [current]: payload.image_url }));
+        if (typeof payload.image_url === "string") {
+          setGeneratedImages((images) => ({ ...images, [index]: payload.image_url }));
         }
       } catch {
         // Mantém a imagem temática local se a geração ainda não estiver pronta.
+        requestedImagesRef.current.delete(index);
       }
-    })();
-    return () => { active = false; };
-  }, [canonicalId, current, generatedImages, getToken, slide?.imagem_prompt]);
+    },
+    [canonicalId, getToken],
+  );
 
+  // Capa exclusiva do material (índice -1).
+  useEffect(() => {
+    void fetchImage(-1);
+  }, [fetchImage]);
+
+  // Imagem do slide atual e pré-carregamento do próximo.
+  useEffect(() => {
+    void fetchImage(current);
+    if (current + 1 < slides.length) void fetchImage(current + 1);
+  }, [fetchImage, current, slides.length]);
+
+  const coverImage = generatedImages[-1] || themeImages[0];
   const effectiveSlideImage = generatedImages[current] || slideImage;
 
   const formatTime = (value: number) => {

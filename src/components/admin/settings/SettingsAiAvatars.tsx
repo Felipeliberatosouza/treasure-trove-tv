@@ -278,6 +278,7 @@ const SettingsAiAvatars = () => {
               Vale para todas as narrações feitas com este avatar.
             </p>
           </div>
+          <AvatarStageFields avatar={avatar} onChange={(changes) => setAvatar({ ...avatar, ...changes })} />
           <div className="space-y-2 sm:col-span-2">
             <Label htmlFor="ai-avatar-url">URL da imagem (opcional)</Label>
             <Input

@@ -444,16 +444,19 @@ const VideoPlayer = ({
         </div>
       </div>
 
-      {/* Logo watermark */}
-      {logoUrl && (
-        <div className="absolute top-2 left-2 z-10 pointer-events-none">
-          <img src={logoUrl} alt="Logo" className="h-6 sm:h-8 w-auto opacity-60" />
-        </div>
-      )}
+      {/* Logomarca no canto superior direito */}
+      <div className="pointer-events-none absolute right-2 top-2 z-20">
+        <img src={logoUrl || brandLogo} alt="Logomarca" className="h-6 w-auto opacity-80 drop-shadow sm:h-8" />
+      </div>
+
+      {/* Domínio comercial no canto inferior direito */}
+      <span className="pointer-events-none absolute bottom-2 right-2 z-20 select-none text-[9px] text-white/80 drop-shadow sm:text-[11px]">
+        {commercialDomain}
+      </span>
 
       {/* Progress milestone indicator */}
       {maxPercentage >= 70 && (
-        <div className="absolute top-2 right-2 rounded-full bg-primary/90 px-2 py-0.5 text-[10px] font-semibold text-primary-foreground">
+        <div className="absolute top-2 left-2 z-20 rounded-full bg-primary/90 px-2 py-0.5 text-[10px] font-semibold text-primary-foreground">
           ✓ 70% assistido
         </div>
       )}

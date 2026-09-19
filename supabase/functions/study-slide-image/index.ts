@@ -90,7 +90,7 @@ Deno.serve(async (req) => {
     if (!response.ok) {
       const message = await response.text().catch(() => "");
       console.error("slide image error", response.status, message);
-      await admin.from("ai_content_artifacts").update({ status: "failed" }).eq("canonical_id", canonicalId).eq("slide_index", slideIndex).eq("artifact_type", "image");
+      await admin.from("ai_content_artifacts").update({ status: "failed" }).eq("canonical_id", canonicalId).eq("slide_index", dbIndex).eq("artifact_type", artifactType);
       return json({ error: "Não foi possível gerar a imagem do slide." }, response.status >= 500 ? 502 : response.status);
     }
     const payload = await response.json();

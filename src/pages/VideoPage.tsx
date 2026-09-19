@@ -86,6 +86,27 @@ const VideoPage = () => {
   const pendingTrialHandledRef = useRef(false);
   const recordedTrialAccessRef = useRef<Set<string>>(new Set());
   const { availability: materials } = useLessonMaterials(id || null);
+
+  // Abre direto o material quando o usuário chega de uma seção (/video/:id?material=resumo).
+  const requestedMaterial = searchParams.get("material");
+  useEffect(() => {
+    if (!requestedMaterial) return;
+    if (requestedMaterial === "simulado" && materials.simulado) {
+      setIsSimuladoOpen(true);
+    } else if (requestedMaterial === "resumo" && materials.resumo) {
+      setMaterialModal("resumo");
+    } else if (requestedMaterial === "top_questoes" && materials.top_questoes) {
+      setMaterialModal("top_questoes");
+    } else if ((requestedMaterial === "colinha" || requestedMaterial === "colinhas") && materials.colinhas) {
+      setMaterialModal("colinhas");
+    } else {
+      return;
+    }
+    const next = new URLSearchParams(searchParams);
+    next.delete("material");
+    setSearchParams(next, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [requestedMaterial, materials.simulado, materials.resumo, materials.top_questoes, materials.colinhas]);
   const { block: activeBlock, loading: blockLoading } = useActiveBlock();
 
   const resolveVideoPlaybackUrl = useCallback(async (storedVideoUrl?: string | null) => {

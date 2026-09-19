@@ -12,6 +12,8 @@ export interface SectionMeta {
   icon: LucideIcon;
   description: string;
   searchPlaceholder: string;
+  /** Prefixo usado no título de cada item desta seção. */
+  itemPrefix: string;
   /** Coluna de URL no conteúdo do professor (lessons / exam_solutions). */
   urlColumn?: string;
   /** Valor gravado em lesson_material_meta.material_type. */
@@ -21,6 +23,7 @@ export interface SectionMeta {
 export const CONTENT_SECTIONS: SectionMeta[] = [
   {
     key: "revisoes",
+    itemPrefix: "Revisão",
     label: "Revisões",
     shortLabel: "Revisões",
     href: "/revisoes",
@@ -31,6 +34,7 @@ export const CONTENT_SECTIONS: SectionMeta[] = [
   },
   {
     key: "resumo",
+    itemPrefix: "Resumo",
     label: "Resumos",
     shortLabel: "Resumos",
     href: "/resumos",
@@ -42,6 +46,7 @@ export const CONTENT_SECTIONS: SectionMeta[] = [
   },
   {
     key: "simulado",
+    itemPrefix: "Simulado",
     label: "Simulados",
     shortLabel: "Simulados",
     href: "/simulados",
@@ -53,6 +58,7 @@ export const CONTENT_SECTIONS: SectionMeta[] = [
   },
   {
     key: "top_questoes",
+    itemPrefix: "Top Questões",
     label: "Top Questões de Provas",
     shortLabel: "Top Questões",
     href: "/top-questoes",
@@ -64,6 +70,7 @@ export const CONTENT_SECTIONS: SectionMeta[] = [
   },
   {
     key: "colinha",
+    itemPrefix: "Colinha",
     label: "Colinhas",
     shortLabel: "Colinhas",
     href: "/colinhas",

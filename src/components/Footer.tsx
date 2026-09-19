@@ -6,6 +6,7 @@ import type {
   FooterSettings,
 } from "@/hooks/usePlatformSettings";
 import { DEFAULT_FOOTER_SETTINGS } from "@/hooks/usePlatformSettings";
+import WhatsAppLeadLink from "@/components/WhatsAppLeadLink";
 
 const Footer = () => {
   const { settings } = useAllPlatformSettings();

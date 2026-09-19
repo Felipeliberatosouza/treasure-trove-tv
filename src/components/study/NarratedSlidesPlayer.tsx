@@ -37,6 +37,12 @@ const imageUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/study-slide-
 
 const normalizeText = (value: string) => value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 
+/** Divide a narração em frases para que a legenda mostre exatamente o que está sendo falado. */
+const splitPhrases = (value: string): string[] => {
+  const parts = value.match(/[^.!?…]+[.!?…]*/g)?.map((p) => p.trim()).filter(Boolean) ?? [];
+  return parts.length ? parts : [value.trim()].filter(Boolean);
+};
+
 const anchorProgress = (narration: string, anchor: string, fallback: number) => {
   const text = normalizeText(narration);
   const needle = normalizeText(anchor).trim();
@@ -116,8 +122,8 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina, areas, 
             "Content-Type": "application/json",
           },
           body: JSON.stringify(canonicalId
-            ? { canonical_id: canonicalId, slide_index: index, avatar_gender: avatar.gender, faixa_etaria: faixaEtaria }
-            : { texto: slide.narracao, avatar_gender: avatar.gender, faixa_etaria: faixaEtaria }),
+            ? { canonical_id: canonicalId, slide_index: index, avatar_gender: avatar.gender, avatar_voice: avatar.voice, faixa_etaria: faixaEtaria }
+            : { texto: slide.narracao, avatar_gender: avatar.gender, avatar_voice: avatar.voice, faixa_etaria: faixaEtaria }),
         });
         if (!resp.ok) {
           const err = await resp.json().catch(() => ({}));
@@ -137,7 +143,7 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina, areas, 
         return null;
       }
     },
-    [slides, getToken, canonicalId, avatar.gender, faixaEtaria],
+    [slides, getToken, canonicalId, avatar.gender, avatar.voice, faixaEtaria],
   );
 
   const prefetch = useCallback(
@@ -259,6 +265,11 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina, areas, 
     if (current + 1 < slides.length) void fetchImage(current + 1);
   }, [fetchImage, current, slides.length]);
 
+  // Ao trocar de slide, a legenda recomeça na primeira frase da narração.
+  useEffect(() => {
+    setCaption(splitPhrases(slides[current]?.narracao || "")[0] ?? "");
+  }, [current, slides]);
+
   const coverImage = generatedImages[-1] || themeImages[0];
   const effectiveSlideImage = generatedImages[current] || slideImage;
 
@@ -289,15 +300,25 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina, areas, 
       }
     }
     if (!text || !audio.duration) return;
-    const words = text.split(/\s+/).filter(Boolean);
-    const wordsPerCaption = 9;
     const progress = Math.min(audio.currentTime / audio.duration, 0.999);
     // O quadro só avança: mantém o que já foi escrito mesmo com pausa ou rebobinagem.
     const revealed = Math.max(maxProgressRef.current[current] ?? 0, progress);
     maxProgressRef.current[current] = revealed;
     setSlideProgress(revealed);
-    const start = Math.floor((progress * words.length) / wordsPerCaption) * wordsPerCaption;
-    setCaption(words.slice(start, start + wordsPerCaption).join(" "));
+    // A legenda acompanha a narração frase a frase: a fala e o texto exibido são o mesmo conteúdo.
+    const phrases = splitPhrases(text);
+    const totalChars = phrases.reduce((sum, phrase) => sum + phrase.length, 0) || 1;
+    const spoken = progress * totalChars;
+    let consumed = 0;
+    let active = phrases[phrases.length - 1] ?? "";
+    for (const phrase of phrases) {
+      consumed += phrase.length;
+      if (spoken < consumed) {
+        active = phrase;
+        break;
+      }
+    }
+    setCaption(active);
   }, [current, slides]);
 
   if (!slides.length) {

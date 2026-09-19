@@ -4,6 +4,8 @@ import {
   DEFAULT_AI_AVATAR,
   DEFAULT_AI_GENERATION_PARAMS,
   AI_CONTENT_TYPES,
+  AI_AVATAR_VOICES,
+  defaultVoiceForGender,
   aiRoleLabel,
   emptyAiDisciplineAvatar,
   type AiAvatarSettings,
@@ -93,12 +95,14 @@ const SettingsAiAvatars = () => {
         ...avatar,
         name: avatar.name.trim(),
         role_label: aiRoleLabel(avatar.gender),
+        voice: avatar.voice || defaultVoiceForGender(avatar.gender),
       }),
       updateParams({
         avatars: params.avatars.map((a) => ({
           ...a,
           name: a.name.trim(),
           role_label: aiRoleLabel(a.gender),
+          voice: a.voice || defaultVoiceForGender(a.gender),
           disciplines: a.disciplines.map((d) => d.trim()).filter(Boolean),
         })),
       }),
@@ -159,12 +163,13 @@ const SettingsAiAvatars = () => {
             />
           </div>
           <div className="space-y-2">
-            <Label>Gênero (voz da narração)</Label>
+            <Label>Gênero (legenda exibida)</Label>
             <Select
               value={avatar.gender}
-              onValueChange={(v) =>
-                setAvatar({ ...avatar, gender: v as AiAvatarSettings["gender"] })
-              }
+              onValueChange={(v) => {
+                const gender = v as AiAvatarSettings["gender"];
+                setAvatar({ ...avatar, gender, voice: defaultVoiceForGender(gender) });
+              }}
             >
               <SelectTrigger>
                 <SelectValue />
@@ -174,6 +179,25 @@ const SettingsAiAvatars = () => {
                 <SelectItem value="male">Masculino</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+          <div className="space-y-2">
+            <Label>Voz da narração</Label>
+            <Select
+              value={avatar.voice || defaultVoiceForGender(avatar.gender)}
+              onValueChange={(v) => setAvatar({ ...avatar, voice: v })}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {AI_AVATAR_VOICES.map((v) => (
+                  <SelectItem key={v.id} value={v.id}>{v.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              Vale para todas as narrações feitas com este avatar.
+            </p>
           </div>
           <div className="space-y-2 sm:col-span-2">
             <Label htmlFor="ai-avatar-url">URL da imagem (opcional)</Label>
@@ -249,12 +273,13 @@ const SettingsAiAvatars = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Gênero (voz da narração)</Label>
+                  <Label>Gênero (legenda exibida)</Label>
                   <Select
                     value={av.gender}
-                    onValueChange={(v) =>
-                      patch(av.id, { gender: v as AiDisciplineAvatar["gender"] })
-                    }
+                    onValueChange={(v) => {
+                      const gender = v as AiDisciplineAvatar["gender"];
+                      patch(av.id, { gender, voice: defaultVoiceForGender(gender) });
+                    }}
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -266,6 +291,25 @@ const SettingsAiAvatars = () => {
                   </Select>
                   <p className="text-xs text-muted-foreground">
                     Legenda exibida: {aiRoleLabel(av.gender)}
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <Label>Voz da narração</Label>
+                  <Select
+                    value={av.voice || defaultVoiceForGender(av.gender)}
+                    onValueChange={(v) => patch(av.id, { voice: v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {AI_AVATAR_VOICES.map((v) => (
+                        <SelectItem key={v.id} value={v.id}>{v.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    Fixa para todas as narrações deste avatar.
                   </p>
                 </div>
                 <div className="space-y-2 sm:col-span-2">

@@ -36,7 +36,7 @@ const tabs = [
   { id: "users", label: "Usuários", icon: Users },
   { id: "plans", label: "Planos", icon: CreditCard },
   { id: "support-tickets", label: "Tickets de Atendimento", icon: LifeBuoy },
-  { id: "leads", label: "Leads do WhatsApp", icon: MessageCircle },
+  { id: "leads", label: "Leads do WhatsApp", icon: MessageCircle, hidden: true },
   { id: "usage-history", label: "Histórico de Uso", icon: Activity, hidden: true },
   { id: "cancellations", label: "Cancelamentos", icon: XCircle },
   { id: "compensation", label: "Pagamento de Professores", icon: DollarSign },

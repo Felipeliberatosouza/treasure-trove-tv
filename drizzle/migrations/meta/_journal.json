@@ -50,6 +50,13 @@
       "when": 1789822435399,
       "tag": "0006_handle_new_user_referral_code",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1789842532785,
+      "tag": "0007_allow_ai_content_doubts",
+      "breakpoints": true
     }
   ]
 }

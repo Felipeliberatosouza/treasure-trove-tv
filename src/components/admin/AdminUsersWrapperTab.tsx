@@ -41,6 +41,8 @@ const AdminUsersWrapperTab = () => {
 
       {activeSection === "list" && <AdminUsersTab />}
       {activeSection === "usage" && <AdminUsageHistoryTab />}
+      {activeSection === "leads" && <AdminLeadsTab />}
+
     </div>
   );
 };

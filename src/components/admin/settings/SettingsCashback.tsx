@@ -157,7 +157,7 @@ const SettingsCashback = () => {
         </p>
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
           {(Object.keys(REFERRAL_ACCESS_LABELS) as (keyof ReferralAccessGrants)[]).map((k) => (
-            <div key={k}>
+            <div key={String(k)}>
               <Label className="text-xs">{REFERRAL_ACCESS_LABELS[k]}</Label>
               <Input
                 type="number"

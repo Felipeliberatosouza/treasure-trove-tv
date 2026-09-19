@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { requestKit } from "@/lib/revisionKit";
+import InviteFriendsPanel from "@/components/referral/InviteFriendsPanel";
 
 const buildSteps = (assunto: string, disciplina: string, nivel: string) => [
   `Lendo o seu pedido: "${assunto}"`,

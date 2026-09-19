@@ -12,6 +12,8 @@ export interface SectionMeta {
   icon: LucideIcon;
   description: string;
   searchPlaceholder: string;
+  /** Prefixo usado no título de cada item desta seção. */
+  itemPrefix: string;
   /** Coluna de URL no conteúdo do professor (lessons / exam_solutions). */
   urlColumn?: string;
   /** Valor gravado em lesson_material_meta.material_type. */

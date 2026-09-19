@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, ArrowUpCircle, ShoppingCart, Sparkles, Gift } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import InviteFriendsPanel from "@/components/referral/InviteFriendsPanel";
 
 const RESOURCE_LABELS: Record<string, string> = {
   revisao: "Revisão",

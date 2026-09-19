@@ -8,6 +8,14 @@ import { Switch } from "@/components/ui/switch";
 import { Card } from "@/components/ui/card";
 import { Save, Plus, Trash2, Sparkles, Users, Clock, Percent, Gift } from "lucide-react";
 import { toast } from "sonner";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   CashbackProgramConfig,
   DEFAULT_CASHBACK_CONFIG,
@@ -15,6 +23,10 @@ import {
   ReferralAccessGrants,
   REFERRAL_ACCESS_LABELS,
   DEFAULT_REFERRAL_ACCESS_GRANTS,
+  DEFAULT_REFERRAL_ACCESS_SCOPES,
+  DEFAULT_REFERRAL_INVITE_MESSAGE,
+  REFERRAL_SCOPE_LABELS,
+  type ReferralCreditScope,
 } from "@/hooks/useCashback";
 
 const SettingsCashback = () => {

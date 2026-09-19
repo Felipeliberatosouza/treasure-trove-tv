@@ -71,6 +71,13 @@
       "when": 1789845260868,
       "tag": "0009_admin_grant_credits_and_tracking_guards",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1789847703672,
+      "tag": "0010_harden_logs_and_leads",
+      "breakpoints": true
     }
   ]
 }

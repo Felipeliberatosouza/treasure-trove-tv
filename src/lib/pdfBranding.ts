@@ -8,6 +8,8 @@ export interface PdfCompany {
 
 export interface PdfBranding {
   platformName: string;
+  /** Domínio comercial configurado pelo administrador. */
+  commercialDomain: string;
   logoDataUrl: string | null;
   logoFormat: "PNG" | "JPEG" | null;
   logoWidth: number;
@@ -17,6 +19,7 @@ export interface PdfBranding {
 }
 
 const DEFAULT_NAME = "Revisão Fácil";
+const DEFAULT_DOMAIN = "revisaofacil.com";
 const DEFAULT_PRIMARY: [number, number, number] = [0, 80, 180];
 
 function hexToRgb(hex: string): [number, number, number] | null {
@@ -62,6 +65,7 @@ function computeSize(dataUrl: string): Promise<{ width: number; height: number }
 
 export async function getPdfBranding(): Promise<PdfBranding> {
   let platformName = DEFAULT_NAME;
+  let commercialDomain = DEFAULT_DOMAIN;
   let logoUrl = "";
   let primaryRgb: [number, number, number] = DEFAULT_PRIMARY;
   const company: PdfCompany = { razaoSocial: "", cnpj: "", address: "" };
@@ -74,6 +78,7 @@ export async function getPdfBranding(): Promise<PdfBranding> {
       const value = (row.value ?? {}) as Record<string, string>;
       if (row.key === "branding") {
         if (value.platform_name) platformName = value.platform_name;
+        if (value.commercial_domain) commercialDomain = value.commercial_domain;
         // Respeita o seletor de logomarca padrão (Configurações → Identidade
         // Visual → Gestão de Logomarca). Cai para `logo_url` legado quando a
         // variante selecionada não estiver definida.
@@ -96,15 +101,16 @@ export async function getPdfBranding(): Promise<PdfBranding> {
   }
 
   if (!logoUrl) {
-    return { platformName, logoDataUrl: null, logoFormat: null, logoWidth: 0, logoHeight: 0, company, primaryRgb };
+    return { platformName, commercialDomain, logoDataUrl: null, logoFormat: null, logoWidth: 0, logoHeight: 0, company, primaryRgb };
   }
   const loaded = await urlToDataUrl(logoUrl);
   if (!loaded) {
-    return { platformName, logoDataUrl: null, logoFormat: null, logoWidth: 0, logoHeight: 0, company, primaryRgb };
+    return { platformName, commercialDomain, logoDataUrl: null, logoFormat: null, logoWidth: 0, logoHeight: 0, company, primaryRgb };
   }
   const { width, height } = await computeSize(loaded.dataUrl);
   return {
     platformName,
+    commercialDomain,
     logoDataUrl: loaded.dataUrl,
     logoFormat: loaded.format,
     logoWidth: width,

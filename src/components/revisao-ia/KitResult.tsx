@@ -17,6 +17,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import VideoShareButtons from "@/components/VideoShareButtons";
 import VLibrasWidget from "@/components/VLibrasWidget";
 import ForensicWatermark from "@/components/ForensicWatermark";
+import BrandStamp from "@/components/branding/BrandStamp";
 
 interface Props {
   result: KitResponse;
@@ -130,6 +131,7 @@ const KitResult = ({ result, onNewKit, initialTab }: Props) => {
         </TabsList>
 
         <TabsContent value="resumo" className="space-y-4 pt-4">
+          <BrandStamp />
           {kit.resumo?.map((s, i) => (
             <Card key={i}>
               <CardContent className="p-4">
@@ -165,11 +167,13 @@ const KitResult = ({ result, onNewKit, initialTab }: Props) => {
           ) : null}
         </TabsContent>
 
-        <TabsContent value="simulado" className="pt-4">
+        <TabsContent value="simulado" className="space-y-3 pt-4">
+          <BrandStamp />
           <KitQuiz questoes={kit.simulado ?? []} />
         </TabsContent>
 
         <TabsContent value="top" className="space-y-3 pt-4">
+          <BrandStamp />
           {(kit.top_questoes ?? []).map((q, i) => (
             <Card key={i}>
               <CardContent className="space-y-2 p-4">
@@ -184,7 +188,8 @@ const KitResult = ({ result, onNewKit, initialTab }: Props) => {
           ))}
         </TabsContent>
 
-        <TabsContent value="colinha" className="pt-4">
+        <TabsContent value="colinha" className="space-y-3 pt-4">
+          <BrandStamp />
           <Card>
             <CardContent className="p-4">
               <ul className="space-y-2 text-sm">

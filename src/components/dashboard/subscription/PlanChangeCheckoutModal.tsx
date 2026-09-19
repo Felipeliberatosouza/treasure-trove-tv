@@ -12,6 +12,7 @@ import {
 import { downloadPlanChangePdf } from "@/lib/planChangePdf";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import InviteFriendsPanel from "@/components/referral/InviteFriendsPanel";
 import { Elements } from "@stripe/react-stripe-js";
 import { getStripe } from "@/lib/stripe";
 import { supabase } from "@/integrations/supabase/client";
@@ -586,6 +587,9 @@ export default function PlanChangeCheckoutModal({
         )}
         </>)}
 
+        <div className="px-6 pb-6">
+          <InviteFriendsPanel variant="compact" eyebrow="Economize na próxima cobrança" />
+        </div>
         </div>
         {/* /Scrollable body */}
 

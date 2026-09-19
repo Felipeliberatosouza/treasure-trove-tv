@@ -323,22 +323,60 @@ const HomeKitGenerator = () => {
               </p>
             </CardContent>
           </Card>
+        </div>
+      )}
+
+      {(loading || messages.length > 0) && (
+        <div className="mx-auto mt-4 max-w-3xl space-y-3 text-left">
+          {messages.length > 0 && (
+            <ul className="space-y-2">
+              {messages.map((m, i) => (
+                <li key={`${m}-${i}`} className="ml-auto w-fit max-w-[85%] rounded-2xl bg-muted px-3 py-2 text-sm">
+                  {m}
+                </li>
+              ))}
+            </ul>
+          )}
 
           <div className="rounded-2xl border border-border bg-white p-3 text-foreground shadow-sm">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Loader2 className="h-4 w-4 shrink-0 animate-spin text-primary" />
+            <div className="flex items-center gap-2">
+              {loading && <Loader2 className="h-4 w-4 shrink-0 animate-spin text-primary" />}
               <input
-                readOnly
-                disabled
+                value={chatMsg}
+                onChange={(e) => setChatMsg(e.target.value)}
                 placeholder="Mensagem para Revisão Fácil"
                 aria-label="Mensagem para Revisão Fácil"
-                className="w-full cursor-not-allowed border-0 bg-transparent px-1 text-sm outline-none placeholder:text-muted-foreground"
+                className="w-full border-0 bg-transparent px-1 text-sm outline-none placeholder:text-muted-foreground"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSendMessage();
+                  }
+                }}
               />
+              {loading && (
+                <Button type="button" size="sm" variant="outline" onClick={handleStop} title="Parar o processamento">
+                  <Square className="h-4 w-4" />
+                  Parar
+                </Button>
+              )}
+              <Button
+                type="button"
+                size="icon"
+                className="rounded-full"
+                disabled={!chatMsg.trim()}
+                aria-label="Enviar mensagem"
+                onClick={handleSendMessage}
+              >
+                <Send className="h-4 w-4" />
+              </Button>
             </div>
             <p className="mt-2 px-1 text-xs text-muted-foreground">
-              Aguarde a entrega do seu Kit de Revisão para enviar uma nova solicitação.
+              Peça ajustes no que você pediu ou use “Parar” para interromper a geração.
             </p>
           </div>
+
+          {notice && <p className="text-sm text-muted-foreground">{notice}</p>}
         </div>
       )}
 

@@ -1,5 +1,4 @@
-import { usePlatformSettings } from "@/hooks/usePlatformSettings";
-import { resolveLogoForBackground } from "@/lib/utils";
+import { usePlatformSettings, resolveLogoForBackground } from "@/hooks/usePlatformSettings";
 import logoRevisaoFacil from "@/assets/logo-revisao-facil.png";
 
 /** Domínio comercial padrão, usado quando o administrador ainda não configurou um. */

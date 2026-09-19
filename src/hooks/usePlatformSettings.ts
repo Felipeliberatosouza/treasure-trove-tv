@@ -538,6 +538,7 @@ export function resolveAiAvatar(
     gender: chosen.gender,
     image_url: chosen.image_url,
     role_label: aiRoleLabel(chosen.gender),
+    voice: chosen.voice || defaultVoiceForGender(chosen.gender),
   };
 }
 

@@ -190,11 +190,13 @@ const AdminDoubtsTab = () => {
       .eq("user_id", doubt.student_id)
       .single();
 
-    const { data: teacherProfile } = await supabase
-      .from("profiles")
-      .select("name")
-      .eq("user_id", doubt.teacher_id)
-      .single();
+    const { data: teacherProfile } = doubt.teacher_id
+      ? await supabase
+          .from("profiles")
+          .select("name")
+          .eq("user_id", doubt.teacher_id)
+          .single()
+      : { data: null };
 
     if (studentProfile?.email) {
       await supabase.functions.invoke("send-app-email", {

@@ -493,6 +493,7 @@ export const emptyAiDisciplineAvatar = (): AiDisciplineAvatar => ({
   gender: "female",
   image_url: "",
   role_label: "Professora virtual",
+  voice: "nova",
   disciplines: [],
   content_types: [],
 });

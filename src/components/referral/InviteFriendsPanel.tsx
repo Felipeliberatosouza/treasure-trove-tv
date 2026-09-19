@@ -53,7 +53,9 @@ const InviteFriendsPanel = ({ variant = "hero", className, eyebrow }: Props) => 
   const contact = settings.contact as ContactSettings | undefined;
 
   const [friendEmail, setFriendEmail] = useState("");
-  const [sending, setSending] = useState(false);
+  const [friendPhone, setFriendPhone] = useState("");
+  const [invites, setInvites] = useState<InviteRow[]>([]);
+  const [sending, setSending] = useState<InviteChannel | null>(null);
 
   const platformName = branding?.platform_name || "Revisão Fácil";
   const logoSrc =

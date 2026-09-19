@@ -130,6 +130,7 @@ const KitResult = ({ result, onNewKit, initialTab }: Props) => {
         </TabsList>
 
         <TabsContent value="resumo" className="space-y-4 pt-4">
+          <BrandStamp />
           {kit.resumo?.map((s, i) => (
             <Card key={i}>
               <CardContent className="p-4">

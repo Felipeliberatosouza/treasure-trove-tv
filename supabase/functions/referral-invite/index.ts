@@ -184,15 +184,44 @@ Deno.serve(async (req) => {
       return respond({ ok: false, error: "Informe um celular válido com DDD." });
     }
 
-    const token = makeToken();
-    const { error: insertError } = await admin.from("referral_invites").insert({
-      referrer_user_id: userId,
-      channel,
-      contact_email: email || null,
-      contact_phone: phoneDigits || null,
-      token,
-    });
-    if (insertError) throw insertError;
+    let token: string;
+    if (action === "resend") {
+      const inviteId = String(body?.inviteId ?? "");
+      const { data: existing } = await admin
+        .from("referral_invites")
+        .select("id, token, referrer_user_id, status")
+        .eq("id", inviteId)
+        .maybeSingle();
+      if (!existing || existing.referrer_user_id !== userId) {
+        return respond({ ok: false, error: "Convite não encontrado." });
+      }
+      if (existing.status === "rewarded") {
+        return respond({ ok: false, error: "Este convite já foi usado pelo seu amigo." });
+      }
+      token = existing.token;
+      const { error: updError } = await admin
+        .from("referral_invites")
+        .update({
+          channel,
+          contact_email: email || null,
+          contact_phone: phoneDigits || null,
+          status: "sent",
+          sent_at: new Date().toISOString(),
+          expires_at: new Date(Date.now() + 60 * 24 * 3600 * 1000).toISOString(),
+        })
+        .eq("id", existing.id);
+      if (updError) throw updError;
+    } else {
+      token = makeToken();
+      const { error: insertError } = await admin.from("referral_invites").insert({
+        referrer_user_id: userId,
+        channel,
+        contact_email: email || null,
+        contact_phone: phoneDigits || null,
+        token,
+      });
+      if (insertError) throw insertError;
+    }
 
     const inviteLink = `${origin}/convite/${token}`;
 

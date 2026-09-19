@@ -36,17 +36,41 @@ const CHIPS = [
   { label: "Criar colinha", icon: StickyNote },
 ];
 
+/** Guarda o pedido em andamento para o usuário não perder o que digitou ao fazer login. */
+const DRAFT_KEY = "rf_kit_draft";
+
+interface KitDraft {
+  assunto: string;
+  disciplina: string;
+  curso: string;
+  instituicao: string;
+  examDate: string;
+  nivel: "rapido" | "aprofundado";
+}
+
+const readDraft = (): Partial<KitDraft> => {
+  try {
+    const raw = localStorage.getItem(DRAFT_KEY);
+    return raw ? (JSON.parse(raw) as Partial<KitDraft>) : {};
+  } catch {
+    return {};
+  }
+};
+
 const HomeKitGenerator = () => {
   const navigate = useNavigate();
   const { profile } = useAuth();
 
-  const [assunto, setAssunto] = useState("");
-  const [disciplina, setDisciplina] = useState("");
-  const [curso, setCurso] = useState("");
-  const [instituicao, setInstituicao] = useState("");
-  const [examDate, setExamDate] = useState("");
-  const [nivel, setNivel] = useState<"rapido" | "aprofundado">("rapido");
-  const [showExtras, setShowExtras] = useState(false);
+  const draft = useRef<Partial<KitDraft>>(readDraft()).current;
+  const [assunto, setAssunto] = useState(draft.assunto || "");
+  const [disciplina, setDisciplina] = useState(draft.disciplina || "");
+  const [curso, setCurso] = useState(draft.curso || "");
+  const [instituicao, setInstituicao] = useState(draft.instituicao || "");
+  const [examDate, setExamDate] = useState(draft.examDate || "");
+  const [nivel, setNivel] = useState<"rapido" | "aprofundado">(draft.nivel === "aprofundado" ? "aprofundado" : "rapido");
+  const [showExtras, setShowExtras] = useState(
+    Boolean(draft.disciplina || draft.curso || draft.instituicao || draft.examDate),
+  );
 
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(0);
@@ -56,6 +80,22 @@ const HomeKitGenerator = () => {
   const submittingRef = useRef(false);
 
   const firstName = useMemo(() => (profile?.name || "").trim().split(" ")[0] || "", [profile?.name]);
+
+  // Mantém o pedido salvo enquanto o usuário navega (login, criar conta, planos).
+  useEffect(() => {
+    try {
+      if (assunto.trim() || disciplina || curso || instituicao || examDate) {
+        localStorage.setItem(
+          DRAFT_KEY,
+          JSON.stringify({ assunto, disciplina, curso, instituicao, examDate, nivel }),
+        );
+      } else {
+        localStorage.removeItem(DRAFT_KEY);
+      }
+    } catch {
+      /* armazenamento indisponível */
+    }
+  }, [assunto, disciplina, curso, instituicao, examDate, nivel]);
 
   useEffect(() => {
     if (!loading || steps.length === 0) return;
@@ -86,6 +126,11 @@ const HomeKitGenerator = () => {
       if (error.kind === "error") setErrorMsg(error.message);
       else setBlocked(error.kind);
       return;
+    }
+    try {
+      localStorage.removeItem(DRAFT_KEY);
+    } catch {
+      /* armazenamento indisponível */
     }
     if (data?.canonical_id) navigate(`/conteudo-ia/${data.canonical_id}`);
   };

@@ -99,7 +99,11 @@ const HomeKitGenerator = () => {
   const [steps, setSteps] = useState<string[]>([]);
   const [blocked, setBlocked] = useState<"signup_required" | "paywall" | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [chatMsg, setChatMsg] = useState("");
+  const [messages, setMessages] = useState<string[]>([]);
   const submittingRef = useRef(false);
+  const runIdRef = useRef(0);
 
   const firstName = useMemo(() => (profile?.name || "").trim().split(" ")[0] || "", [profile?.name]);
 

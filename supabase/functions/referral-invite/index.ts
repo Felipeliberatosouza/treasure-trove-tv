@@ -258,7 +258,7 @@ Deno.serve(async (req) => {
         body: {
           templateName: "cashback-referral-share",
           recipientEmail: email,
-          idempotencyKey: `referral-invite-${token}`,
+          idempotencyKey: `referral-invite-${token}-${Date.now()}`,
           templateData: {
             name: referrerName,
             referral_code: token,

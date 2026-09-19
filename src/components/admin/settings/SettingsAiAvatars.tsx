@@ -4,6 +4,8 @@ import {
   DEFAULT_AI_AVATAR,
   DEFAULT_AI_GENERATION_PARAMS,
   AI_CONTENT_TYPES,
+  AI_AVATAR_VOICES,
+  defaultVoiceForGender,
   aiRoleLabel,
   emptyAiDisciplineAvatar,
   type AiAvatarSettings,

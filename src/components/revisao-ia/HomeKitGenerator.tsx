@@ -30,6 +30,27 @@ const buildSteps = (assunto: string, disciplina: string, nivel: string) => [
   "Abrindo sua revisão",
 ];
 
+/** Fase geral do processamento, exibida acima das tarefas. */
+const phaseLabel = (step: number, total: number) => {
+  if (total === 0) return "Pensando";
+  if (step < Math.ceil(total * 0.3)) return "Pensando";
+  if (step < total - 2) return "Trabalhando";
+  return "Entregando";
+};
+
+/** Três pontinhos animados. */
+const Dots = () => (
+  <span className="inline-flex items-end gap-0.5 pb-0.5" aria-hidden="true">
+    {[0, 150, 300].map((delay) => (
+      <span
+        key={delay}
+        className="h-1 w-1 animate-bounce rounded-full bg-current"
+        style={{ animationDelay: `${delay}ms` }}
+      />
+    ))}
+  </span>
+);
+
 const CHIPS = [
   { label: "Criar resumo", icon: BookOpen },
   { label: "Criar simulado", icon: FileQuestion },

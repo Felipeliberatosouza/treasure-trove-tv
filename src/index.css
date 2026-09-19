@@ -302,12 +302,95 @@
   }
   .avatar-voice-bar:nth-child(2) { animation-delay: 0.15s; }
   .avatar-voice-bar:nth-child(3) { animation-delay: 0.3s; }
+
+  /* Avatar animado: boca (maxilar), balanço do corpo e gestos de mãos/braços */
+  .ai-avatar {
+    position: relative;
+    display: inline-block;
+    color: hsl(var(--primary));
+  }
+  .ai-avatar-body {
+    position: relative;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    border-radius: 9999px;
+    border: 2px solid hsl(var(--primary));
+    box-shadow: 0 10px 24px hsl(var(--background) / 0.35);
+    transform-origin: center bottom;
+  }
+  .ai-avatar-face {
+    position: absolute;
+    inset: 0;
+    height: 100%;
+    width: 100%;
+    object-fit: cover;
+  }
+  .ai-avatar-jaw {
+    position: absolute;
+    inset: 0;
+    display: block;
+    clip-path: inset(62% 20% 4% 20% round 45%);
+    transform-origin: top center;
+  }
+  .ai-avatar.is-speaking .ai-avatar-body {
+    animation: ai-avatar-sway 1.6s ease-in-out infinite;
+    box-shadow: 0 0 0 6px hsl(var(--primary) / 0.32), 0 10px 24px hsl(var(--background) / 0.35);
+  }
+  .ai-avatar.is-speaking .ai-avatar-jaw {
+    animation: ai-avatar-mouth 0.34s ease-in-out infinite;
+  }
+  @keyframes ai-avatar-mouth {
+    0%, 100% { transform: scaleY(1) translateY(0); }
+    50% { transform: scaleY(1.16) translateY(2%); }
+  }
+  @keyframes ai-avatar-sway {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    30% { transform: translateY(-3px) rotate(-1.2deg); }
+    65% { transform: translateY(-1px) rotate(1.2deg); }
+  }
+  .ai-avatar-arm {
+    position: absolute;
+    bottom: -6%;
+    width: 34%;
+    height: 62%;
+    color: hsl(var(--primary) / 0.85);
+    transform-origin: top center;
+    pointer-events: none;
+  }
+  .ai-avatar-arm-left { left: -26%; animation: ai-avatar-arm-left 1.5s ease-in-out infinite; }
+  .ai-avatar-arm-right { right: -26%; animation: ai-avatar-arm-right 1.5s ease-in-out infinite 0.35s; }
+  @keyframes ai-avatar-arm-left {
+    0%, 100% { transform: rotate(14deg) translateY(0); }
+    50% { transform: rotate(-16deg) translateY(-8%); }
+  }
+  @keyframes ai-avatar-arm-right {
+    0%, 100% { transform: rotate(-14deg) translateY(0); }
+    50% { transform: rotate(18deg) translateY(-8%); }
+  }
+  .ai-avatar-voice {
+    position: absolute;
+    bottom: -8px;
+    left: 50%;
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+    transform: translateX(-50%);
+    border-radius: 9999px;
+    background: hsl(var(--background) / 0.9);
+    padding: 3px 6px;
+    box-shadow: 0 2px 6px hsl(var(--background) / 0.4);
+  }
   @media (prefers-reduced-motion: reduce) {
     .avatar-talking { animation: none; }
     .avatar-speaking-stage::before,
     .avatar-speaking-stage::after { animation: none; opacity: 0; }
     .avatar-voice-bar { animation: none; }
+    .ai-avatar.is-speaking .ai-avatar-body,
+    .ai-avatar.is-speaking .ai-avatar-jaw,
+    .ai-avatar-arm { animation: none; }
   }
+
 
   /* Dark theme surfaces → light ink */
   input.bg-secondary,

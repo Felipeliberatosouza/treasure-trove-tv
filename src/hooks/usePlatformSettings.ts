@@ -426,7 +426,68 @@ export interface AiAvatarSettings {
   role_label: string;
   /** Voz fixa usada em todas as narrações deste avatar. */
   voice?: string;
+  /** Intensidade da animação do avatar durante a narração. */
+  animation?: AiAvatarAnimation;
+  /** Posição e tamanho do avatar em cada tipo de slide. */
+  placements?: Partial<Record<AiAvatarSlideContext, AiAvatarPlacement>>;
 }
+
+/** Intensidade do movimento do avatar enquanto narra. */
+export type AiAvatarAnimation = "nenhuma" | "sutil" | "gestos";
+
+export const AI_AVATAR_ANIMATIONS = [
+  { id: "gestos", label: "Fala e gesticula (boca, braços e mãos)" },
+  { id: "sutil", label: "Movimento sutil (só a fala)" },
+  { id: "nenhuma", label: "Sem animação" },
+] as const;
+
+/** Tipos de slide em que o avatar aparece. */
+export const AI_AVATAR_SLIDE_CONTEXTS = [
+  { id: "abertura", label: "Abertura da aula" },
+  { id: "conteudo", label: "Slides de conteúdo" },
+  { id: "lousa", label: "Slides com lousa" },
+  { id: "encerramento", label: "Encerramento" },
+] as const;
+
+export type AiAvatarSlideContext = (typeof AI_AVATAR_SLIDE_CONTEXTS)[number]["id"];
+
+export const AI_AVATAR_POSITIONS = [
+  { id: "esquerda", label: "Esquerda" },
+  { id: "centro", label: "Centro" },
+  { id: "direita", label: "Direita" },
+] as const;
+
+export type AiAvatarPosition = (typeof AI_AVATAR_POSITIONS)[number]["id"];
+
+export const AI_AVATAR_SIZES = [
+  { id: "pequeno", label: "Pequeno" },
+  { id: "medio", label: "Médio" },
+  { id: "grande", label: "Grande" },
+] as const;
+
+export type AiAvatarSize = (typeof AI_AVATAR_SIZES)[number]["id"];
+
+export interface AiAvatarPlacement {
+  position: AiAvatarPosition;
+  size: AiAvatarSize;
+}
+
+export const DEFAULT_AI_AVATAR_PLACEMENTS: Record<AiAvatarSlideContext, AiAvatarPlacement> = {
+  abertura: { position: "centro", size: "grande" },
+  conteudo: { position: "direita", size: "medio" },
+  lousa: { position: "direita", size: "pequeno" },
+  encerramento: { position: "centro", size: "grande" },
+};
+
+/** Posição/tamanho configurados para um tipo de slide, com queda no padrão. */
+export const avatarPlacement = (
+  avatar: Pick<AiAvatarSettings, "placements">,
+  context: AiAvatarSlideContext,
+): AiAvatarPlacement => ({
+  ...DEFAULT_AI_AVATAR_PLACEMENTS[context],
+  ...(avatar.placements?.[context] || {}),
+});
+
 
 /** Vozes disponíveis para a narração do avatar. */
 export const AI_AVATAR_VOICES = [
@@ -457,6 +518,8 @@ export const DEFAULT_AI_AVATAR: AiAvatarSettings = {
   image_url: "",
   role_label: "Professora virtual",
   voice: "nova",
+  animation: "gestos",
+  placements: DEFAULT_AI_AVATAR_PLACEMENTS,
 };
 
 /** Tipos de conteúdo gerados por IA aos quais um avatar pode ser vinculado. */
@@ -494,6 +557,8 @@ export const emptyAiDisciplineAvatar = (): AiDisciplineAvatar => ({
   image_url: "",
   role_label: "Professora virtual",
   voice: "nova",
+  animation: "gestos",
+  placements: DEFAULT_AI_AVATAR_PLACEMENTS,
   disciplines: [],
   content_types: [],
 });

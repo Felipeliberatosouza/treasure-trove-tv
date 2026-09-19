@@ -5,10 +5,18 @@ import {
   DEFAULT_AI_GENERATION_PARAMS,
   AI_CONTENT_TYPES,
   AI_AVATAR_VOICES,
+  AI_AVATAR_ANIMATIONS,
+  AI_AVATAR_SLIDE_CONTEXTS,
+  AI_AVATAR_POSITIONS,
+  AI_AVATAR_SIZES,
+  avatarPlacement,
   defaultVoiceForGender,
   aiRoleLabel,
   emptyAiDisciplineAvatar,
   type AiAvatarSettings,
+  type AiAvatarAnimation,
+  type AiAvatarPosition,
+  type AiAvatarSize,
   type AiGenerationParamsSettings,
   type AiDisciplineAvatar,
   type AiContentTypeId,
@@ -29,6 +37,77 @@ import {
 import { Save, Loader2, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import professoraIa from "@/assets/professora-ia.jpg";
+
+/** Controles de animação e de posição/tamanho do avatar em cada tipo de slide. */
+const AvatarStageFields = ({
+  avatar,
+  onChange,
+}: {
+  avatar: AiAvatarSettings;
+  onChange: (changes: Partial<AiAvatarSettings>) => void;
+}) => {
+  const setPlacement = (
+    context: (typeof AI_AVATAR_SLIDE_CONTEXTS)[number]["id"],
+    changes: Partial<{ position: AiAvatarPosition; size: AiAvatarSize }>,
+  ) =>
+    onChange({
+      placements: {
+        ...(avatar.placements || {}),
+        [context]: { ...avatarPlacement(avatar, context), ...changes },
+      },
+    });
+
+  return (
+    <div className="space-y-4 sm:col-span-2">
+      <div className="space-y-2">
+        <Label>Animação durante a narração</Label>
+        <Select
+          value={avatar.animation || "gestos"}
+          onValueChange={(v) => onChange({ animation: v as AiAvatarAnimation })}
+        >
+          <SelectTrigger className="max-w-sm">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {AI_AVATAR_ANIMATIONS.map((a) => (
+              <SelectItem key={a.id} value={a.id}>{a.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="space-y-2">
+        <Label>Posição do avatar por tipo de slide</Label>
+        <div className="space-y-2">
+          {AI_AVATAR_SLIDE_CONTEXTS.map((ctx) => {
+            const place = avatarPlacement(avatar, ctx.id);
+            return (
+              <div key={ctx.id} className="grid items-center gap-2 sm:grid-cols-3">
+                <span className="text-sm text-muted-foreground">{ctx.label}</span>
+                <Select value={place.position} onValueChange={(v) => setPlacement(ctx.id, { position: v as AiAvatarPosition })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {AI_AVATAR_POSITIONS.map((p) => (
+                      <SelectItem key={p.id} value={p.id}>{p.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select value={place.size} onValueChange={(v) => setPlacement(ctx.id, { size: v as AiAvatarSize })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {AI_AVATAR_SIZES.map((s) => (
+                      <SelectItem key={s.id} value={s.id}>{s.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 /**
  * Cadastro e edição de avatares da IA em um único item:
@@ -199,6 +278,7 @@ const SettingsAiAvatars = () => {
               Vale para todas as narrações feitas com este avatar.
             </p>
           </div>
+          <AvatarStageFields avatar={avatar} onChange={(changes) => setAvatar({ ...avatar, ...changes })} />
           <div className="space-y-2 sm:col-span-2">
             <Label htmlFor="ai-avatar-url">URL da imagem (opcional)</Label>
             <Input
@@ -312,6 +392,7 @@ const SettingsAiAvatars = () => {
                     Fixa para todas as narrações deste avatar.
                   </p>
                 </div>
+                <AvatarStageFields avatar={av} onChange={(changes) => patch(av.id, changes)} />
                 <div className="space-y-2 sm:col-span-2">
                   <Label htmlFor={`disc-${av.id}`}>Disciplinas (separadas por vírgula)</Label>
                   <Input

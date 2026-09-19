@@ -265,6 +265,11 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina, areas, 
     if (current + 1 < slides.length) void fetchImage(current + 1);
   }, [fetchImage, current, slides.length]);
 
+  // Ao trocar de slide, a legenda recomeça na primeira frase da narração.
+  useEffect(() => {
+    setCaption(splitPhrases(slides[current]?.narracao || "")[0] ?? "");
+  }, [current, slides]);
+
   const coverImage = generatedImages[-1] || themeImages[0];
   const effectiveSlideImage = generatedImages[current] || slideImage;
 

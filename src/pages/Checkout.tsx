@@ -19,6 +19,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
+import InviteFriendsPanel from "@/components/referral/InviteFriendsPanel";
 import {
   useCashbackAccount,
   useCashbackConfig,
@@ -423,6 +424,12 @@ const Checkout = () => {
               </CollapsibleContent>
             </Collapsible>
           </Card>
+
+          <InviteFriendsPanel
+            variant="compact"
+            className="order-3 md:order-3 mt-4"
+            eyebrow="Economize na próxima compra"
+          />
         </motion.div>
       </div>
 

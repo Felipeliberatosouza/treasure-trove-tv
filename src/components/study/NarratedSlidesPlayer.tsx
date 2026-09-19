@@ -287,7 +287,10 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina, areas, 
     const words = text.split(/\s+/).filter(Boolean);
     const wordsPerCaption = 9;
     const progress = Math.min(audio.currentTime / audio.duration, 0.999);
-    setSlideProgress(progress);
+    // O quadro só avança: mantém o que já foi escrito mesmo com pausa ou rebobinagem.
+    const revealed = Math.max(maxProgressRef.current[current] ?? 0, progress);
+    maxProgressRef.current[current] = revealed;
+    setSlideProgress(revealed);
     const start = Math.floor((progress * words.length) / wordsPerCaption) * wordsPerCaption;
     setCaption(words.slice(start, start + wordsPerCaption).join(" "));
   }, [current, slides]);

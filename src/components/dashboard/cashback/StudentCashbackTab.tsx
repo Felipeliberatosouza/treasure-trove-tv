@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAllPlatformSettings, type AlertBoxSettings, DEFAULT_ALERT_BOX_SETTINGS } from "@/hooks/usePlatformSettings";
 import ReferralStatusPanel from "./ReferralStatusPanel";
+import FreeCreditsPanel from "./FreeCreditsPanel";
 
 const fmt = (n: number) =>
   n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -262,6 +263,8 @@ const StudentCashbackTab = () => {
       </Card>
 
       <ReferralStatusPanel />
+
+      <FreeCreditsPanel />
 
       <Card className="p-5">
         <h3 className="font-display font-semibold mb-3">Extrato</h3>

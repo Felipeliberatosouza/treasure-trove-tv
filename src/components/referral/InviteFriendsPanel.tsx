@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,6 +26,24 @@ interface Props {
 
 const isValidEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim());
 
+type InviteChannel = "email" | "whatsapp" | "sms";
+
+interface InviteRow {
+  id: string;
+  contact_email: string | null;
+  contact_phone: string | null;
+  status: string;
+  created_at: string;
+}
+
+/** Máscara (XX) XXXXX-XXXX para o celular do amigo. */
+const maskPhone = (value: string) => {
+  const d = value.replace(/\D/g, "").slice(0, 11);
+  if (d.length <= 2) return d.length ? `(${d}` : "";
+  if (d.length <= 7) return `(${d.slice(0, 2)}) ${d.slice(2)}`;
+  return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
+};
+
 const InviteFriendsPanel = ({ variant = "hero", className, eyebrow }: Props) => {
   const { user, profile } = useAuth();
   const { account } = useCashbackAccount();
@@ -35,7 +53,9 @@ const InviteFriendsPanel = ({ variant = "hero", className, eyebrow }: Props) => 
   const contact = settings.contact as ContactSettings | undefined;
 
   const [friendEmail, setFriendEmail] = useState("");
-  const [sending, setSending] = useState(false);
+  const [friendPhone, setFriendPhone] = useState("");
+  const [invites, setInvites] = useState<InviteRow[]>([]);
+  const [sending, setSending] = useState<InviteChannel | null>(null);
 
   const platformName = branding?.platform_name || "Revisão Fácil";
   const logoSrc =
@@ -97,43 +117,59 @@ const InviteFriendsPanel = ({ variant = "hero", className, eyebrow }: Props) => 
     ];
   }, [referralLink, shareText]);
 
-  const sendInvite = async () => {
-    if (!isValidEmail(friendEmail)) {
+  const loadInvites = useCallback(async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from("referral_invites")
+      .select("id, contact_email, contact_phone, status, created_at")
+      .order("created_at", { ascending: false })
+      .limit(8);
+    setInvites((data ?? []) as InviteRow[]);
+  }, [user]);
+
+  useEffect(() => {
+    void loadInvites();
+  }, [loadInvites]);
+
+  const sendInvite = async (channel: InviteChannel) => {
+    if (!user) {
+      toast.error("Entre na sua conta para enviar convites.");
+      return;
+    }
+    if (channel === "email" && !isValidEmail(friendEmail)) {
       toast.error("Informe um e-mail válido.");
       return;
     }
-    if (!user) {
-      toast.error("Entre na sua conta para enviar convites por e-mail.");
+    if (channel !== "email" && friendPhone.replace(/\D/g, "").length !== 11) {
+      toast.error("Informe um celular válido com DDD.");
       return;
     }
-    setSending(true);
+    setSending(channel);
     try {
-      const { error } = await supabase.functions.invoke("send-transactional-email", {
+      const { data, error } = await supabase.functions.invoke("referral-invite", {
         body: {
-          templateName: "cashback-referral-share",
-          recipientEmail: friendEmail.trim(),
-          idempotencyKey: `referral-invite-${user.id}-${Date.now()}`,
-          templateData: {
-            name: (profile as { name?: string } | null)?.name ?? "",
-            referral_code: account?.referral_code ?? "",
-            referral_link: referralLink,
-            share_text: shareText,
-            referral_percent: percent,
-            referralCode: account?.referral_code ?? "",
-            referralLink,
-            shareText,
-            referralPercent: percent,
-          },
+          action: "send",
+          channel,
+          email: friendEmail.trim(),
+          phone: friendPhone.replace(/\D/g, ""),
+          origin,
         },
       });
       if (error) throw error;
-      setFriendEmail("");
+      const result = data as { ok?: boolean; error?: string } | null;
+      if (!result?.ok) {
+        toast.error(result?.error || "Não foi possível enviar agora.");
+        return;
+      }
+      if (channel === "email") setFriendEmail("");
+      else setFriendPhone("");
       toast.success("Convite enviado!");
+      void loadInvites();
     } catch (e) {
       console.error("referral invite failed", e);
       toast.error("Não foi possível enviar agora. Tente novamente em instantes.");
     } finally {
-      setSending(false);
+      setSending(null);
     }
   };
 
@@ -198,20 +234,86 @@ const InviteFriendsPanel = ({ variant = "hero", className, eyebrow }: Props) => 
       </div>
 
       <div className="space-y-2">
-        <p className="text-sm font-medium">Enviar convite por e-mail</p>
+        <p className="text-sm font-medium">Enviar convite direto para o seu amigo</p>
         <div className="flex gap-2">
           <Input
             type="email"
             value={friendEmail}
             onChange={(e) => setFriendEmail(e.target.value)}
-            placeholder="Digite o e-mail do seu amigo"
+            placeholder="E-mail do seu amigo"
             aria-label="E-mail do amigo"
           />
-          <Button variant="secondary" className="gap-2 shrink-0" onClick={sendInvite} disabled={sending}>
-            {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-            Enviar
+          <Button
+            variant="secondary"
+            className="gap-2 shrink-0"
+            onClick={() => sendInvite("email")}
+            disabled={sending !== null}
+          >
+            {sending === "email" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+            E-mail
           </Button>
         </div>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <Input
+            type="tel"
+            inputMode="numeric"
+            value={friendPhone}
+            onChange={(e) => setFriendPhone(maskPhone(e.target.value))}
+            placeholder="(11) 91234-5678"
+            aria-label="Celular do amigo"
+          />
+          <div className="flex gap-2">
+            <Button
+              variant="secondary"
+              className="gap-2 flex-1 sm:flex-none"
+              onClick={() => sendInvite("whatsapp")}
+              disabled={sending !== null}
+            >
+              {sending === "whatsapp" ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Send className="h-4 w-4" />
+              )}
+              WhatsApp
+            </Button>
+            <Button
+              variant="secondary"
+              className="gap-2 flex-1 sm:flex-none"
+              onClick={() => sendInvite("sms")}
+              disabled={sending !== null}
+            >
+              {sending === "sms" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+              SMS
+            </Button>
+          </div>
+        </div>
+        {user && invites.length > 0 && (
+          <div className="space-y-1 rounded-lg border border-border/60 p-2">
+            <p className="text-xs font-medium text-muted-foreground">Convites enviados</p>
+            {invites.map((i) => (
+              <div key={i.id} className="flex items-center justify-between gap-2 text-xs">
+                <span className="truncate">{i.contact_email || i.contact_phone || "Link"}</span>
+                <span
+                  className={
+                    i.status === "rewarded"
+                      ? "text-primary font-medium"
+                      : i.status === "visited"
+                        ? "text-foreground"
+                        : "text-muted-foreground"
+                  }
+                >
+                  {i.status === "rewarded"
+                    ? "Premiado"
+                    : i.status === "visited"
+                      ? "Acessado"
+                      : i.status === "expired"
+                        ? "Expirado"
+                        : "Enviado"}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
         {!user && (
           <p className="text-xs text-muted-foreground">
             <Link to="/login" className="text-primary underline">

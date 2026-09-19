@@ -11,3 +11,7 @@
 - [x] Renderizar destaques sincronizados e lousa virtual no player.
 - [x] Permitir edição didática e da faixa etária na Gestão de IA.
 - [x] Validar compatibilidade, celular e fluxo completo.
+# Roadmap
+
+- [x] Créditos de acesso por indicação de amigos (admin, convite por e-mail/WhatsApp/SMS, link /convite/:token, créditos)
+- [x] Exibir logomarca configurada no topo do menu lateral (Menu overlay)

@@ -9,6 +9,41 @@ export interface CashbackTier {
   percent: number;
 }
 
+/** Quantidade de acessos liberados por indicação, para cada tipo de conteúdo. */
+export interface ReferralAccessGrants {
+  revisao: number;
+  resumo: number;
+  simulado: number;
+  top_questoes: number;
+  colinha: number;
+  duvida: number;
+  aula_particular: number;
+  /** Créditos de geração de material com IA */
+  ai_credits: number;
+}
+
+export const REFERRAL_ACCESS_LABELS: Record<keyof ReferralAccessGrants, string> = {
+  revisao: "Revisões",
+  resumo: "Resumos",
+  simulado: "Simulados",
+  top_questoes: "Top Questões",
+  colinha: "Colinhas",
+  duvida: "Dúvidas",
+  aula_particular: "Aula particular",
+  ai_credits: "Créditos de IA",
+};
+
+export const DEFAULT_REFERRAL_ACCESS_GRANTS: ReferralAccessGrants = {
+  revisao: 1,
+  resumo: 1,
+  simulado: 1,
+  top_questoes: 1,
+  colinha: 1,
+  duvida: 0,
+  aula_particular: 0,
+  ai_credits: 1,
+};
+
 export interface CashbackProgramConfig {
   enabled: boolean;
   grace_period_days: number;
@@ -17,6 +52,11 @@ export interface CashbackProgramConfig {
   min_purchase_amount: number;
   referral_percent: number;
   referral_min_purchase: number;
+  /** Prêmio em acessos quando o amigo indicado entra pelo link do convite */
+  referral_access_enabled: boolean;
+  referral_access_grants: ReferralAccessGrants;
+  /** 0 = sem limite de indicações premiadas por aluno */
+  referral_access_max_rewards: number;
   tiers: CashbackTier[];
 }
 
@@ -28,6 +68,9 @@ export const DEFAULT_CASHBACK_CONFIG: CashbackProgramConfig = {
   min_purchase_amount: 0,
   referral_percent: 10,
   referral_min_purchase: 0,
+  referral_access_enabled: true,
+  referral_access_grants: DEFAULT_REFERRAL_ACCESS_GRANTS,
+  referral_access_max_rewards: 0,
   tiers: [
     { id: "bronze", name: "Bronze", min_spent_12m: 0, percent: 2 },
     { id: "silver", name: "Prata", min_spent_12m: 300, percent: 4 },

@@ -6,9 +6,16 @@ import { CurrencyInput } from "@/components/ui/currency-input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Card } from "@/components/ui/card";
-import { Save, Plus, Trash2, Sparkles, Users, Clock, Percent } from "lucide-react";
+import { Save, Plus, Trash2, Sparkles, Users, Clock, Percent, Gift } from "lucide-react";
 import { toast } from "sonner";
-import { CashbackProgramConfig, DEFAULT_CASHBACK_CONFIG, CashbackTier } from "@/hooks/useCashback";
+import {
+  CashbackProgramConfig,
+  DEFAULT_CASHBACK_CONFIG,
+  CashbackTier,
+  ReferralAccessGrants,
+  REFERRAL_ACCESS_LABELS,
+  DEFAULT_REFERRAL_ACCESS_GRANTS,
+} from "@/hooks/useCashback";
 
 const SettingsCashback = () => {
   const [cfg, setCfg] = useState<CashbackProgramConfig>(DEFAULT_CASHBACK_CONFIG);
@@ -131,6 +138,57 @@ const SettingsCashback = () => {
         <p className="text-xs text-muted-foreground">
           Cada aluno recebe um código pessoal. Quando alguém se cadastra usando esse código e faz a 1ª compra acima do mínimo, o indicador ganha cashback.
         </p>
+      </Card>
+
+      <Card className="p-4 space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Gift className="h-4 w-4 text-primary" />
+            <h3 className="font-medium">Indicação para acesso à IA e conteúdos</h3>
+          </div>
+          <Switch
+            checked={cfg.referral_access_enabled}
+            onCheckedChange={(v) => setCfg({ ...cfg, referral_access_enabled: v })}
+          />
+        </div>
+        <p className="text-xs text-muted-foreground">
+          O aluno envia um convite por e-mail, WhatsApp ou SMS. Quando o amigo acessa a plataforma pelo
+          link do convite, o indicador ganha os acessos abaixo — um prêmio por convite, independente de compra.
+        </p>
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          {(Object.keys(REFERRAL_ACCESS_LABELS) as (keyof ReferralAccessGrants)[]).map((k) => (
+            <div key={String(k)}>
+              <Label className="text-xs">{REFERRAL_ACCESS_LABELS[k]}</Label>
+              <Input
+                type="number"
+                min={0}
+                value={cfg.referral_access_grants?.[k] ?? 0}
+                onChange={(e) =>
+                  setCfg({
+                    ...cfg,
+                    referral_access_grants: {
+                      ...DEFAULT_REFERRAL_ACCESS_GRANTS,
+                      ...cfg.referral_access_grants,
+                      [k]: Math.max(0, parseInt(e.target.value) || 0),
+                    },
+                  })
+                }
+              />
+            </div>
+          ))}
+        </div>
+        <div className="max-w-xs">
+          <Label>Máximo de indicações premiadas por aluno</Label>
+          <Input
+            type="number"
+            min={0}
+            value={cfg.referral_access_max_rewards}
+            onChange={(e) =>
+              setCfg({ ...cfg, referral_access_max_rewards: Math.max(0, parseInt(e.target.value) || 0) })
+            }
+          />
+          <p className="text-xs text-muted-foreground mt-1">0 = sem limite.</p>
+        </div>
       </Card>
 
       <Card className="p-4 space-y-4">

@@ -31,6 +31,7 @@ import MinhasAulasAgendadas from "./pages/MinhasAulasAgendadas.tsx";
 import EstudarIA from "./pages/EstudarIA.tsx";
 
 import ConteudoIA from "./pages/ConteudoIA.tsx";
+import ConviteIndicacao from "./pages/ConviteIndicacao.tsx";
 import ForgotPassword from "./pages/ForgotPassword.tsx";
 import ResetPassword from "./pages/ResetPassword.tsx";
 import VideoPage from "./pages/VideoPage.tsx";
@@ -100,6 +101,7 @@ const App = () => (
             <Route path="/revisao-ia" element={<Navigate to="/" replace />} />
             <Route path="/ia" element={<Navigate to="/" replace />} />
             <Route path="/conteudo-ia/:id" element={<ConteudoIA />} />
+            <Route path="/convite/:token" element={<ConviteIndicacao />} />
             <Route path="/estudar-ia" element={<EstudarIA />} />
             <Route path="/video/:id" element={<VideoPage />} />
             <Route path="/checkout" element={<Checkout />} />

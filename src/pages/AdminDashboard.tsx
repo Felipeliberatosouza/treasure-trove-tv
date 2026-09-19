@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import MandatoryMfaGuard from "@/components/MandatoryMfaGuard";
 import { motion } from "framer-motion";
-import { ArrowLeft, Video, DollarSign, Shield, LayoutDashboard, Settings, HelpCircle, Mail, CalendarClock, Megaphone, Users, CreditCard, FileText, ScrollText, Activity, RefreshCcw, Receipt, XCircle, LifeBuoy, UserCog, User, Lock } from "lucide-react";
+import { ArrowLeft, Video, DollarSign, Shield, LayoutDashboard, Settings, HelpCircle, Mail, CalendarClock, Megaphone, Users, CreditCard, FileText, ScrollText, Activity, RefreshCcw, Receipt, XCircle, LifeBuoy, UserCog, User, Lock, MessageCircle } from "lucide-react";
 import { Link, Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
@@ -36,6 +36,7 @@ const tabs = [
   { id: "users", label: "Usuários", icon: Users },
   { id: "plans", label: "Planos", icon: CreditCard },
   { id: "support-tickets", label: "Tickets de Atendimento", icon: LifeBuoy },
+  { id: "leads", label: "Leads do WhatsApp", icon: MessageCircle },
   { id: "usage-history", label: "Histórico de Uso", icon: Activity, hidden: true },
   { id: "cancellations", label: "Cancelamentos", icon: XCircle },
   { id: "compensation", label: "Pagamento de Professores", icon: DollarSign },

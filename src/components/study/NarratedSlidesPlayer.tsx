@@ -116,8 +116,8 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina, areas, 
             "Content-Type": "application/json",
           },
           body: JSON.stringify(canonicalId
-            ? { canonical_id: canonicalId, slide_index: index, avatar_gender: avatar.gender, faixa_etaria: faixaEtaria }
-            : { texto: slide.narracao, avatar_gender: avatar.gender, faixa_etaria: faixaEtaria }),
+            ? { canonical_id: canonicalId, slide_index: index, avatar_gender: avatar.gender, avatar_voice: avatar.voice, faixa_etaria: faixaEtaria }
+            : { texto: slide.narracao, avatar_gender: avatar.gender, avatar_voice: avatar.voice, faixa_etaria: faixaEtaria }),
         });
         if (!resp.ok) {
           const err = await resp.json().catch(() => ({}));

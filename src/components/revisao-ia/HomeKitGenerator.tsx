@@ -212,48 +212,52 @@ const HomeKitGenerator = () => {
           void handleSubmit();
         }}
       >
-        <div className="rounded-2xl border border-border bg-white p-3 text-left text-foreground shadow-lg transition-shadow focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 focus-within:ring-offset-background md:p-4">
+        <div
+          className={`rounded-2xl border border-border bg-white p-3 text-left text-foreground shadow-lg transition-shadow focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 focus-within:ring-offset-background md:p-4 ${loading ? "opacity-90" : ""}`}
+        >
           <Textarea
             value={assunto}
             onChange={(event) => setAssunto(event.target.value)}
             placeholder="Digite o assunto, a disciplina ou os tópicos da sua prova..."
             maxLength={500}
             rows={3}
-            className="ai-prompt-field min-h-[112px] resize-none border-0 px-2 text-base shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
+            readOnly={loading}
+            aria-readonly={loading}
+            className={`ai-prompt-field min-h-[112px] resize-none border-0 px-2 text-base shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 ${loading ? "cursor-not-allowed text-muted-foreground" : ""}`}
             aria-label="Assunto da próxima prova"
             onKeyDown={(event) => {
               if (event.key === "Enter" && !event.shiftKey) {
                 event.preventDefault();
-                void handleSubmit();
+                if (!loading) void handleSubmit();
               }
             }}
           />
           <div className="flex items-center justify-between gap-3 border-t border-border pt-3">
             <div className="flex items-center gap-1">
-              <Button type="button" size="icon" variant="ghost" aria-label="Adicionar detalhes" title="Adicionar detalhes" onClick={() => setShowExtras((v) => !v)}>
+              <Button type="button" size="icon" variant="ghost" disabled={loading} aria-label="Adicionar detalhes" title="Adicionar detalhes" onClick={() => setShowExtras((v) => !v)}>
                 <Plus className="h-5 w-5" />
               </Button>
-              <Button type="button" variant="outline" size="sm" onClick={() => setShowExtras((v) => !v)}>
+              <Button type="button" variant="outline" size="sm" disabled={loading} onClick={() => setShowExtras((v) => !v)}>
                 <SlidersHorizontal className="h-4 w-4" />
                 Personalizar
               </Button>
             </div>
             <Button type="submit" size="icon" className="rounded-full" disabled={loading || assunto.trim().length < 3} aria-label="Gerar Kit de Revisão" title="Gerar Kit de Revisão">
-              <Send className="h-4 w-4" />
+              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
             </Button>
           </div>
 
           {showExtras && (
             <div className="mt-3 grid gap-3 border-t border-border pt-3 sm:grid-cols-2">
-              <Input placeholder="Disciplina" value={disciplina} onChange={(e) => setDisciplina(e.target.value)} />
-              <Input placeholder="Curso" value={curso} onChange={(e) => setCurso(e.target.value)} />
-              <Input placeholder="Instituição" value={instituicao} onChange={(e) => setInstituicao(e.target.value)} />
-              <Input type="date" value={examDate} onChange={(e) => setExamDate(e.target.value)} />
+              <Input placeholder="Disciplina" value={disciplina} disabled={loading} onChange={(e) => setDisciplina(e.target.value)} />
+              <Input placeholder="Curso" value={curso} disabled={loading} onChange={(e) => setCurso(e.target.value)} />
+              <Input placeholder="Instituição" value={instituicao} disabled={loading} onChange={(e) => setInstituicao(e.target.value)} />
+              <Input type="date" value={examDate} disabled={loading} onChange={(e) => setExamDate(e.target.value)} />
               <div className="flex gap-2 sm:col-span-2">
-                <Button type="button" size="sm" variant={nivel === "rapido" ? "default" : "outline"} onClick={() => setNivel("rapido")}>
+                <Button type="button" size="sm" disabled={loading} variant={nivel === "rapido" ? "default" : "outline"} onClick={() => setNivel("rapido")}>
                   Revisão rápida
                 </Button>
-                <Button type="button" size="sm" variant={nivel === "aprofundado" ? "default" : "outline"} onClick={() => setNivel("aprofundado")}>
+                <Button type="button" size="sm" disabled={loading} variant={nivel === "aprofundado" ? "default" : "outline"} onClick={() => setNivel("aprofundado")}>
                   Revisão aprofundada
                 </Button>
               </div>
@@ -263,34 +267,53 @@ const HomeKitGenerator = () => {
       </form>
 
       {loading && (
-        <Card className="mx-auto mt-6 max-w-3xl text-left">
-          <CardContent className="space-y-3 p-5">
-            <div className="flex items-center gap-2">
-              <Loader2 className="h-4 w-4 animate-spin text-primary" />
-              <p className="text-sm font-semibold">Agente de IA trabalhando na sua revisão</p>
+        <div className="mx-auto mt-6 max-w-3xl space-y-4 text-left">
+          <Card>
+            <CardContent className="space-y-4 p-5">
+              <div className="flex items-center gap-2 text-sm font-semibold text-primary">
+                <Sparkles className="h-4 w-4" />
+                <span>{phaseLabel(step, steps.length)}</span>
+                <Dots />
+              </div>
+              <ol className="space-y-2" aria-live="polite">
+                {steps.slice(0, step + 1).map((s, i) => (
+                  <li key={s} className="flex items-start gap-2 text-sm">
+                    {i < step ? (
+                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                    ) : (
+                      <Loader2 className="mt-0.5 h-4 w-4 shrink-0 animate-spin text-primary" />
+                    )}
+                    <span className={i < step ? "text-muted-foreground" : "text-foreground"}>{s}</span>
+                  </li>
+                ))}
+              </ol>
+              <p className="text-xs text-muted-foreground">
+                Você pode acompanhar aqui mesmo — assim que terminar, a revisão abre automaticamente.
+              </p>
+            </CardContent>
+          </Card>
+
+          <div className="rounded-2xl border border-border bg-white p-3 text-foreground shadow-sm">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Loader2 className="h-4 w-4 shrink-0 animate-spin text-primary" />
+              <input
+                readOnly
+                disabled
+                placeholder="Mensagem para Revisão Fácil"
+                aria-label="Mensagem para Revisão Fácil"
+                className="w-full cursor-not-allowed border-0 bg-transparent px-1 text-sm outline-none placeholder:text-muted-foreground"
+              />
             </div>
-            <ol className="space-y-2" aria-live="polite">
-              {steps.slice(0, step + 1).map((s, i) => (
-                <li key={s} className="flex items-start gap-2 text-sm">
-                  {i < step ? (
-                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                  ) : (
-                    <Loader2 className="mt-0.5 h-4 w-4 shrink-0 animate-spin text-primary" />
-                  )}
-                  <span className={i < step ? "text-muted-foreground" : "text-foreground"}>{s}</span>
-                </li>
-              ))}
-            </ol>
-            <p className="text-xs text-muted-foreground">
-              Você pode acompanhar aqui mesmo — assim que terminar, a revisão abre automaticamente.
+            <p className="mt-2 px-1 text-xs text-muted-foreground">
+              Aguarde a entrega do seu Kit de Revisão para enviar uma nova solicitação.
             </p>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       )}
 
       {errorMsg && <p className="mt-4 text-sm text-destructive">{errorMsg}</p>}
 
-      <div className="mt-6 flex flex-wrap justify-center gap-2">
+      <div className={`mt-6 flex flex-wrap justify-center gap-2 ${loading ? "pointer-events-none opacity-50" : ""}`}>
         {CHIPS.map(({ label, icon: Icon }) => (
           <Button
             key={label}

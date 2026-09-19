@@ -3,6 +3,18 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+const CURSO_OPCOES = [
+  "Ensino Infantil",
+  "Ensino Fundamental I",
+  "Ensino Fundamental II",
+  "Ensino Médio",
+  "Graduação",
+  "Pós-graduação Latu Sensu (Especialização)",
+  "Mestrado",
+  "Doutorado",
+];
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Sparkles, Send, Loader2, CheckCircle2, Lock, Plus, SlidersHorizontal,

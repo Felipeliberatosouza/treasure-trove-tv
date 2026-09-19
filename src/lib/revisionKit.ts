@@ -169,6 +169,7 @@ export async function requestKit(input: {
   assunto: string;
   disciplina?: string;
   curso?: string;
+  serie?: string;
   instituicao?: string;
   exam_date?: string;
   nivel?: "rapido" | "aprofundado";

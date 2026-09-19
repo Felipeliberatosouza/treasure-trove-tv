@@ -315,7 +315,9 @@ async function handleRequest(req: Request, body: any): Promise<Response> {
       return json({ error: "Descreva o assunto da prova (entre 3 e 500 caracteres)." }, 400);
     }
     const disciplina = String(body.disciplina || "").trim().slice(0, 120) || null;
-    const curso = String(body.curso || "").trim().slice(0, 120) || null;
+    const cursoBase = String(body.curso || "").trim().slice(0, 120);
+    const serie = String(body.serie || "").replace(/\D/g, "").slice(0, 3);
+    const curso = [cursoBase, serie ? `${serie}ª série/ano` : ""].filter(Boolean).join(" - ") || null;
     const instituicao = String(body.instituicao || "").trim().slice(0, 120) || null;
     const examDate = /^\d{4}-\d{2}-\d{2}$/.test(String(body.exam_date || "")) ? body.exam_date : null;
     const nivel = body.nivel === "aprofundado" ? "aprofundado" : "rapido";

@@ -136,6 +136,7 @@ const AdminDashboard = () => {
             {activeTab === "audit" && <AdminAuditLogsTab />}
             {activeTab === "login-attempts" && <AdminLoginAttemptsTab />}
             {activeTab === "support-tickets" && <AdminSupportTicketsTab />}
+            {activeTab === "leads" && <AdminLeadsTab />}
             {activeTab === "profile-approvals" && <AdminProfileApprovalsTab />}
             {activeTab === "settings" && <AdminSettingsTab />}
             {activeTab === "personal" && <PersonalDataTab />}

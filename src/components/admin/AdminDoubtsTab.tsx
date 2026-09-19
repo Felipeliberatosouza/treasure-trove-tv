@@ -57,26 +57,33 @@ const AdminDoubtsTab = () => {
 
     if (!doubtsData) { setLoading(false); return; }
 
-    const userIds = [...new Set([...doubtsData.map(d => d.student_id), ...doubtsData.map(d => d.teacher_id)])];
+    const userIds = [...new Set([...doubtsData.map(d => d.student_id), ...doubtsData.map(d => d.teacher_id)])].filter(Boolean) as string[];
     const { data: profiles } = await supabase.from("profiles").select("user_id, name").in("user_id", userIds);
     const profileMap = new Map((profiles || []).map(p => [p.user_id, p.name]));
 
     const lessonIds = doubtsData.filter(d => d.content_type === "lesson").map(d => d.content_id);
     const examIds = doubtsData.filter(d => d.content_type === "exam_solution").map(d => d.content_id);
+    const aiIds = doubtsData.filter(d => d.content_type === "ai_content" && d.content_id).map(d => d.content_id);
 
-    const [lessonsRes, examsRes] = await Promise.all([
+    const [lessonsRes, examsRes, aiRes] = await Promise.all([
       lessonIds.length ? supabase.from("lessons").select("id, title").in("id", lessonIds) : { data: [] },
       examIds.length ? supabase.from("exam_solutions").select("id, title").in("id", examIds) : { data: [] },
+      aiIds.length
+        ? supabase.from("ai_canonical_contents").select("id, assunto").in("id", aiIds as string[])
+        : { data: [] },
     ]);
     const titleMap = new Map([
       ...(lessonsRes.data || []).map(l => [l.id, l.title] as [string, string]),
       ...(examsRes.data || []).map(e => [e.id, e.title] as [string, string]),
+      ...((aiRes.data as any[]) || []).map(a => [a.id, a.assunto] as [string, string]),
     ]);
 
     setDoubts(doubtsData.map(d => ({
       ...d,
       student_name: profileMap.get(d.student_id) || "Aluno",
-      teacher_name: profileMap.get(d.teacher_id) || "Professor",
+      teacher_name: d.teacher_id
+        ? profileMap.get(d.teacher_id) || "Professor"
+        : "Professor Virtual (equipe Revisão Fácil)",
       content_title: titleMap.get(d.content_id) || "Conteúdo",
     })));
 

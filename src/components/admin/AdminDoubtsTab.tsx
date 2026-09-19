@@ -120,12 +120,14 @@ const AdminDoubtsTab = () => {
       return;
     }
 
-    // Email to teacher
-    const { data: teacherProfile } = await supabase
-      .from("profiles")
-      .select("email, name")
-      .eq("user_id", doubt.teacher_id)
-      .single();
+    // Email to teacher (dúvidas de conteúdo de IA não têm professor: ficam com a equipe)
+    const { data: teacherProfile } = doubt.teacher_id
+      ? await supabase
+          .from("profiles")
+          .select("email, name")
+          .eq("user_id", doubt.teacher_id)
+          .single()
+      : { data: null };
 
     if (teacherProfile?.email) {
       await supabase.functions.invoke("send-app-email", {

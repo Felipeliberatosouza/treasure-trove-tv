@@ -1,6 +1,15 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import {
+  DEFAULT_REFERRAL_ACCESS_SCOPES,
+  useCashbackConfig,
+  type ReferralAccessGrants,
+  type ReferralCreditScope,
+} from "@/hooks/useCashback";
+
+/** Origem do conteúdo que o aluno quer acessar. */
+export type ContentSource = "ia" | "professor";
 
 export type ResourceType =
   | "revisao"

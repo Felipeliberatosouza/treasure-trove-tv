@@ -496,9 +496,8 @@ const AdminUsersTab = () => {
                       >
                         <KeyRound className="h-4 w-4" />
                        </Button>
-                      <Button
-
                       {u.trial_status !== "none" && (
+
                         <Button
                           size="icon"
                           variant="ghost"

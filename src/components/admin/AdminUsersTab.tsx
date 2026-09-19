@@ -497,14 +497,7 @@ const AdminUsersTab = () => {
                         <KeyRound className="h-4 w-4" />
                        </Button>
                       <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-8 w-8 text-primary hover:text-primary"
-                        onClick={() => { setCreditUser(u); setCreditValues({}); }}
-                        title="Conceder créditos por recurso"
-                      >
-                        <Coins className="h-4 w-4" />
-                      </Button>
+
                       {u.trial_status !== "none" && (
                         <Button
                           size="icon"

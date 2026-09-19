@@ -446,8 +446,11 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina, areas, 
                 )}
                 {boardMode ? (
                   <div className={`ai-virtual-board mt-2 sm:mt-4 ${faixaEtaria === "criancas_0_9" ? "is-child" : ""}`} aria-label="Lousa virtual com explicação passo a passo">
-                    {(oneBoardStep ? visibleBoardSteps.slice(-1) : visibleBoardSteps).map((step, index) => (
-                      <div key={`${step.conteudo}-${index}`} className={`ai-board-step ai-board-${step.tipo}`}>
+                    {visibleBoardSteps.map((step, index, list) => (
+                      <div
+                        key={`${step.conteudo}-${index}`}
+                        className={`ai-board-step ai-board-${step.tipo} ${highlightLastStep && index < list.length - 1 ? "is-previous" : ""} ${index === list.length - 1 ? "is-current" : ""}`}
+                      >
                         {step.tipo === "seta" && <span aria-hidden="true">→</span>}
                         <HighlightedText text={step.conteudo} terms={step.destaque ? [step.destaque] : []} activeTerm={step.destaque} />
                       </div>
@@ -455,8 +458,8 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina, areas, 
                   </div>
                 ) : slide && (
                   <ul className="mt-2 space-y-1 sm:mt-5 sm:space-y-2">
-                    {slide.bullets.slice(0, 4).map((bullet, index) => (
-                      <li key={index} className="flex items-start gap-2 text-[11px] leading-snug sm:text-sm md:text-base">
+                    {visibleBullets.map((bullet, index) => (
+                      <li key={index} className="ai-slide-bullet flex items-start gap-2 text-[11px] leading-snug sm:text-sm md:text-base">
                         <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
                         <span><HighlightedText text={bullet} terms={keywords.map((item) => item.termo)} activeTerm={activeKeyword} /></span>
                       </li>

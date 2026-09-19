@@ -405,12 +405,12 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina, areas, 
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-background/30" />
         {brandOverlay}
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-2 p-4 text-center sm:gap-3 sm:p-6">
-          <img
+          <AnimatedAvatar
             src={avatarImage}
             alt={`${avatar.name}, ${avatar.role_label.toLowerCase()} da Revisão Fácil`}
-            className="h-16 w-16 rounded-full border-2 border-primary object-cover shadow-lg sm:h-28 sm:w-28"
-            width={1024}
-            height={1024}
+            speaking={false}
+            animation={avatar.animation}
+            size="medio"
           />
           <div>
             <p className="text-xs font-semibold sm:text-sm">{avatar.name}</p>

@@ -12,31 +12,56 @@ import { useAuth } from "@/contexts/AuthContext";
 import { requestKit } from "@/lib/revisionKit";
 import InviteFriendsPanel from "@/components/referral/InviteFriendsPanel";
 
-const buildSteps = (assunto: string, disciplina: string, nivel: string) => [
-  `Lendo o seu pedido: "${assunto}"`,
-  disciplina
-    ? `Confirmando a disciplina informada: ${disciplina}`
-    : "Identificando a disciplina e a área do conhecimento do assunto",
-  `Definindo a profundidade do material (${nivel === "aprofundado" ? "revisão aprofundada" : "revisão rápida"})`,
-  "Consultando o acervo da Revisão Fácil para reaproveitar material equivalente",
-  "Separando os tópicos que mais aparecem em provas sobre esse assunto",
-  "Escrevendo o resumo estruturado em seções",
-  "Elaborando as questões do simulado com gabarito comentado",
-  "Selecionando as Top Questões e escrevendo os comentários",
-  "Condensando a colinha em tópicos de última hora",
-  "Roteirizando os slides e a narração da professora virtual",
-  "Preparando o PDF para download",
-  "Conferindo a consistência de todo o Kit de Revisão",
-  "Abrindo sua revisão",
+interface GenPhase {
+  label: string;
+  tasks: string[];
+}
+
+const buildPhases = (assunto: string, disciplina: string, nivel: string): GenPhase[] => [
+  {
+    label: "Pesquisando",
+    tasks: [
+      `Lendo o seu pedido: "${assunto}"`,
+      disciplina
+        ? `Confirmando a disciplina informada: ${disciplina}`
+        : "Identificando a disciplina e a área do conhecimento do assunto",
+      `Definindo a profundidade do material (${nivel === "aprofundado" ? "revisão aprofundada" : "revisão rápida"})`,
+      "Consultando o acervo da Revisão Fácil sobre esse assunto",
+      "Separando os tópicos que mais aparecem em provas sobre esse assunto",
+    ],
+  },
+  {
+    label: "Trabalhando",
+    tasks: [
+      "Escrevendo o resumo estruturado em seções",
+      "Elaborando as questões do simulado com gabarito comentado",
+      "Selecionando as Top Questões e escrevendo os comentários",
+      "Condensando a colinha em tópicos de última hora",
+      "Roteirizando os slides e a narração da professora virtual",
+    ],
+  },
+  {
+    label: "Entregando",
+    tasks: [
+      "Preparando o PDF para download",
+      "Conferindo a consistência de todo o Kit de Revisão",
+      "Abrindo sua revisão",
+    ],
+  },
 ];
 
-/** Fase geral do processamento, exibida acima das tarefas. */
-const phaseLabel = (step: number, total: number) => {
-  if (total === 0) return "Pensando";
-  if (step < Math.ceil(total * 0.3)) return "Pensando";
-  if (step < total - 2) return "Trabalhando";
-  return "Entregando";
+/** Achata as fases em uma lista de passos com a fase de origem. */
+const flattenPhases = (phases: GenPhase[]) =>
+  phases.flatMap((p, pi) => p.tasks.map((t) => ({ phase: pi, label: p.label, task: t })));
+
+const STEP_MS = 1800;
+const FAST_STEP_MS = 500;
+
+const formatCountdown = (ms: number) => {
+  const total = Math.max(0, Math.ceil(ms / 1000));
+  return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
 };
+
 
 /** Três pontinhos animados. */
 const Dots = () => (
@@ -96,7 +121,9 @@ const HomeKitGenerator = () => {
 
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(0);
-  const [steps, setSteps] = useState<string[]>([]);
+  const [steps, setSteps] = useState<ReturnType<typeof flattenPhases>>([]);
+  const [fast, setFast] = useState(false);
+  const [remainingMs, setRemainingMs] = useState(0);
   const [blocked, setBlocked] = useState<"signup_required" | "paywall" | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -104,6 +131,7 @@ const HomeKitGenerator = () => {
   const [messages, setMessages] = useState<string[]>([]);
   const submittingRef = useRef(false);
   const runIdRef = useRef(0);
+  const resultRef = useRef<{ runId: number; canonicalId?: string | null; error?: { kind: string; message?: string } } | null>(null);
 
   const firstName = useMemo(() => (profile?.name || "").trim().split(" ")[0] || "", [profile?.name]);
 
@@ -123,11 +151,52 @@ const HomeKitGenerator = () => {
     }
   }, [assunto, disciplina, curso, instituicao, examDate, nivel]);
 
+  // Avança as tarefas uma a uma; acelera quando o material já está pronto.
   useEffect(() => {
     if (!loading || steps.length === 0) return;
-    const t = setInterval(() => setStep((s) => Math.min(s + 1, steps.length - 1)), 1600);
+    const interval = fast ? FAST_STEP_MS : STEP_MS;
+    const t = setInterval(() => setStep((s) => Math.min(s + 1, steps.length - 1)), interval);
     return () => clearInterval(t);
-  }, [loading, steps.length]);
+  }, [loading, steps.length, fast]);
+
+  // Contagem regressiva para a conclusão de todo o material.
+  useEffect(() => {
+    if (!loading) return;
+    const t = setInterval(() => setRemainingMs((ms) => Math.max(0, ms - 1000)), 1000);
+    return () => clearInterval(t);
+  }, [loading]);
+
+  useEffect(() => {
+    if (!loading || steps.length === 0) return;
+    const left = steps.length - 1 - step;
+    setRemainingMs((ms) => {
+      const target = left * (fast ? FAST_STEP_MS : STEP_MS);
+      return fast ? target : Math.min(ms, target || ms);
+    });
+  }, [step, fast, loading, steps.length]);
+
+  /** Conclui quando a simulação chega ao fim e o material já está pronto. */
+  useEffect(() => {
+    if (!loading || steps.length === 0) return;
+    const res = resultRef.current;
+    if (!res || res.runId !== runIdRef.current) return;
+    if (step < steps.length - 1) return;
+    setLoading(false);
+    setRemainingMs(0);
+    submittingRef.current = false;
+    resultRef.current = null;
+    if (res.error) {
+      if (res.error.kind === "error") setErrorMsg(res.error.message ?? "Não foi possível gerar agora.");
+      else setBlocked(res.error.kind as "signup_required" | "paywall");
+      return;
+    }
+    try {
+      localStorage.removeItem(DRAFT_KEY);
+    } catch {
+      /* armazenamento indisponível */
+    }
+    if (res.canonicalId) navigate(`/conteudo-ia/${res.canonicalId}`);
+  }, [step, loading, steps.length, navigate]);
 
   const handleSubmit = async (overridePrompt?: string) => {
     const pedido = (overridePrompt ?? assunto).trim();
@@ -135,8 +204,12 @@ const HomeKitGenerator = () => {
     const runId = runIdRef.current + 1;
     runIdRef.current = runId;
     submittingRef.current = true;
-    setSteps(buildSteps(pedido, disciplina.trim(), nivel));
+    resultRef.current = null;
+    const flat = flattenPhases(buildPhases(pedido, disciplina.trim(), nivel));
+    setSteps(flat);
     setStep(0);
+    setFast(false);
+    setRemainingMs(flat.length * STEP_MS);
     setLoading(true);
     setErrorMsg(null);
     setNotice(null);
@@ -152,28 +225,21 @@ const HomeKitGenerator = () => {
     });
     // Pedido cancelado ou substituído por uma nova mensagem: ignora este resultado.
     if (runIdRef.current !== runId) return;
-    setLoading(false);
-    submittingRef.current = false;
-    if (error) {
-      if (error.kind === "error") setErrorMsg(error.message);
-      else setBlocked(error.kind);
-      return;
-    }
-    try {
-      localStorage.removeItem(DRAFT_KEY);
-    } catch {
-      /* armazenamento indisponível */
-    }
-    if (data?.canonical_id) navigate(`/conteudo-ia/${data.canonical_id}`);
+    resultRef.current = { runId, canonicalId: data?.canonical_id, error };
+    // Material pronto: encerra a apresentação das tarefas em poucos segundos.
+    setFast(true);
   };
 
   /** Interrompe o processamento em andamento. */
   const handleStop = () => {
     runIdRef.current += 1;
     submittingRef.current = false;
+    resultRef.current = null;
     setLoading(false);
+    setRemainingMs(0);
     setNotice("Processamento interrompido. Ajuste o pedido e envie novamente quando quiser.");
   };
+
 
   /** Envia uma nova instrução durante o processamento: reinicia com o pedido atualizado. */
   const handleSendMessage = () => {
@@ -312,26 +378,35 @@ const HomeKitGenerator = () => {
         <div className="mx-auto mt-6 max-w-3xl space-y-4 text-left">
           <Card>
             <CardContent className="space-y-4 p-5">
-              <div className="flex items-center gap-2 text-sm font-semibold text-primary">
-                <Sparkles className="h-4 w-4" />
-                <span>{phaseLabel(step, steps.length)}</span>
-                <Dots />
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex items-center gap-2 text-sm font-semibold text-primary">
+                  <Sparkles className="h-4 w-4" />
+                  <span>{steps[step]?.label ?? "Pesquisando"}</span>
+                  <Dots />
+                </div>
+                <div className="rounded-full bg-primary/10 px-3 py-1 text-sm font-semibold tabular-nums text-primary">
+                  Conclusão em {formatCountdown(remainingMs)}
+                </div>
               </div>
               <ol className="space-y-2" aria-live="polite">
-                {steps.slice(0, step + 1).map((s, i) => (
-                  <li key={s} className="flex items-start gap-2 text-sm">
-                    {i < step ? (
-                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                    ) : (
-                      <Loader2 className="mt-0.5 h-4 w-4 shrink-0 animate-spin text-primary" />
-                    )}
-                    <span className={i < step ? "text-muted-foreground" : "text-foreground"}>{s}</span>
-                  </li>
-                ))}
+                {steps
+                  .map((s, i) => ({ ...s, i }))
+                  .filter((s) => s.phase === (steps[step]?.phase ?? 0) && s.i <= step)
+                  .map((s) => (
+                    <li key={s.task} className="flex items-start gap-2 text-sm">
+                      {s.i < step ? (
+                        <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                      ) : (
+                        <Loader2 className="mt-0.5 h-4 w-4 shrink-0 animate-spin text-primary" />
+                      )}
+                      <span className={s.i < step ? "text-muted-foreground" : "text-foreground"}>{s.task}</span>
+                    </li>
+                  ))}
               </ol>
               <p className="text-xs text-muted-foreground">
                 Você pode acompanhar aqui mesmo — assim que terminar, a revisão abre automaticamente.
               </p>
+
             </CardContent>
           </Card>
         </div>

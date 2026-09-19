@@ -4,6 +4,8 @@ import { Loader2 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import KitResult from "@/components/revisao-ia/KitResult";
+import KitSectionView from "@/components/revisao-ia/KitSectionView";
+import { CONTENT_SECTIONS, type SectionKey } from "@/lib/contentSections";
 import { Button } from "@/components/ui/button";
 import { fetchKitById, type KitResponse } from "@/lib/revisionKit";
 
@@ -13,6 +15,8 @@ const ConteudoIA = () => {
   const [searchParams] = useSearchParams();
   const [result, setResult] = useState<KitResponse | null>(null);
   const [loading, setLoading] = useState(true);
+  const secao = searchParams.get("secao");
+  const sectionKey = (CONTENT_SECTIONS.find((s) => s.key === secao)?.key ?? null) as SectionKey | null;
 
   useEffect(() => {
     if (!id) {
@@ -35,7 +39,11 @@ const ConteudoIA = () => {
               <Loader2 className="h-5 w-5 animate-spin" /> Abrindo sua revisão…
             </div>
           ) : result ? (
-            <KitResult result={result} onNewKit={() => navigate("/")} initialTab={searchParams.get("secao")} />
+            sectionKey ? (
+              <KitSectionView result={result} sectionKey={sectionKey} onNewKit={() => navigate("/")} />
+            ) : (
+              <KitResult result={result} onNewKit={() => navigate("/")} />
+            )
           ) : (
             <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4 text-center">
               <h1 className="font-display text-2xl font-bold">Revisão não encontrada</h1>

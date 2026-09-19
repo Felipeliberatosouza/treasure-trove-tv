@@ -15,7 +15,7 @@ import DoubtThreadDialog from "@/components/doubts/DoubtThreadDialog";
 interface Doubt {
   id: string;
   student_id: string;
-  teacher_id: string;
+  teacher_id: string | null;
   content_id: string;
   content_type: string;
   question: string;

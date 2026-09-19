@@ -241,9 +241,7 @@ Se o conteúdo for relevante para mais de uma área, indique todas as que fizere
   try { return JSON.parse(clean); } catch { throw new Error("A IA retornou um material inválido. Tente novamente."); }
 }
 
-Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
-
+async function handleRequest(req: Request, body: any): Promise<Response> {
   const admin = createClient(
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
@@ -251,7 +249,7 @@ Deno.serve(async (req) => {
   );
 
   try {
-    const body = await req.json().catch(() => ({}));
+
     const action = body.action === "status" ? "status" : "generate";
     const anonId = typeof body.anon_id === "string" ? body.anon_id.slice(0, 64) : null;
 

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import ForensicWatermark from "@/components/ForensicWatermark";
 import { useContentProtection } from "@/hooks/useContentProtection";
 import { fetchAndParseThumbVtt, type ParsedThumbVtt } from "@/lib/videoPreviewSprite";
+import { useBrandLogo, useCommercialDomain } from "@/components/branding/BrandStamp";
 
 interface VideoPlayerProps {
   videoUrl: string;

@@ -28,12 +28,14 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
       { auth: { persistSession: false } },
     );
+    // A capa é guardada com slide_index 0 e tipo "cover" (a coluna exige índice >= 0).
+    const dbIndex = isCover ? 0 : slideIndex;
     const { data: existing } = await admin
       .from("ai_content_artifacts")
       .select("storage_path")
       .eq("canonical_id", canonicalId)
-      .eq("slide_index", slideIndex)
-      .eq("artifact_type", "image")
+      .eq("slide_index", dbIndex)
+      .eq("artifact_type", artifactType)
       .eq("status", "ready")
       .maybeSingle();
     if (existing?.storage_path) {

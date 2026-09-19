@@ -137,7 +137,7 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina, areas, 
         return null;
       }
     },
-    [slides, getToken, canonicalId, avatar.gender, faixaEtaria],
+    [slides, getToken, canonicalId, avatar.gender, avatar.voice, faixaEtaria],
   );
 
   const prefetch = useCallback(

@@ -287,6 +287,25 @@ const InviteFriendsPanel = ({ variant = "hero", className, eyebrow }: Props) => 
             </Button>
           </div>
         </div>
+        {user && discountInfo.next && (
+          <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 text-xs leading-relaxed">
+            <p className="font-medium text-primary">Desconto na renovação da sua assinatura</p>
+            <p className="text-muted-foreground">
+              Você já tem <strong>{rewardedCount}</strong> indicaç{rewardedCount === 1 ? "ão" : "ões"} premiada
+              {rewardedCount === 1 ? "" : "s"}. Com <strong>{discountInfo.next.invites}</strong> indicações você
+              ganha <strong>{discountInfo.next.percent}% de desconto</strong> na renovação.
+              {discountInfo.current &&
+                ` Desconto já garantido: ${discountInfo.current.percent}%.`}
+            </p>
+          </div>
+        )}
+        {user && !discountInfo.next && discountInfo.current && (
+          <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 text-xs">
+            <p className="font-medium text-primary">
+              Você já garantiu {discountInfo.current.percent}% de desconto na renovação da assinatura.
+            </p>
+          </div>
+        )}
         {user && invites.length > 0 && (
           <div className="space-y-1 rounded-lg border border-border/60 p-2">
             <p className="text-xs font-medium text-muted-foreground">Convites enviados</p>

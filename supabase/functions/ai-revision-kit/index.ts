@@ -3,9 +3,6 @@
 //   { action: "status", anon_id }            -> saldo/elegibilidade
 //   { action: "generate", ...campos }        -> entrega kit (cache ou geração)
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
-import { createOpenAI } from "npm:@ai-sdk/openai";
-import { streamText } from "npm:ai";
-import { createLovableAiGatewayRunIdFetch } from "../_shared/ai-gateway.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

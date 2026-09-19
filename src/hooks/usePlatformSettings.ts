@@ -456,6 +456,7 @@ export const DEFAULT_AI_AVATAR: AiAvatarSettings = {
   gender: "female",
   image_url: "",
   role_label: "Professora virtual",
+  voice: "nova",
 };
 
 /** Tipos de conteúdo gerados por IA aos quais um avatar pode ser vinculado. */

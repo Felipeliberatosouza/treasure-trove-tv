@@ -84,6 +84,10 @@ export interface CashbackProgramConfig {
   referral_access_grants: ReferralAccessGrants;
   /** 0 = sem limite de indicações premiadas por aluno */
   referral_access_max_rewards: number;
+  /** Onde cada crédito ganho por indicação pode ser usado */
+  referral_access_scopes: ReferralAccessScopes;
+  /** Texto do convite enviado ao amigo */
+  referral_invite_message: string;
   tiers: CashbackTier[];
 }
 
@@ -98,6 +102,8 @@ export const DEFAULT_CASHBACK_CONFIG: CashbackProgramConfig = {
   referral_access_enabled: true,
   referral_access_grants: DEFAULT_REFERRAL_ACCESS_GRANTS,
   referral_access_max_rewards: 0,
+  referral_access_scopes: DEFAULT_REFERRAL_ACCESS_SCOPES,
+  referral_invite_message: DEFAULT_REFERRAL_INVITE_MESSAGE,
   tiers: [
     { id: "bronze", name: "Bronze", min_spent_12m: 0, percent: 2 },
     { id: "silver", name: "Prata", min_spent_12m: 300, percent: 4 },

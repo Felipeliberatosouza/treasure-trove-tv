@@ -16,6 +16,7 @@ import {
 import { CONTENT_SECTIONS, getSection, type SectionKey } from "@/lib/contentSections";
 import type { Video } from "@/data/courses";
 import aiKitCover from "@/assets/slide-visual-ciencia.jpg";
+import { useAiKitCovers } from "@/hooks/useAiKitCovers";
 
 interface Props {
   sectionKey: SectionKey;

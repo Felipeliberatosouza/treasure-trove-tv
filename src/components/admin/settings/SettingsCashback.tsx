@@ -134,6 +134,57 @@ const SettingsCashback = () => {
       </Card>
 
       <Card className="p-4 space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Gift className="h-4 w-4 text-primary" />
+            <h3 className="font-medium">Indicação para acesso à IA e conteúdos</h3>
+          </div>
+          <Switch
+            checked={cfg.referral_access_enabled}
+            onCheckedChange={(v) => setCfg({ ...cfg, referral_access_enabled: v })}
+          />
+        </div>
+        <p className="text-xs text-muted-foreground">
+          O aluno envia um convite por e-mail, WhatsApp ou SMS. Quando o amigo acessa a plataforma pelo
+          link do convite, o indicador ganha os acessos abaixo — um prêmio por convite, independente de compra.
+        </p>
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          {(Object.keys(REFERRAL_ACCESS_LABELS) as (keyof ReferralAccessGrants)[]).map((k) => (
+            <div key={k}>
+              <Label className="text-xs">{REFERRAL_ACCESS_LABELS[k]}</Label>
+              <Input
+                type="number"
+                min={0}
+                value={cfg.referral_access_grants?.[k] ?? 0}
+                onChange={(e) =>
+                  setCfg({
+                    ...cfg,
+                    referral_access_grants: {
+                      ...DEFAULT_REFERRAL_ACCESS_GRANTS,
+                      ...cfg.referral_access_grants,
+                      [k]: Math.max(0, parseInt(e.target.value) || 0),
+                    },
+                  })
+                }
+              />
+            </div>
+          ))}
+        </div>
+        <div className="max-w-xs">
+          <Label>Máximo de indicações premiadas por aluno</Label>
+          <Input
+            type="number"
+            min={0}
+            value={cfg.referral_access_max_rewards}
+            onChange={(e) =>
+              setCfg({ ...cfg, referral_access_max_rewards: Math.max(0, parseInt(e.target.value) || 0) })
+            }
+          />
+          <p className="text-xs text-muted-foreground mt-1">0 = sem limite.</p>
+        </div>
+      </Card>
+
+      <Card className="p-4 space-y-4">
         <div className="flex items-center gap-2">
           <Percent className="h-4 w-4 text-primary" />
           <h3 className="font-medium">Níveis de fidelidade</h3>

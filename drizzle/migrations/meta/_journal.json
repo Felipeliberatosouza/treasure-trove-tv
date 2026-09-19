@@ -43,6 +43,13 @@
       "when": 1789821045874,
       "tag": "0005_referral_access_credits",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1789822435399,
+      "tag": "0006_handle_new_user_referral_code",
+      "breakpoints": true
     }
   ]
 }

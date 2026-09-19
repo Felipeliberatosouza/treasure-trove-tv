@@ -77,6 +77,7 @@ const StudentContentSections = ({
   const [ratings, setRatings] = useState<Record<string, { average: number; count: number }>>({});
   const [continueWatching, setContinueWatching] = useState<Array<Video & { _progress: number }>>([]);
   const [aiKits, setAiKits] = useState<Video[]>([]);
+  const aiCovers = useAiKitCovers(aiKits.map((k) => k.id));
   const { data: aiAvatarSettings } = usePlatformSettings("ai_avatar");
   const { data: aiParams } = usePlatformSettings("ai_generation_params");
 

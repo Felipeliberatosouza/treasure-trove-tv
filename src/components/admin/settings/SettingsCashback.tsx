@@ -6,9 +6,16 @@ import { CurrencyInput } from "@/components/ui/currency-input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Card } from "@/components/ui/card";
-import { Save, Plus, Trash2, Sparkles, Users, Clock, Percent } from "lucide-react";
+import { Save, Plus, Trash2, Sparkles, Users, Clock, Percent, Gift } from "lucide-react";
 import { toast } from "sonner";
-import { CashbackProgramConfig, DEFAULT_CASHBACK_CONFIG, CashbackTier } from "@/hooks/useCashback";
+import {
+  CashbackProgramConfig,
+  DEFAULT_CASHBACK_CONFIG,
+  CashbackTier,
+  ReferralAccessGrants,
+  REFERRAL_ACCESS_LABELS,
+  DEFAULT_REFERRAL_ACCESS_GRANTS,
+} from "@/hooks/useCashback";
 
 const SettingsCashback = () => {
   const [cfg, setCfg] = useState<CashbackProgramConfig>(DEFAULT_CASHBACK_CONFIG);

@@ -51,7 +51,7 @@ const VideoPage = () => {
   const resourceLimit = useResourceLimit();
   const { requireCpf, showCpfModal, setShowCpfModal, onCpfComplete } = useCpfGuard();
   const [showLimitModal, setShowLimitModal] = useState(false);
-  const [limitInfo, setLimitInfo] = useState<{ resourceType: string; used: number; total: number; hasSubscription: boolean; individualPrice: number | null } | null>(null);
+  const [limitInfo, setLimitInfo] = useState<{ resourceType: string; used: number; total: number; hasSubscription: boolean; individualPrice: number | null; referralBlocked?: boolean } | null>(null);
 
   const staticVideo = id ? getVideoById(id) : null;
 
@@ -229,7 +229,7 @@ const VideoPage = () => {
       if (resourceLimit.loaded && videoType) {
         const rt = VIDEO_TYPE_TO_RESOURCE[videoType];
         if (rt) {
-          const result = resourceLimit.checkLimit(rt);
+          const result = resourceLimit.checkLimit(rt, "professor");
           if (result.hasSubscription && result.allowed) {
             setLimitInfo(null);
             setHasFullAccess(true);
@@ -237,10 +237,10 @@ const VideoPage = () => {
           }
           if (result.hasSubscription && !result.allowed) {
             // Will show modal when user tries to play
-            setLimitInfo({ resourceType: rt, used: result.used, total: result.total, hasSubscription: result.hasSubscription, individualPrice: result.individualPrice });
+            setLimitInfo({ resourceType: rt, used: result.used, total: result.total, hasSubscription: result.hasSubscription, individualPrice: result.individualPrice, referralBlocked: result.referralBlocked });
           }
           if (!result.hasSubscription) {
-            setLimitInfo({ resourceType: rt, used: 0, total: 0, hasSubscription: false, individualPrice: result.individualPrice });
+            setLimitInfo({ resourceType: rt, used: 0, total: 0, hasSubscription: false, individualPrice: result.individualPrice, referralBlocked: result.referralBlocked });
           }
         }
       }
@@ -662,6 +662,7 @@ const VideoPage = () => {
           total={limitInfo.total}
           hasSubscription={limitInfo.hasSubscription}
           individualPrice={limitInfo.individualPrice}
+          referralBlocked={limitInfo.referralBlocked}
           onBuyIndividual={handleBuyUnit}
           trialAlreadyUsed={!!(trial.trialEnabled && trial.trialRow && !trial.hasActiveTrial)}
         />

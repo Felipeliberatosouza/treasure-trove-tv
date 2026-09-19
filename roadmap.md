@@ -13,5 +13,5 @@
 - [x] Validar compatibilidade, celular e fluxo completo.
 # Roadmap
 
-- [ ] Créditos de acesso por indicação de amigos (admin, convite por e-mail/WhatsApp/SMS, link /convite/:token, créditos)
-- [ ] Exibir logomarca configurada no topo do menu lateral (Menu overlay)
+- [x] Créditos de acesso por indicação de amigos (admin, convite por e-mail/WhatsApp/SMS, link /convite/:token, créditos)
+- [x] Exibir logomarca configurada no topo do menu lateral (Menu overlay)

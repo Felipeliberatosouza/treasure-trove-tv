@@ -26,6 +26,24 @@ interface Props {
 
 const isValidEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim());
 
+type InviteChannel = "email" | "whatsapp" | "sms";
+
+interface InviteRow {
+  id: string;
+  contact_email: string | null;
+  contact_phone: string | null;
+  status: string;
+  created_at: string;
+}
+
+/** Máscara (XX) XXXXX-XXXX para o celular do amigo. */
+const maskPhone = (value: string) => {
+  const d = value.replace(/\D/g, "").slice(0, 11);
+  if (d.length <= 2) return d.length ? `(${d}` : "";
+  if (d.length <= 7) return `(${d.slice(0, 2)}) ${d.slice(2)}`;
+  return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
+};
+
 const InviteFriendsPanel = ({ variant = "hero", className, eyebrow }: Props) => {
   const { user, profile } = useAuth();
   const { account } = useCashbackAccount();

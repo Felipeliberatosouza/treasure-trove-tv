@@ -32,6 +32,7 @@ interface Props {
 }
 
 const ttsUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/study-tts`;
+const imageUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/study-slide-image`;
 
 const normalizeText = (value: string) => value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 
@@ -67,6 +68,7 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina, areas, 
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [slideProgress, setSlideProgress] = useState(0);
+  const [generatedImages, setGeneratedImages] = useState<Record<number, string>>({});
   // Duração de cada slide (estimada pela narração e corrigida quando o áudio carrega),
   // usada para montar uma barra de tempo única para toda a apresentação.
   const [durations, setDurations] = useState<number[]>(() =>
@@ -109,8 +111,8 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina, areas, 
             "Content-Type": "application/json",
           },
           body: JSON.stringify(canonicalId
-            ? { canonical_id: canonicalId, slide_index: index, avatar_gender: avatar.gender }
-            : { texto: slide.narracao, avatar_gender: avatar.gender }),
+            ? { canonical_id: canonicalId, slide_index: index, avatar_gender: avatar.gender, faixa_etaria: faixaEtaria }
+            : { texto: slide.narracao, avatar_gender: avatar.gender, faixa_etaria: faixaEtaria }),
         });
         if (!resp.ok) {
           const err = await resp.json().catch(() => ({}));
@@ -130,7 +132,7 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina, areas, 
         return null;
       }
     },
-    [slides, getToken, canonicalId, avatar.gender],
+    [slides, getToken, canonicalId, avatar.gender, faixaEtaria],
   );
 
   const prefetch = useCallback(
@@ -202,6 +204,31 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina, areas, 
 
   const coverImage = themeImages[0];
   const slideImage = themeImages[current % themeImages.length];
+
+  useEffect(() => {
+    if (!canonicalId || !slide?.imagem_prompt || generatedImages[current]) return;
+    let active = true;
+    void (async () => {
+      try {
+        if (!tokenRef.current) tokenRef.current = await getToken();
+        const response = await fetch(imageUrl, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${tokenRef.current}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ canonical_id: canonicalId, slide_index: current }),
+        });
+        if (!response.ok) return;
+        const payload = await response.json();
+        if (active && typeof payload.image_url === "string") {
+          setGeneratedImages((images) => ({ ...images, [current]: payload.image_url }));
+        }
+      } catch {
+        // Mantém a imagem temática local se a geração ainda não estiver pronta.
+      }
+    })();
+    return () => { active = false; };
+  }, [canonicalId, current, generatedImages, getToken, slide?.imagem_prompt]);
+
+  const effectiveSlideImage = generatedImages[current] || slideImage;
 
   const formatTime = (value: number) => {
     if (!Number.isFinite(value) || value < 0) return "0:00";
@@ -332,7 +359,7 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina, areas, 
     <div className="ai-slide-player w-full bg-muted">
       <div className="relative aspect-[4/5] w-full overflow-hidden sm:aspect-video">
         <img
-          src={slideImage}
+          src={effectiveSlideImage}
           alt="Ilustração didática da apresentação"
           className={`absolute inset-0 h-full w-full object-cover ${avatarOnly ? "scale-110 blur-lg" : ""}`}
           width={1536}

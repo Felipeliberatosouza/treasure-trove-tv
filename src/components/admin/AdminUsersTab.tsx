@@ -7,10 +7,21 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Search, Trash2, UserCog, UserCheck, UserX, FileSignature, Eye, Download, MailCheck, KeyRound, Send, Gift } from "lucide-react";
+import { Search, Trash2, UserCog, UserCheck, UserX, FileSignature, Eye, Download, MailCheck, KeyRound, Send, Gift, Coins } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuditLog } from "@/hooks/useAuditLog";
 import { formatCPF } from "@/lib/cpfValidator";
+
+const CREDIT_RESOURCES: { key: string; label: string }[] = [
+  { key: "revisao", label: "Revisões" },
+  { key: "resumo", label: "Resumos" },
+  { key: "simulado", label: "Simulados" },
+  { key: "top_questoes", label: "Top Questões" },
+  { key: "colinha", label: "Colinhas" },
+  { key: "duvida", label: "Dúvidas" },
+  { key: "aula_particular", label: "Aula particular" },
+  { key: "ai_credits", label: "Créditos de IA" },
+];
 
 interface UserWithRole {
   user_id: string;
@@ -48,7 +59,37 @@ const AdminUsersTab = () => {
   const [pwdUser, setPwdUser] = useState<UserWithRole | null>(null);
   const [newPwd, setNewPwd] = useState("");
   const [savingPwd, setSavingPwd] = useState(false);
+  const [creditUser, setCreditUser] = useState<UserWithRole | null>(null);
+  const [creditValues, setCreditValues] = useState<Record<string, string>>({});
+  const [savingCredits, setSavingCredits] = useState(false);
   const { toast } = useToast();
+
+  const handleGrantCredits = async () => {
+    if (!creditUser) return;
+    const grants: Record<string, number> = {};
+    for (const r of CREDIT_RESOURCES) {
+      const n = parseInt(creditValues[r.key] || "0", 10);
+      if (Number.isFinite(n) && n > 0) grants[r.key] = n;
+    }
+    if (Object.keys(grants).length === 0) {
+      toast({ title: "Informe ao menos uma quantidade", variant: "destructive" });
+      return;
+    }
+    setSavingCredits(true);
+    const { error } = await supabase.rpc("admin_grant_content_credits" as any, {
+      _user_id: creditUser.user_id,
+      _grants: grants,
+    });
+    setSavingCredits(false);
+    if (error) {
+      toast({ title: "Erro ao conceder créditos", description: error.message, variant: "destructive" });
+      return;
+    }
+    await logAction("grant_credits", "user", creditUser.user_id, { grants });
+    toast({ title: "Créditos concedidos", description: `Créditos adicionados para ${creditUser.name}.` });
+    setCreditUser(null);
+    setCreditValues({});
+  };
 
   const fetchUsers = async () => {
     setLoading(true);

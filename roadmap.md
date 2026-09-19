@@ -10,4 +10,4 @@
 - [x] Gerar palavras-chave, frases didáticas e passos de lousa por faixa etária.
 - [x] Renderizar destaques sincronizados e lousa virtual no player.
 - [x] Permitir edição didática e da faixa etária na Gestão de IA.
-- [ ] Validar compatibilidade, celular e fluxo completo.
+- [x] Validar compatibilidade, celular e fluxo completo.

@@ -39,6 +39,7 @@ export default function ResourceLimitModal({
   individualPrice,
   onBuyIndividual,
   trialAlreadyUsed,
+  referralBlocked,
 }: Props) {
   const navigate = useNavigate();
   const label = RESOURCE_LABELS[resourceType] || resourceType;
@@ -64,6 +65,15 @@ export default function ResourceLimitModal({
         </DialogHeader>
 
         <div className="space-y-4 pt-2">
+          {referralBlocked && (
+            <div className="flex items-start gap-2 rounded-xl border border-destructive/30 bg-destructive/10 p-3">
+              <AlertTriangle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
+              <p className="text-xs leading-relaxed text-destructive">
+                Este conteúdo precisa ser comprado e <strong>não pode ser acessado com os créditos
+                ganhos por indicação</strong>. Assine um plano ou compre o conteúdo avulso para continuar.
+              </p>
+            </div>
+          )}
           {trialAlreadyUsed && (
             <div className="flex items-start gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3">
               <Gift className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />

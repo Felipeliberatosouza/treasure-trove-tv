@@ -66,6 +66,11 @@ const StudentSignup = () => {
   const [loading, setLoading] = useState(false);
   const [phoneVerified, setPhoneVerified] = useState(false);
   const requestedReturnTo = searchParams.get("returnTo");
+  /** Código de indicação vindo do link (?ref=) ou guardado ao abrir um convite. */
+  const referralCode =
+    searchParams.get("ref")?.trim().toUpperCase() ||
+    (typeof window !== "undefined" ? localStorage.getItem("rf_referral_code")?.trim().toUpperCase() : "") ||
+    "";
   const returnTo = requestedReturnTo?.startsWith("/") && !requestedReturnTo.startsWith("//") ? requestedReturnTo : "/";
   const loginUrl = returnTo === "/" ? "/login" : `/login?returnTo=${encodeURIComponent(returnTo)}`;
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -161,7 +166,16 @@ const StudentSignup = () => {
       email,
       password,
       options: {
-        data: { name, role: "student", areas: selectedAreas, birth_date: birthDate, phone: verifiedPhone, cpf: cleanedCpf, accepts_marketing: acceptsMarketing },
+        data: {
+          name,
+          role: "student",
+          areas: selectedAreas,
+          birth_date: birthDate,
+          phone: verifiedPhone,
+          cpf: cleanedCpf,
+          accepts_marketing: acceptsMarketing,
+          ...(referralCode ? { referral_code: referralCode } : {}),
+        },
         emailRedirectTo: `${window.location.origin}${loginUrl}`,
       },
     });

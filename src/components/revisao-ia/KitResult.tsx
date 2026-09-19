@@ -17,6 +17,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import VideoShareButtons from "@/components/VideoShareButtons";
 import VLibrasWidget from "@/components/VLibrasWidget";
 import ForensicWatermark from "@/components/ForensicWatermark";
+import BrandStamp from "@/components/branding/BrandStamp";
 
 interface Props {
   result: KitResponse;

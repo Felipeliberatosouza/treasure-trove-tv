@@ -1872,6 +1872,87 @@ export type Database = {
         }
         Relationships: []
       }
+      referral_content_credits: {
+        Row: {
+          created_at: string
+          granted: number
+          id: string
+          resource_type: string
+          updated_at: string
+          used: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          granted?: number
+          id?: string
+          resource_type: string
+          updated_at?: string
+          used?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          granted?: number
+          id?: string
+          resource_type?: string
+          updated_at?: string
+          used?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      referral_invites: {
+        Row: {
+          channel: string
+          contact_email: string | null
+          contact_phone: string | null
+          created_at: string
+          expires_at: string
+          id: string
+          referrer_user_id: string
+          rewarded_at: string | null
+          sent_at: string
+          status: string
+          token: string
+          updated_at: string
+          visited_at: string | null
+          visitor_user_id: string | null
+        }
+        Insert: {
+          channel: string
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          referrer_user_id: string
+          rewarded_at?: string | null
+          sent_at?: string
+          status?: string
+          token: string
+          updated_at?: string
+          visited_at?: string | null
+          visitor_user_id?: string | null
+        }
+        Update: {
+          channel?: string
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          referrer_user_id?: string
+          rewarded_at?: string | null
+          sent_at?: string
+          status?: string
+          token?: string
+          updated_at?: string
+          visited_at?: string | null
+          visitor_user_id?: string | null
+        }
+        Relationships: []
+      }
       reserved_referral_codes: {
         Row: {
           created_at: string
@@ -3285,6 +3366,10 @@ export type Database = {
           _user_id: string
         }
         Returns: number
+      }
+      consume_referral_content_credit: {
+        Args: { _resource_type: string }
+        Returns: boolean
       }
       count_completed_packages: {
         Args: { _end: string; _start: string; _teacher_id: string }

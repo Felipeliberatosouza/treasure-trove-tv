@@ -36,6 +36,13 @@
       "when": 1789818161656,
       "tag": "0004_add_ai_content_age_classification",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1789821045874,
+      "tag": "0005_referral_access_credits",
+      "breakpoints": true
     }
   ]
 }

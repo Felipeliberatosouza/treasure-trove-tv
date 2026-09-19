@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Sparkles, Send, Loader2, CheckCircle2, Lock, Plus, SlidersHorizontal,
-  BookOpen, FileQuestion, ListChecks, StickyNote,
+  BookOpen, FileQuestion, ListChecks, StickyNote, Square,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { requestKit } from "@/lib/revisionKit";

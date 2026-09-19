@@ -534,4 +534,49 @@ async function handleRequest(req: Request, body: any): Promise<Response> {
     console.error("ai-revision-kit", e);
     return json({ error: "Erro inesperado no Kit de Revisão." }, 500);
   }
+}
+
+// Geração pode levar vários minutos: enviamos "pings" periódicos para o
+// proxy não encerrar a conexão por inatividade (idle timeout de 150s).
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+
+  const body = await req.json().catch(() => ({}));
+  if (body?.action === "status") return await handleRequest(req, body);
+
+  const encoder = new TextEncoder();
+  const stream = new ReadableStream({
+    start(controller) {
+      let done = false;
+      const ping = setInterval(() => {
+        if (done) return;
+        try { controller.enqueue(encoder.encode(`{"type":"ping"}\n`)); } catch { /* ignore */ }
+      }, 10_000);
+
+      (async () => {
+        let payload: unknown;
+        let status = 200;
+        try {
+          const res = await handleRequest(req, body);
+          status = res.status;
+          payload = await res.json().catch(() => ({ error: "Resposta inválida do servidor." }));
+        } catch (e) {
+          console.error("ai-revision-kit stream", e);
+          status = 500;
+          payload = { error: "Erro inesperado no Kit de Revisão." };
+        }
+        done = true;
+        clearInterval(ping);
+        try {
+          controller.enqueue(encoder.encode(JSON.stringify({ type: "result", status, payload }) + "\n"));
+          controller.close();
+        } catch { /* ignore */ }
+      })();
+    },
+  });
+
+  return new Response(stream, {
+    headers: { ...corsHeaders, "Content-Type": "application/x-ndjson", "Cache-Control": "no-cache" },
+  });
 });
+

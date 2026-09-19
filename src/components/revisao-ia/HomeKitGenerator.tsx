@@ -54,7 +54,7 @@ const buildPhases = (assunto: string, disciplina: string, nivel: string): GenPha
 const flattenPhases = (phases: GenPhase[]) =>
   phases.flatMap((p, pi) => p.tasks.map((t) => ({ phase: pi, label: p.label, task: t })));
 
-const STEP_MS = 1800;
+const STEP_MS = 8000;
 const FAST_STEP_MS = 500;
 
 const formatCountdown = (ms: number) => {
@@ -385,7 +385,7 @@ const HomeKitGenerator = () => {
                   <Dots />
                 </div>
                 <div className="rounded-full bg-primary/10 px-3 py-1 text-sm font-semibold tabular-nums text-primary">
-                  Conclusão em {formatCountdown(remainingMs)}
+                  {remainingMs > 0 ? `Conclusão em ${formatCountdown(remainingMs)}` : "Finalizando a sua revisão…"}
                 </div>
               </div>
               <ol className="space-y-2" aria-live="polite">
@@ -426,7 +426,6 @@ const HomeKitGenerator = () => {
 
           <div className="rounded-2xl border border-border bg-white p-3 text-foreground shadow-sm">
             <div className="flex items-center gap-2">
-              {loading && <Loader2 className="h-4 w-4 shrink-0 animate-spin text-primary" />}
               <input
                 value={chatMsg}
                 onChange={(e) => setChatMsg(e.target.value)}

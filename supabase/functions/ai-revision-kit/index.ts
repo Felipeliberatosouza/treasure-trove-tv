@@ -135,7 +135,7 @@ const KIT_TOOL = {
         },
         slides: {
           type: "array",
-          description: "8 a 12 slides: o primeiro é a introdução, os do meio trazem os conceitos, em seguida um slide por Top Questão com a resolução comentada na narração, e o último é o encerramento.",
+          description: "7 a 9 slides: o primeiro é a introdução, os do meio trazem os conceitos, em seguida um slide por Top Questão com a resolução comentada na narração, e o último é o encerramento.",
           items: {
             type: "object",
             properties: {
@@ -201,7 +201,7 @@ Curso: ${params.curso || "não informado"}
 Instituição: ${params.instituicao || "não informada"}
 Profundidade: ${params.nivel === "aprofundado" ? "aprofundada" : "revisão rápida"}
 Público detectado: ${AGE_GUIDANCE[params.faixaEtaria]} (confiança ${Math.round(params.confiancaFaixaEtaria * 100)}%).
-Gere de 8 a 12 slides seguindo exatamente o padrão de narração: slide 1 de introdução, slides do meio com conceitos-chave e conteúdos de prova (com exemplos do dia a dia e frases descontraídas de dica de prova), depois um slide para cada Top Questão gerada em top_questoes — com o enunciado e a resolução comentada na narração — e o último slide de encerramento.
+Gere de 7 a 9 slides (narração de no máximo 700 caracteres por slide) seguindo exatamente o padrão de narração: slide 1 de introdução, slides do meio com conceitos-chave e conteúdos de prova (com exemplos do dia a dia e frases descontraídas de dica de prova), depois um slide para cada Top Questão gerada em top_questoes — com o enunciado e a resolução comentada na narração — e o último slide de encerramento.
 Em cada slide, escreva uma narração fluida em português brasileiro informal e uma direção de imagem didática diretamente relacionada ao tópico (no primeiro e no último slide a imagem é apenas de ambiente, sem conteúdo escrito).
 
 CLASSIFICAÇÃO POR ÁREA (obrigatória): no campo "areas", escolha entre 1 e 3 áreas desta lista de áreas de curso cadastradas na plataforma, copiando o nome EXATAMENTE como aparece:
@@ -218,6 +218,8 @@ Se o conteúdo for relevante para mais de uma área, indique todas as que fizere
     body: JSON.stringify({
       model: GEN_MODEL,
       stream: false,
+      // Raciocínio mínimo: reduz muito o tempo de entrega sem perder qualidade didática.
+      reasoning_effort: "low",
       response_format: { type: "json_object" },
       messages: [
         { role: "system", content: system },

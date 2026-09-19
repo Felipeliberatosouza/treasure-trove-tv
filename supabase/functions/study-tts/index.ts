@@ -20,10 +20,22 @@ Deno.serve(async (req) => {
     const slideIndex = Number.isInteger(body.slide_index) ? body.slide_index : null;
     let texto = typeof body.texto === "string" ? body.texto.trim() : "";
 
-    // Voz coerente com o avatar configurado no painel administrativo.
+    // Voz fixa do avatar configurado no painel administrativo.
+    const ALLOWED_VOICES = ["alloy", "ash", "ballad", "coral", "echo", "fable", "nova", "onyx", "sage", "shimmer", "verse"];
     const avatarGender = body.avatar_gender === "male" ? "male" : "female";
-    const voice = avatarGender === "male" ? "onyx" : "nova";
+    const requestedVoice = typeof body.avatar_voice === "string" ? body.avatar_voice.trim() : "";
+    const voice = ALLOWED_VOICES.includes(requestedVoice)
+      ? requestedVoice
+      : (avatarGender === "male" ? "onyx" : "nova");
 
+    // Assinatura simples do texto: o áudio é regerado quando a narração muda.
+    const textSignature = (value: string) => {
+      let hash = 0;
+      for (let i = 0; i < value.length; i++) hash = (hash * 31 + value.charCodeAt(i)) | 0;
+      return `${value.length}:${hash}`;
+    };
+
+    let cachedRow: { storage_path: string | null; metadata: Record<string, unknown> | null } | null = null;
     if (canonicalId && slideIndex !== null && slideIndex >= 0) {
       const { data: existing } = await admin
         .from("ai_content_artifacts")
@@ -33,8 +45,9 @@ Deno.serve(async (req) => {
         .eq("artifact_type", "audio")
         .eq("status", "ready")
         .maybeSingle();
+      cachedRow = existing as typeof cachedRow;
       const cachedVoice = (existing?.metadata as Record<string, unknown> | null)?.voice;
-      if (existing?.storage_path && cachedVoice === voice) {
+      if (false && existing?.storage_path && cachedVoice === voice) {
         const { data: signed } = await admin.storage.from("ai-revision-media").createSignedUrl(existing.storage_path, 3600);
         if (signed?.signedUrl) {
           return new Response(JSON.stringify({ audio_url: signed.signedUrl, cached: true }), {

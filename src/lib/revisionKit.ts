@@ -228,7 +228,10 @@ export async function buildKitPdf(kit: RevisionKit): Promise<jsPDF> {
   doc.setFontSize(10);
   doc.setTextColor(120, 120, 120);
   doc.text(branding.platformName, pageW - margin, y + 2, { align: "right" });
-  y += 16;
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8);
+  doc.text(branding.commercialDomain, pageW - margin, y + 7, { align: "right" });
+  y += 18;
   doc.setTextColor(30, 30, 30);
 
   doc.setFont("helvetica", "bold");

@@ -8,12 +8,17 @@ import visualCiencia from "@/assets/slide-visual-ciencia.jpg";
 import visualHumanas from "@/assets/slide-visual-humanas.jpg";
 import visualExatas from "@/assets/slide-visual-exatas.jpg";
 import logoRevisaoFacil from "@/assets/logo-revisao-facil.png";
+import type { AgeGroup, KitBoardStep, KitKeyword } from "@/lib/revisionKit";
 
 export interface StudySlide {
   titulo: string;
   bullets: string[];
   narracao: string;
   imagem_prompt?: string;
+  frase_didatica?: string;
+  palavras_chave?: KitKeyword[];
+  modo_visual?: "conteudo" | "lousa" | "avatar";
+  lousa_passos?: KitBoardStep[];
 }
 
 interface Props {
@@ -23,11 +28,34 @@ interface Props {
   disciplina?: string;
   /** Áreas de curso vinculadas ao material — definem o avatar quando cadastrado por área. */
   areas?: string[];
+  faixaEtaria?: AgeGroup;
 }
 
 const ttsUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/study-tts`;
 
-const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina, areas }: Props) => {
+const normalizeText = (value: string) => value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+
+const anchorProgress = (narration: string, anchor: string, fallback: number) => {
+  const text = normalizeText(narration);
+  const needle = normalizeText(anchor).trim();
+  const index = needle ? text.indexOf(needle) : -1;
+  return index >= 0 ? index / Math.max(1, text.length) : fallback;
+};
+
+const HighlightedText = ({ text, terms, activeTerm }: { text: string; terms: string[]; activeTerm?: string }) => {
+  const cleanTerms = terms.filter(Boolean).sort((a, b) => b.length - a.length);
+  if (!cleanTerms.length) return <>{text}</>;
+  const escaped = cleanTerms.map((term) => term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+  const parts = text.split(new RegExp(`(${escaped.join("|")})`, "gi"));
+  return <>{parts.map((part, index) => {
+    const match = cleanTerms.find((term) => normalizeText(term) === normalizeText(part));
+    if (!match) return <span key={`${part}-${index}`}>{part}</span>;
+    const active = activeTerm && normalizeText(activeTerm) === normalizeText(match);
+    return <mark key={`${part}-${index}`} className={`ai-keyword ${active ? "is-active" : ""}`}>{part}</mark>;
+  })}</>;
+};
+
+const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina, areas, faixaEtaria }: Props) => {
   const [current, setCurrent] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -38,6 +66,7 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina, areas }
   const [speaking, setSpeaking] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [slideProgress, setSlideProgress] = useState(0);
   // Duração de cada slide (estimada pela narração e corrigida quando o áudio carrega),
   // usada para montar uma barra de tempo única para toda a apresentação.
   const [durations, setDurations] = useState<number[]>(() =>
@@ -204,6 +233,7 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina, areas }
     const words = text.split(/\s+/).filter(Boolean);
     const wordsPerCaption = 9;
     const progress = Math.min(audio.currentTime / audio.duration, 0.999);
+    setSlideProgress(progress);
     const start = Math.floor((progress * words.length) / wordsPerCaption) * wordsPerCaption;
     setCaption(words.slice(start, start + wordsPerCaption).join(" "));
   }, [current, slides]);
@@ -215,6 +245,16 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina, areas }
   const isIntro = current === 0;
   const isOutro = current === slides.length - 1 && slides.length > 1;
   const avatarOnly = isIntro || isOutro;
+  const keywords = slide?.palavras_chave ?? [];
+  const activeKeyword = keywords
+    .map((item, index) => ({ ...item, at: anchorProgress(slide?.narracao || "", item.ancora, (index + 1) / (keywords.length + 1)) }))
+    .filter((item) => slideProgress >= item.at)
+    .at(-1)?.termo;
+  const visibleBoardSteps = (slide?.lousa_passos ?? []).filter((step, index, list) =>
+    slideProgress >= anchorProgress(slide?.narracao || "", step.ancora, (index + 1) / (list.length + 1)),
+  );
+  const boardMode = slide?.modo_visual === "lousa" && (slide.lousa_passos?.length ?? 0) > 0;
+  const oneBoardStep = faixaEtaria === "criancas_0_9";
 
   // Barra de tempo única: soma as durações de todos os slides.
   const slideDurations = slides.map(
@@ -330,12 +370,26 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina, areas }
                 <h2 className="font-display text-base font-bold leading-tight sm:text-3xl md:text-4xl">
                   {slide?.titulo}
                 </h2>
-                {slide && (
+                {slide?.frase_didatica && (
+                  <p className="ai-didactic-phrase mt-2 max-w-xl text-sm font-semibold leading-snug sm:mt-4 sm:text-xl">
+                    <HighlightedText text={slide.frase_didatica} terms={keywords.map((item) => item.termo)} activeTerm={activeKeyword} />
+                  </p>
+                )}
+                {boardMode ? (
+                  <div className={`ai-virtual-board mt-2 sm:mt-4 ${faixaEtaria === "criancas_0_9" ? "is-child" : ""}`} aria-label="Lousa virtual com explicação passo a passo">
+                    {(oneBoardStep ? visibleBoardSteps.slice(-1) : visibleBoardSteps).map((step, index) => (
+                      <div key={`${step.conteudo}-${index}`} className={`ai-board-step ai-board-${step.tipo}`}>
+                        {step.tipo === "seta" && <span aria-hidden="true">→</span>}
+                        <HighlightedText text={step.conteudo} terms={step.destaque ? [step.destaque] : []} activeTerm={step.destaque} />
+                      </div>
+                    ))}
+                  </div>
+                ) : slide && (
                   <ul className="mt-2 space-y-1 sm:mt-5 sm:space-y-2">
                     {slide.bullets.slice(0, 4).map((bullet, index) => (
                       <li key={index} className="flex items-start gap-2 text-[11px] leading-snug sm:text-sm md:text-base">
                         <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
-                        <span>{bullet}</span>
+                        <span><HighlightedText text={bullet} terms={keywords.map((item) => item.termo)} activeTerm={activeKeyword} /></span>
                       </li>
                     ))}
                   </ul>
@@ -366,7 +420,7 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina, areas }
 
           {showCaptions && caption && (
             <div className="pointer-events-none mx-auto max-w-2xl shrink-0 rounded bg-background/90 px-2 py-1 text-center text-[11px] shadow-lg sm:px-3 sm:py-1.5 sm:text-sm">
-              {caption}
+              <HighlightedText text={caption} terms={keywords.map((item) => item.termo)} activeTerm={activeKeyword} />
             </div>
           )}
         </div>

@@ -420,6 +420,8 @@ export interface AiAvatarSettings {
   name: string;
   /** Gênero do avatar — define a voz da narração. */
   gender: "female" | "male";
+  /** Avatar escolhido na galeria (ilustrado articulado ou em vídeo). */
+  avatar_id?: string;
   /** Imagem do avatar. Vazio = imagem padrão da plataforma. */
   image_url: string;
   /** Legenda derivada do gênero — nunca editável pelo administrador. */
@@ -515,6 +517,7 @@ export const aiRoleLabel = (gender: "female" | "male") =>
 export const DEFAULT_AI_AVATAR: AiAvatarSettings = {
   name: "Professora Ana",
   gender: "female",
+  avatar_id: "ilu-ana",
   image_url: "",
   role_label: "Professora virtual",
   voice: "nova",
@@ -554,6 +557,7 @@ export const emptyAiDisciplineAvatar = (): AiDisciplineAvatar => ({
   id: crypto.randomUUID(),
   name: "",
   gender: "female",
+  avatar_id: "ilu-ana",
   image_url: "",
   role_label: "Professora virtual",
   voice: "nova",

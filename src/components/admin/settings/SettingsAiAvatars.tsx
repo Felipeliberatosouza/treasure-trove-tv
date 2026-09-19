@@ -21,7 +21,8 @@ import {
   type AiDisciplineAvatar,
   type AiContentTypeId,
 } from "@/hooks/usePlatformSettings";
-import { useStorageUpload } from "@/hooks/useStorageUpload";
+import AvatarGalleryPicker from "./AvatarGalleryPicker";
+import type { CatalogAvatar } from "@/components/study/avatarCatalog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -36,7 +37,15 @@ import {
 } from "@/components/ui/select";
 import { Save, Loader2, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import professoraIa from "@/assets/professora-ia.jpg";
+
+/** Mudanças aplicadas ao escolher um avatar da galeria. */
+const fromCatalog = (c: CatalogAvatar, currentName: string): Partial<AiAvatarSettings> => ({
+  avatar_id: c.id,
+  gender: c.gender,
+  voice: defaultVoiceForGender(c.gender),
+  role_label: aiRoleLabel(c.gender),
+  name: currentName.trim() || `${c.gender === "male" ? "Professor" : "Professora"} ${c.label.replace(" (vídeo)", "")}`,
+});
 
 /** Controles de animação e de posição/tamanho do avatar em cada tipo de slide. */
 const AvatarStageFields = ({
@@ -112,14 +121,13 @@ const AvatarStageFields = ({
 /**
  * Cadastro e edição de avatares da IA em um único item:
  * o avatar padrão e os avatares vinculados a disciplinas/tipos de conteúdo.
- * A legenda é sempre derivada do gênero (voz) escolhido.
+ * Os avatares vêm de uma galeria pronta (ilustrados articulados e em vídeo).
  */
 const SettingsAiAvatars = () => {
   const { data: avatarData, loading: avatarLoading, update: updateAvatar } =
     usePlatformSettings("ai_avatar");
   const { data: paramsData, loading: paramsLoading, update: updateParams } =
     usePlatformSettings("ai_generation_params");
-  const { upload, uploading } = useStorageUpload("platform-assets");
 
   const [avatar, setAvatar] = useState<AiAvatarSettings>(DEFAULT_AI_AVATAR);
   const [params, setParams] = useState<AiGenerationParamsSettings>(DEFAULT_AI_GENERATION_PARAMS);
@@ -135,22 +143,10 @@ const SettingsAiAvatars = () => {
     }
   }, [paramsData]);
 
-  const handleAvatarUpload = async (file: File | undefined) => {
-    if (!file) return;
-    const url = await upload(file, `ai-avatar/${Date.now()}-${file.name}`);
-    if (url) setAvatar((a) => ({ ...a, image_url: url }));
-  };
-
   const patch = (id: string, changes: Partial<AiDisciplineAvatar>) =>
     setParams((p) => ({
       avatars: p.avatars.map((a) => (a.id === id ? { ...a, ...changes } : a)),
     }));
-
-  const handleDisciplineUpload = async (id: string, file: File | undefined) => {
-    if (!file) return;
-    const url = await upload(file, `ai-avatar/${Date.now()}-${file.name}`);
-    if (url) patch(id, { image_url: url });
-  };
 
   const toggleType = (av: AiDisciplineAvatar, type: AiContentTypeId, checked: boolean) => {
     const next = checked
@@ -205,30 +201,14 @@ const SettingsAiAvatars = () => {
           <h3 className="font-semibold">Avatar padrão</h3>
           <p className="text-sm text-muted-foreground">
             Usado nas revisões geradas por IA quando nenhum avatar por disciplina combina.
-            O gênero define a voz da narração e a legenda ({aiRoleLabel(avatar.gender)}).
+            O gênero do avatar define a voz da narração e a legenda ({aiRoleLabel(avatar.gender)}).
           </p>
         </div>
 
-        <div className="flex items-center gap-4">
-          <img
-            src={avatar.image_url || professoraIa}
-            alt="Prévia do avatar da IA"
-            className="h-20 w-20 rounded-full border-2 border-primary object-cover"
-          />
-          <div className="space-y-2">
-            <Label htmlFor="ai-avatar-file">Imagem do avatar</Label>
-            <div className="flex items-center gap-2">
-              <Input
-                id="ai-avatar-file"
-                type="file"
-                accept="image/*"
-                className="max-w-xs"
-                onChange={(e) => handleAvatarUpload(e.target.files?.[0])}
-              />
-              {uploading && <Loader2 className="h-4 w-4 animate-spin" />}
-            </div>
-          </div>
-        </div>
+        <AvatarGalleryPicker
+          value={avatar.avatar_id}
+          onSelect={(c) => setAvatar((a) => ({ ...a, ...fromCatalog(c, a.name) }))}
+        />
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
@@ -240,24 +220,6 @@ const SettingsAiAvatars = () => {
               placeholder="Ex.: Professora Ana"
               maxLength={60}
             />
-          </div>
-          <div className="space-y-2">
-            <Label>Gênero (legenda exibida)</Label>
-            <Select
-              value={avatar.gender}
-              onValueChange={(v) => {
-                const gender = v as AiAvatarSettings["gender"];
-                setAvatar({ ...avatar, gender, voice: defaultVoiceForGender(gender) });
-              }}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="female">Feminino</SelectItem>
-                <SelectItem value="male">Masculino</SelectItem>
-              </SelectContent>
-            </Select>
           </div>
           <div className="space-y-2">
             <Label>Voz da narração</Label>
@@ -275,19 +237,10 @@ const SettingsAiAvatars = () => {
               </SelectContent>
             </Select>
             <p className="text-xs text-muted-foreground">
-              Vale para todas as narrações feitas com este avatar.
+              Vale para todas as narrações feitas com este avatar. Legenda: {aiRoleLabel(avatar.gender)}.
             </p>
           </div>
           <AvatarStageFields avatar={avatar} onChange={(changes) => setAvatar({ ...avatar, ...changes })} />
-          <div className="space-y-2 sm:col-span-2">
-            <Label htmlFor="ai-avatar-url">URL da imagem (opcional)</Label>
-            <Input
-              id="ai-avatar-url"
-              value={avatar.image_url}
-              onChange={(e) => setAvatar({ ...avatar, image_url: e.target.value })}
-              placeholder="https://…"
-            />
-          </div>
         </div>
       </div>
 
@@ -295,7 +248,7 @@ const SettingsAiAvatars = () => {
         <div>
           <h3 className="font-semibold">Avatares por disciplina</h3>
           <p className="text-sm text-muted-foreground">
-            Vincule avatares a disciplinas e aos tipos de conteúdo gerados por IA.
+            Vincule avatares da galeria a disciplinas e aos tipos de conteúdo gerados por IA.
           </p>
         </div>
 
@@ -308,27 +261,7 @@ const SettingsAiAvatars = () => {
         {params.avatars.map((av) => (
           <Card key={av.id}>
             <CardContent className="space-y-4 p-4">
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex items-center gap-4">
-                  <img
-                    src={av.image_url || professoraIa}
-                    alt={`Prévia do avatar ${av.name || "sem nome"}`}
-                    className="h-16 w-16 rounded-full border-2 border-primary object-cover"
-                  />
-                  <div className="space-y-2">
-                    <Label htmlFor={`file-${av.id}`}>Imagem</Label>
-                    <div className="flex items-center gap-2">
-                      <Input
-                        id={`file-${av.id}`}
-                        type="file"
-                        accept="image/*"
-                        className="max-w-xs"
-                        onChange={(e) => handleDisciplineUpload(av.id, e.target.files?.[0])}
-                      />
-                      {uploading && <Loader2 className="h-4 w-4 animate-spin" />}
-                    </div>
-                  </div>
-                </div>
+              <div className="flex justify-end">
                 <Button
                   variant="ghost"
                   size="icon"
@@ -341,6 +274,11 @@ const SettingsAiAvatars = () => {
                 </Button>
               </div>
 
+              <AvatarGalleryPicker
+                value={av.avatar_id}
+                onSelect={(c) => patch(av.id, fromCatalog(c, av.name))}
+              />
+
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor={`name-${av.id}`}>Nome do avatar</Label>
@@ -351,27 +289,6 @@ const SettingsAiAvatars = () => {
                     placeholder="Ex.: Professor Lucas"
                     onChange={(e) => patch(av.id, { name: e.target.value })}
                   />
-                </div>
-                <div className="space-y-2">
-                  <Label>Gênero (legenda exibida)</Label>
-                  <Select
-                    value={av.gender}
-                    onValueChange={(v) => {
-                      const gender = v as AiDisciplineAvatar["gender"];
-                      patch(av.id, { gender, voice: defaultVoiceForGender(gender) });
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="female">Feminino</SelectItem>
-                      <SelectItem value="male">Masculino</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <p className="text-xs text-muted-foreground">
-                    Legenda exibida: {aiRoleLabel(av.gender)}
-                  </p>
                 </div>
                 <div className="space-y-2">
                   <Label>Voz da narração</Label>
@@ -389,7 +306,7 @@ const SettingsAiAvatars = () => {
                     </SelectContent>
                   </Select>
                   <p className="text-xs text-muted-foreground">
-                    Fixa para todas as narrações deste avatar.
+                    Legenda exibida: {aiRoleLabel(av.gender)}
                   </p>
                 </div>
                 <AvatarStageFields avatar={av} onChange={(changes) => patch(av.id, changes)} />

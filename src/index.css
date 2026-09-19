@@ -391,6 +391,78 @@
     .ai-avatar-arm { animation: none; }
   }
 
+  /* Personagem ilustrado articulado (SVG): boca, cabeça, tronco, braços e mãos */
+  .rig { height: 100%; width: 100%; overflow: visible; }
+  .rig-body { transform-origin: 100px 220px; }
+  .rig-head { transform-origin: 100px 110px; }
+  .rig-mouth { transform-origin: 100px 90px; transform: scaleY(0.35); }
+  .rig-eyes { transform-origin: 100px 70px; animation: rig-blink 5.4s ease-in-out infinite; }
+  .rig-arm-l { transform-origin: 54px 138px; transform: rotate(6deg); }
+  .rig-arm-r { transform-origin: 146px 138px; transform: rotate(-6deg); }
+  .rig-forearm-l { transform-origin: 53px 172px; }
+  .rig-forearm-r { transform-origin: 147px 172px; }
+
+  .rig.is-speaking .rig-mouth { animation: rig-mouth 0.3s ease-in-out infinite; }
+  .rig.is-speaking .rig-body { animation: rig-sway 2.6s ease-in-out infinite; }
+  .rig.is-speaking .rig-head { animation: rig-nod 2.1s ease-in-out infinite; }
+  .rig.has-gestures .rig-arm-l { animation: rig-arm-l 2.4s ease-in-out infinite; }
+  .rig.has-gestures .rig-arm-r { animation: rig-arm-r 2.4s ease-in-out infinite 0.5s; }
+  .rig.has-gestures .rig-forearm-l { animation: rig-forearm-l 2.4s ease-in-out infinite; }
+  .rig.has-gestures .rig-forearm-r { animation: rig-forearm-r 2.4s ease-in-out infinite 0.5s; }
+
+  @keyframes rig-mouth {
+    0%, 100% { transform: scaleY(0.3) scaleX(0.96); }
+    45% { transform: scaleY(1.05) scaleX(1.04); }
+    70% { transform: scaleY(0.62) scaleX(1); }
+  }
+  @keyframes rig-sway {
+    0%, 100% { transform: rotate(-1.1deg) translateY(0); }
+    50% { transform: rotate(1.1deg) translateY(-2px); }
+  }
+  @keyframes rig-nod {
+    0%, 100% { transform: rotate(1.6deg) translateY(0); }
+    50% { transform: rotate(-1.8deg) translateY(1.5px); }
+  }
+  @keyframes rig-blink {
+    0%, 92%, 100% { transform: scaleY(1); }
+    95% { transform: scaleY(0.1); }
+  }
+  @keyframes rig-arm-l {
+    0%, 100% { transform: rotate(8deg); }
+    35% { transform: rotate(-26deg); }
+    70% { transform: rotate(-6deg); }
+  }
+  @keyframes rig-arm-r {
+    0%, 100% { transform: rotate(-8deg); }
+    35% { transform: rotate(26deg); }
+    70% { transform: rotate(6deg); }
+  }
+  @keyframes rig-forearm-l {
+    0%, 100% { transform: rotate(-4deg); }
+    40% { transform: rotate(-34deg) translateY(-4px); }
+  }
+  @keyframes rig-forearm-r {
+    0%, 100% { transform: rotate(4deg); }
+    40% { transform: rotate(34deg) translateY(-4px); }
+  }
+
+  /* Avatar em vídeo */
+  .rig-video {
+    height: 100%;
+    width: 100%;
+    border-radius: 9999px;
+    border: 2px solid hsl(var(--primary));
+    object-fit: cover;
+    background: hsl(var(--muted));
+  }
+  .rig-video.is-speaking {
+    box-shadow: 0 0 0 6px hsl(var(--primary) / 0.32), 0 10px 24px hsl(var(--background) / 0.35);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .rig *, .rig { animation: none !important; }
+  }
+
 
   /* Dark theme surfaces → light ink */
   input.bg-secondary,

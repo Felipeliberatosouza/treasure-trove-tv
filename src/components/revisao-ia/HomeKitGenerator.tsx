@@ -56,6 +56,7 @@ const flattenPhases = (phases: GenPhase[]) =>
 
 const STEP_MS = 8000;
 const FAST_STEP_MS = 500;
+const ESTIMATED_TOTAL_MS = 180_000;
 
 const formatCountdown = (ms: number) => {
   const total = Math.max(0, Math.ceil(ms / 1000));
@@ -155,24 +156,28 @@ const HomeKitGenerator = () => {
   useEffect(() => {
     if (!loading || steps.length === 0) return;
     const interval = fast ? FAST_STEP_MS : STEP_MS;
-    const t = setInterval(() => setStep((s) => Math.min(s + 1, steps.length - 1)), interval);
+    const t = setInterval(() => setStep((s) => {
+      // Só anuncia a abertura depois que o servidor confirmar que o material está pronto.
+      const lastAvailableStep = fast ? steps.length - 1 : Math.max(steps.length - 2, 0);
+      return Math.min(s + 1, lastAvailableStep);
+    }), interval);
     return () => clearInterval(t);
   }, [loading, steps.length, fast]);
 
   // Contagem regressiva para a conclusão de todo o material.
   useEffect(() => {
     if (!loading) return;
-    const t = setInterval(() => setRemainingMs((ms) => Math.max(0, ms - 1000)), 1000);
+    const t = setInterval(() => setRemainingMs((ms) => {
+      if (!fast) return Math.max(1000, ms - 1000);
+      return Math.max(0, ms - 1000);
+    }), 1000);
     return () => clearInterval(t);
-  }, [loading]);
+  }, [loading, fast]);
 
   useEffect(() => {
-    if (!loading || steps.length === 0) return;
+    if (!loading || !fast || steps.length === 0) return;
     const left = steps.length - 1 - step;
-    setRemainingMs((ms) => {
-      const target = left * (fast ? FAST_STEP_MS : STEP_MS);
-      return fast ? target : Math.min(ms, target || ms);
-    });
+    setRemainingMs(left * FAST_STEP_MS);
   }, [step, fast, loading, steps.length]);
 
   /** Conclui quando a simulação chega ao fim e o material já está pronto. */
@@ -209,7 +214,7 @@ const HomeKitGenerator = () => {
     setSteps(flat);
     setStep(0);
     setFast(false);
-    setRemainingMs(flat.length * STEP_MS);
+    setRemainingMs(ESTIMATED_TOTAL_MS);
     setLoading(true);
     setErrorMsg(null);
     setNotice(null);

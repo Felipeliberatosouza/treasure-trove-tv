@@ -89,7 +89,7 @@ const KIT_TOOL = {
         subtopicos: { type: "array", items: { type: "string" } },
         resumo: {
           type: "array",
-          description: "Seções do resumo (4 a 7 seções).",
+          description: "Seções do resumo (3 a 4 seções objetivas).",
           items: {
             type: "object",
             properties: {
@@ -102,10 +102,10 @@ const KIT_TOOL = {
         conceitos_chave: { type: "array", items: { type: "string" } },
         exemplos: { type: "array", items: { type: "string" } },
         pontos_de_atencao: { type: "array", items: { type: "string" } },
-        colinha: { type: "array", items: { type: "string" }, description: "8 a 12 bullets curtos." },
+        colinha: { type: "array", items: { type: "string" }, description: "6 a 8 bullets curtos." },
         simulado: {
           type: "array",
-          description: "5 questões de múltipla escolha.",
+          description: "4 questões de múltipla escolha.",
           items: {
             type: "object",
             properties: {
@@ -121,7 +121,7 @@ const KIT_TOOL = {
         },
         top_questoes: {
           type: "array",
-          description: "3 a 5 questões abertas com gabarito comentado.",
+          description: "Exatamente 3 questões abertas com gabarito comentado.",
           items: {
             type: "object",
             properties: {
@@ -135,7 +135,7 @@ const KIT_TOOL = {
         },
         slides: {
           type: "array",
-          description: "7 a 9 slides: o primeiro é a introdução, os do meio trazem os conceitos, em seguida um slide por Top Questão com a resolução comentada na narração, e o último é o encerramento.",
+          description: "Exatamente 7 slides: introdução, 2 slides de conceitos, 3 slides de Top Questões e encerramento.",
           items: {
             type: "object",
             properties: {
@@ -201,7 +201,7 @@ Curso: ${params.curso || "não informado"}
 Instituição: ${params.instituicao || "não informada"}
 Profundidade: ${params.nivel === "aprofundado" ? "aprofundada" : "revisão rápida"}
 Público detectado: ${AGE_GUIDANCE[params.faixaEtaria]} (confiança ${Math.round(params.confiancaFaixaEtaria * 100)}%).
-Gere de 7 a 9 slides (narração de no máximo 700 caracteres por slide) seguindo exatamente o padrão de narração: slide 1 de introdução, slides do meio com conceitos-chave e conteúdos de prova (com exemplos do dia a dia e frases descontraídas de dica de prova), depois um slide para cada Top Questão gerada em top_questoes — com o enunciado e a resolução comentada na narração — e o último slide de encerramento.
+  Gere exatamente 7 slides, com narração de no máximo 450 caracteres por slide: 1 introdução, 2 slides de conceitos-chave com exemplos do dia a dia e dicas de prova, 3 slides de Top Questões (uma questão por slide, com enunciado e resolução comentada) e 1 encerramento.
 Em cada slide, escreva uma narração fluida em português brasileiro informal e uma direção de imagem didática diretamente relacionada ao tópico (no primeiro e no último slide a imagem é apenas de ambiente, sem conteúdo escrito).
 
 CLASSIFICAÇÃO POR ÁREA (obrigatória): no campo "areas", escolha entre 1 e 3 áreas desta lista de áreas de curso cadastradas na plataforma, copiando o nome EXATAMENTE como aparece:

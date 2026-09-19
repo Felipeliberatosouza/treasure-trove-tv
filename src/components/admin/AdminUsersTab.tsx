@@ -85,7 +85,11 @@ const AdminUsersTab = () => {
       toast({ title: "Erro ao conceder créditos", description: error.message, variant: "destructive" });
       return;
     }
-    await logAction("grant_credits", "user", creditUser.user_id, { grants });
+    await logAction("grant_credits", {
+      targetTable: "referral_content_credits",
+      targetId: creditUser.user_id,
+      metadata: { grants },
+    });
     toast({ title: "Créditos concedidos", description: `Créditos adicionados para ${creditUser.name}.` });
     setCreditUser(null);
     setCreditValues({});

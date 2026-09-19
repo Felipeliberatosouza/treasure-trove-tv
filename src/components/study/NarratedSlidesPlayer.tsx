@@ -316,7 +316,10 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina, areas, 
     slideProgress >= anchorProgress(slide?.narracao || "", step.ancora, (index + 1) / (list.length + 1)),
   );
   const boardMode = slide?.modo_visual === "lousa" && (slide.lousa_passos?.length ?? 0) > 0;
-  const oneBoardStep = faixaEtaria === "criancas_0_9";
+  const highlightLastStep = faixaEtaria === "criancas_0_9";
+  // Tópicos entram um a um, acompanhando a narração.
+  const allBullets = (slide?.bullets ?? []).slice(0, 4);
+  const visibleBullets = allBullets.filter((_, index) => slideProgress >= index / (allBullets.length + 1));
 
   // Barra de tempo única: soma as durações de todos os slides.
   const slideDurations = slides.map(

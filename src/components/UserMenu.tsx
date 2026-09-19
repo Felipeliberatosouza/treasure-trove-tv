@@ -4,6 +4,7 @@ import { User, LogOut, LayoutDashboard, ChevronDown } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePlatformSettings, BrandingSettings } from "@/hooks/usePlatformSettings";
 import { useReferralCredits } from "@/hooks/useReferralCredits";
+import { useResourceLimit } from "@/hooks/useResourceLimit";
 
 const UserMenu = forwardRef<HTMLDivElement>((_, forwardedRef) => {
   const { user, role, profile, signOut } = useAuth();
@@ -14,6 +15,7 @@ const UserMenu = forwardRef<HTMLDivElement>((_, forwardedRef) => {
   const accentColor = (branding as BrandingSettings | null)?.accent_color || "#f59e0b";
   const { totalRemaining, aiCredits } = useReferralCredits();
   const totalCredits = totalRemaining + aiCredits;
+  const { planName } = useResourceLimit();
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -43,6 +45,11 @@ const UserMenu = forwardRef<HTMLDivElement>((_, forwardedRef) => {
         <User className="h-4 w-4 text-primary" />
         <span className="flex flex-col items-start leading-tight">
           <span className="max-w-[110px] truncate">{firstName}</span>
+          {role === "student" && planName && (
+            <span className="max-w-[130px] truncate text-[10px] font-semibold text-primary">
+              Plano {planName}
+            </span>
+          )}
           {role === "student" && (
             <span className="text-[10px] font-normal text-black/60">
               {totalCredits} crédito{totalCredits === 1 ? "" : "s"} grátis

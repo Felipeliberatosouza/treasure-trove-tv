@@ -4,6 +4,8 @@ import { Loader2 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import KitResult from "@/components/revisao-ia/KitResult";
+import KitSectionView from "@/components/revisao-ia/KitSectionView";
+import { CONTENT_SECTIONS, type SectionKey } from "@/lib/contentSections";
 import { Button } from "@/components/ui/button";
 import { fetchKitById, type KitResponse } from "@/lib/revisionKit";
 

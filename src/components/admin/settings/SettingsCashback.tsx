@@ -230,6 +230,20 @@ const SettingsCashback = () => {
           />
           <p className="text-xs text-muted-foreground mt-1">0 = sem limite.</p>
         </div>
+
+        <div>
+          <Label>Texto do convite enviado ao amigo</Label>
+          <Textarea
+            rows={4}
+            value={cfg.referral_invite_message ?? DEFAULT_REFERRAL_INVITE_MESSAGE}
+            onChange={(e) => setCfg({ ...cfg, referral_invite_message: e.target.value })}
+            placeholder={DEFAULT_REFERRAL_INVITE_MESSAGE}
+          />
+          <p className="text-xs text-muted-foreground mt-1">
+            Use <strong>{"{nome}"}</strong> para o nome de quem indica, <strong>{"{plataforma}"}</strong> para o
+            nome da plataforma e <strong>{"{link}"}</strong> para o link exclusivo do convite.
+          </p>
+        </div>
       </Card>
 
       <Card className="p-4 space-y-4">

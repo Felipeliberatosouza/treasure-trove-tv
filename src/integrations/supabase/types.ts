@@ -19,9 +19,11 @@ export type Database = {
           areas: string[]
           assunto: string
           cache_key: string
+          confianca_faixa_etaria: number
           created_at: string
           created_by: string | null
           disciplina: string | null
+          faixa_etaria: string
           hits: number
           id: string
           idioma: string
@@ -39,9 +41,11 @@ export type Database = {
           areas?: string[]
           assunto: string
           cache_key: string
+          confianca_faixa_etaria?: number
           created_at?: string
           created_by?: string | null
           disciplina?: string | null
+          faixa_etaria?: string
           hits?: number
           id?: string
           idioma?: string
@@ -59,9 +63,11 @@ export type Database = {
           areas?: string[]
           assunto?: string
           cache_key?: string
+          confianca_faixa_etaria?: number
           created_at?: string
           created_by?: string | null
           disciplina?: string | null
+          faixa_etaria?: string
           hits?: number
           id?: string
           idioma?: string
@@ -271,6 +277,7 @@ export type Database = {
           anon_id: string | null
           cache_key: string | null
           canonical_id: string | null
+          confianca_faixa_etaria: number
           created_at: string
           credit_reserved: boolean
           curso: string | null
@@ -278,6 +285,7 @@ export type Database = {
           duration_ms: number | null
           error_message: string | null
           exam_date: string | null
+          faixa_etaria: string
           id: string
           idempotency_key: string | null
           instituicao: string | null
@@ -293,6 +301,7 @@ export type Database = {
           anon_id?: string | null
           cache_key?: string | null
           canonical_id?: string | null
+          confianca_faixa_etaria?: number
           created_at?: string
           credit_reserved?: boolean
           curso?: string | null
@@ -300,6 +309,7 @@ export type Database = {
           duration_ms?: number | null
           error_message?: string | null
           exam_date?: string | null
+          faixa_etaria?: string
           id?: string
           idempotency_key?: string | null
           instituicao?: string | null
@@ -315,6 +325,7 @@ export type Database = {
           anon_id?: string | null
           cache_key?: string | null
           canonical_id?: string | null
+          confianca_faixa_etaria?: number
           created_at?: string
           credit_reserved?: boolean
           curso?: string | null
@@ -322,6 +333,7 @@ export type Database = {
           duration_ms?: number | null
           error_message?: string | null
           exam_date?: string | null
+          faixa_etaria?: string
           id?: string
           idempotency_key?: string | null
           instituicao?: string | null

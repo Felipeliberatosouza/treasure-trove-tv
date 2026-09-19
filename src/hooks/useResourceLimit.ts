@@ -32,6 +32,8 @@ interface LimitResult {
   remaining: number;
   hasSubscription: boolean;
   individualPrice: number | null;
+  /** Acessos ganhos por indicação de amigos, ainda não usados. */
+  referralCredits: number;
 }
 
 export function useResourceLimit() {

@@ -50,26 +50,36 @@ Deno.serve(async (req) => {
       .eq("status", "ready")
       .eq("visibility", "public_canonical")
       .maybeSingle();
+    if (!canonical) return json({ error: "Material não encontrado." }, 404);
     const slides = Array.isArray(canonical?.kit?.slides) ? canonical.kit.slides : [];
-    const slide = slides[slideIndex];
-    if (!slide) return json({ error: "Slide não encontrado." }, 404);
+    const slide = isCover ? null : slides[slideIndex];
+    if (!isCover && !slide) return json({ error: "Slide não encontrado." }, 404);
+    const disciplina = typeof canonical.kit?.disciplina === "string" ? canonical.kit.disciplina : "";
+    const titulo = typeof canonical.kit?.titulo === "string" ? canonical.kit.titulo : canonical.assunto;
 
     const apiKey = Deno.env.get("LOVABLE_API_KEY");
     if (!apiKey) return json({ error: "Serviço de imagens indisponível." }, 500);
     await admin.from("ai_content_artifacts").upsert({
       canonical_id: canonicalId,
-      slide_index: slideIndex,
-      artifact_type: "image",
+      slide_index: dbIndex,
+      artifact_type: artifactType,
       status: "processing",
     }, { onConflict: "canonical_id,slide_index,artifact_type" });
 
+    // Descrição visual específica do conteúdo: capa usa o assunto do material,
+    // slides sem imagem_prompt usam título e tópicos do próprio slide.
+    const slideBullets = Array.isArray(slide?.bullets) ? slide.bullets.slice(0, 3).join("; ") : "";
+    const subject = isCover
+      ? `Capa de abertura, ampla e marcante, representando visualmente o tema "${titulo}"${disciplina ? ` na área de ${disciplina}` : ""}.`
+      : `${slide?.imagem_prompt || `Cena que representa "${slide?.titulo}"${slideBullets ? `, abordando: ${slideBullets}` : ""}.`}`;
     const prompt = [
       "Imagem educacional horizontal 16:9 para uma aula da Revisão Fácil.",
-      `Assunto: ${canonical.assunto}.`,
+      `Assunto do material: ${canonical.assunto}.`,
+      disciplina ? `Disciplina: ${disciplina}.` : "",
       `Público: ${canonical.faixa_etaria}.`,
-      slide.imagem_prompt || slide.titulo,
+      subject,
       "Composição clara, didática, apropriada para a idade, sem palavras, letras, números, marcas ou logotipos.",
-    ].join(" ");
+    ].filter(Boolean).join(" ");
     const response = await fetch("https://ai.gateway.lovable.dev/v1/images/generations", {
       method: "POST",
       headers: { "Lovable-API-Key": apiKey, "Content-Type": "application/json" },

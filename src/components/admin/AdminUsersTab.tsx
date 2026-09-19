@@ -485,6 +485,15 @@ const AdminUsersTab = () => {
                         title="Definir nova senha"
                       >
                         <KeyRound className="h-4 w-4" />
+                       </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-8 w-8 text-primary hover:text-primary"
+                        onClick={() => { setCreditUser(u); setCreditValues({}); }}
+                        title="Conceder créditos por recurso"
+                      >
+                        <Coins className="h-4 w-4" />
                       </Button>
                       {u.trial_status !== "none" && (
                         <Button
@@ -609,6 +618,44 @@ const AdminUsersTab = () => {
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => { setPwdUser(null); setNewPwd(""); }} disabled={savingPwd}>Cancelar</Button>
               <Button onClick={handleSavePassword} disabled={savingPwd}>{savingPwd ? "Salvando..." : "Salvar nova senha"}</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!creditUser} onOpenChange={(o) => { if (!o) { setCreditUser(null); setCreditValues({}); } }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="font-display flex items-center gap-2">
+              <Coins className="h-5 w-5" /> Conceder créditos
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Informe quantos acessos gratuitos serão concedidos a <strong>{creditUser?.name}</strong> em cada recurso.
+              Os créditos somam ao saldo gratuito do usuário.
+            </p>
+            <div className="grid grid-cols-2 gap-3">
+              {CREDIT_RESOURCES.map((r) => (
+                <div key={r.key} className="space-y-1">
+                  <label className="text-xs text-muted-foreground" htmlFor={`credit-${r.key}`}>{r.label}</label>
+                  <Input
+                    id={`credit-${r.key}`}
+                    type="number"
+                    min={0}
+                    step={1}
+                    placeholder="0"
+                    value={creditValues[r.key] ?? ""}
+                    onChange={(e) =>
+                      setCreditValues((prev) => ({ ...prev, [r.key]: e.target.value.replace(/\D/g, "") }))
+                    }
+                  />
+                </div>
+              ))}
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => { setCreditUser(null); setCreditValues({}); }} disabled={savingCredits}>Cancelar</Button>
+              <Button onClick={handleGrantCredits} disabled={savingCredits}>{savingCredits ? "Salvando..." : "Conceder créditos"}</Button>
             </div>
           </div>
         </DialogContent>

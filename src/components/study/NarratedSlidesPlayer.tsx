@@ -337,6 +337,15 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina, areas, 
     slideProgress >= anchorProgress(slide?.narracao || "", step.ancora, (index + 1) / (list.length + 1)),
   );
   const boardMode = slide?.modo_visual === "lousa" && (slide.lousa_passos?.length ?? 0) > 0;
+  // Posição/tamanho do avatar vêm do cadastro administrativo, por tipo de slide.
+  const slideContext: AiAvatarSlideContext = isIntro
+    ? "abertura"
+    : isOutro
+      ? "encerramento"
+      : boardMode
+        ? "lousa"
+        : "conteudo";
+  const placement = avatarPlacement(avatar, slideContext);
   const highlightLastStep = faixaEtaria === "criancas_0_9";
   // Tópicos entram um a um, acompanhando a narração.
   const allBullets = (slide?.bullets ?? []).slice(0, 4);

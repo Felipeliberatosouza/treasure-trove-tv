@@ -43,10 +43,13 @@ interface LimitResult {
   individualPrice: number | null;
   /** Acessos ganhos por indicação de amigos, ainda não usados. */
   referralCredits: number;
+  /** true quando o aluno tem créditos, mas o administrador não permite usá-los neste conteúdo. */
+  referralBlocked: boolean;
 }
 
 export function useResourceLimit() {
   const { user } = useAuth();
+  const { config } = useCashbackConfig();
   const [subscriptionId, setSubscriptionId] = useState<string | null>(null);
   const [plan, setPlan] = useState<SubscriptionPlan | null>(null);
   const [usageCounts, setUsageCounts] = useState<Record<string, number>>({});

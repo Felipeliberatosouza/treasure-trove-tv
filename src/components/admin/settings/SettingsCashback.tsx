@@ -155,13 +155,14 @@ const SettingsCashback = () => {
           O aluno envia um convite por e-mail, WhatsApp ou SMS. Quando o amigo acessa a plataforma pelo
           link do convite, o indicador ganha os acessos abaixo — um prêmio por convite, independente de compra.
         </p>
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <div className="space-y-3">
           {(Object.keys(REFERRAL_ACCESS_LABELS) as (keyof ReferralAccessGrants)[]).map((k) => (
-            <div key={String(k)}>
-              <Label className="text-xs">{REFERRAL_ACCESS_LABELS[k]}</Label>
+            <div key={String(k)} className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_120px_minmax(0,1.4fr)] sm:items-end">
+              <Label className="text-xs sm:pb-2">{REFERRAL_ACCESS_LABELS[k]}</Label>
               <Input
                 type="number"
                 min={0}
+                aria-label={`Quantidade de ${REFERRAL_ACCESS_LABELS[k]}`}
                 value={cfg.referral_access_grants?.[k] ?? 0}
                 onChange={(e) =>
                   setCfg({
@@ -174,9 +175,37 @@ const SettingsCashback = () => {
                   })
                 }
               />
+              <Select
+                value={cfg.referral_access_scopes?.[k] ?? DEFAULT_REFERRAL_ACCESS_SCOPES[k]}
+                onValueChange={(v) =>
+                  setCfg({
+                    ...cfg,
+                    referral_access_scopes: {
+                      ...DEFAULT_REFERRAL_ACCESS_SCOPES,
+                      ...cfg.referral_access_scopes,
+                      [k]: v as ReferralCreditScope,
+                    },
+                  })
+                }
+              >
+                <SelectTrigger aria-label={`Onde usar ${REFERRAL_ACCESS_LABELS[k]}`}>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {(Object.keys(REFERRAL_SCOPE_LABELS) as ReferralCreditScope[]).map((s) => (
+                    <SelectItem key={s} value={s}>
+                      {REFERRAL_SCOPE_LABELS[s]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           ))}
         </div>
+        <p className="text-xs text-muted-foreground">
+          Para cada recurso escolha a quantidade liberada por indicação e onde o crédito pode ser usado.
+          Ao escolher "Não pode ser usado com créditos", o aluno verá que aquele conteúdo precisa ser comprado.
+        </p>
         <div className="max-w-xs">
           <Label>Máximo de indicações premiadas por aluno</Label>
           <Input

@@ -16,6 +16,7 @@ import {
 import { CONTENT_SECTIONS, getSection, type SectionKey } from "@/lib/contentSections";
 import type { Video } from "@/data/courses";
 import aiKitCover from "@/assets/slide-visual-ciencia.jpg";
+import { useAiKitCovers } from "@/hooks/useAiKitCovers";
 
 interface Props {
   sectionKey: SectionKey;
@@ -282,6 +283,9 @@ const SectionCatalog = ({ sectionKey }: Props) => {
     };
   }, [sectionKey, section.urlColumn, section.metaType, user, aiAvatarSettings, aiParams]);
 
+  const aiIds = useMemo(() => items.filter((i) => i._origin === "ai").map((i) => i.id), [items]);
+  const aiCovers = useAiKitCovers(aiIds);
+
   const filtered = useMemo(() => {
     const term = normalize(query.trim());
     const base = term.length === 0
@@ -291,14 +295,16 @@ const SectionCatalog = ({ sectionKey }: Props) => {
             [i.title, i.description, i.category, i.instructor, ...i._areas].join(" "),
           ).includes(term),
         );
-    return [...base].sort((a, b) => {
-      const aw = watchedIds.has(a.id) ? 1 : 0;
-      const bw = watchedIds.has(b.id) ? 1 : 0;
-      if (aw !== bw) return aw - bw;
-      if (b._views !== a._views) return b._views - a._views;
-      return b._createdAt - a._createdAt;
-    });
-  }, [items, query, watchedIds]);
+    return [...base]
+      .map((i) => (aiCovers[i.id] ? { ...i, thumbnail: aiCovers[i.id] } : i))
+      .sort((a, b) => {
+        const aw = watchedIds.has(a.id) ? 1 : 0;
+        const bw = watchedIds.has(b.id) ? 1 : 0;
+        if (aw !== bw) return aw - bw;
+        if (b._views !== a._views) return b._views - a._views;
+        return b._createdAt - a._createdAt;
+      });
+  }, [items, query, watchedIds, aiCovers]);
 
   const hasAreas = !!user && studentAreas.length > 0;
   const inAreas = useMemo(

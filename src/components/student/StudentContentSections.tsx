@@ -7,6 +7,7 @@ import VideoCarousel from "@/components/VideoCarousel";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import type { Video } from "@/data/courses";
+import { useAiKitCovers } from "@/hooks/useAiKitCovers";
 
 interface StudentContentSectionsProps {
   /**
@@ -77,6 +78,7 @@ const StudentContentSections = ({
   const [ratings, setRatings] = useState<Record<string, { average: number; count: number }>>({});
   const [continueWatching, setContinueWatching] = useState<Array<Video & { _progress: number }>>([]);
   const [aiKits, setAiKits] = useState<Video[]>([]);
+  const aiCovers = useAiKitCovers(aiKits.map((k) => k.id));
   const { data: aiAvatarSettings } = usePlatformSettings("ai_avatar");
   const { data: aiParams } = usePlatformSettings("ai_generation_params");
 
@@ -320,22 +322,17 @@ const StudentContentSections = ({
 
       <Section
         title={lessonsLabel}
-        videos={lessons}
-        onVideoClick={onVideoClick}
+        videos={[
+          ...lessons,
+          ...aiKits.map((k) => (aiCovers[k.id] ? { ...k, thumbnail: aiCovers[k.id] } : k)),
+        ]}
+        onVideoClick={(id) =>
+          aiKits.some((k) => k.id === id) ? navigate(`/conteudo-ia/${id}`) : onVideoClick(id)
+        }
         ratings={ratings}
         watchedIds={watchedIds}
         emptyText="Nenhum conteúdo encontrado para suas áreas de interesse."
       />
-      {aiKits.length > 0 && (
-        <Section
-          title="🤖 Revisões com IA nas suas áreas"
-          videos={aiKits}
-          onVideoClick={(id) => navigate(`/conteudo-ia/${id}`)}
-          ratings={ratings}
-          watchedIds={watchedIds}
-          emptyText=""
-        />
-      )}
       <Section
         title={examsLabel}
         videos={exams}

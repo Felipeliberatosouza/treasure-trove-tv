@@ -22,6 +22,7 @@ import HomeKitGenerator from "@/components/revisao-ia/HomeKitGenerator";
 import InviteFriendsPanel from "@/components/referral/InviteFriendsPanel";
 import type { Video } from "@/data/courses";
 import aiKitCover from "@/assets/slide-visual-ciencia.jpg";
+import { useAiKitCovers } from "@/hooks/useAiKitCovers";
 
 interface SearchResult {
   id: string;
@@ -45,6 +46,7 @@ const Index = () => {
   const [aiKits, setAiKits] = useState<Video[]>([]);
   const [aiKitIds, setAiKitIds] = useState<Set<string>>(new Set());
   const [aiKitAreas, setAiKitAreas] = useState<Record<string, string[]>>({});
+  const aiCovers = useAiKitCovers(aiKits.map((k) => k.id));
   const [teacherLessons, setTeacherLessons] = useState<Video[]>([]);
   const [teacherExams, setTeacherExams] = useState<Video[]>([]);
   const [loadingTeacherContent, setLoadingTeacherContent] = useState(false);
@@ -477,11 +479,13 @@ const Index = () => {
               areas.map((area) => {
                 const lessonsForArea = areaLessons[area.name] || [];
                 // Vínculo oficial: áreas gravadas no material de IA (classificação automática/admin).
-                const kitsForArea = aiKits.filter((kit) =>
-                  (aiKitAreas[kit.id] || []).some(
-                    (a) => a.trim().toLowerCase() === area.name.trim().toLowerCase(),
-                  ),
-                );
+                const kitsForArea = aiKits
+                  .filter((kit) =>
+                    (aiKitAreas[kit.id] || []).some(
+                      (a) => a.trim().toLowerCase() === area.name.trim().toLowerCase(),
+                    ),
+                  )
+                  .map((kit) => (aiCovers[kit.id] ? { ...kit, thumbnail: aiCovers[kit.id] } : kit));
                 if (lessonsForArea.length === 0 && kitsForArea.length === 0) return null;
                 return (
                   <VideoCarousel

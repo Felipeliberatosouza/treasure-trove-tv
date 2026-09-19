@@ -271,12 +271,13 @@ const SettingsAiAvatars = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Gênero (voz da narração)</Label>
+                  <Label>Gênero (legenda exibida)</Label>
                   <Select
                     value={av.gender}
-                    onValueChange={(v) =>
-                      patch(av.id, { gender: v as AiDisciplineAvatar["gender"] })
-                    }
+                    onValueChange={(v) => {
+                      const gender = v as AiDisciplineAvatar["gender"];
+                      patch(av.id, { gender, voice: defaultVoiceForGender(gender) });
+                    }}
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -288,6 +289,25 @@ const SettingsAiAvatars = () => {
                   </Select>
                   <p className="text-xs text-muted-foreground">
                     Legenda exibida: {aiRoleLabel(av.gender)}
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <Label>Voz da narração</Label>
+                  <Select
+                    value={av.voice || defaultVoiceForGender(av.gender)}
+                    onValueChange={(v) => patch(av.id, { voice: v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {AI_AVATAR_VOICES.map((v) => (
+                        <SelectItem key={v.id} value={v.id}>{v.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    Fixa para todas as narrações deste avatar.
                   </p>
                 </div>
                 <div className="space-y-2 sm:col-span-2">

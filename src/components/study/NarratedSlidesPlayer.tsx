@@ -312,10 +312,14 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina, areas, 
   };
 
   const brandOverlay = (
-    <div className="pointer-events-none absolute bottom-2 right-2 z-10 flex flex-col items-end gap-0.5 sm:bottom-3 sm:right-3">
-      <img src={brandLogo} alt="Revisão Fácil" className="h-5 w-auto opacity-90 sm:h-7" />
-      <span className="text-[8px] text-muted-foreground sm:text-[10px]">revisaofacil.com.br</span>
-    </div>
+    <>
+      <div className="pointer-events-none absolute right-2 top-2 z-10 sm:right-3 sm:top-3">
+        <img src={brandLogo} alt="Logomarca" className="h-5 w-auto opacity-90 drop-shadow sm:h-7" />
+      </div>
+      <span className="pointer-events-none absolute bottom-2 right-2 z-10 select-none text-[9px] text-muted-foreground sm:bottom-3 sm:right-3 sm:text-[11px]">
+        {commercialDomain}
+      </span>
+    </>
   );
 
   const legalNotice = (

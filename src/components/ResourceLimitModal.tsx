@@ -25,6 +25,8 @@ interface Props {
   individualPrice: number | null;
   onBuyIndividual?: () => void;
   trialAlreadyUsed?: boolean;
+  /** true quando o aluno tem créditos de indicação, mas o conteúdo não aceita créditos. */
+  referralBlocked?: boolean;
 }
 
 export default function ResourceLimitModal({

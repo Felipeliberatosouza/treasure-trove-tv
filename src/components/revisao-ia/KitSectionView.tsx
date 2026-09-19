@@ -114,6 +114,15 @@ const KitSectionView = ({ result, sectionKey, onNewKit }: Props) => {
         </div>
       )}
 
+      {sectionKey === "revisoes" && (
+        <DoubtForm
+          contentId={result.canonical_id ?? undefined}
+          contentType="ai_content"
+          title="Enviar Dúvida sobre esta aula"
+          placeholder="Descreva sua dúvida sobre esta aula com professor virtual..."
+        />
+      )}
+
       {sectionKey === "resumo" && (
         <div className="space-y-4">
           {items.map((s: any, i: number) => (

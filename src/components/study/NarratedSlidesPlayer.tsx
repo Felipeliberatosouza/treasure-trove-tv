@@ -8,6 +8,7 @@ import visualCiencia from "@/assets/slide-visual-ciencia.jpg";
 import visualHumanas from "@/assets/slide-visual-humanas.jpg";
 import visualExatas from "@/assets/slide-visual-exatas.jpg";
 import logoRevisaoFacil from "@/assets/logo-revisao-facil.png";
+import { DEFAULT_COMMERCIAL_DOMAIN } from "@/components/branding/BrandStamp";
 import type { AgeGroup, KitBoardStep, KitKeyword } from "@/lib/revisionKit";
 
 export interface StudySlide {

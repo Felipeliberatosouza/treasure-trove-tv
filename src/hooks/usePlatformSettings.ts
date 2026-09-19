@@ -518,6 +518,8 @@ export const DEFAULT_AI_AVATAR: AiAvatarSettings = {
   image_url: "",
   role_label: "Professora virtual",
   voice: "nova",
+  animation: "gestos",
+  placements: DEFAULT_AI_AVATAR_PLACEMENTS,
 };
 
 /** Tipos de conteúdo gerados por IA aos quais um avatar pode ser vinculado. */

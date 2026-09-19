@@ -127,9 +127,35 @@ export function useResourceLimit() {
     load();
   }, [user]);
 
+  /** Regra do administrador: onde o crédito daquele recurso pode ser usado. */
+  const scopeOf = useCallback(
+    (resourceType: ResourceType): ReferralCreditScope => {
+      const scopes = {
+        ...DEFAULT_REFERRAL_ACCESS_SCOPES,
+        ...(config.referral_access_scopes ?? {}),
+      } as Record<keyof ReferralAccessGrants, ReferralCreditScope>;
+      return scopes[resourceType] ?? "ambos";
+    },
+    [config.referral_access_scopes]
+  );
+
+  /** Indica se o crédito de indicação pode ser usado naquele conteúdo. */
+  const canUseReferralCredit = useCallback(
+    (resourceType: ResourceType, source?: ContentSource): boolean => {
+      const scope = scopeOf(resourceType);
+      if (scope === "nenhum") return false;
+      if (!source || scope === "ambos") return true;
+      return scope === source;
+    },
+    [scopeOf]
+  );
+
   const checkLimit = useCallback(
-    (resourceType: ResourceType): LimitResult => {
-      const bonus = referralCredits[resourceType] || 0;
+    (resourceType: ResourceType, source?: ContentSource): LimitResult => {
+      const owned = referralCredits[resourceType] || 0;
+      const usable = canUseReferralCredit(resourceType, source);
+      const bonus = usable ? owned : 0;
+      const referralBlocked = owned > 0 && !usable;
 
       if (!plan) {
         return {
@@ -140,6 +166,7 @@ export function useResourceLimit() {
           hasSubscription: false,
           individualPrice: resourcePrices[resourceType] ?? null,
           referralCredits: bonus,
+          referralBlocked,
         };
       }
 
@@ -154,6 +181,7 @@ export function useResourceLimit() {
           hasSubscription: true,
           individualPrice: resourcePrices[resourceType] ?? null,
           referralCredits: bonus,
+          referralBlocked,
         };
       }
 
@@ -169,15 +197,17 @@ export function useResourceLimit() {
         hasSubscription: true,
         individualPrice: resourcePrices[resourceType] ?? null,
         referralCredits: bonus,
+        referralBlocked,
       };
     },
-    [plan, usageCounts, resourcePrices, referralCredits]
+    [plan, usageCounts, resourcePrices, referralCredits, canUseReferralCredit]
   );
 
   /** Consome um acesso ganho por indicação antes de cobrar do aluno. */
   const consumeReferralCredit = useCallback(
-    async (resourceType: ResourceType): Promise<boolean> => {
+    async (resourceType: ResourceType, source?: ContentSource): Promise<boolean> => {
       if (!user || (referralCredits[resourceType] || 0) <= 0) return false;
+      if (!canUseReferralCredit(resourceType, source)) return false;
       const { data, error } = await supabase.rpc("consume_referral_content_credit", {
         _resource_type: resourceType,
       });

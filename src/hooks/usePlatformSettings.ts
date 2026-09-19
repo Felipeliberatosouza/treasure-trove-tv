@@ -424,7 +424,28 @@ export interface AiAvatarSettings {
   image_url: string;
   /** Legenda derivada do gênero — nunca editável pelo administrador. */
   role_label: string;
+  /** Voz fixa usada em todas as narrações deste avatar. */
+  voice?: string;
 }
+
+/** Vozes disponíveis para a narração do avatar. */
+export const AI_AVATAR_VOICES = [
+  { id: "nova", label: "Nova (feminina, clara)" },
+  { id: "shimmer", label: "Shimmer (feminina, suave)" },
+  { id: "coral", label: "Coral (feminina, calorosa)" },
+  { id: "sage", label: "Sage (feminina, serena)" },
+  { id: "alloy", label: "Alloy (neutra)" },
+  { id: "onyx", label: "Onyx (masculina, grave)" },
+  { id: "echo", label: "Echo (masculina, firme)" },
+  { id: "ash", label: "Ash (masculina, natural)" },
+  { id: "ballad", label: "Ballad (masculina, expressiva)" },
+  { id: "verse", label: "Verse (masculina, narrativa)" },
+  { id: "fable", label: "Fable (masculina, contador de histórias)" },
+] as const;
+
+/** Voz padrão quando o administrador ainda não escolheu uma. */
+export const defaultVoiceForGender = (gender: "female" | "male") =>
+  gender === "male" ? "onyx" : "nova";
 
 /** Legenda fixa do avatar, derivada do gênero (voz) escolhido. */
 export const aiRoleLabel = (gender: "female" | "male") =>

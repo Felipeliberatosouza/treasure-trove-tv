@@ -79,7 +79,7 @@ const KitResult = ({ result, onNewKit }: Props) => {
       </div>
 
       <div className="ai-slide-shell overflow-hidden rounded-xl bg-muted shadow-xl">
-        <NarratedSlidesPlayer topico={kit.assunto} disciplina={kit.disciplina} slides={kit.slides ?? []} canonicalId={result.canonical_id} areas={result.areas} />
+        <NarratedSlidesPlayer topico={kit.assunto} disciplina={kit.disciplina} slides={kit.slides ?? []} canonicalId={result.canonical_id} areas={result.areas} faixaEtaria={kit.faixa_etaria} />
       </div>
 
       {/* Destaque junto à apresentação: aulas gravadas e aula particular */}

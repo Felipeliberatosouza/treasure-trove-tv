@@ -21,11 +21,33 @@ export interface KitTopQuestion {
   subtopico?: string;
   dificuldade?: string;
 }
+export type AgeGroup =
+  | "criancas_0_9"
+  | "pre_adolescentes_10_13"
+  | "adolescentes_14_17"
+  | "jovens_18_25"
+  | "adultos_26_45"
+  | "adultos_46_mais";
+export type BoardStepType = "texto" | "operacao" | "seta" | "linha" | "circulo" | "desenho";
+export interface KitKeyword {
+  termo: string;
+  ancora: string;
+}
+export interface KitBoardStep {
+  tipo: BoardStepType;
+  conteudo: string;
+  ancora: string;
+  destaque?: string;
+}
 export interface KitSlide {
   titulo: string;
   bullets: string[];
   narracao: string;
   imagem_prompt?: string;
+  frase_didatica?: string;
+  palavras_chave?: KitKeyword[];
+  modo_visual?: "conteudo" | "lousa" | "avatar";
+  lousa_passos?: KitBoardStep[];
 }
 export interface RevisionKit {
   titulo: string;
@@ -40,6 +62,8 @@ export interface RevisionKit {
   simulado: KitQuizQuestion[];
   top_questoes: KitTopQuestion[];
   slides: KitSlide[];
+  faixa_etaria?: AgeGroup;
+  confianca_faixa_etaria?: number;
 }
 
 export interface KitResponse {

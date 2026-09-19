@@ -21,12 +21,18 @@ import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useCourseAreas } from "@/hooks/useCourseAreas";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import type { AgeGroup, KitBoardStep, KitKeyword } from "@/lib/revisionKit";
 
 interface KitSlide {
   titulo?: string;
   bullets?: string[];
   narracao?: string;
   imagem_prompt?: string;
+  frase_didatica?: string;
+  palavras_chave?: KitKeyword[];
+  modo_visual?: "conteudo" | "lousa" | "avatar";
+  lousa_passos?: KitBoardStep[];
 }
 
 interface KitData {
@@ -34,6 +40,8 @@ interface KitData {
   assunto?: string;
   disciplina?: string;
   slides?: KitSlide[];
+  faixa_etaria?: AgeGroup;
+  confianca_faixa_etaria?: number;
   [key: string]: unknown;
 }
 
@@ -47,7 +55,18 @@ interface MaterialRow {
   updated_at: string;
   hits: number;
   kit: KitData;
+  faixa_etaria: AgeGroup;
+  confianca_faixa_etaria: number;
 }
+
+const AGE_LABELS: Record<AgeGroup, string> = {
+  criancas_0_9: "Crianças — 0 a 9 anos",
+  pre_adolescentes_10_13: "Pré-adolescentes — 10 a 13 anos",
+  adolescentes_14_17: "Adolescentes — 14 a 17 anos",
+  jovens_18_25: "Jovens universitários — 18 a 25 anos",
+  adultos_26_45: "Adultos — 26 a 45 anos",
+  adultos_46_mais: "Adultos maduros — acima de 46 anos",
+};
 
 /** Gestão dos materiais já gerados por IA: edição (inclusive da narração) e exclusão. */
 const SettingsAiMaterials = () => {
@@ -63,7 +82,7 @@ const SettingsAiMaterials = () => {
     setLoading(true);
     const { data, error } = await supabase
       .from("ai_canonical_contents")
-      .select("id, assunto, disciplina, areas, status, visibility, updated_at, hits, kit")
+      .select("id, assunto, disciplina, areas, status, visibility, updated_at, hits, kit, faixa_etaria, confianca_faixa_etaria")
       .order("updated_at", { ascending: false })
       .limit(200);
     setLoading(false);
@@ -112,6 +131,7 @@ const SettingsAiMaterials = () => {
         assunto: editing.assunto.trim(),
         disciplina: editing.disciplina?.trim() || null,
         areas: editing.areas,
+        faixa_etaria: editing.faixa_etaria,
         kit: editing.kit as never,
       })
       .eq("id", editing.id);
@@ -194,6 +214,14 @@ const SettingsAiMaterials = () => {
             />
           </div>
           <div className="space-y-2 sm:col-span-2">
+            <Label>Faixa etária detectada</Label>
+            <Select value={editing.faixa_etaria} onValueChange={(value) => setEditing({ ...editing, faixa_etaria: value as AgeGroup, kit: { ...editing.kit, faixa_etaria: value as AgeGroup } })}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>{Object.entries(AGE_LABELS).map(([value, label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}</SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">Confiança da detecção: {Math.round((editing.confianca_faixa_etaria || 0) * 100)}%</p>
+          </div>
+          <div className="space-y-2 sm:col-span-2">
             <Label>Áreas de curso vinculadas</Label>
             <p className="text-xs text-muted-foreground">
               Define o avatar usado, a faixa da área na página inicial e a entrega para alunos
@@ -241,6 +269,20 @@ const SettingsAiMaterials = () => {
                     value={slide.titulo ?? ""}
                     onChange={(e) => patchSlide(index, { titulo: e.target.value })}
                   />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor={`slide-frase-${index}`}>Frase didática</Label>
+                  <Input id={`slide-frase-${index}`} value={slide.frase_didatica ?? ""} onChange={(e) => patchSlide(index, { frase_didatica: e.target.value })} />
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor={`slide-palavras-${index}`}>Palavras-chave (uma por linha)</Label>
+                    <Textarea id={`slide-palavras-${index}`} rows={4} value={(slide.palavras_chave ?? []).map((item) => `${item.termo} | ${item.ancora}`).join("\n")} onChange={(e) => patchSlide(index, { palavras_chave: e.target.value.split("\n").filter(Boolean).map((line) => { const [termo, ancora] = line.split("|").map((part) => part.trim()); return { termo, ancora: ancora || termo }; }) })} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor={`slide-lousa-${index}`}>Passos da lousa (um por linha)</Label>
+                    <Textarea id={`slide-lousa-${index}`} rows={4} value={(slide.lousa_passos ?? []).map((item) => `${item.tipo} | ${item.conteudo} | ${item.ancora}`).join("\n")} onChange={(e) => patchSlide(index, { lousa_passos: e.target.value.split("\n").filter(Boolean).map((line) => { const [tipo, conteudo, ancora] = line.split("|").map((part) => part.trim()); const valid = ["texto", "operacao", "seta", "linha", "circulo", "desenho"].includes(tipo); return { tipo: valid ? tipo as KitBoardStep["tipo"] : "texto", conteudo, ancora: ancora || conteudo }; }) })} />
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor={`slide-bullets-${index}`}>Tópicos (um por linha)</Label>

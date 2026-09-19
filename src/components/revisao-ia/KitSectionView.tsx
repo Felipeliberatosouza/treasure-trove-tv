@@ -12,6 +12,7 @@ import VideoShareButtons from "@/components/VideoShareButtons";
 import VLibrasWidget from "@/components/VLibrasWidget";
 import ForensicWatermark from "@/components/ForensicWatermark";
 import BrandStamp from "@/components/branding/BrandStamp";
+import DoubtForm from "@/components/DoubtForm";
 import { CONTENT_SECTIONS, getSection, type SectionKey } from "@/lib/contentSections";
 
 interface Props {

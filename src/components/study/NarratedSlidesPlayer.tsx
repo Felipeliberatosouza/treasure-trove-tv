@@ -196,6 +196,11 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina, areas, 
 
   const slide = slides[current];
 
+  // Ao trocar de slide, o quadro começa vazio (ou no ponto já preenchido, se for uma volta).
+  useEffect(() => {
+    setSlideProgress(maxProgressRef.current[current] ?? 0);
+  }, [current]);
+
   const themeImages = useMemo(() => {
     const value = `${disciplina || ""} ${topico}`.toLowerCase();
     if (/matem|físic|fisic|engenh|estat|cálc|calc|tecnolog|comput/.test(value)) {

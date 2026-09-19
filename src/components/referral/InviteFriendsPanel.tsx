@@ -97,43 +97,59 @@ const InviteFriendsPanel = ({ variant = "hero", className, eyebrow }: Props) => 
     ];
   }, [referralLink, shareText]);
 
-  const sendInvite = async () => {
-    if (!isValidEmail(friendEmail)) {
+  const loadInvites = useCallback(async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from("referral_invites")
+      .select("id, contact_email, contact_phone, status, created_at")
+      .order("created_at", { ascending: false })
+      .limit(8);
+    setInvites((data ?? []) as InviteRow[]);
+  }, [user]);
+
+  useEffect(() => {
+    void loadInvites();
+  }, [loadInvites]);
+
+  const sendInvite = async (channel: InviteChannel) => {
+    if (!user) {
+      toast.error("Entre na sua conta para enviar convites.");
+      return;
+    }
+    if (channel === "email" && !isValidEmail(friendEmail)) {
       toast.error("Informe um e-mail válido.");
       return;
     }
-    if (!user) {
-      toast.error("Entre na sua conta para enviar convites por e-mail.");
+    if (channel !== "email" && friendPhone.replace(/\D/g, "").length !== 11) {
+      toast.error("Informe um celular válido com DDD.");
       return;
     }
-    setSending(true);
+    setSending(channel);
     try {
-      const { error } = await supabase.functions.invoke("send-transactional-email", {
+      const { data, error } = await supabase.functions.invoke("referral-invite", {
         body: {
-          templateName: "cashback-referral-share",
-          recipientEmail: friendEmail.trim(),
-          idempotencyKey: `referral-invite-${user.id}-${Date.now()}`,
-          templateData: {
-            name: (profile as { name?: string } | null)?.name ?? "",
-            referral_code: account?.referral_code ?? "",
-            referral_link: referralLink,
-            share_text: shareText,
-            referral_percent: percent,
-            referralCode: account?.referral_code ?? "",
-            referralLink,
-            shareText,
-            referralPercent: percent,
-          },
+          action: "send",
+          channel,
+          email: friendEmail.trim(),
+          phone: friendPhone.replace(/\D/g, ""),
+          origin,
         },
       });
       if (error) throw error;
-      setFriendEmail("");
+      const result = data as { ok?: boolean; error?: string } | null;
+      if (!result?.ok) {
+        toast.error(result?.error || "Não foi possível enviar agora.");
+        return;
+      }
+      if (channel === "email") setFriendEmail("");
+      else setFriendPhone("");
       toast.success("Convite enviado!");
+      void loadInvites();
     } catch (e) {
       console.error("referral invite failed", e);
       toast.error("Não foi possível enviar agora. Tente novamente em instantes.");
     } finally {
-      setSending(false);
+      setSending(null);
     }
   };
 

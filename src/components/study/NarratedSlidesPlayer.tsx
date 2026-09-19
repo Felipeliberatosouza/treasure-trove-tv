@@ -406,6 +406,7 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina, areas, 
         {brandOverlay}
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-2 p-4 text-center sm:gap-3 sm:p-6">
           <AnimatedAvatar
+            avatarId={avatar.avatar_id}
             src={avatarImage}
             alt={`${avatar.name}, ${avatar.role_label.toLowerCase()} da Revisão Fácil`}
             speaking={false}
@@ -452,6 +453,7 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina, areas, 
               }`}
             >
               <AnimatedAvatar
+                avatarId={avatar.avatar_id}
                 src={avatarImage}
                 alt={`${avatar.name}, ${avatar.role_label.toLowerCase()} da Revisão Fácil`}
                 speaking={speaking}
@@ -505,6 +507,7 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina, areas, 
               </div>
               <div className="shrink-0 text-center">
                 <AnimatedAvatar
+                  avatarId={avatar.avatar_id}
                   src={avatarImage}
                   alt={`${avatar.name}, ${avatar.role_label.toLowerCase()} da Revisão Fácil`}
                   speaking={speaking}

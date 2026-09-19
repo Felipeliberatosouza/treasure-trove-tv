@@ -17,8 +17,11 @@ Deno.serve(async (req) => {
   try {
     const body = await req.json();
     const canonicalId = typeof body.canonical_id === "string" ? body.canonical_id : "";
-    const slideIndex = Number.isInteger(body.slide_index) ? body.slide_index : -1;
-    if (!canonicalId || slideIndex < 0) return json({ error: "Slide inválido." }, 400);
+    // slide_index === -1 identifica a capa única do material.
+    const slideIndex = Number.isInteger(body.slide_index) ? body.slide_index : -2;
+    const isCover = slideIndex === -1;
+    if (!canonicalId || slideIndex < -1) return json({ error: "Slide inválido." }, 400);
+    const artifactType = isCover ? "cover" : "image";
 
     const admin = createClient(
       Deno.env.get("SUPABASE_URL")!,

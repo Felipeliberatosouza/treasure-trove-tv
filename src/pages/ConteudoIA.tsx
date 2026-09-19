@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -34,7 +34,7 @@ const ConteudoIA = () => {
               <Loader2 className="h-5 w-5 animate-spin" /> Abrindo sua revisão…
             </div>
           ) : result ? (
-            <KitResult result={result} onNewKit={() => navigate("/")} />
+            <KitResult result={result} onNewKit={() => navigate("/")} initialTab={searchParams.get("secao")} />
           ) : (
             <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4 text-center">
               <h1 className="font-display text-2xl font-bold">Revisão não encontrada</h1>

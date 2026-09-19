@@ -35,27 +35,8 @@ Deno.serve(async (req) => {
       return `${value.length}:${hash}`;
     };
 
-    let cachedRow: { storage_path: string | null; metadata: Record<string, unknown> | null } | null = null;
+    let signature = "";
     if (canonicalId && slideIndex !== null && slideIndex >= 0) {
-      const { data: existing } = await admin
-        .from("ai_content_artifacts")
-        .select("storage_path, metadata")
-        .eq("canonical_id", canonicalId)
-        .eq("slide_index", slideIndex)
-        .eq("artifact_type", "audio")
-        .eq("status", "ready")
-        .maybeSingle();
-      cachedRow = existing as typeof cachedRow;
-      const cachedVoice = (existing?.metadata as Record<string, unknown> | null)?.voice;
-      if (false && existing?.storage_path && cachedVoice === voice) {
-        const { data: signed } = await admin.storage.from("ai-revision-media").createSignedUrl(existing.storage_path, 3600);
-        if (signed?.signedUrl) {
-          return new Response(JSON.stringify({ audio_url: signed.signedUrl, cached: true }), {
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          });
-        }
-      }
-
       const { data: canonical } = await admin
         .from("ai_canonical_contents")
         .select("kit, status, visibility")
@@ -70,6 +51,27 @@ Deno.serve(async (req) => {
           status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
+      signature = textSignature(texto);
+
+      // Só reaproveita o áudio quando voz e texto da narração são exatamente os mesmos.
+      const { data: existing } = await admin
+        .from("ai_content_artifacts")
+        .select("storage_path, metadata")
+        .eq("canonical_id", canonicalId)
+        .eq("slide_index", slideIndex)
+        .eq("artifact_type", "audio")
+        .eq("status", "ready")
+        .maybeSingle();
+      const meta = (existing?.metadata as Record<string, unknown> | null) ?? null;
+      if (existing?.storage_path && meta?.voice === voice && meta?.text_signature === signature) {
+        const { data: signed } = await admin.storage.from("ai-revision-media").createSignedUrl(existing.storage_path, 3600);
+        if (signed?.signedUrl) {
+          return new Response(JSON.stringify({ audio_url: signed.signedUrl, cached: true }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+      }
+
       await admin.from("ai_content_artifacts").upsert({
         canonical_id: canonicalId,
         slide_index: slideIndex,

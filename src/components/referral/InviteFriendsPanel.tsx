@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { Copy, Gift, Send, Loader2, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { useCashbackAccount, useCashbackConfig } from "@/hooks/useCashback";
+import { useCashbackAccount, useCashbackConfig, getReferralDiscount } from "@/hooks/useCashback";
 import {
   useAllPlatformSettings,
   type BrandingSettings,
@@ -48,6 +48,7 @@ const InviteFriendsPanel = ({ variant = "hero", className, eyebrow }: Props) => 
   const { user, profile } = useAuth();
   const { account } = useCashbackAccount();
   const { config } = useCashbackConfig();
+  const [rewardedCount, setRewardedCount] = useState(0);
   const { settings } = useAllPlatformSettings();
   const branding = settings.branding as BrandingSettings | undefined;
   const contact = settings.contact as ContactSettings | undefined;
@@ -125,7 +126,19 @@ const InviteFriendsPanel = ({ variant = "hero", className, eyebrow }: Props) => 
       .order("created_at", { ascending: false })
       .limit(8);
     setInvites((data ?? []) as InviteRow[]);
+
+    const { count } = await supabase
+      .from("referral_invites")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "rewarded");
+    setRewardedCount(count ?? 0);
   }, [user]);
+
+  /** Faixa de desconto na renovação conforme as indicações já premiadas. */
+  const discountInfo = useMemo(
+    () => getReferralDiscount(config.referral_discount_tiers, rewardedCount),
+    [config.referral_discount_tiers, rewardedCount]
+  );
 
   useEffect(() => {
     void loadInvites();
@@ -287,6 +300,25 @@ const InviteFriendsPanel = ({ variant = "hero", className, eyebrow }: Props) => 
             </Button>
           </div>
         </div>
+        {user && discountInfo.next && (
+          <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 text-xs leading-relaxed">
+            <p className="font-medium text-primary">Desconto na renovação da sua assinatura</p>
+            <p className="text-muted-foreground">
+              Você já tem <strong>{rewardedCount}</strong> indicaç{rewardedCount === 1 ? "ão" : "ões"} premiada
+              {rewardedCount === 1 ? "" : "s"}. Com <strong>{discountInfo.next.invites}</strong> indicações você
+              ganha <strong>{discountInfo.next.percent}% de desconto</strong> na renovação.
+              {discountInfo.current &&
+                ` Desconto já garantido: ${discountInfo.current.percent}%.`}
+            </p>
+          </div>
+        )}
+        {user && !discountInfo.next && discountInfo.current && (
+          <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 text-xs">
+            <p className="font-medium text-primary">
+              Você já garantiu {discountInfo.current.percent}% de desconto na renovação da assinatura.
+            </p>
+          </div>
+        )}
         {user && invites.length > 0 && (
           <div className="space-y-1 rounded-lg border border-border/60 p-2">
             <p className="text-xs font-medium text-muted-foreground">Convites enviados</p>

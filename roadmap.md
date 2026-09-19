@@ -15,3 +15,6 @@
 
 - [x] Créditos de acesso por indicação de amigos (admin, convite por e-mail/WhatsApp/SMS, link /convite/:token, créditos)
 - [x] Exibir logomarca configurada no topo do menu lateral (Menu overlay)
+- [x] Escopo dos créditos (IA/professor/nenhum), créditos no cabeçalho, painel detalhado e texto do convite editável
+- [x] Mostrar nome do plano assinado abaixo do nome do usuário no cabeçalho
+- [x] Faixas de desconto por número de indicações (admin Cashback) + aviso ao aluno na tela de convite

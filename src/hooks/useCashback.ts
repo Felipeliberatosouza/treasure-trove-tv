@@ -44,6 +44,33 @@ export const DEFAULT_REFERRAL_ACCESS_GRANTS: ReferralAccessGrants = {
   ai_credits: 1,
 };
 
+/** Onde os créditos ganhos por indicação podem ser usados. */
+export type ReferralCreditScope = "ambos" | "ia" | "professor" | "nenhum";
+
+export const REFERRAL_SCOPE_LABELS: Record<ReferralCreditScope, string> = {
+  ambos: "Conteúdo de IA e de professores",
+  ia: "Somente conteúdo de IA",
+  professor: "Somente conteúdo de professores",
+  nenhum: "Não pode ser usado com créditos",
+};
+
+export type ReferralAccessScopes = Record<keyof ReferralAccessGrants, ReferralCreditScope>;
+
+export const DEFAULT_REFERRAL_ACCESS_SCOPES: ReferralAccessScopes = {
+  revisao: "ambos",
+  resumo: "ambos",
+  simulado: "ambos",
+  top_questoes: "ambos",
+  colinha: "ambos",
+  duvida: "ambos",
+  aula_particular: "professor",
+  ai_credits: "ia",
+};
+
+/** Texto padrão do convite enviado por e-mail, WhatsApp ou SMS. */
+export const DEFAULT_REFERRAL_INVITE_MESSAGE =
+  "{nome} te convidou para estudar na {plataforma}! Revisões, resumos, simulados, colinhas e aulas com professores em um só lugar. Acesse pelo link: {link}";
+
 export interface CashbackProgramConfig {
   enabled: boolean;
   grace_period_days: number;
@@ -57,7 +84,40 @@ export interface CashbackProgramConfig {
   referral_access_grants: ReferralAccessGrants;
   /** 0 = sem limite de indicações premiadas por aluno */
   referral_access_max_rewards: number;
+  /** Onde cada crédito ganho por indicação pode ser usado */
+  referral_access_scopes: ReferralAccessScopes;
+  /** Texto do convite enviado ao amigo */
+  referral_invite_message: string;
+  /** Faixas de desconto na renovação da assinatura conforme o número de indicações premiadas */
+  referral_discount_tiers: ReferralDiscountTier[];
   tiers: CashbackTier[];
+}
+
+/** Número de indicações premiadas e o % de desconto correspondente na renovação. */
+export interface ReferralDiscountTier {
+  invites: number;
+  percent: number;
+}
+
+export const DEFAULT_REFERRAL_DISCOUNT_TIERS: ReferralDiscountTier[] = [
+  { invites: 3, percent: 10 },
+  { invites: 5, percent: 20 },
+  { invites: 10, percent: 35 },
+];
+
+/** Próxima faixa de desconto a ser alcançada e a faixa já conquistada. */
+export function getReferralDiscount(
+  tiers: ReferralDiscountTier[] | undefined,
+  rewardedInvites: number
+): { current: ReferralDiscountTier | null; next: ReferralDiscountTier | null } {
+  const sorted = [...(tiers ?? [])].filter((t) => t.invites > 0).sort((a, b) => a.invites - b.invites);
+  let current: ReferralDiscountTier | null = null;
+  let next: ReferralDiscountTier | null = null;
+  for (const t of sorted) {
+    if (rewardedInvites >= t.invites) current = t;
+    else if (!next) next = t;
+  }
+  return { current, next };
 }
 
 export const DEFAULT_CASHBACK_CONFIG: CashbackProgramConfig = {
@@ -71,6 +131,9 @@ export const DEFAULT_CASHBACK_CONFIG: CashbackProgramConfig = {
   referral_access_enabled: true,
   referral_access_grants: DEFAULT_REFERRAL_ACCESS_GRANTS,
   referral_access_max_rewards: 0,
+  referral_access_scopes: DEFAULT_REFERRAL_ACCESS_SCOPES,
+  referral_invite_message: DEFAULT_REFERRAL_INVITE_MESSAGE,
+  referral_discount_tiers: DEFAULT_REFERRAL_DISCOUNT_TIERS,
   tiers: [
     { id: "bronze", name: "Bronze", min_spent_12m: 0, percent: 2 },
     { id: "silver", name: "Prata", min_spent_12m: 300, percent: 4 },

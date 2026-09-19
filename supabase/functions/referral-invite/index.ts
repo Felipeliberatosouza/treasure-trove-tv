@@ -159,8 +159,8 @@ Deno.serve(async (req) => {
       return respond({ ok: true, rewarded: true, referralCode });
     }
 
-    /* ---------------- SEND (autenticado) ---------------- */
-    if (action !== "send") return respond({ ok: false, error: "Ação inválida." }, 400);
+    /* ---------------- SEND / RESEND (autenticado) ---------------- */
+    if (action !== "send" && action !== "resend") return respond({ ok: false, error: "Ação inválida." }, 400);
 
     const authHeader = req.headers.get("Authorization") ?? "";
     if (!authHeader.startsWith("Bearer ")) return respond({ ok: false, error: "Faça login para enviar convites." }, 401);
@@ -184,15 +184,44 @@ Deno.serve(async (req) => {
       return respond({ ok: false, error: "Informe um celular válido com DDD." });
     }
 
-    const token = makeToken();
-    const { error: insertError } = await admin.from("referral_invites").insert({
-      referrer_user_id: userId,
-      channel,
-      contact_email: email || null,
-      contact_phone: phoneDigits || null,
-      token,
-    });
-    if (insertError) throw insertError;
+    let token: string;
+    if (action === "resend") {
+      const inviteId = String(body?.inviteId ?? "");
+      const { data: existing } = await admin
+        .from("referral_invites")
+        .select("id, token, referrer_user_id, status")
+        .eq("id", inviteId)
+        .maybeSingle();
+      if (!existing || existing.referrer_user_id !== userId) {
+        return respond({ ok: false, error: "Convite não encontrado." });
+      }
+      if (existing.status === "rewarded") {
+        return respond({ ok: false, error: "Este convite já foi usado pelo seu amigo." });
+      }
+      token = existing.token;
+      const { error: updError } = await admin
+        .from("referral_invites")
+        .update({
+          channel,
+          contact_email: email || null,
+          contact_phone: phoneDigits || null,
+          status: "sent",
+          sent_at: new Date().toISOString(),
+          expires_at: new Date(Date.now() + 60 * 24 * 3600 * 1000).toISOString(),
+        })
+        .eq("id", existing.id);
+      if (updError) throw updError;
+    } else {
+      token = makeToken();
+      const { error: insertError } = await admin.from("referral_invites").insert({
+        referrer_user_id: userId,
+        channel,
+        contact_email: email || null,
+        contact_phone: phoneDigits || null,
+        token,
+      });
+      if (insertError) throw insertError;
+    }
 
     const inviteLink = `${origin}/convite/${token}`;
 
@@ -211,9 +240,14 @@ Deno.serve(async (req) => {
     const platformName =
       ((brandingRow?.value as Record<string, string>)?.platform_name) || "Revisão Fácil";
 
-    const message =
-      `${referrerName ? referrerName + " te convidou" : "Você foi convidado"} para estudar na ${platformName}! ` +
-      `Revisões, resumos, simulados, colinhas e aulas com professores. Acesse: ${inviteLink}`;
+    const template =
+      (typeof cfg.referral_invite_message === "string" && cfg.referral_invite_message.trim()) ||
+      "{nome} te convidou para estudar na {plataforma}! Revisões, resumos, simulados, colinhas e aulas com professores em um só lugar. Acesse pelo link: {link}";
+
+    const message = template
+      .replaceAll("{nome}", referrerName || "Um amigo")
+      .replaceAll("{plataforma}", platformName)
+      .replaceAll("{link}", inviteLink);
 
     if (channel === "link") {
       return respond({ ok: true, token, inviteLink, message });
@@ -224,7 +258,7 @@ Deno.serve(async (req) => {
         body: {
           templateName: "cashback-referral-share",
           recipientEmail: email,
-          idempotencyKey: `referral-invite-${token}`,
+          idempotencyKey: `referral-invite-${token}-${Date.now()}`,
           templateData: {
             name: referrerName,
             referral_code: token,

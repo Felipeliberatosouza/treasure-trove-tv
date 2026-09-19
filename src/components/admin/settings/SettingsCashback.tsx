@@ -8,6 +8,14 @@ import { Switch } from "@/components/ui/switch";
 import { Card } from "@/components/ui/card";
 import { Save, Plus, Trash2, Sparkles, Users, Clock, Percent, Gift } from "lucide-react";
 import { toast } from "sonner";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   CashbackProgramConfig,
   DEFAULT_CASHBACK_CONFIG,
@@ -15,6 +23,12 @@ import {
   ReferralAccessGrants,
   REFERRAL_ACCESS_LABELS,
   DEFAULT_REFERRAL_ACCESS_GRANTS,
+  DEFAULT_REFERRAL_ACCESS_SCOPES,
+  DEFAULT_REFERRAL_INVITE_MESSAGE,
+  REFERRAL_SCOPE_LABELS,
+  DEFAULT_REFERRAL_DISCOUNT_TIERS,
+  type ReferralCreditScope,
+  type ReferralDiscountTier,
 } from "@/hooks/useCashback";
 
 const SettingsCashback = () => {
@@ -155,13 +169,14 @@ const SettingsCashback = () => {
           O aluno envia um convite por e-mail, WhatsApp ou SMS. Quando o amigo acessa a plataforma pelo
           link do convite, o indicador ganha os acessos abaixo — um prêmio por convite, independente de compra.
         </p>
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <div className="space-y-3">
           {(Object.keys(REFERRAL_ACCESS_LABELS) as (keyof ReferralAccessGrants)[]).map((k) => (
-            <div key={String(k)}>
-              <Label className="text-xs">{REFERRAL_ACCESS_LABELS[k]}</Label>
+            <div key={String(k)} className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_120px_minmax(0,1.4fr)] sm:items-end">
+              <Label className="text-xs sm:pb-2">{REFERRAL_ACCESS_LABELS[k]}</Label>
               <Input
                 type="number"
                 min={0}
+                aria-label={`Quantidade de ${REFERRAL_ACCESS_LABELS[k]}`}
                 value={cfg.referral_access_grants?.[k] ?? 0}
                 onChange={(e) =>
                   setCfg({
@@ -174,9 +189,37 @@ const SettingsCashback = () => {
                   })
                 }
               />
+              <Select
+                value={cfg.referral_access_scopes?.[k] ?? DEFAULT_REFERRAL_ACCESS_SCOPES[k]}
+                onValueChange={(v) =>
+                  setCfg({
+                    ...cfg,
+                    referral_access_scopes: {
+                      ...DEFAULT_REFERRAL_ACCESS_SCOPES,
+                      ...cfg.referral_access_scopes,
+                      [k]: v as ReferralCreditScope,
+                    },
+                  })
+                }
+              >
+                <SelectTrigger aria-label={`Onde usar ${REFERRAL_ACCESS_LABELS[k]}`}>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {(Object.keys(REFERRAL_SCOPE_LABELS) as ReferralCreditScope[]).map((s) => (
+                    <SelectItem key={s} value={s}>
+                      {REFERRAL_SCOPE_LABELS[s]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           ))}
         </div>
+        <p className="text-xs text-muted-foreground">
+          Para cada recurso escolha a quantidade liberada por indicação e onde o crédito pode ser usado.
+          Ao escolher "Não pode ser usado com créditos", o aluno verá que aquele conteúdo precisa ser comprado.
+        </p>
         <div className="max-w-xs">
           <Label>Máximo de indicações premiadas por aluno</Label>
           <Input
@@ -188,6 +231,87 @@ const SettingsCashback = () => {
             }
           />
           <p className="text-xs text-muted-foreground mt-1">0 = sem limite.</p>
+        </div>
+
+        <div>
+          <Label>Texto do convite enviado ao amigo</Label>
+          <Textarea
+            rows={4}
+            value={cfg.referral_invite_message ?? DEFAULT_REFERRAL_INVITE_MESSAGE}
+            onChange={(e) => setCfg({ ...cfg, referral_invite_message: e.target.value })}
+            placeholder={DEFAULT_REFERRAL_INVITE_MESSAGE}
+          />
+          <p className="text-xs text-muted-foreground mt-1">
+            Use <strong>{"{nome}"}</strong> para o nome de quem indica, <strong>{"{plataforma}"}</strong> para o
+            nome da plataforma e <strong>{"{link}"}</strong> para o link exclusivo do convite.
+          </p>
+        </div>
+
+        <div className="space-y-2">
+          <Label className="flex items-center gap-2">
+            <Percent className="h-4 w-4" /> Desconto na renovação por indicações
+          </Label>
+          <p className="text-xs text-muted-foreground">
+            Defina quantas indicações premiadas o aluno precisa acumular para ganhar cada % de desconto
+            na renovação da assinatura. O aluno vê essa meta na tela de convite.
+          </p>
+          {(cfg.referral_discount_tiers ?? DEFAULT_REFERRAL_DISCOUNT_TIERS).map((t, i) => {
+            const list = [...(cfg.referral_discount_tiers ?? DEFAULT_REFERRAL_DISCOUNT_TIERS)];
+            const update = (patch: Partial<ReferralDiscountTier>) => {
+              list[i] = { ...list[i], ...patch };
+              setCfg({ ...cfg, referral_discount_tiers: list });
+            };
+            return (
+              <div key={i} className="flex items-end gap-2">
+                <div className="flex-1">
+                  <Label className="text-xs">Indicações</Label>
+                  <Input
+                    type="number"
+                    min={1}
+                    value={t.invites}
+                    onChange={(e) => update({ invites: Number(e.target.value) })}
+                  />
+                </div>
+                <div className="flex-1">
+                  <Label className="text-xs">Desconto (%)</Label>
+                  <Input
+                    type="number"
+                    min={0}
+                    max={100}
+                    value={t.percent}
+                    onChange={(e) => update({ percent: Number(e.target.value) })}
+                  />
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() =>
+                    setCfg({
+                      ...cfg,
+                      referral_discount_tiers: list.filter((_, idx) => idx !== i),
+                    })
+                  }
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            );
+          })}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() =>
+              setCfg({
+                ...cfg,
+                referral_discount_tiers: [
+                  ...(cfg.referral_discount_tiers ?? DEFAULT_REFERRAL_DISCOUNT_TIERS),
+                  { invites: 1, percent: 5 },
+                ],
+              })
+            }
+          >
+            <Plus className="h-4 w-4 mr-1" /> Adicionar faixa
+          </Button>
         </div>
       </Card>
 

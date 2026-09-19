@@ -20,7 +20,9 @@ Deno.serve(async (req) => {
     // slide_index === -1 identifica a capa única do material.
     const slideIndex = Number.isInteger(body.slide_index) ? body.slide_index : -2;
     const isCover = slideIndex === -1;
-    if (!canonicalId || slideIndex < -1) return json({ error: "Slide inválido." }, 400);
+    const coverIds: string[] = Array.isArray(body.cover_ids)
+      ? body.cover_ids.filter((id: unknown) => typeof id === "string").slice(0, 40)
+      : [];
     const artifactType = isCover ? "cover" : "image";
 
     const admin = createClient(
@@ -28,6 +30,43 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
       { auth: { persistSession: false } },
     );
+
+    // Consulta em lote das capas já prontas (usada nas listagens de conteúdo).
+    if (coverIds.length > 0) {
+      const { data: rows } = await admin
+        .from("ai_content_artifacts")
+        .select("canonical_id, storage_path")
+        .in("canonical_id", coverIds)
+        .eq("artifact_type", "cover")
+        .eq("status", "ready");
+      const covers: Record<string, string> = {};
+      for (const row of rows || []) {
+        if (!row.storage_path) continue;
+        const { data: signed } = await admin.storage
+          .from("ai-revision-media")
+          .createSignedUrl(row.storage_path, 3600);
+        if (signed?.signedUrl) covers[row.canonical_id] = signed.signedUrl;
+      }
+      // Gera em segundo plano as capas que ainda não existem, para a próxima visita.
+      const missing = coverIds.filter((id) => !covers[id]).slice(0, 3);
+      const selfUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/study-slide-image`;
+      for (const id of missing) {
+        const task = fetch(selfUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+          },
+          body: JSON.stringify({ canonical_id: id, slide_index: -1 }),
+        }).catch(() => undefined);
+        // deno-lint-ignore no-explicit-any
+        const runtime = (globalThis as any).EdgeRuntime;
+        if (runtime?.waitUntil) runtime.waitUntil(task);
+      }
+      return json({ covers });
+    }
+
+    if (!canonicalId || slideIndex < -1) return json({ error: "Slide inválido." }, 400);
     // A capa é guardada com slide_index 0 e tipo "cover" (a coluna exige índice >= 0).
     const dbIndex = isCover ? 0 : slideIndex;
     const { data: existing } = await admin

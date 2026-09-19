@@ -7,6 +7,7 @@ import VideoCarousel from "@/components/VideoCarousel";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import type { Video } from "@/data/courses";
+import { useAiKitCovers } from "@/hooks/useAiKitCovers";
 
 interface StudentContentSectionsProps {
   /**

@@ -392,6 +392,7 @@ const SettingsAiAvatars = () => {
                     Fixa para todas as narrações deste avatar.
                   </p>
                 </div>
+                <AvatarStageFields avatar={av} onChange={(changes) => patch(av.id, changes)} />
                 <div className="space-y-2 sm:col-span-2">
                   <Label htmlFor={`disc-${av.id}`}>Disciplinas (separadas por vírgula)</Label>
                   <Input

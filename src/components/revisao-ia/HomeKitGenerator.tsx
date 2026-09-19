@@ -378,26 +378,35 @@ const HomeKitGenerator = () => {
         <div className="mx-auto mt-6 max-w-3xl space-y-4 text-left">
           <Card>
             <CardContent className="space-y-4 p-5">
-              <div className="flex items-center gap-2 text-sm font-semibold text-primary">
-                <Sparkles className="h-4 w-4" />
-                <span>{phaseLabel(step, steps.length)}</span>
-                <Dots />
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex items-center gap-2 text-sm font-semibold text-primary">
+                  <Sparkles className="h-4 w-4" />
+                  <span>{steps[step]?.label ?? "Pesquisando"}</span>
+                  <Dots />
+                </div>
+                <div className="rounded-full bg-primary/10 px-3 py-1 text-sm font-semibold tabular-nums text-primary">
+                  Conclusão em {formatCountdown(remainingMs)}
+                </div>
               </div>
               <ol className="space-y-2" aria-live="polite">
-                {steps.slice(0, step + 1).map((s, i) => (
-                  <li key={s} className="flex items-start gap-2 text-sm">
-                    {i < step ? (
-                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                    ) : (
-                      <Loader2 className="mt-0.5 h-4 w-4 shrink-0 animate-spin text-primary" />
-                    )}
-                    <span className={i < step ? "text-muted-foreground" : "text-foreground"}>{s}</span>
-                  </li>
-                ))}
+                {steps
+                  .map((s, i) => ({ ...s, i }))
+                  .filter((s) => s.phase === (steps[step]?.phase ?? 0) && s.i <= step)
+                  .map((s) => (
+                    <li key={s.task} className="flex items-start gap-2 text-sm">
+                      {s.i < step ? (
+                        <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                      ) : (
+                        <Loader2 className="mt-0.5 h-4 w-4 shrink-0 animate-spin text-primary" />
+                      )}
+                      <span className={s.i < step ? "text-muted-foreground" : "text-foreground"}>{s.task}</span>
+                    </li>
+                  ))}
               </ol>
               <p className="text-xs text-muted-foreground">
                 Você pode acompanhar aqui mesmo — assim que terminar, a revisão abre automaticamente.
               </p>
+
             </CardContent>
           </Card>
         </div>

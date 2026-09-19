@@ -88,7 +88,36 @@ export interface CashbackProgramConfig {
   referral_access_scopes: ReferralAccessScopes;
   /** Texto do convite enviado ao amigo */
   referral_invite_message: string;
+  /** Faixas de desconto na renovação da assinatura conforme o número de indicações premiadas */
+  referral_discount_tiers: ReferralDiscountTier[];
   tiers: CashbackTier[];
+}
+
+/** Número de indicações premiadas e o % de desconto correspondente na renovação. */
+export interface ReferralDiscountTier {
+  invites: number;
+  percent: number;
+}
+
+export const DEFAULT_REFERRAL_DISCOUNT_TIERS: ReferralDiscountTier[] = [
+  { invites: 3, percent: 10 },
+  { invites: 5, percent: 20 },
+  { invites: 10, percent: 35 },
+];
+
+/** Próxima faixa de desconto a ser alcançada e a faixa já conquistada. */
+export function getReferralDiscount(
+  tiers: ReferralDiscountTier[] | undefined,
+  rewardedInvites: number
+): { current: ReferralDiscountTier | null; next: ReferralDiscountTier | null } {
+  const sorted = [...(tiers ?? [])].filter((t) => t.invites > 0).sort((a, b) => a.invites - b.invites);
+  let current: ReferralDiscountTier | null = null;
+  let next: ReferralDiscountTier | null = null;
+  for (const t of sorted) {
+    if (rewardedInvites >= t.invites) current = t;
+    else if (!next) next = t;
+  }
+  return { current, next };
 }
 
 export const DEFAULT_CASHBACK_CONFIG: CashbackProgramConfig = {

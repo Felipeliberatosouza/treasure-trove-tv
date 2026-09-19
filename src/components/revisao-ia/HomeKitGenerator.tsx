@@ -201,7 +201,7 @@ const HomeKitGenerator = () => {
       /* armazenamento indisponível */
     }
     if (res.canonicalId) navigate(`/conteudo-ia/${res.canonicalId}`);
-  }, [step, loading, steps.length, navigate]);
+  }, [step, loading, steps.length, navigate, fast]);
 
   const handleSubmit = async (overridePrompt?: string) => {
     const pedido = (overridePrompt ?? assunto).trim();

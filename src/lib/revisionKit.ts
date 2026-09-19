@@ -109,9 +109,36 @@ async function callFn(body: Record<string, unknown>) {
     },
     body: JSON.stringify({ ...body, anon_id: getAnonId() }),
   });
-  const payload = await resp.json().catch(() => ({}));
-  return { ok: resp.ok, status: resp.status, payload } as const;
+  const contentType = resp.headers.get("Content-Type") || "";
+  if (!contentType.includes("ndjson") || !resp.body) {
+    const payload = await resp.json().catch(() => ({}));
+    return { ok: resp.ok, status: resp.status, payload } as const;
+  }
+
+  // Resposta em linhas: "pings" mantêm a conexão viva até o resultado final.
+  const reader = resp.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  let final: { status: number; payload: any } | null = null;
+  while (true) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    let idx: number;
+    while ((idx = buffer.indexOf("\n")) >= 0) {
+      const line = buffer.slice(0, idx).trim();
+      buffer = buffer.slice(idx + 1);
+      if (!line) continue;
+      try {
+        const msg = JSON.parse(line);
+        if (msg?.type === "result") final = { status: msg.status ?? 200, payload: msg.payload ?? {} };
+      } catch { /* linha parcial ou ping inválido */ }
+    }
+  }
+  if (!final) return { ok: false, status: 500, payload: { error: "Conexão interrompida. Tente novamente." } } as const;
+  return { ok: final.status >= 200 && final.status < 400, status: final.status, payload: final.payload } as const;
 }
+
 
 export async function fetchKitStatus(): Promise<KitStatus> {
   const { ok, payload } = await callFn({ action: "status" });

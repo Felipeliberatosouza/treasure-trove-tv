@@ -42,6 +42,7 @@ export function useResourceLimit() {
   const [plan, setPlan] = useState<SubscriptionPlan | null>(null);
   const [usageCounts, setUsageCounts] = useState<Record<string, number>>({});
   const [resourcePrices, setResourcePrices] = useState<Record<string, number>>({});
+  const [referralCredits, setReferralCredits] = useState<Record<string, number>>({});
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {

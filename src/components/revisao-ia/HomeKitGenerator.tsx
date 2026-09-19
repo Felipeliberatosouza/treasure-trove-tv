@@ -129,16 +129,20 @@ const HomeKitGenerator = () => {
     return () => clearInterval(t);
   }, [loading, steps.length]);
 
-  const handleSubmit = async () => {
-    if (submittingRef.current || assunto.trim().length < 3) return;
+  const handleSubmit = async (overridePrompt?: string) => {
+    const pedido = (overridePrompt ?? assunto).trim();
+    if (pedido.length < 3) return;
+    const runId = runIdRef.current + 1;
+    runIdRef.current = runId;
     submittingRef.current = true;
-    setSteps(buildSteps(assunto.trim(), disciplina.trim(), nivel));
+    setSteps(buildSteps(pedido, disciplina.trim(), nivel));
     setStep(0);
     setLoading(true);
     setErrorMsg(null);
+    setNotice(null);
     setBlocked(null);
     const { data, error } = await requestKit({
-      assunto: assunto.trim(),
+      assunto: pedido,
       disciplina: disciplina.trim() || undefined,
       curso: curso.trim() || undefined,
       instituicao: instituicao.trim() || undefined,
@@ -146,6 +150,8 @@ const HomeKitGenerator = () => {
       nivel,
       idempotency_key: crypto.randomUUID(),
     });
+    // Pedido cancelado ou substituído por uma nova mensagem: ignora este resultado.
+    if (runIdRef.current !== runId) return;
     setLoading(false);
     submittingRef.current = false;
     if (error) {
@@ -159,6 +165,27 @@ const HomeKitGenerator = () => {
       /* armazenamento indisponível */
     }
     if (data?.canonical_id) navigate(`/conteudo-ia/${data.canonical_id}`);
+  };
+
+  /** Interrompe o processamento em andamento. */
+  const handleStop = () => {
+    runIdRef.current += 1;
+    submittingRef.current = false;
+    setLoading(false);
+    setNotice("Processamento interrompido. Ajuste o pedido e envie novamente quando quiser.");
+  };
+
+  /** Envia uma nova instrução durante o processamento: reinicia com o pedido atualizado. */
+  const handleSendMessage = () => {
+    const msg = chatMsg.trim();
+    if (!msg) return;
+    setMessages((prev) => [...prev, msg]);
+    setChatMsg("");
+    const novoPedido = `${assunto.trim()}\n\nAjuste solicitado: ${msg}`;
+    setAssunto(novoPedido);
+    runIdRef.current += 1;
+    submittingRef.current = false;
+    void handleSubmit(novoPedido);
   };
 
   if (blocked) {

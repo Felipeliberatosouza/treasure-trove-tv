@@ -701,6 +701,11 @@ const AdminUsersTab = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      <CreditStatementDialog
+        user={statementUser ? { user_id: statementUser.user_id, name: statementUser.name } : null}
+        onClose={() => setStatementUser(null)}
+      />
     </div>
   );
 };

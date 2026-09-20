@@ -54,6 +54,8 @@ const Index = () => {
   const [aiKitIds, setAiKitIds] = useState<Set<string>>(new Set());
   const [aiKitAreas, setAiKitAreas] = useState<Record<string, string[]>>({});
   const aiCovers = useAiKitCovers(aiKits.map((k) => k.id));
+  const [statRatings, setStatRatings] = useState<Record<string, { average: number; count: number }>>({});
+  const [statViews, setStatViews] = useState<Record<string, number>>({});
   const [teacherLessons, setTeacherLessons] = useState<Video[]>([]);
   const [teacherExams, setTeacherExams] = useState<Video[]>([]);
   const [loadingTeacherContent, setLoadingTeacherContent] = useState(false);

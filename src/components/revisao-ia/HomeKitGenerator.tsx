@@ -304,15 +304,15 @@ const HomeKitGenerator = () => {
             </>
           ) : (
             <>
-              <h2 className="text-xl font-bold">Seus créditos gratuitos acabaram</h2>
+              <h2 className="text-xl font-bold">Seus Créditos de IA acabaram</h2>
               <p className="text-sm text-muted-foreground">
-                Assine a Revisão Fácil para continuar gerando kits, ou escolha uma aula com professor
-                e conteúdos avulsos do catálogo.
+                Compre Créditos de IA avulsos, assine um plano com Créditos de IA inclusos, ou escolha
+                uma aula com professor e conteúdos avulsos do catálogo.
               </p>
               <div className="flex flex-wrap justify-center gap-2">
-                <Button asChild><Link to="/#pricing">Ver planos</Link></Button>
-                <Button asChild variant="outline"><Link to="/minhas-aulas-agendadas">Aula com professor</Link></Button>
-                <Button asChild variant="ghost"><Link to="/revisoes">Conteúdos avulsos</Link></Button>
+                <Button asChild><Link to="/creditos-ia">Comprar Créditos de IA</Link></Button>
+                <Button asChild variant="outline"><Link to="/#pricing">Ver planos</Link></Button>
+                <Button asChild variant="ghost"><Link to="/minhas-aulas-agendadas">Aula com professor</Link></Button>
               </div>
             </>
           )}

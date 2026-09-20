@@ -22,6 +22,7 @@ import {
   type AiContentTypeId,
 } from "@/hooks/usePlatformSettings";
 import AvatarGalleryPicker from "./AvatarGalleryPicker";
+import VoicePreviewButton, { VOICE_SAMPLE_TEXT } from "./VoicePreviewButton";
 import type { CatalogAvatar } from "@/components/study/avatarCatalog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -236,8 +237,13 @@ const SettingsAiAvatars = () => {
                 ))}
               </SelectContent>
             </Select>
+            <VoicePreviewButton
+              voice={avatar.voice || defaultVoiceForGender(avatar.gender)}
+              gender={avatar.gender}
+            />
             <p className="text-xs text-muted-foreground">
               Vale para todas as narrações feitas com este avatar. Legenda: {aiRoleLabel(avatar.gender)}.
+              Frase do exemplo: “{VOICE_SAMPLE_TEXT}”
             </p>
           </div>
           <AvatarStageFields avatar={avatar} onChange={(changes) => setAvatar({ ...avatar, ...changes })} />
@@ -305,6 +311,10 @@ const SettingsAiAvatars = () => {
                       ))}
                     </SelectContent>
                   </Select>
+                  <VoicePreviewButton
+                    voice={av.voice || defaultVoiceForGender(av.gender)}
+                    gender={av.gender}
+                  />
                   <p className="text-xs text-muted-foreground">
                     Legenda exibida: {aiRoleLabel(av.gender)}
                   </p>

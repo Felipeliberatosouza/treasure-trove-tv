@@ -94,6 +94,14 @@ const KitResult = ({ result, onNewKit, initialTab }: Props) => {
         <NarratedSlidesPlayer topico={kit.assunto} disciplina={kit.disciplina} slides={kit.slides ?? []} canonicalId={result.canonical_id} areas={result.areas} faixaEtaria={kit.faixa_etaria} />
       </div>
 
+      {result.canonical_id && (
+        <ContentRating
+          contentId={result.canonical_id}
+          contentType="ai"
+          title="Avalie esta aula com professor virtual"
+        />
+      )}
+
       {/* Dúvidas sobre a aula com professor virtual: vão para a equipe da plataforma. */}
       <DoubtForm
         contentId={result.canonical_id ?? undefined}
@@ -101,6 +109,7 @@ const KitResult = ({ result, onNewKit, initialTab }: Props) => {
         title="Enviar Dúvida sobre esta aula"
         placeholder="Descreva sua dúvida sobre esta aula com professor virtual..."
       />
+
 
 
 

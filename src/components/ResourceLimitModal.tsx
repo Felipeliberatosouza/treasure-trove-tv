@@ -69,8 +69,8 @@ export default function ResourceLimitModal({
             <div className="flex items-start gap-2 rounded-xl border border-destructive/30 bg-destructive/10 p-3">
               <AlertTriangle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
               <p className="text-xs leading-relaxed text-destructive">
-                Este conteúdo precisa ser comprado e <strong>não pode ser acessado com os créditos
-                ganhos por indicação</strong>. Assine um plano ou compre o conteúdo avulso para continuar.
+                Este conteúdo precisa ser comprado e <strong>não pode ser acessado com os Créditos
+                de IA Ganhos por Indicação</strong>. Assine um plano ou compre o conteúdo avulso para continuar.
               </p>
             </div>
           )}

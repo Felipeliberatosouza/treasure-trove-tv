@@ -12,7 +12,8 @@ const PaymentSuccess = () => {
   const [searchParams] = useSearchParams();
   const sessionId = searchParams.get("session_id");
   const contentId = searchParams.get("content_id");
-  const isUnitPurchase = !!sessionId && !!contentId;
+  const isAiCredits = !!sessionId && searchParams.get("ai_credits") === "1";
+  const isUnitPurchase = (!!sessionId && !!contentId) || isAiCredits;
   const { refreshSubscription, subscription, user, profile } = useAuth();
   const [verified, setVerified] = useState(false);
   const [checking, setChecking] = useState(true);

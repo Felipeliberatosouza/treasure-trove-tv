@@ -80,22 +80,21 @@ const Index = () => {
         .order("updated_at", { ascending: false })
         .limit(20);
       const mapped: Video[] = (data || []).map((row) => {
-        const kit = (row.kit || {}) as { titulo?: string; slides?: unknown[]; resumo?: unknown };
+        const kit = (row.kit || {}) as { titulo?: string; slides?: { narracao?: string }[] };
+        const avatar = resolveAiAvatar(
+          aiParams,
+          { ...DEFAULT_AI_AVATAR, ...(aiAvatarSettings || {}) },
+          { disciplina: row.disciplina, areas: (row.areas as string[] | null) || [], contentType: "apresentacao" },
+        );
         return {
           id: row.id,
           title: kit.titulo || row.assunto,
           description: row.disciplina || "Revisão gerada com apoio de IA",
-          thumbnail: aiKitCover,
-          duration: "Aula com Professor Virtual",
+          thumbnail: "",
+          duration: formatDuration(estimateSlidesDuration(kit.slides)),
           category: ((row.areas as string[] | null) || [])[0] || row.disciplina || "Revisão com IA",
-          instructor: (() => {
-            const avatar = resolveAiAvatar(
-              aiParams,
-              { ...DEFAULT_AI_AVATAR, ...(aiAvatarSettings || {}) },
-              { disciplina: row.disciplina, areas: (row.areas as string[] | null) || [], contentType: "apresentacao" },
-            );
-            return `${aiRoleLabel(avatar.gender)} ${avatar.name}`.trim();
-          })(),
+          instructor: aiInstructorLabel(avatar.gender, avatar.name),
+          overlayLabel: aiOverlayLabel(avatar.gender, avatar.name),
           lessons: Array.isArray(kit.slides) ? kit.slides.length : 0,
         };
       });

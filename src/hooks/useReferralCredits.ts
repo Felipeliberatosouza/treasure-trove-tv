@@ -79,6 +79,10 @@ export function useReferralCredits() {
         .from("referral_invites")
         .select("id, channel, contact_email, contact_phone, token, status, created_at, visited_at, rewarded_at")
         .order("created_at", { ascending: false }),
+      supabase
+        .from("ai_revision_credit_ledger")
+        .select("delta, reason")
+        .eq("user_id", user.id),
     ]);
 
     setRows(

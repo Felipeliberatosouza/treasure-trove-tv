@@ -19,6 +19,7 @@ import VLibrasWidget from "@/components/VLibrasWidget";
 import ForensicWatermark from "@/components/ForensicWatermark";
 import BrandStamp from "@/components/branding/BrandStamp";
 import DoubtForm from "@/components/DoubtForm";
+import ContentRating from "@/components/ContentRating";
 
 interface Props {
   result: KitResponse;

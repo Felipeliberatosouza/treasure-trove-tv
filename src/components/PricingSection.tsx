@@ -37,7 +37,17 @@ interface PlanData {
   service_duvidas_qty?: number;
   service_aula_particular?: boolean;
   service_aula_particular_qty?: number;
+  ai_credits_mode?: string;
+  ai_credits_qty?: number;
 }
+
+const aiCreditsLine = (plan: PlanData): string | null => {
+  if (plan.ai_credits_mode === "unlimited") return "Uso de IA ilimitado";
+  if (plan.ai_credits_mode === "included" && (plan.ai_credits_qty || 0) > 0) {
+    return `Créditos de IA: ${plan.ai_credits_qty} por mês`;
+  }
+  return null;
+};
 
 const SERVICE_LABELS: Record<string, string> = {
   service_revisoes: "Revisões",

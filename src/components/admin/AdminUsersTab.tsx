@@ -63,6 +63,33 @@ const AdminUsersTab = () => {
   const [creditUser, setCreditUser] = useState<UserWithRole | null>(null);
   const [creditValues, setCreditValues] = useState<Record<string, string>>({});
   const [savingCredits, setSavingCredits] = useState(false);
+  const [statementUser, setStatementUser] = useState<UserWithRole | null>(null);
+  // Resumo de créditos gratuitos por usuário (usados x restantes).
+  const [creditSummary, setCreditSummary] = useState<Record<string, { used: number; remaining: number }>>({});
+
+  const loadCreditSummary = async () => {
+    const [{ data: rows }, { data: ai }] = await Promise.all([
+      supabase.from("referral_content_credits").select("user_id, granted, used"),
+      supabase.from("ai_revision_credits").select("user_id, balance"),
+    ]);
+    const map: Record<string, { used: number; remaining: number }> = {};
+    (rows || []).forEach((r: any) => {
+      const entry = map[r.user_id] || { used: 0, remaining: 0 };
+      entry.used += r.used || 0;
+      entry.remaining += Math.max(0, (r.granted || 0) - (r.used || 0));
+      map[r.user_id] = entry;
+    });
+    (ai || []).forEach((r: any) => {
+      const entry = map[r.user_id] || { used: 0, remaining: 0 };
+      entry.remaining += r.balance || 0;
+      map[r.user_id] = entry;
+    });
+    setCreditSummary(map);
+  };
+
+  useEffect(() => {
+    void loadCreditSummary();
+  }, []);
   const { toast } = useToast();
 
   const handleGrantCredits = async () => {

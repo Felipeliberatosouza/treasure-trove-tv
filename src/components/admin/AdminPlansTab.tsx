@@ -105,6 +105,14 @@ const AdminPlansTab = () => {
     // Validate: every enabled service must have a quantity > 0
     for (let i = 0; i < plans.length; i++) {
       const plan = plans[i];
+      if (plan.ai_credits_mode === "included" && !(Number(plan.ai_credits_qty) > 0)) {
+        toast({
+          title: "Créditos de IA obrigatórios",
+          description: `No plano "${plan.name || `Plano ${i + 1}`}", informe a quantidade de Créditos de IA.`,
+          variant: "destructive",
+        });
+        return;
+      }
       for (const s of SERVICE_KEYS) {
         if (plan[`service_${s.key}`]) {
           const qty = Number(plan[`service_${s.key}_qty`]);

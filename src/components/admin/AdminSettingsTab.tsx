@@ -27,9 +27,9 @@ const SECTIONS_RAW = [
   { id: "alert_box", label: "Caixa de Alerta", icon: AlertTriangle },
   { id: "aula_particular", label: "Aula Particular", icon: CalendarClock },
   { id: "areas", label: "Áreas de Cursos", icon: FolderOpen },
-  { id: "secondary_student", label: "Banner Secundário Aluno", icon: Megaphone },
-  { id: "secondary_teacher", label: "Banner Secundário Professor", icon: Megaphone },
-  { id: "secondary", label: "Banner Secundário Visitante", icon: Megaphone },
+  { id: "secondary_student", label: "Banner Aluno", icon: Megaphone },
+  { id: "secondary_teacher", label: "Banner Professor", icon: Megaphone },
+  { id: "secondary", label: "Banner Visitante", icon: Megaphone },
   { id: "cashback", label: "Cashback", icon: Sparkles },
   { id: "products", label: "Config. de Produtos", icon: Package },
   { id: "contract", label: "Contrato do Professor", icon: FileSignature },
@@ -87,19 +87,19 @@ const AdminSettingsTab = () => {
       {activeSection === "secondary" && (
         <SettingsHeroBanner
           settingsKey="secondary_banner"
-          description="Banner secundário (acima do rodapé) exibido para visitantes (não logados). O administrador vê os banners de aluno e professor em um carrossel automático."
+          description="Banner exibido na página inicial (acima do rodapé) para quem NÃO está logado. Use uma mensagem de convite: conhecer a plataforma, criar conta, ver planos. O administrador vê os banners de aluno e professor em um carrossel automático."
         />
       )}
       {activeSection === "secondary_student" && (
         <SettingsHeroBanner
           settingsKey="secondary_banner_student"
-          description="Banner secundário (acima do rodapé) exibido para alunos logados. Também aparece como um dos slides do carrossel do administrador."
+          description="Banner exibido na página inicial (acima do rodapé) para alunos logados. Use uma mensagem para quem já estuda aqui: novos materiais, simulados, aula com professor, indicação de amigos."
         />
       )}
       {activeSection === "secondary_teacher" && (
         <SettingsHeroBanner
           settingsKey="secondary_banner_teacher"
-          description="Banner secundário (acima do rodapé) exibido para professores logados. Também aparece como um dos slides do carrossel do administrador."
+          description="Banner exibido na página inicial (acima do rodapé) para professores logados. Use uma mensagem para o professor: publicar aulas, responder dúvidas, metas e ganhos."
         />
       )}
       {activeSection === "areas" && <SettingsCourseAreas />}

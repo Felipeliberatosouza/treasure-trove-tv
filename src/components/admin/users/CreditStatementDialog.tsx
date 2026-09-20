@@ -109,6 +109,20 @@ const CreditStatementDialog = ({
     };
   }, [user]);
 
+  // Separa os Créditos de IA recebidos por origem (indicação, compra, bônus) e os usados.
+  const aiOrigin = ledger.reduce(
+    (acc, l) => {
+      const delta = Number(l.delta ?? 0);
+      const reason = (l.reason || "").toLowerCase();
+      if (delta < 0) acc.used += -delta;
+      else if (reason.startsWith("referral")) acc.referral += delta;
+      else if (reason.startsWith("purchase")) acc.purchased += delta;
+      else acc.bonus += delta;
+      return acc;
+    },
+    { referral: 0, purchased: 0, bonus: 0, used: 0 }
+  );
+
   return (
     <Dialog open={!!user} onOpenChange={(o) => { if (!o) onClose(); }}>
       <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
@@ -150,16 +164,47 @@ const CreditStatementDialog = ({
                         <TableCell className="text-right font-medium">{Math.max(0, c.granted - c.used)}</TableCell>
                       </TableRow>
                     ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </section>
+
+            <section>
+              <h3 className="mb-2 text-sm font-semibold">Créditos de IA por origem</h3>
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
                     <TableRow>
-                      <TableCell>Créditos de IA</TableCell>
-                      <TableCell className="text-right">—</TableCell>
-                      <TableCell className="text-right">—</TableCell>
+                      <TableHead>Origem</TableHead>
+                      <TableHead className="text-right">Recebidos</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    <TableRow>
+                      <TableCell>Créditos de IA Ganhos por Indicação</TableCell>
+                      <TableCell className="text-right">{aiOrigin.referral}</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell>Créditos de IA Comprados</TableCell>
+                      <TableCell className="text-right">{aiOrigin.purchased}</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell>Créditos de IA de bônus, plano ou equipe</TableCell>
+                      <TableCell className="text-right">{aiOrigin.bonus}</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell>Créditos de IA usados</TableCell>
+                      <TableCell className="text-right text-destructive">{aiOrigin.used}</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="font-medium">Saldo atual de Créditos de IA</TableCell>
                       <TableCell className="text-right font-medium">{aiBalance}</TableCell>
                     </TableRow>
                   </TableBody>
                 </Table>
               </div>
             </section>
+
 
             <section>
               <h3 className="mb-2 text-sm font-semibold">Movimentação dos Créditos de IA</h3>

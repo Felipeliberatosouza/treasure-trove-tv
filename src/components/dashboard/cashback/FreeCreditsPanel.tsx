@@ -95,16 +95,57 @@ const FreeCreditsPanel = () => {
                 <Badge variant={r.remaining > 0 ? "default" : "outline"}>{r.remaining} restantes</Badge>
               </div>
             ))}
-            <div className="flex items-center justify-between rounded-lg border p-3">
-              <div className="flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-primary" />
-                <p className="text-sm font-medium">Créditos de IA</p>
-              </div>
-              <Badge variant={aiCredits > 0 ? "default" : "outline"}>{aiCredits} restantes</Badge>
-            </div>
           </div>
         )}
       </Card>
+
+      <Card className="p-4">
+        <div className="flex items-center gap-2 mb-3">
+          <Sparkles className="h-4 w-4 text-primary" />
+          <h3 className="font-semibold">Créditos de IA</h3>
+          <Badge variant={aiCredits > 0 ? "default" : "outline"} className="ml-auto">
+            {aiCredits} disponíveis
+          </Badge>
+        </div>
+
+        {loading ? (
+          <p className="text-sm text-muted-foreground">Carregando…</p>
+        ) : (
+          <div className="space-y-2">
+            <div className="flex items-center justify-between rounded-lg border p-3">
+              <div>
+                <p className="text-sm font-medium">Ganhos por indicação</p>
+                <p className="text-xs text-muted-foreground">
+                  Créditos recebidos ao indicar amigos
+                </p>
+              </div>
+              <Badge variant="secondary">{aiBreakdown.referral}</Badge>
+            </div>
+            <div className="flex items-center justify-between rounded-lg border p-3">
+              <div>
+                <p className="text-sm font-medium">Comprados</p>
+                <p className="text-xs text-muted-foreground">Pacotes de Créditos de IA adquiridos</p>
+              </div>
+              <Badge variant="secondary">{aiBreakdown.purchased}</Badge>
+            </div>
+            {aiBreakdown.bonus > 0 && (
+              <div className="flex items-center justify-between rounded-lg border p-3">
+                <div>
+                  <p className="text-sm font-medium">Bônus e plano</p>
+                  <p className="text-xs text-muted-foreground">
+                    Créditos do cadastro, do plano assinado ou concedidos pela equipe
+                  </p>
+                </div>
+                <Badge variant="secondary">{aiBreakdown.bonus}</Badge>
+              </div>
+            )}
+            <p className="text-xs text-muted-foreground px-1">
+              Já utilizados: {aiBreakdown.used} • Saldo atual: {aiCredits}
+            </p>
+          </div>
+        )}
+      </Card>
+
 
       <Card className="p-4">
         <div className="flex items-center gap-2 mb-3">

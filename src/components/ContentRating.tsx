@@ -53,17 +53,20 @@ const ContentRating = ({ contentId, contentType, title = "Avalie esta aula" }: P
       return;
     }
     setSaving(true);
-    if (userRating !== null) {
-      await supabase
-        .from("video_ratings")
-        .update({ rating: value })
-        .eq("user_id", user.id)
-        .eq("content_type", contentType)
-        .eq("content_id", contentId);
-    } else {
-      await supabase
-        .from("video_ratings")
-        .insert({ user_id: user.id, content_type: contentType, content_id: contentId, rating: value });
+    const { error } = userRating !== null
+      ? await supabase
+          .from("video_ratings")
+          .update({ rating: value })
+          .eq("user_id", user.id)
+          .eq("content_type", contentType)
+          .eq("content_id", contentId)
+      : await supabase
+          .from("video_ratings")
+          .insert({ user_id: user.id, content_type: contentType, content_id: contentId, rating: value });
+    if (error) {
+      toast.error("Não foi possível registrar sua avaliação. Tente novamente.");
+      setSaving(false);
+      return;
     }
     toast.success("Avaliação registrada!");
     await load();

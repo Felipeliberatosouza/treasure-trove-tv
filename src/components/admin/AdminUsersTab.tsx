@@ -119,7 +119,7 @@ const AdminUsersTab = () => {
       metadata: { grants },
     });
     await loadCreditSummary();
-    toast({ title: "Créditos concedidos", description: `Créditos adicionados para ${creditUser.name}.` });
+    toast({ title: "Créditos de IA concedidos", description: `Créditos de IA adicionados para ${creditUser.name}.` });
     setCreditUser(null);
     setCreditValues({});
   };
@@ -396,8 +396,8 @@ const AdminUsersTab = () => {
                 <TableHead>Aceita e-mails</TableHead>
                 <TableHead>Contrato</TableHead>
                 <TableHead>Teste Grátis</TableHead>
-                <TableHead className="text-right">Créditos usados</TableHead>
-                <TableHead className="text-right">Créditos restantes</TableHead>
+                <TableHead className="text-right">Créditos de IA usados</TableHead>
+                <TableHead className="text-right">Créditos de IA restantes</TableHead>
                 <TableHead>Extrato</TableHead>
                 <TableHead>Aniversário</TableHead>
                 <TableHead>Cadastro</TableHead>
@@ -491,7 +491,7 @@ const AdminUsersTab = () => {
                         variant="outline"
                         className="h-8 shrink-0 gap-1 border-primary/40 text-primary hover:text-primary"
                         onClick={() => { setCreditUser(u); setCreditValues({}); }}
-                        title="Conceder créditos por recurso"
+                        title="Conceder Créditos de IA por recurso"
                       >
                         <Coins className="h-4 w-4" /> Créditos
                       </Button>
@@ -673,7 +673,7 @@ const AdminUsersTab = () => {
           </DialogHeader>
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              Informe quantos acessos gratuitos serão concedidos a <strong>{creditUser?.name}</strong> em cada recurso.
+              Informe quantos Créditos de IA serão concedidos a <strong>{creditUser?.name}</strong> em cada recurso.
               Os créditos somam ao saldo gratuito do usuário.
             </p>
             <div className="grid grid-cols-2 gap-3">
@@ -696,7 +696,7 @@ const AdminUsersTab = () => {
             </div>
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => { setCreditUser(null); setCreditValues({}); }} disabled={savingCredits}>Cancelar</Button>
-              <Button onClick={handleGrantCredits} disabled={savingCredits}>{savingCredits ? "Salvando..." : "Conceder créditos"}</Button>
+              <Button onClick={handleGrantCredits} disabled={savingCredits}>{savingCredits ? "Salvando..." : "Conceder Créditos de IA"}</Button>
             </div>
           </div>
         </DialogContent>

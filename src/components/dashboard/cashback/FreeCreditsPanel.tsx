@@ -70,7 +70,7 @@ const FreeCreditsPanel = () => {
       <Card className="p-4">
         <div className="flex items-center gap-2 mb-3">
           <Gift className="h-4 w-4 text-primary" />
-          <h3 className="font-semibold">Acessos gratuitos por indicação (conteúdos)</h3>
+          <h3 className="font-semibold">Créditos de IA Ganhos por Indicação (conteúdos)</h3>
           <Badge variant="secondary" className="ml-auto">
             {totalRemaining} disponíveis
           </Badge>
@@ -80,7 +80,7 @@ const FreeCreditsPanel = () => {
           <p className="text-sm text-muted-foreground">Carregando…</p>
         ) : rows.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            Você ainda não tem acessos gratuitos. Convide amigos e ganhe acessos.
+            Você ainda não tem Créditos de IA. Convide amigos e ganhe Créditos de IA.
           </p>
         ) : (
           <div className="space-y-2">
@@ -114,16 +114,16 @@ const FreeCreditsPanel = () => {
           <div className="space-y-2">
             <div className="flex items-center justify-between rounded-lg border p-3">
               <div>
-                <p className="text-sm font-medium">Ganhos por indicação</p>
+                <p className="text-sm font-medium">Créditos de IA Ganhos por Indicação</p>
                 <p className="text-xs text-muted-foreground">
-                  Créditos recebidos ao indicar amigos
+                  Créditos de IA recebidos ao indicar amigos
                 </p>
               </div>
               <Badge variant="secondary">{aiBreakdown.referral}</Badge>
             </div>
             <div className="flex items-center justify-between rounded-lg border p-3">
               <div>
-                <p className="text-sm font-medium">Comprados</p>
+                <p className="text-sm font-medium">Créditos de IA Comprados</p>
                 <p className="text-xs text-muted-foreground">Pacotes de Créditos de IA adquiridos</p>
               </div>
               <Badge variant="secondary">{aiBreakdown.purchased}</Badge>
@@ -131,9 +131,9 @@ const FreeCreditsPanel = () => {
             {aiBreakdown.bonus > 0 && (
               <div className="flex items-center justify-between rounded-lg border p-3">
                 <div>
-                  <p className="text-sm font-medium">Bônus e plano</p>
+                  <p className="text-sm font-medium">Créditos de IA de bônus e do plano</p>
                   <p className="text-xs text-muted-foreground">
-                    Créditos do cadastro, do plano assinado ou concedidos pela equipe
+                    Créditos de IA do cadastro, do plano assinado ou concedidos pela equipe
                   </p>
                 </div>
                 <Badge variant="secondary">{aiBreakdown.bonus}</Badge>

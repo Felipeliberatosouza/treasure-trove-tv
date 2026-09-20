@@ -70,7 +70,7 @@ const FreeCreditsPanel = () => {
       <Card className="p-4">
         <div className="flex items-center gap-2 mb-3">
           <Gift className="h-4 w-4 text-primary" />
-          <h3 className="font-semibold">Créditos de IA Ganhos por Indicação (conteúdos)</h3>
+          <h3 className="font-semibold">Acessos grátis a conteúdos (ganhos por indicação)</h3>
           <Badge variant="secondary" className="ml-auto">
             {totalRemaining} disponíveis
           </Badge>

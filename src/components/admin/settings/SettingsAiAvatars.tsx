@@ -22,6 +22,7 @@ import {
   type AiContentTypeId,
 } from "@/hooks/usePlatformSettings";
 import AvatarGalleryPicker from "./AvatarGalleryPicker";
+import VoicePreviewButton, { VOICE_SAMPLE_TEXT } from "./VoicePreviewButton";
 import type { CatalogAvatar } from "@/components/study/avatarCatalog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";

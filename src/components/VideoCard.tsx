@@ -1,8 +1,9 @@
 import { motion } from "framer-motion";
 import { Play, Clock, Eye, Star, Gift, CheckCircle } from "lucide-react";
 import type { Video } from "@/data/courses";
-import { prefetchSignedUrlForContent } from "@/lib/signedUrlCache";
-import { useEffect, useRef } from "react";
+import { prefetchSignedUrlForContent, getSignedVideoUrl } from "@/lib/signedUrlCache";
+import { formatDuration } from "@/lib/contentDisplay";
+import { useEffect, useRef, useState } from "react";
 
 interface VideoCardProps {
   video: Video;

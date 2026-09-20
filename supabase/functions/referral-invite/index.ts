@@ -214,6 +214,46 @@ Deno.serve(async (req) => {
       return respond({ ok: false, error: "Informe um celular válido com DDD." });
     }
 
+    /* --- Conferência do contato indicado --- */
+    if (channel !== "link" && (email || phoneDigits)) {
+      const { data: registered } = await admin.rpc("is_contact_registered", {
+        _email: email || null,
+        _phone: phoneDigits || null,
+      });
+      if (registered === true) {
+        return respond({
+          ok: false,
+          error: "Esse contato já tem cadastro na plataforma, então não conta como indicação.",
+        });
+      }
+
+      const filters: string[] = [];
+      if (email) filters.push(`contact_email.eq.${email}`);
+      if (phoneDigits) filters.push(`contact_phone.eq.${phoneDigits}`);
+      const { data: previous } = await admin
+        .from("referral_invites")
+        .select("id, status, visited_at, referrer_user_id")
+        .or(filters.join(","));
+      const alreadyVisited = (previous ?? []).some(
+        (p) => p.visited_at || p.status === "visited" || p.status === "rewarded"
+      );
+      if (alreadyVisited) {
+        return respond({
+          ok: false,
+          error: "Esse contato já acessou a plataforma por um convite, então não conta como indicação.",
+        });
+      }
+      const ownPending = (previous ?? []).find(
+        (p) => p.referrer_user_id === userId && p.status === "sent"
+      );
+      if (action === "send" && ownPending) {
+        return respond({
+          ok: false,
+          error: "Você já enviou um convite para esse contato. Use o reenvio na sua lista de convites.",
+        });
+      }
+    }
+
     let token: string;
     if (action === "resend") {
       const inviteId = String(body?.inviteId ?? "");

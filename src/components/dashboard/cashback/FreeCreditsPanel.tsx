@@ -70,17 +70,17 @@ const FreeCreditsPanel = () => {
       <Card className="p-4">
         <div className="flex items-center gap-2 mb-3">
           <Gift className="h-4 w-4 text-primary" />
-          <h3 className="font-semibold">Créditos gratuitos por indicação</h3>
+          <h3 className="font-semibold">Acessos gratuitos por indicação (conteúdos)</h3>
           <Badge variant="secondary" className="ml-auto">
-            {totalRemaining + aiCredits} disponíveis
+            {totalRemaining} disponíveis
           </Badge>
         </div>
 
         {loading ? (
           <p className="text-sm text-muted-foreground">Carregando…</p>
-        ) : rows.length === 0 && aiCredits === 0 ? (
+        ) : rows.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            Você ainda não tem créditos gratuitos. Convide amigos e ganhe acessos.
+            Você ainda não tem acessos gratuitos. Convide amigos e ganhe acessos.
           </p>
         ) : (
           <div className="space-y-2">

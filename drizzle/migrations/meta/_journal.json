@@ -78,6 +78,13 @@
       "when": 1789847703672,
       "tag": "0010_harden_logs_and_leads",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1789875434452,
+      "tag": "0011_content_duration_seconds",
+      "breakpoints": true
     }
   ]
 }

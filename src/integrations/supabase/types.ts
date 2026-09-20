@@ -1013,6 +1013,7 @@ export type Database = {
           colinha_url: string | null
           created_at: string
           description: string | null
+          duration_seconds: number | null
           duvidas_url: string | null
           id: string
           platform_percentage: number | null
@@ -1044,6 +1045,7 @@ export type Database = {
           colinha_url?: string | null
           created_at?: string
           description?: string | null
+          duration_seconds?: number | null
           duvidas_url?: string | null
           id?: string
           platform_percentage?: number | null
@@ -1075,6 +1077,7 @@ export type Database = {
           colinha_url?: string | null
           created_at?: string
           description?: string | null
+          duration_seconds?: number | null
           duvidas_url?: string | null
           id?: string
           platform_percentage?: number | null
@@ -1374,6 +1377,7 @@ export type Database = {
           colinha_url: string | null
           created_at: string
           description: string | null
+          duration_seconds: number | null
           duvidas_url: string | null
           id: string
           platform_percentage: number | null
@@ -1405,6 +1409,7 @@ export type Database = {
           colinha_url?: string | null
           created_at?: string
           description?: string | null
+          duration_seconds?: number | null
           duvidas_url?: string | null
           id?: string
           platform_percentage?: number | null
@@ -1436,6 +1441,7 @@ export type Database = {
           colinha_url?: string | null
           created_at?: string
           description?: string | null
+          duration_seconds?: number | null
           duvidas_url?: string | null
           id?: string
           platform_percentage?: number | null
@@ -3499,6 +3505,10 @@ export type Database = {
         Returns: string
       }
       release_pending_cashback: { Args: never; Returns: number }
+      set_content_duration: {
+        Args: { _content_id: string; _content_type: string; _seconds: number }
+        Returns: boolean
+      }
       start_free_trial: { Args: never; Returns: boolean }
     }
     Enums: {

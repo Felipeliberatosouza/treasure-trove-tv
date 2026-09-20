@@ -168,7 +168,7 @@ const AiCredits = () => {
             <p className="mt-1 text-sm text-muted-foreground">
               Os planos de assinatura já incluem Créditos de IA — alguns com uso ilimitado.
             </p>
-            <Button variant="outline" className="mt-4" onClick={() => navigate("/#planos")}>
+            <Button variant="outline" className="mt-4" onClick={() => navigate("/")}>
               Ver planos
             </Button>
           </div>

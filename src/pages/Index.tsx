@@ -21,8 +21,15 @@ import { AnimatePresence, motion } from "framer-motion";
 import HomeKitGenerator from "@/components/revisao-ia/HomeKitGenerator";
 import InviteFriendsPanel from "@/components/referral/InviteFriendsPanel";
 import type { Video } from "@/data/courses";
-import aiKitCover from "@/assets/slide-visual-ciencia.jpg";
 import { useAiKitCovers } from "@/hooks/useAiKitCovers";
+import {
+  formatDuration,
+  estimateSlidesDuration,
+  aiInstructorLabel,
+  aiOverlayLabel,
+  teacherInstructorLabel,
+  teacherOverlayLabel,
+} from "@/lib/contentDisplay";
 
 interface SearchResult {
   id: string;

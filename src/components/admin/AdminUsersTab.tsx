@@ -396,6 +396,9 @@ const AdminUsersTab = () => {
                 <TableHead>Aceita e-mails</TableHead>
                 <TableHead>Contrato</TableHead>
                 <TableHead>Teste Grátis</TableHead>
+                <TableHead className="text-right">Créditos usados</TableHead>
+                <TableHead className="text-right">Créditos restantes</TableHead>
+                <TableHead>Extrato</TableHead>
                 <TableHead>Aniversário</TableHead>
                 <TableHead>Cadastro</TableHead>
                 <TableHead className="text-right">Ações</TableHead>

@@ -3688,6 +3688,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_contact_registered: {
+        Args: { _email: string; _phone: string }
+        Returns: boolean
+      }
       is_content_teacher: {
         Args: { _content_id: string; _content_type: string; _user_id: string }
         Returns: boolean

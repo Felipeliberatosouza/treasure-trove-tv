@@ -54,6 +54,67 @@ Deno.serve(async (req) => {
     const grants = { ...DEFAULT_GRANTS, ...((cfg.referral_access_grants as Record<string, number>) ?? {}) };
     const maxRewards = Number(cfg.referral_access_max_rewards ?? 0);
 
+    /** Credita os prêmios de indicação para um indicador. */
+    const rewardReferrer = async (referrerUserId: string): Promise<boolean> => {
+      if (!accessEnabled) return false;
+      if (maxRewards > 0) {
+        const { count } = await admin
+          .from("referral_invites")
+          .select("id", { count: "exact", head: true })
+          .eq("referrer_user_id", referrerUserId)
+          .eq("status", "rewarded");
+        if ((count ?? 0) >= maxRewards) return false;
+      }
+
+      for (const key of CONTENT_KEYS) {
+        const qty = Number(grants[key] ?? 0);
+        if (qty <= 0) continue;
+        const { data: existing } = await admin
+          .from("referral_content_credits")
+          .select("id, granted")
+          .eq("user_id", referrerUserId)
+          .eq("resource_type", key)
+          .maybeSingle();
+        if (existing) {
+          await admin
+            .from("referral_content_credits")
+            .update({ granted: existing.granted + qty })
+            .eq("id", existing.id);
+        } else {
+          await admin
+            .from("referral_content_credits")
+            .insert({ user_id: referrerUserId, resource_type: key, granted: qty });
+        }
+      }
+
+      const aiQty = Number(grants.ai_credits ?? 0);
+      if (aiQty > 0) {
+        const { data: credits } = await admin
+          .from("ai_revision_credits")
+          .select("user_id, balance")
+          .eq("user_id", referrerUserId)
+          .maybeSingle();
+        const newBalance = (credits?.balance ?? 0) + aiQty;
+        if (credits) {
+          await admin
+            .from("ai_revision_credits")
+            .update({ balance: newBalance })
+            .eq("user_id", referrerUserId);
+        } else {
+          await admin
+            .from("ai_revision_credits")
+            .insert({ user_id: referrerUserId, balance: newBalance, signup_granted: false });
+        }
+        await admin.from("ai_revision_credit_ledger").insert({
+          user_id: referrerUserId,
+          delta: aiQty,
+          reason: "referral_access",
+          balance_after: newBalance,
+        });
+      }
+      return true;
+    };
+
     /* ---------------- CLAIM (público) ---------------- */
     if (action === "claim") {
       const token = String(body?.token ?? "").trim().toUpperCase();
@@ -90,73 +151,42 @@ Deno.serve(async (req) => {
 
       if (!accessEnabled) return respond({ ok: true, rewarded: false, referralCode });
 
-      // limite de indicações premiadas
-      if (maxRewards > 0) {
-        const { count } = await admin
+      // todos os convites pendentes para o mesmo contato também são premiados
+      const pending: Array<{ id: string; referrer_user_id: string }> = [];
+      const contactFilters: string[] = [];
+      if (invite.contact_email) contactFilters.push(`contact_email.eq.${invite.contact_email}`);
+      if (invite.contact_phone) contactFilters.push(`contact_phone.eq.${invite.contact_phone}`);
+      if (contactFilters.length) {
+        const { data: siblings } = await admin
           .from("referral_invites")
-          .select("id", { count: "exact", head: true })
-          .eq("referrer_user_id", invite.referrer_user_id)
-          .eq("status", "rewarded");
-        if ((count ?? 0) >= maxRewards) {
-          return respond({ ok: true, rewarded: false, limitReached: true, referralCode });
+          .select("id, referrer_user_id, status, expires_at")
+          .or(contactFilters.join(","))
+          .neq("id", invite.id)
+          .eq("status", "sent");
+        for (const s of siblings ?? []) {
+          if (new Date(s.expires_at).getTime() >= Date.now()) {
+            pending.push({ id: s.id, referrer_user_id: s.referrer_user_id });
+          }
         }
       }
 
-      // credita acessos por conteúdo
-      for (const key of CONTENT_KEYS) {
-        const qty = Number(grants[key] ?? 0);
-        if (qty <= 0) continue;
-        const { data: existing } = await admin
-          .from("referral_content_credits")
-          .select("id, granted")
-          .eq("user_id", invite.referrer_user_id)
-          .eq("resource_type", key)
-          .maybeSingle();
-        if (existing) {
+      const targets = [{ id: invite.id, referrer_user_id: invite.referrer_user_id }, ...pending];
+      let mainRewarded = false;
+      const nowIso = new Date().toISOString();
+      for (const t of targets) {
+        const ok = await rewardReferrer(t.referrer_user_id);
+        if (ok) {
           await admin
-            .from("referral_content_credits")
-            .update({ granted: existing.granted + qty })
-            .eq("id", existing.id);
-        } else {
-          await admin
-            .from("referral_content_credits")
-            .insert({ user_id: invite.referrer_user_id, resource_type: key, granted: qty });
+            .from("referral_invites")
+            .update({ status: "rewarded", rewarded_at: nowIso })
+            .eq("id", t.id);
+          if (t.id === invite.id) mainRewarded = true;
+        } else if (t.id !== invite.id) {
+          await admin.from("referral_invites").update({ status: "visited", visited_at: nowIso }).eq("id", t.id);
         }
       }
 
-      // créditos de IA
-      const aiQty = Number(grants.ai_credits ?? 0);
-      if (aiQty > 0) {
-        const { data: credits } = await admin
-          .from("ai_revision_credits")
-          .select("user_id, balance")
-          .eq("user_id", invite.referrer_user_id)
-          .maybeSingle();
-        const newBalance = (credits?.balance ?? 0) + aiQty;
-        if (credits) {
-          await admin
-            .from("ai_revision_credits")
-            .update({ balance: newBalance })
-            .eq("user_id", invite.referrer_user_id);
-        } else {
-          await admin
-            .from("ai_revision_credits")
-            .insert({ user_id: invite.referrer_user_id, balance: newBalance, signup_granted: false });
-        }
-        await admin.from("ai_revision_credit_ledger").insert({
-          user_id: invite.referrer_user_id,
-          delta: aiQty,
-          reason: "referral_access",
-          balance_after: newBalance,
-        });
-      }
-
-      await admin
-        .from("referral_invites")
-        .update({ status: "rewarded", rewarded_at: new Date().toISOString() })
-        .eq("id", invite.id);
-
-      return respond({ ok: true, rewarded: true, referralCode });
+      return respond({ ok: true, rewarded: mainRewarded, limitReached: !mainRewarded, referralCode });
     }
 
     /* ---------------- SEND / RESEND (autenticado) ---------------- */

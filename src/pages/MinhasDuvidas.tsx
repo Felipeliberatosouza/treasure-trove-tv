@@ -31,6 +31,10 @@ interface Doubt {
   answered_at: string | null;
   messages_limit: number;
   questions_used: number;
+  audience?: string;
+  subject?: string | null;
+  interactions_limit?: number | null;
+  interactions_used?: number;
   content_title?: string;
   teacher_name?: string;
 }
@@ -38,6 +42,8 @@ interface Doubt {
 interface DoubtMessage {
   id: string;
   doubt_id: string;
+  author_id?: string | null;
+  blocked?: boolean;
   author_role: "student" | "teacher" | "admin";
   message_kind: "question" | "answer";
   body: string;
@@ -69,6 +75,7 @@ const MinhasDuvidas = () => {
   const [reply, setReply] = useState<Record<string, string>>({});
   const [sendingId, setSendingId] = useState<string | null>(null);
   const [newIds, setNewIds] = useState<Set<string>>(new Set());
+  const [authorNames, setAuthorNames] = useState<Record<string, string>>({});
 
   const markNew = (id: string) =>
     setNewIds((prev) => {
@@ -128,7 +135,10 @@ const MinhasDuvidas = () => {
     setDoubts(
       list.map((d) => ({
         ...d,
-        teacher_name: pMap.get(d.teacher_id) || "Professor",
+        teacher_name:
+          d.audience === "area"
+            ? "Professores da área"
+            : pMap.get(d.teacher_id) || "Professor",
         content_title: tMap.get(d.content_id) || "Conteúdo",
       }))
     );
@@ -139,6 +149,26 @@ const MinhasDuvidas = () => {
       grouped[m.doubt_id].push(m);
     });
     setMessages(grouped);
+
+    const authorIds = [
+      ...new Set(
+        ((msgsRes.data || []) as DoubtMessage[])
+          .filter((m) => m.author_role === "teacher" && m.author_id)
+          .map((m) => m.author_id as string)
+      ),
+    ];
+    if (authorIds.length) {
+      const { data: authors } = await supabase
+        .from("teacher_profiles_public")
+        .select("user_id, name")
+        .in("user_id", authorIds);
+      const map: Record<string, string> = {};
+      (authors || []).forEach((a: any) => {
+        map[a.user_id] = a.name;
+      });
+      setAuthorNames(map);
+    }
+
     setLoading(false);
   };
 
@@ -225,6 +255,47 @@ const MinhasDuvidas = () => {
       toast.error("Escreva sua nova pergunta com pelo menos 10 caracteres.");
       return;
     }
+
+    // Dúvidas de aulas com professor virtual: chat aberto aos professores da área.
+    if (doubt.audience === "area") {
+      setSendingId(doubt.id);
+      const send = async (useCredits: boolean) =>
+        supabase.functions.invoke("doubt-interaction", {
+          body: {
+            action: "reply",
+            doubtId: doubt.id,
+            body: text,
+            useCredits,
+            origin: window.location.origin,
+          },
+        });
+
+      let { data, error } = await send(false);
+      if (!error && (data as any)?.needsCredits) {
+        const cost = (data as any).cost ?? 0;
+        const ok = window.confirm(
+          `Você já usou todas as interações do seu plano nesta dúvida. Continuar usando ${cost} Crédito(s) de IA?`
+        );
+        if (!ok) {
+          setSendingId(null);
+          return;
+        }
+        ({ data, error } = await send(true));
+      }
+      setSendingId(null);
+
+      if (error) return toast.error("Não foi possível enviar a pergunta.");
+      if ((data as any)?.blocked) return toast.error((data as any).reason || "Mensagem bloqueada pela moderação.");
+      if ((data as any)?.insufficientCredits)
+        return toast.error("Créditos de IA insuficientes. Compre Créditos de IA para continuar.");
+      if ((data as any)?.error) return toast.error((data as any).error);
+
+      toast.success("Pergunta enviada aos professores da área.");
+      setReply((r) => ({ ...r, [doubt.id]: "" }));
+      fetchAll();
+      return;
+    }
+
     if (doubt.questions_used >= doubt.messages_limit) {
       toast.error("Você atingiu o limite de perguntas desta dúvida.");
       return;
@@ -281,9 +352,17 @@ const MinhasDuvidas = () => {
                 const cfg = STATUS[d.status] || STATUS.pending_approval;
                 const Icon = cfg.icon;
                 const open = openId === d.id;
-                const remaining = Math.max(0, d.messages_limit - d.questions_used);
-                const canReply = d.status === "answered" && remaining > 0;
-                const thread = messages[d.id] || [];
+                const isArea = d.audience === "area";
+                const unlimited = isArea && d.interactions_limit === null;
+                const remaining = isArea
+                  ? unlimited
+                    ? Infinity
+                    : Math.max(0, (d.interactions_limit ?? 0) - (d.interactions_used ?? 0))
+                  : Math.max(0, d.messages_limit - d.questions_used);
+                const canReply = isArea
+                  ? d.status !== "rejected"
+                  : d.status === "answered" && remaining > 0;
+                const thread = (messages[d.id] || []).filter((m) => !m.blocked);
                 return (
                   <li
                     key={d.id}
@@ -317,7 +396,11 @@ const MinhasDuvidas = () => {
 
                     <div className="flex flex-wrap items-center gap-2 text-xs">
                       <Badge variant="secondary" className="font-mono">
-                        Perguntas: {d.questions_used}/{d.messages_limit}
+                        {isArea
+                          ? unlimited
+                            ? "Interações ilimitadas"
+                            : `Interações: ${d.interactions_used ?? 0}/${d.interactions_limit ?? 0}`
+                          : `Perguntas: ${d.questions_used}/${d.messages_limit}`}
                       </Badge>
                       <span className="text-muted-foreground">
                         Enviada em {new Date(d.created_at).toLocaleDateString("pt-BR")}
@@ -367,7 +450,7 @@ const MinhasDuvidas = () => {
                                     {m.author_role === "student"
                                       ? "Você"
                                       : m.author_role === "teacher"
-                                      ? "Professor"
+                                      ? `Prof. ${(m.author_id && authorNames[m.author_id]) || ""}`.trim()
                                       : "Equipe"}{" "}
                                     · {m.message_kind === "question" ? "pergunta" : "resposta"}
                                   </span>
@@ -397,8 +480,11 @@ const MinhasDuvidas = () => {
                                 />
                                 <div className="flex items-center justify-between">
                                   <span className="text-xs text-muted-foreground">
-                                    Restam {remaining} pergunta{remaining === 1 ? "" : "s"} nesta
-                                    dúvida.
+                                    {unlimited
+                                      ? "Seu plano permite interações ilimitadas nesta dúvida."
+                                      : remaining > 0
+                                      ? `Restam ${remaining} pergunta${remaining === 1 ? "" : "s"} nesta dúvida.`
+                                      : "Limite do plano atingido — a próxima pergunta usa Créditos de IA."}
                                   </span>
                                   <Button
                                     size="sm"
@@ -413,7 +499,7 @@ const MinhasDuvidas = () => {
                                   </Button>
                                 </div>
                               </div>
-                            ) : d.status === "answered" && remaining === 0 ? (
+                            ) : !isArea && d.status === "answered" && remaining === 0 ? (
                               <p className="text-xs text-muted-foreground italic pt-1">
                                 Você utilizou todas as {d.messages_limit} perguntas permitidas
                                 desta dúvida.

@@ -252,7 +252,7 @@ async function handleRequest(req: Request, body: any): Promise<Response> {
 
   try {
 
-    const action = body.action === "status" ? "status" : "generate";
+    const action = body.action === "status" || body.action === "cancel" ? body.action : "generate";
     const anonId = typeof body.anon_id === "string" ? body.anon_id.slice(0, 64) : null;
 
     // --- identifica usuário (opcional) ---

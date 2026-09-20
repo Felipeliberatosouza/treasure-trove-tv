@@ -258,15 +258,20 @@ const SectionCatalog = ({ sectionKey }: Props) => {
             id: row.id,
             title: sectionTitle(row.assunto || (row.kit?.titulo as string) || ""),
             description: [row.disciplina, countLabel(total)].filter(Boolean).join(" • "),
-            thumbnail: aiKitCover,
-            duration: sectionKey === "revisoes" ? "Aula com Professor Virtual" : countLabel(total),
+            thumbnail: "",
+            duration:
+              sectionKey === "revisoes"
+                ? formatDuration(estimateSlidesDuration(row.kit?.slides))
+                : countLabel(total),
             category: areas[0] || row.disciplina || "",
-            instructor: `${aiRoleLabel(avatar.gender)} ${avatar.name}`.trim(),
+            instructor: aiInstructorLabel(avatar.gender, avatar.name),
+            overlayLabel: aiOverlayLabel(avatar.gender, avatar.name),
             lessons: total || 1,
+            views: viewsMap.get(row.id) || 0,
             _areas: areas,
             _origin: "ai" as const,
             _contentType: "ai" as const,
-            _views: 0,
+            _views: viewsMap.get(row.id) || 0,
             _createdAt: new Date(row.updated_at).getTime(),
           };
         });

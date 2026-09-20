@@ -401,15 +401,22 @@ async function handleRequest(req: Request, body: any): Promise<Response> {
     }
 
     // 2) elegibilidade
+    let planUnlimited = false;
     if (!userId) {
       const used = await anonUsed();
       if (!anonId || used >= ANON_FREE_USES) {
         return json({ error: "signup_required", message: "Crie sua conta gratuita para continuar — você ganha 2 créditos de IA." }, 402);
       }
     } else {
-      const credits = await ensureCredits(userId);
-      if (credits.balance <= 0) {
-        return json({ error: "paywall", message: "Seus créditos gratuitos de IA acabaram." }, 402);
+      await ensureCredits(userId);
+      // Créditos de IA do plano assinado (ilimitado ou cota mensal inclusa).
+      const { data: planClaim } = await admin.rpc("claim_plan_ai_credits", { _user_id: userId });
+      planUnlimited = Boolean((planClaim as { unlimited?: boolean } | null)?.unlimited);
+      if (!planUnlimited) {
+        const credits = await ensureCredits(userId);
+        if (credits.balance <= 0) {
+          return json({ error: "paywall", message: "Seus Créditos de IA acabaram." }, 402);
+        }
       }
     }
 
@@ -432,7 +439,7 @@ async function handleRequest(req: Request, body: any): Promise<Response> {
 
     // 3) reserva do crédito
     let reservedBalance: number | null = null;
-    if (userId) {
+    if (userId && !planUnlimited) {
       const credits = await ensureCredits(userId);
       reservedBalance = credits.balance - 1;
       await admin.from("ai_revision_credits").update({ balance: reservedBalance }).eq("user_id", userId);

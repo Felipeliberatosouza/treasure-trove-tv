@@ -189,6 +189,15 @@ export async function requestKit(input: {
   };
 }
 
+/** Cancela uma geração abandonada e devolve o Crédito de IA reservado. */
+export async function cancelKit(idempotencyKey: string): Promise<void> {
+  try {
+    await callFn({ action: "cancel", idempotency_key: idempotencyKey });
+  } catch {
+    /* cancelamento é best-effort */
+  }
+}
+
 /** Gera o PDF do Kit a partir do conteúdo já estruturado (sem nova chamada de IA). */
 export async function buildKitPdf(kit: RevisionKit): Promise<jsPDF> {
   const doc = new jsPDF({ unit: "mm", format: "a4" });

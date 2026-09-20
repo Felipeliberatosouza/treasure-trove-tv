@@ -21,7 +21,7 @@ import {
   BookOpen, FileQuestion, ListChecks, StickyNote, Square,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { requestKit } from "@/lib/revisionKit";
+import { cancelKit, requestKit } from "@/lib/revisionKit";
 import InviteFriendsPanel from "@/components/referral/InviteFriendsPanel";
 
 interface GenPhase {
@@ -146,6 +146,7 @@ const HomeKitGenerator = () => {
   const [messages, setMessages] = useState<string[]>([]);
   const submittingRef = useRef(false);
   const runIdRef = useRef(0);
+  const pendingKeyRef = useRef<string | null>(null);
   const resultRef = useRef<{ runId: number; canonicalId?: string | null; error?: { kind: string; message?: string } } | null>(null);
 
   const firstName = useMemo(() => (profile?.name || "").trim().split(" ")[0] || "", [profile?.name]);
@@ -233,6 +234,8 @@ const HomeKitGenerator = () => {
     setErrorMsg(null);
     setNotice(null);
     setBlocked(null);
+    const idempotencyKey = crypto.randomUUID();
+    pendingKeyRef.current = idempotencyKey;
     const { data, error } = await requestKit({
       assunto: pedido,
       disciplina: disciplina.trim() || undefined,
@@ -241,17 +244,26 @@ const HomeKitGenerator = () => {
       instituicao: instituicao.trim() || undefined,
       exam_date: examDate || undefined,
       nivel,
-      idempotency_key: crypto.randomUUID(),
+      idempotency_key: idempotencyKey,
     });
     // Pedido cancelado ou substituído por uma nova mensagem: ignora este resultado.
     if (runIdRef.current !== runId) return;
+    if (pendingKeyRef.current === idempotencyKey) pendingKeyRef.current = null;
     resultRef.current = { runId, canonicalId: data?.canonical_id, error };
     // Material pronto: encerra a apresentação das tarefas em poucos segundos.
     setFast(true);
   };
 
+  /** Devolve o Crédito de IA de uma geração que o aluno abandonou. */
+  const abandonPendingRun = () => {
+    const key = pendingKeyRef.current;
+    pendingKeyRef.current = null;
+    if (key) void cancelKit(key);
+  };
+
   /** Interrompe o processamento em andamento. */
   const handleStop = () => {
+    abandonPendingRun();
     runIdRef.current += 1;
     submittingRef.current = false;
     resultRef.current = null;
@@ -269,6 +281,7 @@ const HomeKitGenerator = () => {
     setChatMsg("");
     const novoPedido = `${assunto.trim()}\n\nAjuste solicitado: ${msg}`;
     setAssunto(novoPedido);
+    abandonPendingRun();
     runIdRef.current += 1;
     submittingRef.current = false;
     void handleSubmit(novoPedido);

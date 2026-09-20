@@ -38,6 +38,9 @@ export interface AiCreditsBreakdown {
   referral: number;
   purchased: number;
   bonus: number;
+  signup: number;
+  plan: number;
+  admin: number;
   used: number;
 }
 

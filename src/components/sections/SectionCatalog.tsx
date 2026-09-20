@@ -172,9 +172,11 @@ const SectionCatalog = ({ sectionKey }: Props) => {
       if (cancelled) return;
 
       const viewsMap = new Map<string, number>();
-      [...(((lessonViews as any).data || []) as any[]), ...(((examViews as any).data || []) as any[])].forEach(
-        (r) => viewsMap.set(r.content_id, r.views_count),
-      );
+      [
+        ...(((lessonViews as any).data || []) as any[]),
+        ...(((examViews as any).data || []) as any[]),
+        ...(((aiViews as any).data || []) as any[]),
+      ].forEach((r) => viewsMap.set(r.content_id, r.views_count));
 
       const ratingsMap: Record<string, { average: number; count: number }> = {};
       (((ratingsRes as any).data || []) as any[]).forEach((r) => {

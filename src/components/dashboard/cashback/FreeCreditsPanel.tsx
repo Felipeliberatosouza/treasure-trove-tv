@@ -70,17 +70,22 @@ const FreeCreditsPanel = () => {
       <Card className="p-4">
         <div className="flex items-center gap-2 mb-3">
           <Gift className="h-4 w-4 text-primary" />
-          <h3 className="font-semibold">Créditos de IA Ganhos por Indicação (conteúdos)</h3>
+          <h3 className="font-semibold">Acessos grátis a conteúdos (ganhos por indicação)</h3>
           <Badge variant="secondary" className="ml-auto">
             {totalRemaining} disponíveis
           </Badge>
         </div>
 
+        <p className="text-xs text-muted-foreground -mt-2 mb-2">
+          Liberam a abertura de conteúdos (revisões, resumos, simulados etc.). Não são Créditos de IA
+          e não entram no saldo do quadro abaixo.
+        </p>
+
         {loading ? (
           <p className="text-sm text-muted-foreground">Carregando…</p>
         ) : rows.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            Você ainda não tem Créditos de IA. Convide amigos e ganhe Créditos de IA.
+            Você ainda não tem acessos grátis. Convide amigos e ganhe acessos a conteúdos.
           </p>
         ) : (
           <div className="space-y-2">
@@ -128,19 +133,49 @@ const FreeCreditsPanel = () => {
               </div>
               <Badge variant="secondary">{aiBreakdown.purchased}</Badge>
             </div>
-            {aiBreakdown.bonus > 0 && (
+            {aiBreakdown.signup > 0 && (
               <div className="flex items-center justify-between rounded-lg border p-3">
                 <div>
-                  <p className="text-sm font-medium">Créditos de IA de bônus e do plano</p>
+                  <p className="text-sm font-medium">Créditos de IA de boas-vindas</p>
+                  <p className="text-xs text-muted-foreground">Recebidos ao criar a sua conta</p>
+                </div>
+                <Badge variant="secondary">{aiBreakdown.signup}</Badge>
+              </div>
+            )}
+            {aiBreakdown.plan > 0 && (
+              <div className="flex items-center justify-between rounded-lg border p-3">
+                <div>
+                  <p className="text-sm font-medium">Créditos de IA do Plano</p>
+                  <p className="text-xs text-muted-foreground">Incluídos na sua assinatura</p>
+                </div>
+                <Badge variant="secondary">{aiBreakdown.plan}</Badge>
+              </div>
+            )}
+            {aiBreakdown.admin > 0 && (
+              <div className="flex items-center justify-between rounded-lg border p-3">
+                <div>
+                  <p className="text-sm font-medium">Créditos de IA Concedidos pela Equipe</p>
                   <p className="text-xs text-muted-foreground">
-                    Créditos de IA do cadastro, do plano assinado ou concedidos pela equipe
+                    Créditos de IA liberados manualmente pela equipe Revisão Fácil
                   </p>
                 </div>
-                <Badge variant="secondary">{aiBreakdown.bonus}</Badge>
+                <Badge variant="secondary">{aiBreakdown.admin}</Badge>
+              </div>
+            )}
+            {aiBreakdown.bonus - aiBreakdown.signup - aiBreakdown.plan - aiBreakdown.admin > 0 && (
+              <div className="flex items-center justify-between rounded-lg border p-3">
+                <div>
+                  <p className="text-sm font-medium">Outros Créditos de IA de bônus</p>
+                  <p className="text-xs text-muted-foreground">Ajustes e estornos de Créditos de IA</p>
+                </div>
+                <Badge variant="secondary">
+                  {aiBreakdown.bonus - aiBreakdown.signup - aiBreakdown.plan - aiBreakdown.admin}
+                </Badge>
               </div>
             )}
             <p className="text-xs text-muted-foreground px-1">
-              Já utilizados: {aiBreakdown.used} • Saldo atual: {aiCredits}
+              Total recebido: {aiBreakdown.referral + aiBreakdown.purchased + aiBreakdown.bonus} • Já
+              utilizados: {aiBreakdown.used} • Saldo atual: {aiCredits}
             </p>
           </div>
         )}

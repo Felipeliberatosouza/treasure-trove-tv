@@ -38,6 +38,9 @@ export interface AiCreditsBreakdown {
   referral: number;
   purchased: number;
   bonus: number;
+  signup: number;
+  plan: number;
+  admin: number;
   used: number;
 }
 
@@ -50,6 +53,9 @@ export function useReferralCredits() {
     referral: 0,
     purchased: 0,
     bonus: 0,
+    signup: 0,
+    plan: 0,
+    admin: 0,
     used: 0,
   });
   const [invites, setInvites] = useState<ReferralInvite[]>([]);
@@ -98,7 +104,15 @@ export function useReferralCredits() {
     );
     setAiCredits(ai.data?.balance ?? 0);
 
-    const bd: AiCreditsBreakdown = { referral: 0, purchased: 0, bonus: 0, used: 0 };
+    const bd: AiCreditsBreakdown = {
+      referral: 0,
+      purchased: 0,
+      bonus: 0,
+      signup: 0,
+      plan: 0,
+      admin: 0,
+      used: 0,
+    };
     for (const e of ledger.data ?? []) {
       const delta = Number(e.delta ?? 0);
       const reason = String(e.reason ?? "");
@@ -108,6 +122,15 @@ export function useReferralCredits() {
         bd.referral += delta;
       } else if (reason.startsWith("purchase")) {
         bd.purchased += delta;
+      } else if (reason.startsWith("signup")) {
+        bd.signup += delta;
+        bd.bonus += delta;
+      } else if (reason.startsWith("plan")) {
+        bd.plan += delta;
+        bd.bonus += delta;
+      } else if (reason.startsWith("admin")) {
+        bd.admin += delta;
+        bd.bonus += delta;
       } else {
         bd.bonus += delta;
       }

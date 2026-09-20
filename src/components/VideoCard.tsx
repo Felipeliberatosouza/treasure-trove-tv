@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Play, Clock, BookOpen, Star, Gift, CheckCircle } from "lucide-react";
+import { Play, Clock, Eye, Star, Gift, CheckCircle } from "lucide-react";
 import type { Video } from "@/data/courses";
 import { prefetchSignedUrlForContent } from "@/lib/signedUrlCache";
 import { useEffect, useRef } from "react";
@@ -49,21 +49,27 @@ const VideoCard = ({ video, index, onClick, rating, showTrialBadge, watched }: V
       tabIndex={0}
     >
       <div className="card-shine overflow-hidden rounded-lg bg-card transition-all duration-300 group-hover:ring-1 group-hover:ring-primary/40 group-hover:scale-[1.03]">
-        <div className="relative aspect-video overflow-hidden">
-          <img
-            src={video.thumbnail}
-            alt={video.title}
-            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-            loading="lazy"
-          />
+        <div className="relative aspect-video overflow-hidden bg-muted">
+          {video.thumbnail ? (
+            <img
+              src={video.thumbnail}
+              alt={video.title}
+              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+              loading="lazy"
+            />
+          ) : (
+            <div className="h-full w-full animate-pulse bg-gradient-to-br from-muted to-muted-foreground/10" />
+          )}
           <div className="absolute inset-0 flex items-center justify-center bg-background/0 transition-all group-hover:bg-background/40">
             <div className="scale-0 rounded-full bg-primary p-3 transition-transform group-hover:scale-100">
               <Play className="h-5 w-5 text-primary-foreground" fill="currentColor" />
             </div>
           </div>
-          <div className="absolute bottom-2 right-2 rounded bg-background/80 px-2 py-0.5 text-xs font-medium backdrop-blur-sm">
-            {video.duration}
-          </div>
+          {video.overlayLabel && (
+            <div className="absolute bottom-2 left-2 right-2 truncate rounded bg-background/80 px-2 py-1 text-xs font-medium backdrop-blur-sm">
+              {video.overlayLabel}
+            </div>
+          )}
           {showTrialBadge && (
             <div className="absolute top-2 left-2 flex items-center gap-1 rounded-full bg-accent px-2 py-0.5 text-[10px] font-bold text-accent-foreground shadow-md">
               <Gift className="h-3 w-3" /> TESTE GRÁTIS
@@ -90,24 +96,28 @@ const VideoCard = ({ video, index, onClick, rating, showTrialBadge, watched }: V
           ) : (
             <p className="text-xs text-muted-foreground">{video.instructor}</p>
           )}
-          <div className="flex items-center gap-3 text-xs text-muted-foreground">
-            <span className="flex items-center gap-1">
-              <BookOpen className="h-3 w-3" />
-              {video.lessons} aulas
-            </span>
-            <span className="flex items-center gap-1">
-              <Clock className="h-3 w-3" />
-              {video.duration}
-            </span>
-          </div>
-          <div className="flex items-center justify-end">
-            {rating && rating.count > 0 && (
-              <div className="flex items-center gap-1">
-                <Star className="h-3 w-3 fill-accent text-accent" />
-                <span className="text-xs font-medium">{rating.average.toFixed(1)}</span>
-                <span className="text-[10px] text-muted-foreground">({rating.count})</span>
-              </div>
+          <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+            {video.duration && (
+              <span className="flex items-center gap-1">
+                <Clock className="h-3 w-3" />
+                {video.duration}
+              </span>
             )}
+            <span className="flex items-center gap-1">
+              <Eye className="h-3 w-3" />
+              {video.views ?? 0}
+            </span>
+            <span className="flex items-center gap-1">
+              <Star className={`h-3 w-3 ${rating && rating.count > 0 ? "fill-accent text-accent" : ""}`} />
+              {rating && rating.count > 0 ? (
+                <>
+                  <span className="font-medium">{rating.average.toFixed(1)}</span>
+                  <span className="text-[10px]">({rating.count})</span>
+                </>
+              ) : (
+                <span className="text-[10px]">sem avaliações</span>
+              )}
+            </span>
           </div>
         </div>
       </div>

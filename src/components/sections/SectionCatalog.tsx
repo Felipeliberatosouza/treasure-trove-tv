@@ -15,8 +15,15 @@ import {
 } from "@/hooks/usePlatformSettings";
 import { CONTENT_SECTIONS, getSection, type SectionKey } from "@/lib/contentSections";
 import type { Video } from "@/data/courses";
-import aiKitCover from "@/assets/slide-visual-ciencia.jpg";
 import { useAiKitCovers } from "@/hooks/useAiKitCovers";
+import {
+  formatDuration,
+  estimateSlidesDuration,
+  aiInstructorLabel,
+  aiOverlayLabel,
+  teacherInstructorLabel,
+  teacherOverlayLabel,
+} from "@/lib/contentDisplay";
 
 interface Props {
   sectionKey: SectionKey;
@@ -138,9 +145,10 @@ const SectionCatalog = ({ sectionKey }: Props) => {
 
       const lessonIds = lessonRows.map((l) => l.id);
       const examIds = examRows.map((e) => e.id);
-      const allIds = [...lessonIds, ...examIds];
+      const aiIds = ((aiRes.data as any[]) || []).map((r) => r.id);
+      const allIds = [...lessonIds, ...examIds, ...aiIds];
 
-      const [lessonViews, examViews, ratingsRes, viewsRes] = await Promise.all([
+      const [lessonViews, examViews, aiViews, ratingsRes, viewsRes] = await Promise.all([
         lessonIds.length
           ? supabase.rpc("get_content_view_counts", { _content_type: "lesson", _ids: lessonIds })
           : Promise.resolve({ data: [] as any[] }),
@@ -149,6 +157,9 @@ const SectionCatalog = ({ sectionKey }: Props) => {
               _content_type: "exam_solution",
               _ids: examIds,
             })
+          : Promise.resolve({ data: [] as any[] }),
+        aiIds.length
+          ? supabase.rpc("get_content_view_counts", { _content_type: "ai", _ids: aiIds })
           : Promise.resolve({ data: [] as any[] }),
         allIds.length
           ? supabase.rpc("get_video_rating_aggregates" as any, { _ids: allIds })
@@ -161,9 +172,11 @@ const SectionCatalog = ({ sectionKey }: Props) => {
       if (cancelled) return;
 
       const viewsMap = new Map<string, number>();
-      [...(((lessonViews as any).data || []) as any[]), ...(((examViews as any).data || []) as any[])].forEach(
-        (r) => viewsMap.set(r.content_id, r.views_count),
-      );
+      [
+        ...(((lessonViews as any).data || []) as any[]),
+        ...(((examViews as any).data || []) as any[]),
+        ...(((aiViews as any).data || []) as any[]),
+      ].forEach((r) => viewsMap.set(r.content_id, r.views_count));
 
       const ratingsMap: Record<string, { average: number; count: number }> = {};
       (((ratingsRes as any).data || []) as any[]).forEach((r) => {
@@ -192,11 +205,13 @@ const SectionCatalog = ({ sectionKey }: Props) => {
           title: sectionTitle(r.title),
           description: r.description || "",
           thumbnail: r.thumbnail_url || r.carousel_cover_url || "/placeholder.svg",
-          duration: "",
+          duration: formatDuration(r.duration_seconds),
           category: ((r.areas as string[]) || [])[0] || "",
-          instructor: t?.name || "",
+          instructor: teacherInstructorLabel(t?.name),
+          overlayLabel: teacherOverlayLabel(t?.name),
           instructorHref: t?.slug ? `/${t.slug}` : undefined,
           lessons: 1,
+          views: viewsMap.get(r.id) || 0,
           videoUrl: r.video_url || undefined,
           _areas: (r.areas as string[]) || [],
           _origin: "teacher",
@@ -243,15 +258,20 @@ const SectionCatalog = ({ sectionKey }: Props) => {
             id: row.id,
             title: sectionTitle(row.assunto || (row.kit?.titulo as string) || ""),
             description: [row.disciplina, countLabel(total)].filter(Boolean).join(" • "),
-            thumbnail: aiKitCover,
-            duration: sectionKey === "revisoes" ? "Aula com Professor Virtual" : countLabel(total),
+            thumbnail: "",
+            duration:
+              sectionKey === "revisoes"
+                ? formatDuration(estimateSlidesDuration(row.kit?.slides))
+                : countLabel(total),
             category: areas[0] || row.disciplina || "",
-            instructor: `${aiRoleLabel(avatar.gender)} ${avatar.name}`.trim(),
+            instructor: aiInstructorLabel(avatar.gender, avatar.name),
+            overlayLabel: aiOverlayLabel(avatar.gender, avatar.name),
             lessons: total || 1,
+            views: viewsMap.get(row.id) || 0,
             _areas: areas,
             _origin: "ai" as const,
             _contentType: "ai" as const,
-            _views: 0,
+            _views: viewsMap.get(row.id) || 0,
             _createdAt: new Date(row.updated_at).getTime(),
           };
         });

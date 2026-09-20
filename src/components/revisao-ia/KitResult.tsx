@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,7 @@ import VLibrasWidget from "@/components/VLibrasWidget";
 import ForensicWatermark from "@/components/ForensicWatermark";
 import BrandStamp from "@/components/branding/BrandStamp";
 import DoubtForm from "@/components/DoubtForm";
+import ContentRating from "@/components/ContentRating";
 
 interface Props {
   result: KitResponse;
@@ -40,6 +41,32 @@ const KitResult = ({ result, onNewKit, initialTab }: Props) => {
   const { user } = useAuth();
   const [downloading, setDownloading] = useState(false);
   const [feedbackSent, setFeedbackSent] = useState(false);
+
+  // Registra a visualização da aula com professor virtual (uma vez por aluno).
+  useEffect(() => {
+    const canonicalId = result.canonical_id;
+    if (!user || !canonicalId) return;
+    let cancelled = false;
+    void (async () => {
+      const { data } = await supabase
+        .from("video_views")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("content_type", "ai")
+        .eq("content_id", canonicalId)
+        .maybeSingle();
+      if (cancelled || data) return;
+      await supabase.from("video_views").insert({
+        user_id: user.id,
+        content_type: "ai",
+        content_id: canonicalId,
+        watch_percentage: 100,
+      });
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user, result.canonical_id]);
 
   const handlePdf = async () => {
     setDownloading(true);
@@ -94,6 +121,14 @@ const KitResult = ({ result, onNewKit, initialTab }: Props) => {
         <NarratedSlidesPlayer topico={kit.assunto} disciplina={kit.disciplina} slides={kit.slides ?? []} canonicalId={result.canonical_id} areas={result.areas} faixaEtaria={kit.faixa_etaria} />
       </div>
 
+      {result.canonical_id && (
+        <ContentRating
+          contentId={result.canonical_id}
+          contentType="ai"
+          title="Avalie esta aula com professor virtual"
+        />
+      )}
+
       {/* Dúvidas sobre a aula com professor virtual: vão para a equipe da plataforma. */}
       <DoubtForm
         contentId={result.canonical_id ?? undefined}
@@ -101,6 +136,7 @@ const KitResult = ({ result, onNewKit, initialTab }: Props) => {
         title="Enviar Dúvida sobre esta aula"
         placeholder="Descreva sua dúvida sobre esta aula com professor virtual..."
       />
+
 
 
 

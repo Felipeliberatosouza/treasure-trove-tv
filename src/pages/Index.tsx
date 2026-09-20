@@ -21,8 +21,15 @@ import { AnimatePresence, motion } from "framer-motion";
 import HomeKitGenerator from "@/components/revisao-ia/HomeKitGenerator";
 import InviteFriendsPanel from "@/components/referral/InviteFriendsPanel";
 import type { Video } from "@/data/courses";
-import aiKitCover from "@/assets/slide-visual-ciencia.jpg";
 import { useAiKitCovers } from "@/hooks/useAiKitCovers";
+import {
+  formatDuration,
+  estimateSlidesDuration,
+  aiInstructorLabel,
+  aiOverlayLabel,
+  teacherInstructorLabel,
+  teacherOverlayLabel,
+} from "@/lib/contentDisplay";
 
 interface SearchResult {
   id: string;
@@ -47,6 +54,8 @@ const Index = () => {
   const [aiKitIds, setAiKitIds] = useState<Set<string>>(new Set());
   const [aiKitAreas, setAiKitAreas] = useState<Record<string, string[]>>({});
   const aiCovers = useAiKitCovers(aiKits.map((k) => k.id));
+  const [statRatings, setStatRatings] = useState<Record<string, { average: number; count: number }>>({});
+  const [statViews, setStatViews] = useState<Record<string, number>>({});
   const [teacherLessons, setTeacherLessons] = useState<Video[]>([]);
   const [teacherExams, setTeacherExams] = useState<Video[]>([]);
   const [loadingTeacherContent, setLoadingTeacherContent] = useState(false);
@@ -73,22 +82,21 @@ const Index = () => {
         .order("updated_at", { ascending: false })
         .limit(20);
       const mapped: Video[] = (data || []).map((row) => {
-        const kit = (row.kit || {}) as { titulo?: string; slides?: unknown[]; resumo?: unknown };
+        const kit = (row.kit || {}) as { titulo?: string; slides?: { narracao?: string }[] };
+        const avatar = resolveAiAvatar(
+          aiParams,
+          { ...DEFAULT_AI_AVATAR, ...(aiAvatarSettings || {}) },
+          { disciplina: row.disciplina, areas: (row.areas as string[] | null) || [], contentType: "apresentacao" },
+        );
         return {
           id: row.id,
           title: kit.titulo || row.assunto,
           description: row.disciplina || "Revisão gerada com apoio de IA",
-          thumbnail: aiKitCover,
-          duration: "Aula com Professor Virtual",
+          thumbnail: "",
+          duration: formatDuration(estimateSlidesDuration(kit.slides)),
           category: ((row.areas as string[] | null) || [])[0] || row.disciplina || "Revisão com IA",
-          instructor: (() => {
-            const avatar = resolveAiAvatar(
-              aiParams,
-              { ...DEFAULT_AI_AVATAR, ...(aiAvatarSettings || {}) },
-              { disciplina: row.disciplina, areas: (row.areas as string[] | null) || [], contentType: "apresentacao" },
-            );
-            return `${aiRoleLabel(avatar.gender)} ${avatar.name}`.trim();
-          })(),
+          instructor: aiInstructorLabel(avatar.gender, avatar.name),
+          overlayLabel: aiOverlayLabel(avatar.gender, avatar.name),
           lessons: Array.isArray(kit.slides) ? kit.slides.length : 0,
         };
       });
@@ -267,9 +275,10 @@ const Index = () => {
             title: l.title,
             description: l.description || "",
             thumbnail: l.thumbnail_url || "/placeholder.svg",
-            duration: "",
+            duration: formatDuration(l.duration_seconds),
             category: (l.areas as string[] || [])[0] || "",
-            instructor: teacher?.name || "",
+            instructor: teacherInstructorLabel(teacher?.name),
+            overlayLabel: teacherOverlayLabel(teacher?.name),
             instructorHref: teacher?.slug ? `/${teacher.slug}` : undefined,
             lessons: 1,
             level: "Iniciante" as const,
@@ -282,6 +291,50 @@ const Index = () => {
     };
     fetchAreaLessons();
   }, [areas, isTeacher]);
+
+  // Visualizações e avaliações de todos os conteúdos exibidos (professor e IA)
+  const lessonIdsKey = [
+    ...Object.values(areaLessons).flat().map((v) => v.id),
+    ...popularVideos.map((v) => v.id),
+  ]
+    .filter((v, i, arr) => arr.indexOf(v) === i)
+    .sort()
+    .join(",");
+  const aiIdsKey = aiKits.map((k) => k.id).sort().join(",");
+
+  useEffect(() => {
+    const lessonIds = lessonIdsKey ? lessonIdsKey.split(",") : [];
+    const aiIds = aiIdsKey ? aiIdsKey.split(",") : [];
+    const allIds = [...lessonIds, ...aiIds];
+    if (allIds.length === 0) return;
+    let cancelled = false;
+    void (async () => {
+      const [lessonViews, aiViews, ratingsRes] = await Promise.all([
+        lessonIds.length
+          ? supabase.rpc("get_content_view_counts", { _content_type: "lesson", _ids: lessonIds })
+          : Promise.resolve({ data: [] as any[] }),
+        aiIds.length
+          ? supabase.rpc("get_content_view_counts", { _content_type: "ai", _ids: aiIds })
+          : Promise.resolve({ data: [] as any[] }),
+        supabase.rpc("get_video_rating_aggregates" as any, { _ids: allIds }),
+      ]);
+      if (cancelled) return;
+      const views: Record<string, number> = {};
+      [...(((lessonViews as any).data || []) as any[]), ...(((aiViews as any).data || []) as any[])].forEach(
+        (r) => (views[r.content_id] = r.views_count),
+      );
+      const ratings: Record<string, { average: number; count: number }> = {};
+      (((ratingsRes as any).data || []) as any[]).forEach((r) => {
+        ratings[r.content_id] = { average: Number(r.average) || 0, count: r.count || 0 };
+      });
+      setStatViews(views);
+      setStatRatings(ratings);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [lessonIdsKey, aiIdsKey]);
+
 
   // Inline search effect
   useEffect(() => {
@@ -438,8 +491,9 @@ const Index = () => {
               ) : popularVideos.length > 0 ? (
                 <VideoCarousel
                   title="✨ Recomendado para você"
-                  videos={popularVideos}
+                  videos={popularVideos.map((v) => ({ ...v, views: statViews[v.id] ?? 0 }))}
                   onVideoClick={handleVideoClick}
+                  ratings={statRatings}
                   showTrialBadge={showTrialBadge}
                   watchedIds={watchedIds}
                 />
@@ -477,7 +531,10 @@ const Index = () => {
               </div>
             ) : (
               areas.map((area) => {
-                const lessonsForArea = areaLessons[area.name] || [];
+                const lessonsForArea = (areaLessons[area.name] || []).map((v) => ({
+                  ...v,
+                  views: statViews[v.id] ?? 0,
+                }));
                 // Vínculo oficial: áreas gravadas no material de IA (classificação automática/admin).
                 const kitsForArea = aiKits
                   .filter((kit) =>
@@ -485,7 +542,11 @@ const Index = () => {
                       (a) => a.trim().toLowerCase() === area.name.trim().toLowerCase(),
                     ),
                   )
-                  .map((kit) => (aiCovers[kit.id] ? { ...kit, thumbnail: aiCovers[kit.id] } : kit));
+                  .map((kit) => ({
+                    ...kit,
+                    thumbnail: aiCovers[kit.id] || "",
+                    views: statViews[kit.id] ?? 0,
+                  }));
                 if (lessonsForArea.length === 0 && kitsForArea.length === 0) return null;
                 return (
                   <VideoCarousel
@@ -493,6 +554,7 @@ const Index = () => {
                     title={`📚 ${area.name}`}
                     videos={[...lessonsForArea, ...kitsForArea]}
                     onVideoClick={handleVideoClick}
+                    ratings={statRatings}
                     showTrialBadge={showTrialBadge}
                     watchedIds={watchedIds}
                   />

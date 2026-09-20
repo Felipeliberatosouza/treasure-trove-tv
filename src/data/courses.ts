@@ -11,6 +11,10 @@ export interface Video {
   /** Link para a página do professor (conteúdo de professor real). */
   instructorHref?: string;
   videoUrl?: string;
+  /** Frase exibida na barra cinza sobre o vídeo. */
+  overlayLabel?: string;
+  /** Número de visualizações do conteúdo. */
+  views?: number;
 }
 
 export const videos: Video[] = [];

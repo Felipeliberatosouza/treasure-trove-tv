@@ -605,9 +605,13 @@ export function resolveAiAvatar(
   return {
     name: chosen.name,
     gender: chosen.gender,
+    // Mantém a aparência escolhida (galeria, animação e posições) do avatar da disciplina.
+    avatar_id: chosen.avatar_id || fallback.avatar_id,
     image_url: chosen.image_url,
     role_label: aiRoleLabel(chosen.gender),
     voice: chosen.voice || defaultVoiceForGender(chosen.gender),
+    animation: chosen.animation || fallback.animation || "gestos",
+    placements: chosen.placements || fallback.placements,
   };
 }
 

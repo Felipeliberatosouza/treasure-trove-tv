@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Search, Trash2, UserCog, UserCheck, UserX, FileSignature, Eye, Download, MailCheck, KeyRound, Send, Gift, Coins } from "lucide-react";
+import { Search, Trash2, UserCog, UserCheck, UserX, FileSignature, Eye, Download, MailCheck, KeyRound, Send, Gift, Coins, ReceiptText } from "lucide-react";
+import CreditStatementDialog from "./users/CreditStatementDialog";
 import { useToast } from "@/hooks/use-toast";
 import { useAuditLog } from "@/hooks/useAuditLog";
 import { formatCPF } from "@/lib/cpfValidator";
@@ -62,6 +63,33 @@ const AdminUsersTab = () => {
   const [creditUser, setCreditUser] = useState<UserWithRole | null>(null);
   const [creditValues, setCreditValues] = useState<Record<string, string>>({});
   const [savingCredits, setSavingCredits] = useState(false);
+  const [statementUser, setStatementUser] = useState<UserWithRole | null>(null);
+  // Resumo de créditos gratuitos por usuário (usados x restantes).
+  const [creditSummary, setCreditSummary] = useState<Record<string, { used: number; remaining: number }>>({});
+
+  const loadCreditSummary = async () => {
+    const [{ data: rows }, { data: ai }] = await Promise.all([
+      supabase.from("referral_content_credits").select("user_id, granted, used"),
+      supabase.from("ai_revision_credits").select("user_id, balance"),
+    ]);
+    const map: Record<string, { used: number; remaining: number }> = {};
+    (rows || []).forEach((r: any) => {
+      const entry = map[r.user_id] || { used: 0, remaining: 0 };
+      entry.used += r.used || 0;
+      entry.remaining += Math.max(0, (r.granted || 0) - (r.used || 0));
+      map[r.user_id] = entry;
+    });
+    (ai || []).forEach((r: any) => {
+      const entry = map[r.user_id] || { used: 0, remaining: 0 };
+      entry.remaining += r.balance || 0;
+      map[r.user_id] = entry;
+    });
+    setCreditSummary(map);
+  };
+
+  useEffect(() => {
+    void loadCreditSummary();
+  }, []);
   const { toast } = useToast();
 
   const handleGrantCredits = async () => {
@@ -90,6 +118,7 @@ const AdminUsersTab = () => {
       targetId: creditUser.user_id,
       metadata: { grants },
     });
+    await loadCreditSummary();
     toast({ title: "Créditos concedidos", description: `Créditos adicionados para ${creditUser.name}.` });
     setCreditUser(null);
     setCreditValues({});
@@ -367,6 +396,9 @@ const AdminUsersTab = () => {
                 <TableHead>Aceita e-mails</TableHead>
                 <TableHead>Contrato</TableHead>
                 <TableHead>Teste Grátis</TableHead>
+                <TableHead className="text-right">Créditos usados</TableHead>
+                <TableHead className="text-right">Créditos restantes</TableHead>
+                <TableHead>Extrato</TableHead>
                 <TableHead>Aniversário</TableHead>
                 <TableHead>Cadastro</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
@@ -438,6 +470,13 @@ const AdminUsersTab = () => {
                         Não usado
                       </Badge>
                     )}
+                  </TableCell>
+                  <TableCell className="text-right text-xs">{creditSummary[u.user_id]?.used ?? 0}</TableCell>
+                  <TableCell className="text-right text-xs font-medium">{creditSummary[u.user_id]?.remaining ?? 0}</TableCell>
+                  <TableCell>
+                    <Button size="sm" variant="ghost" className="h-8 gap-1 px-2 text-xs" onClick={() => setStatementUser(u)}>
+                      <ReceiptText className="h-4 w-4" /> Ver extrato
+                    </Button>
                   </TableCell>
                   <TableCell className="text-muted-foreground text-xs">
                     {u.birth_date ? new Date(u.birth_date + "T00:00:00").toLocaleDateString("pt-BR") : "—"}
@@ -662,6 +701,11 @@ const AdminUsersTab = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      <CreditStatementDialog
+        user={statementUser ? { user_id: statementUser.user_id, name: statementUser.name } : null}
+        onClose={() => setStatementUser(null)}
+      />
     </div>
   );
 };

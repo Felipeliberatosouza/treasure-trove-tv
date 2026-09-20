@@ -69,7 +69,7 @@ export function useReferralCredits() {
       return;
     }
     setLoading(true);
-    const [credits, ai, inviteRows] = await Promise.all([
+    const [credits, ai, inviteRows, ledger] = await Promise.all([
       supabase
         .from("referral_content_credits")
         .select("resource_type, granted, used")

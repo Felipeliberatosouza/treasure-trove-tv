@@ -34,11 +34,24 @@ export interface ReferralInvite {
  * Créditos gratuitos ganhos por indicação (por conteúdo e de IA) e
  * acompanhamento dos convites enviados pelo aluno.
  */
+export interface AiCreditsBreakdown {
+  referral: number;
+  purchased: number;
+  bonus: number;
+  used: number;
+}
+
 export function useReferralCredits() {
   const { user } = useAuth();
   const { config } = useCashbackConfig();
   const [rows, setRows] = useState<ReferralCreditRow[]>([]);
   const [aiCredits, setAiCredits] = useState(0);
+  const [aiBreakdown, setAiBreakdown] = useState<AiCreditsBreakdown>({
+    referral: 0,
+    purchased: 0,
+    bonus: 0,
+    used: 0,
+  });
   const [invites, setInvites] = useState<ReferralInvite[]>([]);
   const [loading, setLoading] = useState(true);
 

@@ -491,8 +491,9 @@ const Index = () => {
               ) : popularVideos.length > 0 ? (
                 <VideoCarousel
                   title="✨ Recomendado para você"
-                  videos={popularVideos}
+                  videos={popularVideos.map((v) => ({ ...v, views: statViews[v.id] ?? 0 }))}
                   onVideoClick={handleVideoClick}
+                  ratings={statRatings}
                   showTrialBadge={showTrialBadge}
                   watchedIds={watchedIds}
                 />

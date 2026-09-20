@@ -40,7 +40,7 @@ const PaymentSuccess = () => {
       }
     })();
     return () => { cancelled = true; };
-  }, [isUnitPurchase, user, sessionId]);
+  }, [isUnitPurchase, isAiCredits, user, sessionId]);
 
   // Poll for subscription confirmation (only for subscription flow)
   useEffect(() => {

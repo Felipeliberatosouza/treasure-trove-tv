@@ -39,4 +39,4 @@ export const teacherOverlayLabel = (name?: string | null): string =>
 
 /** Nome exibido abaixo do card para professor real. */
 export const teacherInstructorLabel = (name?: string | null): string =>
-  name ? `Prof. ${name}` : "";
+  name ? `Prof. ${name}` : "Aula gravada por professor";

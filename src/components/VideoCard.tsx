@@ -1,8 +1,9 @@
 import { motion } from "framer-motion";
 import { Play, Clock, Eye, Star, Gift, CheckCircle } from "lucide-react";
 import type { Video } from "@/data/courses";
-import { prefetchSignedUrlForContent } from "@/lib/signedUrlCache";
-import { useEffect, useRef } from "react";
+import { prefetchSignedUrlForContent, getSignedVideoUrl } from "@/lib/signedUrlCache";
+import { formatDuration } from "@/lib/contentDisplay";
+import { useEffect, useRef, useState } from "react";
 
 interface VideoCardProps {
   video: Video;
@@ -15,6 +16,34 @@ interface VideoCardProps {
 
 const VideoCard = ({ video, index, onClick, rating, showTrialBadge, watched }: VideoCardProps) => {
   const rootRef = useRef<HTMLDivElement>(null);
+  const [measuredDuration, setMeasuredDuration] = useState("");
+
+  // Quando a aula ainda não tem duração registrada, medimos a partir dos
+  // metadados do vídeo para que o card de professor mostre a mesma informação
+  // do card de professor virtual.
+  useEffect(() => {
+    if (video.duration || !video.videoUrl) return;
+    let cancelled = false;
+    void (async () => {
+      const url = await getSignedVideoUrl(video.videoUrl as string);
+      if (!url || cancelled) return;
+      const el = document.createElement("video");
+      el.preload = "metadata";
+      el.muted = true;
+      el.src = url;
+      el.onloadedmetadata = () => {
+        if (!cancelled && Number.isFinite(el.duration) && el.duration > 0) {
+          setMeasuredDuration(formatDuration(el.duration));
+        }
+        el.src = "";
+      };
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [video.duration, video.videoUrl]);
+
+  const durationLabel = video.duration || measuredDuration;
 
   // Prefetch ao entrar no viewport: gera a URL assinada em background para
   // reduzir o TTFB caso o usuário clique no card.
@@ -97,10 +126,10 @@ const VideoCard = ({ video, index, onClick, rating, showTrialBadge, watched }: V
             <p className="text-xs text-muted-foreground">{video.instructor}</p>
           )}
           <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-            {video.duration && (
+            {durationLabel && (
               <span className="flex items-center gap-1">
                 <Clock className="h-3 w-3" />
-                {video.duration}
+                {durationLabel}
               </span>
             )}
             <span className="flex items-center gap-1">

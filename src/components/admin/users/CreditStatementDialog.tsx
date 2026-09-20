@@ -40,6 +40,20 @@ interface InviteRow {
 const fmt = (d?: string | null) =>
   d ? new Date(d).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" }) : "—";
 
+/** Traduz o motivo técnico da movimentação para uma explicação simples. */
+const describeReason = (reason: string | null, delta: number) => {
+  const r = (reason || "").toLowerCase();
+  if (r.startsWith("referral")) return "Crédito de IA Ganho por Indicação de amigo";
+  if (r.startsWith("purchase")) return "Crédito de IA Comprado pelo aluno";
+  if (r.includes("signup")) return "Crédito de IA de boas-vindas ao criar a conta";
+  if (r.includes("plan")) return "Crédito de IA incluído no plano assinado";
+  if (r.includes("admin")) return "Crédito de IA concedido pela equipe";
+  if (r.includes("refund") || r.includes("estorno")) return "Devolução de Crédito de IA por material não entregue";
+  if (r.includes("expire")) return "Crédito de IA vencido";
+  if (delta < 0) return "Crédito de IA usado para criar material de estudo";
+  return "Crédito de IA adicionado à conta";
+};
+
 /** Extrato completo dos créditos gratuitos de um usuário. */
 const CreditStatementDialog = ({
   user,
@@ -100,7 +114,7 @@ const CreditStatementDialog = ({
       <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-display flex items-center gap-2">
-            <ReceiptText className="h-5 w-5" /> Extrato de créditos — {user?.name}
+            <ReceiptText className="h-5 w-5" /> Extrato de Créditos de IA — {user?.name}
           </DialogTitle>
         </DialogHeader>
 
@@ -111,7 +125,7 @@ const CreditStatementDialog = ({
         ) : (
           <div className="space-y-6">
             <section>
-              <h3 className="mb-2 text-sm font-semibold">Créditos por recurso</h3>
+              <h3 className="mb-2 text-sm font-semibold">Créditos de IA por recurso</h3>
               <div className="rounded-md border">
                 <Table>
                   <TableHeader>
@@ -124,7 +138,7 @@ const CreditStatementDialog = ({
                   </TableHeader>
                   <TableBody>
                     {credits.length === 0 && (
-                      <TableRow><TableCell colSpan={4} className="text-sm text-muted-foreground">Nenhum crédito concedido.</TableCell></TableRow>
+                      <TableRow><TableCell colSpan={4} className="text-sm text-muted-foreground">Nenhum Crédito de IA concedido.</TableCell></TableRow>
                     )}
                     {credits.map((c) => (
                       <TableRow key={c.resource_type}>
@@ -146,7 +160,7 @@ const CreditStatementDialog = ({
             </section>
 
             <section>
-              <h3 className="mb-2 text-sm font-semibold">Movimentação dos créditos de IA</h3>
+              <h3 className="mb-2 text-sm font-semibold">Movimentação dos Créditos de IA</h3>
               {ledger.length === 0 ? (
                 <p className="text-sm text-muted-foreground">Sem movimentações.</p>
               ) : (
@@ -155,18 +169,18 @@ const CreditStatementDialog = ({
                     <TableHeader>
                       <TableRow>
                         <TableHead>Data</TableHead>
-                        <TableHead>Motivo</TableHead>
-                        <TableHead className="text-right">Variação</TableHead>
-                        <TableHead className="text-right">Saldo</TableHead>
+                        <TableHead>O que aconteceu</TableHead>
+                        <TableHead className="text-right">Créditos de IA</TableHead>
+                        <TableHead className="text-right">Saldo depois</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {ledger.map((l) => (
                         <TableRow key={l.id}>
                           <TableCell className="whitespace-nowrap text-xs">{fmt(l.created_at)}</TableCell>
-                          <TableCell className="text-xs">{l.reason || "—"}</TableCell>
+                          <TableCell className="text-xs">{describeReason(l.reason, l.delta)}</TableCell>
                           <TableCell className={`text-right text-xs ${l.delta < 0 ? "text-destructive" : "text-green-500"}`}>
-                            {l.delta > 0 ? `+${l.delta}` : l.delta}
+                            {l.delta > 0 ? `+${l.delta} recebidos` : `${Math.abs(l.delta)} usados`}
                           </TableCell>
                           <TableCell className="text-right text-xs">{l.balance_after ?? "—"}</TableCell>
                         </TableRow>
@@ -178,7 +192,7 @@ const CreditStatementDialog = ({
             </section>
 
             <section>
-              <h3 className="mb-2 text-sm font-semibold">Como usou (últimos acessos)</h3>
+              <h3 className="mb-2 text-sm font-semibold">Como usou os Créditos de IA (últimos acessos)</h3>
               {usage.length === 0 ? (
                 <p className="text-sm text-muted-foreground">Nenhum acesso registrado.</p>
               ) : (

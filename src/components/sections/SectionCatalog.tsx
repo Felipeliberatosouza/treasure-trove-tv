@@ -145,9 +145,10 @@ const SectionCatalog = ({ sectionKey }: Props) => {
 
       const lessonIds = lessonRows.map((l) => l.id);
       const examIds = examRows.map((e) => e.id);
-      const allIds = [...lessonIds, ...examIds];
+      const aiIds = ((aiRes.data as any[]) || []).map((r) => r.id);
+      const allIds = [...lessonIds, ...examIds, ...aiIds];
 
-      const [lessonViews, examViews, ratingsRes, viewsRes] = await Promise.all([
+      const [lessonViews, examViews, aiViews, ratingsRes, viewsRes] = await Promise.all([
         lessonIds.length
           ? supabase.rpc("get_content_view_counts", { _content_type: "lesson", _ids: lessonIds })
           : Promise.resolve({ data: [] as any[] }),
@@ -156,6 +157,9 @@ const SectionCatalog = ({ sectionKey }: Props) => {
               _content_type: "exam_solution",
               _ids: examIds,
             })
+          : Promise.resolve({ data: [] as any[] }),
+        aiIds.length
+          ? supabase.rpc("get_content_view_counts", { _content_type: "ai", _ids: aiIds })
           : Promise.resolve({ data: [] as any[] }),
         allIds.length
           ? supabase.rpc("get_video_rating_aggregates" as any, { _ids: allIds })

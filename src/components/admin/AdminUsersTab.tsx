@@ -118,6 +118,7 @@ const AdminUsersTab = () => {
       targetId: creditUser.user_id,
       metadata: { grants },
     });
+    await loadCreditSummary();
     toast({ title: "Créditos concedidos", description: `Créditos adicionados para ${creditUser.name}.` });
     setCreditUser(null);
     setCreditValues({});

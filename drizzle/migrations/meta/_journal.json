@@ -106,6 +106,13 @@
       "when": 1789910202443,
       "tag": "0014_doubt_count_ignore_blocked",
       "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1789910617452,
+      "tag": "0015_fix_plans_grants_and_ai_ratings",
+      "breakpoints": true
     }
   ]
 }

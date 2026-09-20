@@ -252,7 +252,7 @@ async function handleRequest(req: Request, body: any): Promise<Response> {
 
   try {
 
-    const action = body.action === "status" ? "status" : "generate";
+    const action = body.action === "status" || body.action === "cancel" ? body.action : "generate";
     const anonId = typeof body.anon_id === "string" ? body.anon_id.slice(0, 64) : null;
 
     // --- identifica usuário (opcional) ---
@@ -307,6 +307,36 @@ async function handleRequest(req: Request, body: any): Promise<Response> {
         balance: 0,
         anon_free_left: Math.max(ANON_FREE_USES - used, 0),
       });
+    }
+
+    // ------- cancelamento: devolve o Crédito de IA reservado -------
+    if (action === "cancel") {
+      const key = typeof body.idempotency_key === "string" ? body.idempotency_key.slice(0, 80) : null;
+      if (!userId || !key) return json({ canceled: false });
+      // A reserva acontece poucos instantes depois do início: aguardamos um pouco.
+      let pending: { id: string; status: string; credit_reserved: boolean } | null = null;
+      for (let i = 0; i < 5; i++) {
+        const { data } = await admin
+          .from("ai_revision_requests")
+          .select("id, status, credit_reserved")
+          .eq("idempotency_key", key)
+          .eq("user_id", userId)
+          .maybeSingle();
+        if (data?.credit_reserved && data.status === "processing") { pending = data as typeof pending; break; }
+        await new Promise((r) => setTimeout(r, 1500));
+      }
+      if (!pending) return json({ canceled: false });
+      const credits = await ensureCredits(userId);
+      const refunded = credits.balance + 1;
+      await admin.from("ai_revision_credits").update({ balance: refunded }).eq("user_id", userId);
+      await admin.from("ai_revision_credit_ledger").insert({
+        user_id: userId, delta: 1, reason: "kit_refund", request_id: pending.id, balance_after: refunded,
+      });
+      await admin
+        .from("ai_revision_requests")
+        .update({ credit_reserved: false })
+        .eq("id", pending.id);
+      return json({ canceled: true, balance: refunded });
     }
 
     // ------- geração -------
@@ -553,7 +583,7 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   const body = await req.json().catch(() => ({}));
-  if (body?.action === "status") return await handleRequest(req, body);
+  if (body?.action === "status" || body?.action === "cancel") return await handleRequest(req, body);
 
   const encoder = new TextEncoder();
   const stream = new ReadableStream({

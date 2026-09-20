@@ -499,9 +499,9 @@ async function handleRequest(req: Request, body: any): Promise<Response> {
     }
     const requestId = reqRow!.id;
 
-    // 3) reserva do crédito
+    // 3) reserva do crédito (o teste grátis cobre a geração sem debitar Crédito de IA)
     let reservedBalance: number | null = null;
-    if (userId && !planUnlimited) {
+    if (userId && !planUnlimited && !trialCover) {
       const credits = await ensureCredits(userId);
       reservedBalance = credits.balance - 1;
       await admin.from("ai_revision_credits").update({ balance: reservedBalance }).eq("user_id", userId);
@@ -509,6 +509,11 @@ async function handleRequest(req: Request, body: any): Promise<Response> {
         user_id: userId, delta: -1, reason: "kit_reserve", request_id: requestId, balance_after: reservedBalance,
       });
       await admin.from("ai_revision_requests").update({ credit_reserved: true }).eq("id", requestId);
+    }
+    if (userId && trialCover && trialCover.type === "videos") {
+      // Consome um acesso do teste grátis, conforme configurado pelo administrador.
+      const used = trialCover.watched + 1;
+      await admin.from("free_trials").update({ videos_watched: used }).eq("id", trialCover.id);
     }
 
     const apiKey = Deno.env.get("LOVABLE_API_KEY");

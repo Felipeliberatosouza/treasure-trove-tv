@@ -52,7 +52,9 @@ const UserMenu = forwardRef<HTMLDivElement>((_, forwardedRef) => {
           {role === "student" && (
             <span className="text-[10px] font-normal text-black/60">
               {aiCredits} Crédito{aiCredits === 1 ? "" : "s"} de IA
-              {totalRemaining > 0 ? ` · ${totalRemaining} acesso${totalRemaining === 1 ? "" : "s"} grátis` : ""}
+              {totalRemaining > 0
+                ? ` · ${totalRemaining} Crédito${totalRemaining === 1 ? "" : "s"} de IA Ganho${totalRemaining === 1 ? "" : "s"} por Indicação`
+                : ""}
             </span>
           )}
         </span>

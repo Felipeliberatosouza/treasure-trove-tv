@@ -531,7 +531,10 @@ const Index = () => {
               </div>
             ) : (
               areas.map((area) => {
-                const lessonsForArea = areaLessons[area.name] || [];
+                const lessonsForArea = (areaLessons[area.name] || []).map((v) => ({
+                  ...v,
+                  views: statViews[v.id] ?? 0,
+                }));
                 // Vínculo oficial: áreas gravadas no material de IA (classificação automática/admin).
                 const kitsForArea = aiKits
                   .filter((kit) =>
@@ -539,7 +542,11 @@ const Index = () => {
                       (a) => a.trim().toLowerCase() === area.name.trim().toLowerCase(),
                     ),
                   )
-                  .map((kit) => (aiCovers[kit.id] ? { ...kit, thumbnail: aiCovers[kit.id] } : kit));
+                  .map((kit) => ({
+                    ...kit,
+                    thumbnail: aiCovers[kit.id] || "",
+                    views: statViews[kit.id] ?? 0,
+                  }));
                 if (lessonsForArea.length === 0 && kitsForArea.length === 0) return null;
                 return (
                   <VideoCarousel
@@ -547,6 +554,7 @@ const Index = () => {
                     title={`📚 ${area.name}`}
                     videos={[...lessonsForArea, ...kitsForArea]}
                     onVideoClick={handleVideoClick}
+                    ratings={statRatings}
                     showTrialBadge={showTrialBadge}
                     watchedIds={watchedIds}
                   />

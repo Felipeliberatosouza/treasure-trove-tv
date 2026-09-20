@@ -97,6 +97,22 @@ export function useReferralCredits() {
       }))
     );
     setAiCredits(ai.data?.balance ?? 0);
+
+    const bd: AiCreditsBreakdown = { referral: 0, purchased: 0, bonus: 0, used: 0 };
+    for (const e of ledger.data ?? []) {
+      const delta = Number(e.delta ?? 0);
+      const reason = String(e.reason ?? "");
+      if (delta < 0) {
+        bd.used += -delta;
+      } else if (reason.startsWith("referral")) {
+        bd.referral += delta;
+      } else if (reason.startsWith("purchase")) {
+        bd.purchased += delta;
+      } else {
+        bd.bonus += delta;
+      }
+    }
+    setAiBreakdown(bd);
     setInvites((inviteRows.data ?? []) as ReferralInvite[]);
     setLoading(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -70,11 +70,24 @@ const VideoPlayer = ({
     return 0;
   };
 
+  const durationReported = useRef(false);
+
   const syncDuration = () => {
     const video = videoRef.current;
     if (!video) return 0;
     const nextDuration = getValidDuration(video);
-    if (nextDuration > 0) setDuration(nextDuration);
+    if (nextDuration > 0) {
+      setDuration(nextDuration);
+      // Guarda a duração real do conteúdo para exibir nos cards.
+      if (!durationReported.current && contentId) {
+        durationReported.current = true;
+        void supabase.rpc("set_content_duration" as any, {
+          _content_type: contentType,
+          _content_id: contentId,
+          _seconds: Math.round(nextDuration),
+        });
+      }
+    }
     return nextDuration;
   };
 

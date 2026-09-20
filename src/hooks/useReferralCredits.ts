@@ -124,5 +124,5 @@ export function useReferralCredits() {
 
   const totalRemaining = rows.reduce((sum, r) => sum + r.remaining, 0);
 
-  return { rows, aiCredits, invites, loading, reload, totalRemaining };
+  return { rows, aiCredits, aiBreakdown, invites, loading, reload, totalRemaining };
 }

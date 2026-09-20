@@ -340,7 +340,19 @@ Deno.serve(async (req) => {
       const bonusFactor = (c.qualityBonusPct + c.rfScoreBonusPct) / 100;
       const bonusAmount = round2(base * bonusFactor);
       const poolFinal = round2(base + bonusAmount);
-      const totalGross = round2(c.packageFeeTotal + c.commissionTotal + poolFinal);
+      // Bônus opcional por dúvidas respondidas no período
+      const { data: doubtRewards } = await supabase
+        .from("doubt_teacher_rewards").select("id, amount")
+        .eq("teacher_id", c.teacher_id).eq("status", "pending")
+        .gte("created_at", startTs).lt("created_at", endTs);
+      const doubtBonusTotal = round2((doubtRewards ?? []).reduce((acc: number, r: any) => acc + Number(r.amount || 0), 0));
+      if (doubtRewards?.length) {
+        await supabase.from("doubt_teacher_rewards")
+          .update({ status: "included" })
+          .in("id", doubtRewards.map((r: any) => r.id));
+      }
+
+      const totalGross = round2(c.packageFeeTotal + c.commissionTotal + poolFinal + doubtBonusTotal);
       totalDistributed += poolFinal;
 
       // Salva stats
@@ -377,7 +389,7 @@ Deno.serve(async (req) => {
           pool_share_pct: sharePct, quality_bonus_pct: c.qualityBonusPct,
           rf_score_bonus_pct: c.rfScoreBonusPct, rf_score: c.rfScore,
           commission_amount: c.commissionTotal,
-          notes: `Pacotes: ${c.packages} x R$${packageFee.toFixed(2)} | Comissão: R$${c.commissionTotal.toFixed(2)} | Pool: R$${poolFinal.toFixed(2)}`,
+          notes: `Pacotes: ${c.packages} x R$${packageFee.toFixed(2)} | Comissão: R$${c.commissionTotal.toFixed(2)} | Pool: R$${poolFinal.toFixed(2)} | Bônus dúvidas: R$${doubtBonusTotal.toFixed(2)}`,
         });
       }
     }

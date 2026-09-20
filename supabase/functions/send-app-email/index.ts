@@ -27,6 +27,8 @@ const TEMPLATE_KEY_ALIAS: Record<string, string> = {
   'doubt-answered': 'doubt_answered',
   'doubt-approved': 'doubt_approved',
   'doubt-question-approved': 'doubt_question_approved',
+  'doubt-area-invite': 'doubt_area_invite',
+  'doubt-new-answer': 'doubt_new_answer',
   'doubt-sent-confirmation': 'doubt_submitted',
   'payment-confirmation': 'payment_confirmation',
   'subscription-cancelled': 'subscription_cancelled',

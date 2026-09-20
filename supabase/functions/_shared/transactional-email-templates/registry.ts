@@ -45,6 +45,8 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'doubt-answered': doubtAnswered,
   'doubt-sent-confirmation': doubtSentConfirmation,
   'doubt-question-approved': doubtQuestionApproved,
+  'doubt-area-invite': doubtAreaInvite,
+  'doubt-new-answer': doubtNewAnswer,
   'welcome-student': welcomeStudent,
   'welcome-teacher': welcomeTeacher,
   'new-teacher-admin-notify': newTeacherAdminNotify,

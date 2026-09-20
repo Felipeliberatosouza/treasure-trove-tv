@@ -445,7 +445,11 @@ async function handleRequest(req: Request, body: any): Promise<Response> {
       if (!planUnlimited) {
         const credits = await ensureCredits(userId);
         if (credits.balance <= 0) {
-          return json({ error: "paywall", message: "Seus Créditos de IA acabaram." }, 402);
+          // Teste grátis ativo cobre a geração de IA, seguindo as regras configuradas.
+          trialCover = await checkFreeTrial(userId);
+          if (!trialCover) {
+            return json({ error: "paywall", message: "Seus Créditos de IA acabaram." }, 402);
+          }
         }
       }
     }

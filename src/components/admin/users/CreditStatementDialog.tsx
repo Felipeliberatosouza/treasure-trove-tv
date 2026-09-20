@@ -82,7 +82,7 @@ const CreditStatementDialog = ({
           .select("id, delta, reason, created_at, balance_after")
           .eq("user_id", user.user_id)
           .order("created_at", { ascending: false })
-          .limit(50),
+          .limit(500),
         supabase
           .from("resource_usage")
           .select("id, resource_type, accessed_at, content_type")
@@ -125,7 +125,9 @@ const CreditStatementDialog = ({
         ) : (
           <div className="space-y-6">
             <section>
-              <h3 className="mb-2 text-sm font-semibold">Créditos de IA por recurso</h3>
+              <h3 className="mb-2 text-sm font-semibold">
+                Créditos de IA Ganhos por Indicação (por recurso)
+              </h3>
               <div className="rounded-md border">
                 <Table>
                   <TableHeader>

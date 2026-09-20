@@ -294,6 +294,41 @@ const AdminPlansTab = () => {
                 ))}
               </div>
             </div>
+
+            {/* Créditos de IA */}
+            <div className="space-y-3 border rounded-lg p-3 bg-muted/30">
+              <div>
+                <h4 className="text-sm font-semibold">Créditos de IA</h4>
+                <p className="text-xs text-muted-foreground">
+                  Define quantos Créditos de IA o assinante recebe a cada mês, ou se o plano tem uso de IA ilimitado.
+                </p>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <Label>Modalidade</Label>
+                  <select
+                    className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                    value={(plan.ai_credits_mode as string) || "none"}
+                    onChange={(e) => updatePlan(pi, "ai_credits_mode", e.target.value)}
+                  >
+                    {AI_MODES.map((m) => (
+                      <option key={m.value} value={m.value}>{m.label}</option>
+                    ))}
+                  </select>
+                </div>
+                {plan.ai_credits_mode === "included" && (
+                  <div>
+                    <Label>Créditos de IA por mês</Label>
+                    <Input
+                      type="number"
+                      min={1}
+                      value={(plan.ai_credits_qty as number) || 0}
+                      onChange={(e) => updatePlan(pi, "ai_credits_qty", parseInt(e.target.value) || 0)}
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
           </Card>
         ))}
 

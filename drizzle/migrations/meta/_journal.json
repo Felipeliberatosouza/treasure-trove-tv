@@ -92,6 +92,20 @@
       "when": 1789902691260,
       "tag": "0012_ai_credits_plans_and_packages",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1789909681990,
+      "tag": "0013_doubt_area_chat",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1789910202443,
+      "tag": "0014_doubt_count_ignore_blocked",
+      "breakpoints": true
     }
   ]
 }

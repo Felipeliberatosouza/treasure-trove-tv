@@ -13,6 +13,8 @@ import { template as doubtApproved } from './doubt-approved.tsx'
 import { template as doubtAnswered } from './doubt-answered.tsx'
 import { template as doubtSentConfirmation } from './doubt-sent-confirmation.tsx'
 import { template as doubtQuestionApproved } from './doubt-question-approved.tsx'
+import { template as doubtAreaInvite } from './doubt-area-invite.tsx'
+import { template as doubtNewAnswer } from './doubt-new-answer.tsx'
 import { template as welcomeStudent } from './welcome-student.tsx'
 import { template as welcomeTeacher } from './welcome-teacher.tsx'
 import { template as newTeacherAdminNotify } from './new-teacher-admin-notify.tsx'
@@ -43,6 +45,8 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'doubt-answered': doubtAnswered,
   'doubt-sent-confirmation': doubtSentConfirmation,
   'doubt-question-approved': doubtQuestionApproved,
+  'doubt-area-invite': doubtAreaInvite,
+  'doubt-new-answer': doubtNewAnswer,
   'welcome-student': welcomeStudent,
   'welcome-teacher': welcomeTeacher,
   'new-teacher-admin-notify': newTeacherAdminNotify,

@@ -22,6 +22,7 @@ import SettingsCashback from "./settings/SettingsCashback";
 import SettingsFooter from "./settings/SettingsFooter";
 import SettingsAlertBox from "./settings/SettingsAlertBox";
 import SettingsAiGeneration from "./settings/SettingsAiGeneration";
+import SettingsDoubts from "./settings/SettingsDoubts";
 
 const SECTIONS_RAW = [
   { id: "ai_generation", label: "Gestão de IA", icon: Sparkles },
@@ -38,6 +39,7 @@ const SECTIONS_RAW = [
   { id: "products", label: "Config. de Produtos", icon: Package },
   { id: "contract", label: "Contrato do Professor", icon: FileSignature },
   { id: "contact", label: "Dados e Contatos", icon: Phone },
+  { id: "doubts", label: "Dúvidas", icon: Headset },
   { id: "support", label: "Suporte", icon: Headset },
   { id: "emails", label: "E-mails", icon: Mail },
   { id: "branding", label: "Identidade Visual", icon: Palette },
@@ -138,6 +140,7 @@ const AdminSettingsTab = () => {
       {activeSection === "retention" && <SettingsRetentionCoupon />}
       {activeSection === "alert_box" && <SettingsAlertBox />}
       {activeSection === "ai_generation" && <SettingsAiGeneration />}
+      {activeSection === "doubts" && <SettingsDoubts />}
     </div>
   );
 };

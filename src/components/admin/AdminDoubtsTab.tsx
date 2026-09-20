@@ -11,6 +11,7 @@ import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import DoubtThreadDialog from "@/components/doubts/DoubtThreadDialog";
+import AdminBlockedDoubtMessages from "@/components/admin/AdminBlockedDoubtMessages";
 
 interface Doubt {
   id: string;
@@ -448,6 +449,7 @@ const AdminDoubtsTab = () => {
         onClose={() => setThreadDoubt(null)}
         onChanged={fetchDoubts}
       />
+      <AdminBlockedDoubtMessages />
     </div>
   );
 };

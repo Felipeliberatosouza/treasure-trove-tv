@@ -833,15 +833,55 @@ export type Database = {
         }
         Relationships: []
       }
+      doubt_area_invites: {
+        Row: {
+          created_at: string
+          doubt_id: string
+          id: string
+          notified_at: string | null
+          responded_at: string | null
+          teacher_id: string
+        }
+        Insert: {
+          created_at?: string
+          doubt_id: string
+          id?: string
+          notified_at?: string | null
+          responded_at?: string | null
+          teacher_id: string
+        }
+        Update: {
+          created_at?: string
+          doubt_id?: string
+          id?: string
+          notified_at?: string | null
+          responded_at?: string | null
+          teacher_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "doubt_area_invites_doubt_id_fkey"
+            columns: ["doubt_id"]
+            isOneToOne: false
+            referencedRelation: "student_doubts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       doubt_messages: {
         Row: {
           author_id: string
           author_role: string
+          block_matches: string[]
+          block_reason: string | null
+          blocked: boolean
           body: string
+          bonus_amount: number
           created_at: string
           doubt_id: string
           id: string
           message_kind: string
+          paid_with_credits: boolean
           rejection_reason: string | null
           status: string
           updated_at: string
@@ -849,11 +889,16 @@ export type Database = {
         Insert: {
           author_id: string
           author_role: string
+          block_matches?: string[]
+          block_reason?: string | null
+          blocked?: boolean
           body: string
+          bonus_amount?: number
           created_at?: string
           doubt_id: string
           id?: string
           message_kind: string
+          paid_with_credits?: boolean
           rejection_reason?: string | null
           status?: string
           updated_at?: string
@@ -861,11 +906,16 @@ export type Database = {
         Update: {
           author_id?: string
           author_role?: string
+          block_matches?: string[]
+          block_reason?: string | null
+          blocked?: boolean
           body?: string
+          bonus_amount?: number
           created_at?: string
           doubt_id?: string
           id?: string
           message_kind?: string
+          paid_with_credits?: boolean
           rejection_reason?: string | null
           status?: string
           updated_at?: string
@@ -873,6 +923,47 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "doubt_messages_doubt_id_fkey"
+            columns: ["doubt_id"]
+            isOneToOne: false
+            referencedRelation: "student_doubts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      doubt_teacher_rewards: {
+        Row: {
+          amount: number
+          created_at: string
+          doubt_id: string
+          id: string
+          message_id: string | null
+          status: string
+          teacher_id: string
+          updated_at: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          doubt_id: string
+          id?: string
+          message_id?: string | null
+          status?: string
+          teacher_id: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          doubt_id?: string
+          id?: string
+          message_id?: string | null
+          status?: string
+          teacher_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "doubt_teacher_rewards_doubt_id_fkey"
             columns: ["doubt_id"]
             isOneToOne: false
             referencedRelation: "student_doubts"
@@ -1772,6 +1863,7 @@ export type Database = {
           phone_verified: boolean
           pix_key: string | null
           profile_title: string | null
+          receives_doubt_emails: boolean
           referral_code: number | null
           slug: string | null
           updated_at: string
@@ -1800,6 +1892,7 @@ export type Database = {
           phone_verified?: boolean
           pix_key?: string | null
           profile_title?: string | null
+          receives_doubt_emails?: boolean
           referral_code?: number | null
           slug?: string | null
           updated_at?: string
@@ -1828,6 +1921,7 @@ export type Database = {
           phone_verified?: boolean
           pix_key?: string | null
           profile_title?: string | null
+          receives_doubt_emails?: boolean
           referral_code?: number | null
           slug?: string | null
           updated_at?: string
@@ -2306,15 +2400,21 @@ export type Database = {
           answer: string | null
           answered_at: string | null
           approved_at: string | null
+          area_ids: string[]
+          audience: string
           content_id: string | null
           content_type: string
           created_at: string
+          credits_spent: number
           id: string
+          interactions_limit: number | null
+          interactions_used: number
           messages_limit: number
           question: string
           questions_used: number
           status: string
           student_id: string
+          subject: string | null
           teacher_id: string | null
           updated_at: string
         }
@@ -2322,15 +2422,21 @@ export type Database = {
           answer?: string | null
           answered_at?: string | null
           approved_at?: string | null
+          area_ids?: string[]
+          audience?: string
           content_id?: string | null
           content_type?: string
           created_at?: string
+          credits_spent?: number
           id?: string
+          interactions_limit?: number | null
+          interactions_used?: number
           messages_limit?: number
           question: string
           questions_used?: number
           status?: string
           student_id: string
+          subject?: string | null
           teacher_id?: string | null
           updated_at?: string
         }
@@ -2338,15 +2444,21 @@ export type Database = {
           answer?: string | null
           answered_at?: string | null
           approved_at?: string | null
+          area_ids?: string[]
+          audience?: string
           content_id?: string | null
           content_type?: string
           created_at?: string
+          credits_spent?: number
           id?: string
+          interactions_limit?: number | null
+          interactions_used?: number
           messages_limit?: number
           question?: string
           questions_used?: number
           status?: string
           student_id?: string
+          subject?: string | null
           teacher_id?: string | null
           updated_at?: string
         }
@@ -3496,6 +3608,10 @@ export type Database = {
       admin_reset_free_trial: { Args: { _user_id: string }; Returns: boolean }
       can_access_lesson_material: {
         Args: { _lesson_id: string; _material_type: string }
+        Returns: boolean
+      }
+      can_teacher_access_doubt: {
+        Args: { _doubt_id: string }
         Returns: boolean
       }
       claim_plan_ai_credits: { Args: { _user_id: string }; Returns: Json }

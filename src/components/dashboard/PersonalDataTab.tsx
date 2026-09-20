@@ -36,6 +36,7 @@ const PersonalDataTab = () => {
   const [address, setAddress] = useState("");
   const [pixKey, setPixKey] = useState("");
   const [acceptsMarketing, setAcceptsMarketing] = useState(false);
+  const [receivesDoubtEmails, setReceivesDoubtEmails] = useState(true);
   const [phoneVerified, setPhoneVerified] = useState(false);
   const [experiences, setExperiences] = useState<Experience[]>([]);
   const [education, setEducation] = useState<Education[]>([]);
@@ -123,6 +124,7 @@ const PersonalDataTab = () => {
       setAddress((profile as any).address || "");
       setPixKey((profile as any).pix_key || "");
       setAcceptsMarketing((profile as any).accepts_marketing || false);
+      setReceivesDoubtEmails((profile as any).receives_doubt_emails !== false);
       setPhoneVerified((profile as any).phone_verified || false);
     }
   }, [profile]);
@@ -239,7 +241,7 @@ const PersonalDataTab = () => {
       }
     }
 
-    const updateData: any = { name, bio, expertise_area: expertiseAreas.join(", "), birth_date: birthDate || null, phone: phone || null, cpf: cpf || null, accepts_marketing: acceptsMarketing };
+    const updateData: any = { name, bio, expertise_area: expertiseAreas.join(", "), birth_date: birthDate || null, phone: phone || null, cpf: cpf || null, accepts_marketing: acceptsMarketing, receives_doubt_emails: receivesDoubtEmails };
     if (emailChanged) {
       updateData.email = trimmedEmail;
     }
@@ -410,6 +412,19 @@ const PersonalDataTab = () => {
             Aceito receber mensagens e e-mails com promoções e novidades da Revisão Fácil
           </label>
         </div>
+        {role === "teacher" && (
+          <div className="flex items-start gap-2 pt-2">
+            <Checkbox
+              id="receivesDoubtEmails"
+              checked={receivesDoubtEmails}
+              onCheckedChange={(v) => setReceivesDoubtEmails(v === true)}
+              className="mt-0.5"
+            />
+            <label htmlFor="receivesDoubtEmails" className="text-sm text-muted-foreground leading-tight">
+              Quero receber por e-mail as dúvidas de alunos da minha área, com link direto para o chat
+            </label>
+          </div>
+        )}
         {role === "teacher" && (
           <>
             <div>

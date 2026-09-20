@@ -239,7 +239,23 @@ Deno.serve(async (req) => {
         const dt = (new Date(d.answered_at).getTime() - new Date(d.created_at).getTime()) / 86400000;
         return dt <= 5;
       }).length;
-      const doubtsPct = doubtsReceived > 0 ? doubtsAnsweredInTime / doubtsReceived : 1;
+      
+      // Dúvidas abertas por área (aulas com professor virtual): conta convocações
+      // recebidas e respondidas dentro do prazo.
+      const { data: areaInvites } = await supabase
+        .from("doubt_area_invites").select("notified_at, responded_at, created_at")
+        .eq("teacher_id", teacherId)
+        .gte("created_at", startTs).lt("created_at", endTs);
+      const areaReceived = areaInvites?.length ?? 0;
+      const areaAnswered = (areaInvites ?? []).filter((i: any) => {
+        if (!i.responded_at) return false;
+        const dt = (new Date(i.responded_at).getTime() - new Date(i.created_at).getTime()) / 86400000;
+        return dt <= 5;
+      }).length;
+
+      const totalDoubtsReceived = doubtsReceived + areaReceived;
+      const totalDoubtsAnswered = doubtsAnsweredInTime + areaAnswered;
+      const doubtsPct = totalDoubtsReceived > 0 ? totalDoubtsAnswered / totalDoubtsReceived : 1;
       const doubtsScore = round2(doubtsPct * 10);
 
       // Agenda atualizada (heurística: tem disponibilidade ativa)
@@ -299,7 +315,7 @@ Deno.serve(async (req) => {
         rfComponents: {
           insertion_score: insertionScore, insertion_target: target, insertion_actual: packages,
           lessons_score: lessonsScore, lessons_scheduled: lessonsScheduled, lessons_delivered: lessonsDelivered,
-          doubts_score: doubtsScore, doubts_received: doubtsReceived, doubts_answered_in_time: doubtsAnsweredInTime,
+          doubts_score: doubtsScore, doubts_received: totalDoubtsReceived, doubts_answered_in_time: totalDoubtsAnswered,
           agenda_score: agendaScore, agenda_days_updated: agendaDays,
         },
         qualityBonusPct: qBonus, rfScoreBonusPct: rfBonus,
@@ -324,7 +340,19 @@ Deno.serve(async (req) => {
       const bonusFactor = (c.qualityBonusPct + c.rfScoreBonusPct) / 100;
       const bonusAmount = round2(base * bonusFactor);
       const poolFinal = round2(base + bonusAmount);
-      const totalGross = round2(c.packageFeeTotal + c.commissionTotal + poolFinal);
+      // Bônus opcional por dúvidas respondidas no período
+      const { data: doubtRewards } = await supabase
+        .from("doubt_teacher_rewards").select("id, amount")
+        .eq("teacher_id", c.teacher_id).eq("status", "pending")
+        .gte("created_at", startTs).lt("created_at", endTs);
+      const doubtBonusTotal = round2((doubtRewards ?? []).reduce((acc: number, r: any) => acc + Number(r.amount || 0), 0));
+      if (doubtRewards?.length) {
+        await supabase.from("doubt_teacher_rewards")
+          .update({ status: "included" })
+          .in("id", doubtRewards.map((r: any) => r.id));
+      }
+
+      const totalGross = round2(c.packageFeeTotal + c.commissionTotal + poolFinal + doubtBonusTotal);
       totalDistributed += poolFinal;
 
       // Salva stats
@@ -361,7 +389,7 @@ Deno.serve(async (req) => {
           pool_share_pct: sharePct, quality_bonus_pct: c.qualityBonusPct,
           rf_score_bonus_pct: c.rfScoreBonusPct, rf_score: c.rfScore,
           commission_amount: c.commissionTotal,
-          notes: `Pacotes: ${c.packages} x R$${packageFee.toFixed(2)} | Comissão: R$${c.commissionTotal.toFixed(2)} | Pool: R$${poolFinal.toFixed(2)}`,
+          notes: `Pacotes: ${c.packages} x R$${packageFee.toFixed(2)} | Comissão: R$${c.commissionTotal.toFixed(2)} | Pool: R$${poolFinal.toFixed(2)} | Bônus dúvidas: R$${doubtBonusTotal.toFixed(2)}`,
         });
       }
     }

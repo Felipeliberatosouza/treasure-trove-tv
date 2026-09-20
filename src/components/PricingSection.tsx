@@ -101,7 +101,7 @@ const PricingSection = () => {
 
   useEffect(() => {
     const fetchPlans = async () => {
-      const baseFields = "name, price, features, highlighted, cancel_text, allow_free_cancel, min_commitment_days, service_revisoes, service_revisoes_qty, service_resumos, service_resumos_qty, service_simulados, service_simulados_qty, service_top_questoes, service_top_questoes_qty, service_colinhas, service_colinhas_qty, service_duvidas, service_duvidas_qty, service_aula_particular, service_aula_particular_qty";
+      const baseFields = "name, price, features, highlighted, cancel_text, allow_free_cancel, min_commitment_days, service_revisoes, service_revisoes_qty, service_resumos, service_resumos_qty, service_simulados, service_simulados_qty, service_top_questoes, service_top_questoes_qty, service_colinhas, service_colinhas_qty, service_duvidas, service_duvidas_qty, service_aula_particular, service_aula_particular_qty, ai_credits_mode, ai_credits_qty";
       // stripe_price_id is restricted to authenticated users at the DB level
       const selectFields = user ? `${baseFields}, stripe_price_id` : baseFields;
       const { data } = await supabase
@@ -215,6 +215,12 @@ const PricingSection = () => {
                       <span className="text-foreground font-medium">{service}</span>
                     </li>
                   ))}
+                  {aiCreditsLine(plan) && (
+                    <li className="flex items-center gap-3">
+                      <Check className="h-4 w-4 shrink-0 text-accent" />
+                      <span className="text-foreground font-medium">{aiCreditsLine(plan)}</span>
+                    </li>
+                  )}
                 </ul>
                 <Button
                   size="lg"

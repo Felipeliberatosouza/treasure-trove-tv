@@ -309,6 +309,32 @@ async function handleRequest(req: Request, body: any): Promise<Response> {
       });
     }
 
+    // ------- cancelamento: devolve o Crédito de IA reservado -------
+    if (action === "cancel") {
+      const key = typeof body.idempotency_key === "string" ? body.idempotency_key.slice(0, 80) : null;
+      if (!userId || !key) return json({ canceled: false });
+      const { data: pending } = await admin
+        .from("ai_revision_requests")
+        .select("id, status, credit_reserved, user_id")
+        .eq("idempotency_key", key)
+        .eq("user_id", userId)
+        .maybeSingle();
+      if (!pending || !pending.credit_reserved || pending.status !== "processing") {
+        return json({ canceled: false });
+      }
+      const credits = await ensureCredits(userId);
+      const refunded = credits.balance + 1;
+      await admin.from("ai_revision_credits").update({ balance: refunded }).eq("user_id", userId);
+      await admin.from("ai_revision_credit_ledger").insert({
+        user_id: userId, delta: 1, reason: "kit_refund", request_id: pending.id, balance_after: refunded,
+      });
+      await admin
+        .from("ai_revision_requests")
+        .update({ credit_reserved: false })
+        .eq("id", pending.id);
+      return json({ canceled: true, balance: refunded });
+    }
+
     // ------- geração -------
     const assunto = String(body.assunto || "").trim();
     if (assunto.length < 3 || assunto.length > 500) {

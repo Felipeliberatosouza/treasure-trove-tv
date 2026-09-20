@@ -25,7 +25,11 @@ const PaymentSuccess = () => {
     let cancelled = false;
     (async () => {
       try {
-        await supabase.functions.invoke("verify-payment", { body: { sessionId } });
+        if (isAiCredits) {
+          await supabase.functions.invoke("buy-ai-credits", { body: { action: "verify", sessionId } });
+        } else {
+          await supabase.functions.invoke("verify-payment", { body: { sessionId } });
+        }
       } catch (err) {
         console.error("verify-payment error:", err);
       } finally {

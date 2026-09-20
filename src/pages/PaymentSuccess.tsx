@@ -12,7 +12,8 @@ const PaymentSuccess = () => {
   const [searchParams] = useSearchParams();
   const sessionId = searchParams.get("session_id");
   const contentId = searchParams.get("content_id");
-  const isUnitPurchase = !!sessionId && !!contentId;
+  const isAiCredits = !!sessionId && searchParams.get("ai_credits") === "1";
+  const isUnitPurchase = (!!sessionId && !!contentId) || isAiCredits;
   const { refreshSubscription, subscription, user, profile } = useAuth();
   const [verified, setVerified] = useState(false);
   const [checking, setChecking] = useState(true);
@@ -24,7 +25,11 @@ const PaymentSuccess = () => {
     let cancelled = false;
     (async () => {
       try {
-        await supabase.functions.invoke("verify-payment", { body: { sessionId } });
+        if (isAiCredits) {
+          await supabase.functions.invoke("buy-ai-credits", { body: { action: "verify", sessionId } });
+        } else {
+          await supabase.functions.invoke("verify-payment", { body: { sessionId } });
+        }
       } catch (err) {
         console.error("verify-payment error:", err);
       } finally {
@@ -35,7 +40,7 @@ const PaymentSuccess = () => {
       }
     })();
     return () => { cancelled = true; };
-  }, [isUnitPurchase, user, sessionId]);
+  }, [isUnitPurchase, isAiCredits, user, sessionId]);
 
   // Poll for subscription confirmation (only for subscription flow)
   useEffect(() => {

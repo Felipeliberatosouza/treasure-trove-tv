@@ -85,6 +85,13 @@
       "when": 1789875434452,
       "tag": "0011_content_duration_seconds",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1789902691260,
+      "tag": "0012_ai_credits_plans_and_packages",
+      "breakpoints": true
     }
   ]
 }

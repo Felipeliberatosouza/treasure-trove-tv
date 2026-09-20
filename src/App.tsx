@@ -40,6 +40,7 @@ import CookieConsent from "./components/CookieConsent.tsx";
 import EmailSecurityNotification from "./pages/EmailSecurityNotification.tsx";
 import PaymentSuccess from "./pages/PaymentSuccess.tsx";
 import PaymentCanceled from "./pages/PaymentCanceled.tsx";
+import AiCredits from "./pages/AiCredits.tsx";
 import Checkout from "./pages/Checkout.tsx";
 import PreviewPlanChange from "./pages/PreviewPlanChange.tsx";
 import DynamicBranding from "./components/DynamicBranding.tsx";
@@ -106,6 +107,7 @@ const App = () => (
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/payment-success" element={<PaymentSuccess />} />
             <Route path="/payment-canceled" element={<PaymentCanceled />} />
+            <Route path="/creditos-ia" element={<AiCredits />} />
             <Route path="/email-seguranca" element={<EmailSecurityNotification />} />
             <Route path="/preview/plan-change" element={<PreviewPlanChange />} />
             {!import.meta.env.PROD && (

@@ -34,6 +34,7 @@ const emptyPlan = (): Plan => {
   const p: Plan = {
     name: "", price: 0, highlighted: false, features: [""], active: true, sort_order: 0,
     allow_free_cancel: true, min_commitment_days: 30, cancel_text: "",
+    ai_credits_mode: "none", ai_credits_qty: 0,
   };
   SERVICE_KEYS.forEach(s => {
     p[`service_${s.key}`] = false;
@@ -41,6 +42,12 @@ const emptyPlan = (): Plan => {
   });
   return p;
 };
+
+const AI_MODES = [
+  { value: "none", label: "Sem Créditos de IA" },
+  { value: "included", label: "Quantidade de Créditos de IA por mês" },
+  { value: "unlimited", label: "Uso de IA ilimitado" },
+] as const;
 
 const AdminPlansTab = () => {
   const [plans, setPlans] = useState<Plan[]>([]);
@@ -98,6 +105,14 @@ const AdminPlansTab = () => {
     // Validate: every enabled service must have a quantity > 0
     for (let i = 0; i < plans.length; i++) {
       const plan = plans[i];
+      if (plan.ai_credits_mode === "included" && !(Number(plan.ai_credits_qty) > 0)) {
+        toast({
+          title: "Créditos de IA obrigatórios",
+          description: `No plano "${plan.name || `Plano ${i + 1}`}", informe a quantidade de Créditos de IA.`,
+          variant: "destructive",
+        });
+        return;
+      }
       for (const s of SERVICE_KEYS) {
         if (plan[`service_${s.key}`]) {
           const qty = Number(plan[`service_${s.key}_qty`]);
@@ -277,6 +292,41 @@ const AdminPlansTab = () => {
                     )}
                   </div>
                 ))}
+              </div>
+            </div>
+
+            {/* Créditos de IA */}
+            <div className="space-y-3 border rounded-lg p-3 bg-muted/30">
+              <div>
+                <h4 className="text-sm font-semibold">Créditos de IA</h4>
+                <p className="text-xs text-muted-foreground">
+                  Define quantos Créditos de IA o assinante recebe a cada mês, ou se o plano tem uso de IA ilimitado.
+                </p>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <Label>Modalidade</Label>
+                  <select
+                    className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                    value={(plan.ai_credits_mode as string) || "none"}
+                    onChange={(e) => updatePlan(pi, "ai_credits_mode", e.target.value)}
+                  >
+                    {AI_MODES.map((m) => (
+                      <option key={m.value} value={m.value}>{m.label}</option>
+                    ))}
+                  </select>
+                </div>
+                {plan.ai_credits_mode === "included" && (
+                  <div>
+                    <Label>Créditos de IA por mês</Label>
+                    <Input
+                      type="number"
+                      min={1}
+                      value={(plan.ai_credits_qty as number) || 0}
+                      onChange={(e) => updatePlan(pi, "ai_credits_qty", parseInt(e.target.value) || 0)}
+                    />
+                  </div>
+                )}
               </div>
             </div>
           </Card>

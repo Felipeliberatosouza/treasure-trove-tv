@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, forwardRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { User, LogOut, LayoutDashboard, ChevronDown } from "lucide-react";
+import { User, LogOut, LayoutDashboard, ChevronDown, Sparkles } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePlatformSettings, BrandingSettings } from "@/hooks/usePlatformSettings";
 import { useReferralCredits } from "@/hooks/useReferralCredits";
@@ -14,7 +14,6 @@ const UserMenu = forwardRef<HTMLDivElement>((_, forwardedRef) => {
   const { data: branding } = usePlatformSettings("branding");
   const accentColor = (branding as BrandingSettings | null)?.accent_color || "#f59e0b";
   const { totalRemaining, aiCredits } = useReferralCredits();
-  const totalCredits = totalRemaining + aiCredits;
   const { planName } = useResourceLimit();
 
   useEffect(() => {
@@ -52,7 +51,8 @@ const UserMenu = forwardRef<HTMLDivElement>((_, forwardedRef) => {
           )}
           {role === "student" && (
             <span className="text-[10px] font-normal text-black/60">
-              {totalCredits} crédito{totalCredits === 1 ? "" : "s"} grátis
+              {aiCredits} Crédito{aiCredits === 1 ? "" : "s"} de IA
+              {totalRemaining > 0 ? ` · ${totalRemaining} acesso${totalRemaining === 1 ? "" : "s"} grátis` : ""}
             </span>
           )}
         </span>
@@ -68,6 +68,15 @@ const UserMenu = forwardRef<HTMLDivElement>((_, forwardedRef) => {
           >
             <LayoutDashboard className="h-4 w-4" /> {role === "admin" ? "Painel Administrativo" : "Meu Painel"}
           </Link>
+          {role === "student" && (
+            <Link
+              to="/creditos-ia"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-foreground hover:bg-secondary transition-colors"
+            >
+              <Sparkles className="h-4 w-4" /> Comprar Créditos de IA
+            </Link>
+          )}
           <button
             onClick={handleSignOut}
             className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-secondary transition-colors"

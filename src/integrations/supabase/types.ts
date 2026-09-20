@@ -174,6 +174,89 @@ export type Database = {
           },
         ]
       }
+      ai_credit_packages: {
+        Row: {
+          active: boolean
+          created_at: string
+          credits: number
+          highlighted: boolean
+          id: string
+          name: string
+          price: number
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          credits?: number
+          highlighted?: boolean
+          id?: string
+          name: string
+          price?: number
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          credits?: number
+          highlighted?: boolean
+          id?: string
+          name?: string
+          price?: number
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      ai_credit_purchases: {
+        Row: {
+          amount: number
+          created_at: string
+          credits: number
+          id: string
+          package_id: string | null
+          package_name: string
+          payment_status: string
+          stripe_payment_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          credits?: number
+          id?: string
+          package_id?: string | null
+          package_name?: string
+          payment_status?: string
+          stripe_payment_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          credits?: number
+          id?: string
+          package_id?: string | null
+          package_name?: string
+          payment_status?: string
+          stripe_payment_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_credit_purchases_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "ai_credit_packages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_generation_jobs: {
         Row: {
           attempts: number
@@ -2316,6 +2399,8 @@ export type Database = {
       subscription_plans: {
         Row: {
           active: boolean
+          ai_credits_mode: string
+          ai_credits_qty: number
           allow_free_cancel: boolean
           cancel_text: string | null
           created_at: string
@@ -2346,6 +2431,8 @@ export type Database = {
         }
         Insert: {
           active?: boolean
+          ai_credits_mode?: string
+          ai_credits_qty?: number
           allow_free_cancel?: boolean
           cancel_text?: string | null
           created_at?: string
@@ -2376,6 +2463,8 @@ export type Database = {
         }
         Update: {
           active?: boolean
+          ai_credits_mode?: string
+          ai_credits_qty?: number
           allow_free_cancel?: boolean
           cancel_text?: string | null
           created_at?: string
@@ -3391,6 +3480,10 @@ export type Database = {
       }
     }
     Functions: {
+      add_ai_credits: {
+        Args: { _amount: number; _reason: string; _user_id: string }
+        Returns: number
+      }
       add_business_days: {
         Args: { days: number; start_ts: string }
         Returns: string
@@ -3405,6 +3498,7 @@ export type Database = {
         Args: { _lesson_id: string; _material_type: string }
         Returns: boolean
       }
+      claim_plan_ai_credits: { Args: { _user_id: string }; Returns: Json }
       consume_cashback: {
         Args: {
           _requested_amount: number

@@ -16,7 +16,7 @@ import AdminEmailsTab from "@/components/admin/AdminEmailsTab";
 import AdminSubscriptionsTab from "@/components/admin/AdminSubscriptionsTab";
 import AdminSalesPostsTab from "@/components/admin/AdminSalesPostsTab";
 import AdminUsersWrapperTab from "@/components/admin/AdminUsersWrapperTab";
-import AdminPlansTab from "@/components/admin/AdminPlansTab";
+import AdminPlansWrapperTab from "@/components/admin/AdminPlansWrapperTab";
 import AdminSecurityTab from "@/components/admin/AdminSecurityTab";
 import AdminAuditLogsTab from "@/components/admin/AdminAuditLogsTab";
 import AdminLoginAttemptsTab from "@/components/admin/AdminLoginAttemptsTab";
@@ -126,7 +126,7 @@ const AdminDashboard = () => {
             {activeTab === "emails" && <AdminEmailsTab />}
             {activeTab === "sales-posts" && <AdminSalesPostsTab />}
             {activeTab === "users" && <AdminUsersWrapperTab />}
-            {activeTab === "plans" && <AdminPlansTab />}
+            {activeTab === "plans" && <AdminPlansWrapperTab />}
             {activeTab === "usage-history" && <AdminUsageHistoryTab />}
             {activeTab === "cancellation-reasons" && <AdminCancellationReasonsTab />}
             {activeTab === "cancellation-receipts" && <AdminCancellationReceiptsTab />}

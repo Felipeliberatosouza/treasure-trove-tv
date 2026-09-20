@@ -133,6 +133,8 @@ const KitResult = ({ result, onNewKit, initialTab }: Props) => {
       <DoubtForm
         contentId={result.canonical_id ?? undefined}
         contentType="ai_content"
+        areaNames={result.areas ?? []}
+        subject={kit.assunto}
         title="Enviar Dúvida sobre esta aula"
         placeholder="Descreva sua dúvida sobre esta aula com professor virtual..."
       />

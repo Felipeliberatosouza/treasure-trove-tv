@@ -292,6 +292,50 @@ const Index = () => {
     fetchAreaLessons();
   }, [areas, isTeacher]);
 
+  // Visualizações e avaliações de todos os conteúdos exibidos (professor e IA)
+  const lessonIdsKey = [
+    ...Object.values(areaLessons).flat().map((v) => v.id),
+    ...popularVideos.map((v) => v.id),
+  ]
+    .filter((v, i, arr) => arr.indexOf(v) === i)
+    .sort()
+    .join(",");
+  const aiIdsKey = aiKits.map((k) => k.id).sort().join(",");
+
+  useEffect(() => {
+    const lessonIds = lessonIdsKey ? lessonIdsKey.split(",") : [];
+    const aiIds = aiIdsKey ? aiIdsKey.split(",") : [];
+    const allIds = [...lessonIds, ...aiIds];
+    if (allIds.length === 0) return;
+    let cancelled = false;
+    void (async () => {
+      const [lessonViews, aiViews, ratingsRes] = await Promise.all([
+        lessonIds.length
+          ? supabase.rpc("get_content_view_counts", { _content_type: "lesson", _ids: lessonIds })
+          : Promise.resolve({ data: [] as any[] }),
+        aiIds.length
+          ? supabase.rpc("get_content_view_counts", { _content_type: "ai", _ids: aiIds })
+          : Promise.resolve({ data: [] as any[] }),
+        supabase.rpc("get_video_rating_aggregates" as any, { _ids: allIds }),
+      ]);
+      if (cancelled) return;
+      const views: Record<string, number> = {};
+      [...(((lessonViews as any).data || []) as any[]), ...(((aiViews as any).data || []) as any[])].forEach(
+        (r) => (views[r.content_id] = r.views_count),
+      );
+      const ratings: Record<string, { average: number; count: number }> = {};
+      (((ratingsRes as any).data || []) as any[]).forEach((r) => {
+        ratings[r.content_id] = { average: Number(r.average) || 0, count: r.count || 0 };
+      });
+      setStatViews(views);
+      setStatRatings(ratings);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [lessonIdsKey, aiIdsKey]);
+
+
   // Inline search effect
   useEffect(() => {
     if (inlineQuery.trim().length < 2) {

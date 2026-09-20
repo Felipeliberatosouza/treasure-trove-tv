@@ -294,7 +294,7 @@ const HomeKitGenerator = () => {
             <>
               <h2 className="text-xl font-bold">Crie sua conta para continuar</h2>
               <p className="text-sm text-muted-foreground">
-                Você já usou sua revisão gratuita. Ao criar a conta você ganha 2 créditos de IA,
+                Você já usou sua revisão gratuita. Ao criar a conta você ganha 2 Créditos de IA,
                 sem cartão e sem assinatura.
               </p>
               <div className="flex flex-wrap justify-center gap-2">

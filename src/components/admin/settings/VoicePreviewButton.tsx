@@ -17,17 +17,31 @@ const VoicePreviewButton = ({ voice, gender }: { voice: string; gender: "male" |
     audioRef.current?.pause();
     setLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke("study-tts", {
-        body: { texto: VOICE_SAMPLE_TEXT, avatar_voice: voice, avatar_gender: gender },
-      });
-      if (error) throw error;
-      const blob =
-        data instanceof Blob
-          ? data
-          : data instanceof ArrayBuffer
-            ? new Blob([data], { type: "audio/mpeg" })
-            : null;
-      if (!blob) throw new Error("Áudio não recebido");
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token;
+      if (!token) throw new Error("Sessão expirada");
+      const resp = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/study-tts`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+          body: JSON.stringify({
+            texto: VOICE_SAMPLE_TEXT,
+            avatar_voice: voice,
+            avatar_gender: gender,
+          }),
+        },
+      );
+      if (!resp.ok) {
+        const detail = await resp.text().catch(() => "");
+        throw new Error(detail || `Falha ${resp.status}`);
+      }
+      const blob = await resp.blob();
+      if (!blob.size) throw new Error("Áudio não recebido");
       const url = URL.createObjectURL(blob);
       const audio = new Audio(url);
       audioRef.current = audio;

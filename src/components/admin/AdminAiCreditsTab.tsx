@@ -90,7 +90,7 @@ const AdminAiCreditsTab = () => {
 
   const updatePackage = (idx: number, field: keyof CreditPackage, value: unknown) => {
     const updated = [...packages];
-    (updated[idx] as Record<string, unknown>)[field] = value;
+    (updated[idx] as unknown as Record<string, unknown>)[field] = value;
     setPackages(updated);
   };
 

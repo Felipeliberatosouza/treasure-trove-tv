@@ -34,6 +34,7 @@ const emptyPlan = (): Plan => {
   const p: Plan = {
     name: "", price: 0, highlighted: false, features: [""], active: true, sort_order: 0,
     allow_free_cancel: true, min_commitment_days: 30, cancel_text: "",
+    ai_credits_mode: "none", ai_credits_qty: 0,
   };
   SERVICE_KEYS.forEach(s => {
     p[`service_${s.key}`] = false;
@@ -41,6 +42,12 @@ const emptyPlan = (): Plan => {
   });
   return p;
 };
+
+const AI_MODES = [
+  { value: "none", label: "Sem Créditos de IA" },
+  { value: "included", label: "Quantidade de Créditos de IA por mês" },
+  { value: "unlimited", label: "Uso de IA ilimitado" },
+] as const;
 
 const AdminPlansTab = () => {
   const [plans, setPlans] = useState<Plan[]>([]);

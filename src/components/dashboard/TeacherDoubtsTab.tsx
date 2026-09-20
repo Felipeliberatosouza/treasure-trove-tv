@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { HelpCircle, Send, Clock, AlertTriangle, CheckCircle, Loader2, Filter, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
 import DoubtThreadDialog from "@/components/doubts/DoubtThreadDialog";
+import TeacherAreaDoubtsTab from "@/components/dashboard/TeacherAreaDoubtsTab";
 
 type DoubtFilter = "all" | "pending" | "awaiting_approval" | "answered";
 
@@ -173,6 +174,10 @@ const TeacherDoubtsTab = () => {
       <h2 className="font-display text-lg font-semibold mb-1 flex items-center gap-2">
         <HelpCircle className="h-5 w-5" /> Dúvidas de Alunos
       </h2>
+
+      <div className="mb-8 rounded-xl border border-border bg-card p-4">
+        <TeacherAreaDoubtsTab />
+      </div>
       <div className="text-sm text-muted-foreground mb-4 space-y-1">
         {pendingCount > 0 && (
           <p>{pendingCount} dúvida(s) aguardando resposta. Prazo: {deadlineDays} dias.</p>

@@ -53,6 +53,9 @@ export function useReferralCredits() {
     referral: 0,
     purchased: 0,
     bonus: 0,
+    signup: 0,
+    plan: 0,
+    admin: 0,
     used: 0,
   });
   const [invites, setInvites] = useState<ReferralInvite[]>([]);

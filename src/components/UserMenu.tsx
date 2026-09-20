@@ -53,10 +53,11 @@ const UserMenu = forwardRef<HTMLDivElement>((_, forwardedRef) => {
             <span className="text-[10px] font-normal text-black/60">
               {aiCredits} Crédito{aiCredits === 1 ? "" : "s"} de IA
               {totalRemaining > 0
-                ? ` · ${totalRemaining} Crédito${totalRemaining === 1 ? "" : "s"} de IA Ganho${totalRemaining === 1 ? "" : "s"} por Indicação`
+                ? ` · ${totalRemaining} acesso${totalRemaining === 1 ? "" : "s"} grátis a conteúdos`
                 : ""}
             </span>
           )}
+
         </span>
         <ChevronDown className={`h-3 w-3 text-black transition-transform ${open ? "rotate-180" : ""}`} />
       </button>

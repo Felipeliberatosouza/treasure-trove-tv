@@ -80,7 +80,13 @@ Deno.serve(async (req) => {
       const question = String(body.question || '').trim()
       if (question.length < 10) return json({ error: 'Escreva sua dúvida com pelo menos 10 caracteres.' }, 200)
 
-      const areaIds: string[] = Array.isArray(body.areaIds) ? body.areaIds.filter(Boolean) : []
+      let areaIds: string[] = Array.isArray(body.areaIds) ? body.areaIds.filter(Boolean) : []
+      // O conteúdo de IA guarda as áreas por nome; resolvemos para os IDs aqui.
+      const requestedAreaNames: string[] = Array.isArray(body.areaNames) ? body.areaNames.filter(Boolean) : []
+      if (!areaIds.length && requestedAreaNames.length) {
+        const { data: byName } = await admin.from('course_areas').select('id').in('name', requestedAreaNames)
+        areaIds = (byName || []).map((a: any) => a.id)
+      }
       const moderation = moderateDoubtText(question, cfg.blocked_words)
 
       // limite de interações conforme plano ativo

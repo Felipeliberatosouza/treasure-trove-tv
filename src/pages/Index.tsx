@@ -259,7 +259,7 @@ const Index = () => {
       const teacherMap = new Map<string, { name: string; slug: string | null }>();
       if (teacherIds.size > 0) {
         const { data: tProfiles } = await supabase
-          .from("profiles")
+          .from("teacher_profiles_public")
           .select("user_id, name, slug")
           .in("user_id", Array.from(teacherIds));
         (tProfiles || []).forEach((p: any) =>

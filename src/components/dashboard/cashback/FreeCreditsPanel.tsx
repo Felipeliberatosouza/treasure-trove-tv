@@ -30,7 +30,8 @@ const fmtDate = (d: string | null) =>
 
 /** Detalhe dos créditos gratuitos ganhos por indicação e acompanhamento dos convites. */
 const FreeCreditsPanel = () => {
-  const { rows, aiCredits, invites, loading, reload, totalRemaining } = useReferralCredits();
+  const { rows, aiCredits, aiBreakdown, invites, loading, reload, totalRemaining } =
+    useReferralCredits();
   const [editing, setEditing] = useState<ReferralInvite | null>(null);
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");

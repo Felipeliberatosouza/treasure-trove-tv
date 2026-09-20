@@ -34,11 +34,24 @@ export interface ReferralInvite {
  * Créditos gratuitos ganhos por indicação (por conteúdo e de IA) e
  * acompanhamento dos convites enviados pelo aluno.
  */
+export interface AiCreditsBreakdown {
+  referral: number;
+  purchased: number;
+  bonus: number;
+  used: number;
+}
+
 export function useReferralCredits() {
   const { user } = useAuth();
   const { config } = useCashbackConfig();
   const [rows, setRows] = useState<ReferralCreditRow[]>([]);
   const [aiCredits, setAiCredits] = useState(0);
+  const [aiBreakdown, setAiBreakdown] = useState<AiCreditsBreakdown>({
+    referral: 0,
+    purchased: 0,
+    bonus: 0,
+    used: 0,
+  });
   const [invites, setInvites] = useState<ReferralInvite[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -56,7 +69,7 @@ export function useReferralCredits() {
       return;
     }
     setLoading(true);
-    const [credits, ai, inviteRows] = await Promise.all([
+    const [credits, ai, inviteRows, ledger] = await Promise.all([
       supabase
         .from("referral_content_credits")
         .select("resource_type, granted, used")
@@ -66,6 +79,10 @@ export function useReferralCredits() {
         .from("referral_invites")
         .select("id, channel, contact_email, contact_phone, token, status, created_at, visited_at, rewarded_at")
         .order("created_at", { ascending: false }),
+      supabase
+        .from("ai_revision_credit_ledger")
+        .select("delta, reason")
+        .eq("user_id", user.id),
     ]);
 
     setRows(
@@ -80,6 +97,22 @@ export function useReferralCredits() {
       }))
     );
     setAiCredits(ai.data?.balance ?? 0);
+
+    const bd: AiCreditsBreakdown = { referral: 0, purchased: 0, bonus: 0, used: 0 };
+    for (const e of ledger.data ?? []) {
+      const delta = Number(e.delta ?? 0);
+      const reason = String(e.reason ?? "");
+      if (delta < 0) {
+        bd.used += -delta;
+      } else if (reason.startsWith("referral")) {
+        bd.referral += delta;
+      } else if (reason.startsWith("purchase")) {
+        bd.purchased += delta;
+      } else {
+        bd.bonus += delta;
+      }
+    }
+    setAiBreakdown(bd);
     setInvites((inviteRows.data ?? []) as ReferralInvite[]);
     setLoading(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -91,5 +124,5 @@ export function useReferralCredits() {
 
   const totalRemaining = rows.reduce((sum, r) => sum + r.remaining, 0);
 
-  return { rows, aiCredits, invites, loading, reload, totalRemaining };
+  return { rows, aiCredits, aiBreakdown, invites, loading, reload, totalRemaining };
 }

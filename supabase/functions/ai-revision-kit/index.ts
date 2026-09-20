@@ -432,6 +432,34 @@ async function handleRequest(req: Request, body: any): Promise<Response> {
 
     // 2) elegibilidade
     let planUnlimited = false;
+    // Teste grátis ativo: cobre a geração mesmo sem Créditos de IA.
+    let trialCover: { id: string; type: string; watched: number } | null = null;
+
+    async function checkFreeTrial(uid: string) {
+      const { data: settingRow } = await admin
+        .from("platform_settings")
+        .select("value")
+        .eq("key", "free_trial")
+        .maybeSingle();
+      const settings = (settingRow?.value ?? {}) as { enabled?: boolean };
+      if (!settings?.enabled) return null;
+
+      const { data: trial } = await admin
+        .from("free_trials")
+        .select("id, active, trial_type, trial_days, trial_videos, videos_watched, started_at")
+        .eq("user_id", uid)
+        .maybeSingle();
+      if (!trial || !trial.active) return null;
+
+      if (trial.trial_type === "days") {
+        const elapsed = (Date.now() - new Date(trial.started_at).getTime()) / 86400000;
+        if (elapsed >= (trial.trial_days ?? 0)) return null;
+        return { id: trial.id as string, type: "days", watched: trial.videos_watched ?? 0 };
+      }
+      const watched = trial.videos_watched ?? 0;
+      if (watched >= (trial.trial_videos ?? 0)) return null;
+      return { id: trial.id as string, type: "videos", watched };
+    }
     if (!userId) {
       const used = await anonUsed();
       if (!anonId || used >= ANON_FREE_USES) {

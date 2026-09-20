@@ -126,10 +126,10 @@ const VideoCard = ({ video, index, onClick, rating, showTrialBadge, watched }: V
             <p className="text-xs text-muted-foreground">{video.instructor}</p>
           )}
           <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-            {video.duration && (
+            {durationLabel && (
               <span className="flex items-center gap-1">
                 <Clock className="h-3 w-3" />
-                {video.duration}
+                {durationLabel}
               </span>
             )}
             <span className="flex items-center gap-1">

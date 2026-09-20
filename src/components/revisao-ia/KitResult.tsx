@@ -42,6 +42,32 @@ const KitResult = ({ result, onNewKit, initialTab }: Props) => {
   const [downloading, setDownloading] = useState(false);
   const [feedbackSent, setFeedbackSent] = useState(false);
 
+  // Registra a visualização da aula com professor virtual (uma vez por aluno).
+  useEffect(() => {
+    const canonicalId = result.canonical_id;
+    if (!user || !canonicalId) return;
+    let cancelled = false;
+    void (async () => {
+      const { data } = await supabase
+        .from("video_views")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("content_type", "ai")
+        .eq("content_id", canonicalId)
+        .maybeSingle();
+      if (cancelled || data) return;
+      await supabase.from("video_views").insert({
+        user_id: user.id,
+        content_type: "ai",
+        content_id: canonicalId,
+        watch_percentage: 100,
+      });
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user, result.canonical_id]);
+
   const handlePdf = async () => {
     setDownloading(true);
     try {

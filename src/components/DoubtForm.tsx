@@ -3,28 +3,70 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { HelpCircle, Send, Mail, MessageSquare } from "lucide-react";
+import { HelpCircle, Send, Mail, MessageSquare, ShieldAlert } from "lucide-react";
 import { toast } from "sonner";
 import { useDoubtLimits } from "@/hooks/useDoubtLimits";
+import { useDoubtChatConfig } from "@/hooks/useDoubtChatConfig";
 
 interface DoubtFormProps {
   contentId?: string;
   contentType?: "lesson" | "exam_solution" | "teacher_profile" | "ai_content";
-  /** Ausente nos conteúdos de IA: a dúvida vai direto para a equipe (administração). */
+  /** Ausente nos conteúdos de IA: a dúvida é aberta para os professores da área. */
   teacherId?: string | null;
+  /** Áreas de curso (nomes) do conteúdo de IA, usadas para convocar professores. */
+  areaNames?: string[];
+  /** Assunto do material, exibido aos professores convocados. */
+  subject?: string;
   title?: string;
   placeholder?: string;
 }
 
-const DoubtForm = ({ contentId, contentType, teacherId, title, placeholder }: DoubtFormProps) => {
+const DoubtForm = ({
+  contentId,
+  contentType,
+  teacherId,
+  areaNames,
+  subject,
+  title,
+  placeholder,
+}: DoubtFormProps) => {
   const { user } = useAuth();
   const [question, setQuestion] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [blockedReason, setBlockedReason] = useState<string | null>(null);
   const { limits } = useDoubtLimits();
-  // For now we only show the individual-purchase limit here. The actual
-  // limit applied to a thread is captured at creation time on the server.
-  const individualLimit = limits.individual_purchase;
+  const { config } = useDoubtChatConfig();
+  const isAiContent = contentType === "ai_content";
+  const individualLimit = isAiContent ? config.interactions_no_plan : limits.individual_purchase;
+
+  const submitAiDoubt = async () => {
+    const { data, error } = await supabase.functions.invoke("doubt-interaction", {
+      body: {
+        action: "create",
+        contentId,
+        contentType,
+        areaNames: areaNames ?? [],
+        subject,
+        question: question.trim(),
+        origin: window.location.origin,
+      },
+    });
+    if (error) {
+      toast.error("Erro ao enviar dúvida. Tente novamente.");
+      return false;
+    }
+    if ((data as any)?.blocked) {
+      setBlockedReason((data as any).reason || "Mensagem bloqueada pela moderação.");
+      toast.error("Mensagem bloqueada pela moderação.");
+      return false;
+    }
+    if ((data as any)?.error) {
+      toast.error((data as any).error);
+      return false;
+    }
+    return true;
+  };
 
   const handleSubmit = async () => {
     if (!user) {
@@ -36,6 +78,17 @@ const DoubtForm = ({ contentId, contentType, teacherId, title, placeholder }: Do
       return;
     }
     setSubmitting(true);
+    setBlockedReason(null);
+
+    if (isAiContent) {
+      const ok = await submitAiDoubt();
+      if (ok) {
+        setSubmitted(true);
+        setQuestion("");
+      }
+      setSubmitting(false);
+      return;
+    }
 
     const doubtId = crypto.randomUUID();
     const { error } = await supabase.from("student_doubts").insert({
@@ -88,21 +141,41 @@ const DoubtForm = ({ contentId, contentType, teacherId, title, placeholder }: Do
 
       <div className="flex items-start gap-2 rounded-lg bg-card/60 border border-border p-2.5 text-xs text-muted-foreground">
         <MessageSquare className="h-3.5 w-3.5 shrink-0 mt-0.5 text-primary" />
-        <span>
-          Você pode enviar até{" "}
-          <strong className="text-foreground">
-            {individualLimit} pergunta{individualLimit === 1 ? "" : "s"}
-          </strong>{" "}
-          (a inicial e réplicas sobre a resposta do professor). Assinantes podem ter um limite maior
-          conforme o plano contratado.
-        </span>
+        {isAiContent ? (
+          <span>
+            Sua dúvida vai para todos os professores da área e as respostas ficam num chat, com
+            o histórico completo. Você pode fazer{" "}
+            <strong className="text-foreground">
+              {individualLimit} pergunta{individualLimit === 1 ? "" : "s"}
+            </strong>{" "}
+            conforme o seu plano — depois disso, é possível continuar usando Créditos de IA.
+          </span>
+        ) : (
+          <span>
+            Você pode enviar até{" "}
+            <strong className="text-foreground">
+              {individualLimit} pergunta{individualLimit === 1 ? "" : "s"}
+            </strong>{" "}
+            (a inicial e réplicas sobre a resposta do professor). Assinantes podem ter um limite maior
+            conforme o plano contratado.
+          </span>
+        )}
       </div>
+
+      {blockedReason && (
+        <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/10 p-2.5 text-xs text-destructive">
+          <ShieldAlert className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+          <span>{blockedReason} Reescreva sua mensagem sem esse conteúdo.</span>
+        </div>
+      )}
 
       {submitted ? (
         <div className="rounded-lg bg-primary/5 border border-primary/20 p-4 text-center space-y-2">
           <p className="text-sm text-foreground font-medium">✅ Dúvida enviada com sucesso!</p>
           <p className="text-xs text-muted-foreground">
-            Sua dúvida foi recebida e está sendo analisada. Em breve o professor irá responder.
+            {isAiContent
+              ? "Os professores da área já foram avisados e podem responder no chat da sua dúvida."
+              : "Sua dúvida foi recebida e está sendo analisada. Em breve o professor irá responder."}
           </p>
           <div className="flex items-center justify-center gap-1 text-xs text-primary">
             <Mail className="h-3.5 w-3.5" />
@@ -129,6 +202,9 @@ const DoubtForm = ({ contentId, contentType, teacherId, title, placeholder }: Do
               {submitting ? "Enviando..." : "Enviar Dúvida"}
             </Button>
           </div>
+          <p className="text-[11px] text-muted-foreground">
+            Não é permitido trocar telefone, e-mail ou endereços de sites, nem usar linguagem ofensiva.
+          </p>
         </>
       )}
     </div>

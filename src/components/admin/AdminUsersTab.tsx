@@ -471,6 +471,13 @@ const AdminUsersTab = () => {
                       </Badge>
                     )}
                   </TableCell>
+                  <TableCell className="text-right text-xs">{creditSummary[u.user_id]?.used ?? 0}</TableCell>
+                  <TableCell className="text-right text-xs font-medium">{creditSummary[u.user_id]?.remaining ?? 0}</TableCell>
+                  <TableCell>
+                    <Button size="sm" variant="ghost" className="h-8 gap-1 px-2 text-xs" onClick={() => setStatementUser(u)}>
+                      <ReceiptText className="h-4 w-4" /> Ver extrato
+                    </Button>
+                  </TableCell>
                   <TableCell className="text-muted-foreground text-xs">
                     {u.birth_date ? new Date(u.birth_date + "T00:00:00").toLocaleDateString("pt-BR") : "—"}
                   </TableCell>

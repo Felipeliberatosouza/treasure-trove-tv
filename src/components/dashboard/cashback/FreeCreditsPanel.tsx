@@ -76,11 +76,16 @@ const FreeCreditsPanel = () => {
           </Badge>
         </div>
 
+        <p className="text-xs text-muted-foreground -mt-2 mb-2">
+          Liberam a abertura de conteúdos (revisões, resumos, simulados etc.). Não são Créditos de IA
+          e não entram no saldo do quadro abaixo.
+        </p>
+
         {loading ? (
           <p className="text-sm text-muted-foreground">Carregando…</p>
         ) : rows.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            Você ainda não tem Créditos de IA. Convide amigos e ganhe Créditos de IA.
+            Você ainda não tem acessos grátis. Convide amigos e ganhe acessos a conteúdos.
           </p>
         ) : (
           <div className="space-y-2">

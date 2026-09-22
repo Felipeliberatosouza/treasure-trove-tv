@@ -326,16 +326,21 @@ async function handleRequest(req: Request, body: any): Promise<Response> {
         await new Promise((r) => setTimeout(r, 1500));
       }
       if (!pending) return json({ canceled: false });
+      // Reivindica a reserva de forma atômica: só quem consegue limpar
+      // credit_reserved devolve o crédito (evita estorno em duplicidade).
+      const { data: claimed } = await admin
+        .from("ai_revision_requests")
+        .update({ credit_reserved: false })
+        .eq("id", pending.id)
+        .eq("credit_reserved", true)
+        .select("id");
+      if (!claimed?.length) return json({ canceled: false });
       const credits = await ensureCredits(userId);
       const refunded = credits.balance + 1;
       await admin.from("ai_revision_credits").update({ balance: refunded }).eq("user_id", userId);
       await admin.from("ai_revision_credit_ledger").insert({
         user_id: userId, delta: 1, reason: "kit_refund", request_id: pending.id, balance_after: refunded,
       });
-      await admin
-        .from("ai_revision_requests")
-        .update({ credit_reserved: false })
-        .eq("id", pending.id);
       return json({ canceled: true, balance: refunded });
     }
 

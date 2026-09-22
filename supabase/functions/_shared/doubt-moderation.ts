@@ -32,10 +32,19 @@ const CONTACT_PATTERNS: { label: string; re: RegExp }[] = [
   { label: 'e-mail', re: /[a-z0-9._%+-]+\s*(@|\(at\)|\[at\]|\barroba\b)\s*[a-z0-9.-]+\s*(\.|\bponto\b)\s*[a-z]{2,}/gi },
   { label: 'endereço de site', re: /\b(?:https?:\/\/|www\.)\S+/gi },
   { label: 'endereço de site', re: /\b[a-z0-9-]+\s*(?:\.|\bponto\b)\s*(?:com|com\.br|net|br|org|io|me)\b/gi },
-  { label: 'telefone', re: /(?:\+?55\s*)?(?:\(?\d{2}\)?\s*)?9?\d{4}[\s.-]?\d{4}\b/g },
+  // Telefone: exige DDD entre parênteses, prefixo +55, celular iniciado em 9
+  // ou uma sequência longa de dígitos. Evita casar anos como "2019 2020".
+  { label: 'telefone', re: /\(\d{2}\)\s*9?\d{4}[\s.-]?\d{4}\b/g },
+  { label: 'telefone', re: /\+?55[\s.-]*\(?\d{2}\)?[\s.-]*9?\d{4}[\s.-]?\d{4}\b/g },
+  { label: 'telefone', re: /\b9\d{4}[\s.-]?\d{4}\b/g },
+  { label: 'telefone', re: /\b\d{10,13}\b/g },
   { label: 'telefone', re: /\b(?:whats\s*app|whatsapp|zap|telegram|instagram|insta|facebook|tiktok)\b\s*[:\-]?\s*[@\w.+]{3,}/gi },
   { label: 'perfil de rede social', re: /(^|\s)@[a-z0-9._]{3,}/gi },
 ]
+
+function escapeRegExp(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
 
 export function moderateDoubtText(
   text: string,
@@ -54,7 +63,12 @@ export function moderateDoubtText(
 
   const normalized = normalize(text)
   const words = (blockedWords.length ? blockedWords : DEFAULT_BAD_WORDS).map(normalize)
-  const hits = words.filter((w) => w.length > 2 && normalized.includes(w))
+  // Palavra inteira: evita bloquear "computação" (puta) ou "enviado" (viado).
+  const hits = words.filter((w) => {
+    if (w.length <= 2) return false
+    const re = new RegExp(`(^|[^\\p{L}\\p{N}])${escapeRegExp(w)}($|[^\\p{L}\\p{N}])`, 'u')
+    return re.test(normalized)
+  })
   if (hits.length) {
     matches.push(...hits)
     reason = 'Linguagem ofensiva não é permitida no chat de dúvidas.'

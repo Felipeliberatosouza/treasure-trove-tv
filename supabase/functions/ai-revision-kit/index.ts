@@ -326,16 +326,21 @@ async function handleRequest(req: Request, body: any): Promise<Response> {
         await new Promise((r) => setTimeout(r, 1500));
       }
       if (!pending) return json({ canceled: false });
+      // Reivindica a reserva de forma atômica: só quem consegue limpar
+      // credit_reserved devolve o crédito (evita estorno em duplicidade).
+      const { data: claimed } = await admin
+        .from("ai_revision_requests")
+        .update({ credit_reserved: false })
+        .eq("id", pending.id)
+        .eq("credit_reserved", true)
+        .select("id");
+      if (!claimed?.length) return json({ canceled: false });
       const credits = await ensureCredits(userId);
       const refunded = credits.balance + 1;
       await admin.from("ai_revision_credits").update({ balance: refunded }).eq("user_id", userId);
       await admin.from("ai_revision_credit_ledger").insert({
         user_id: userId, delta: 1, reason: "kit_refund", request_id: pending.id, balance_after: refunded,
       });
-      await admin
-        .from("ai_revision_requests")
-        .update({ credit_reserved: false })
-        .eq("id", pending.id);
       return json({ canceled: true, balance: refunded });
     }
 
@@ -580,6 +585,26 @@ async function handleRequest(req: Request, body: any): Promise<Response> {
         .select("id")
         .single();
 
+      let finalBalance = reservedBalance;
+      if (userId && reservedBalance !== null) {
+        // Se o cancelamento já devolveu o crédito, cobramos novamente:
+        // o material foi entregue.
+        const { data: stillReserved } = await admin
+          .from("ai_revision_requests")
+          .update({ credit_reserved: false })
+          .eq("id", requestId)
+          .eq("credit_reserved", true)
+          .select("id");
+        if (!stillReserved?.length) {
+          const credits = await ensureCredits(userId);
+          finalBalance = credits.balance - 1;
+          await admin.from("ai_revision_credits").update({ balance: finalBalance }).eq("user_id", userId);
+          await admin.from("ai_revision_credit_ledger").insert({
+            user_id: userId, delta: -1, reason: "kit_reserve", request_id: requestId, balance_after: finalBalance,
+          });
+        }
+      }
+
       await admin
         .from("ai_revision_requests")
         .update({ status: "ready", canonical_id: saved?.id ?? null, duration_ms: Date.now() - started })
@@ -590,21 +615,30 @@ async function handleRequest(req: Request, body: any): Promise<Response> {
         request_id: requestId,
         canonical_id: saved?.id ?? null,
         kit,
-        balance: reservedBalance,
+        balance: finalBalance,
       });
     } catch (e) {
       const message = e instanceof Error ? e.message : "Falha na geração.";
-      // devolve o crédito reservado
+      // devolve o crédito reservado (apenas se a reserva ainda não foi estornada)
       if (userId && reservedBalance !== null) {
-        const refunded = reservedBalance + 1;
-        await admin.from("ai_revision_credits").update({ balance: refunded }).eq("user_id", userId);
-        await admin.from("ai_revision_credit_ledger").insert({
-          user_id: userId, delta: 1, reason: "kit_refund", request_id: requestId, balance_after: refunded,
-        });
+        const { data: stillReserved } = await admin
+          .from("ai_revision_requests")
+          .update({ credit_reserved: false })
+          .eq("id", requestId)
+          .eq("credit_reserved", true)
+          .select("id");
+        if (stillReserved?.length) {
+          const credits = await ensureCredits(userId);
+          const refunded = credits.balance + 1;
+          await admin.from("ai_revision_credits").update({ balance: refunded }).eq("user_id", userId);
+          await admin.from("ai_revision_credit_ledger").insert({
+            user_id: userId, delta: 1, reason: "kit_refund", request_id: requestId, balance_after: refunded,
+          });
+        }
       }
       await admin
         .from("ai_revision_requests")
-        .update({ status: "failed", error_message: message, credit_reserved: false })
+        .update({ status: "failed", error_message: message })
         .eq("id", requestId);
       return json({ error: "generation_failed", message }, 500);
     }

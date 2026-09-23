@@ -127,6 +127,13 @@
       "when": 1790171940332,
       "tag": "0017_work_documents",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1790175166094,
+      "tag": "0018_tighten_prices_and_leads_policies",
+      "breakpoints": true
     }
   ]
 }

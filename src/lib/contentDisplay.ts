@@ -37,6 +37,10 @@ export const aiOverlayLabel = (gender: string | undefined, name: string): string
 export const teacherOverlayLabel = (name?: string | null): string =>
   name ? `Aula com Prof. ${name}` : "Aula gravada por professor";
 
-/** Nome exibido abaixo do card para professor real. */
+/**
+ * Nome exibido abaixo do card para professor real.
+ * Sem nome cadastrado, não exibimos rótulo genérico (a frase
+ * "Aula gravada por professor" fica apenas sobre a capa).
+ */
 export const teacherInstructorLabel = (name?: string | null): string =>
-  name ? `Prof. ${name}` : "Aula gravada por professor";
+  name ? `Prof. ${name}` : "";

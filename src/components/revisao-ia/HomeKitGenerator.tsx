@@ -306,9 +306,9 @@ const HomeKitGenerator = () => {
           {blocked === "signup_required" ? (
             <>
               <h2 className="text-xl font-bold">Crie sua conta para continuar</h2>
-              <p className="text-sm text-muted-foreground">
-                Você já usou seus créditos gratuitos. Crie sua conta e ganhe mais créditos
-                gratuitos, sem cartão e sem assinatura.
+              <p className="text-sm text-muted-foreground">Você já usou seus créditos gratuitos.</p>
+              <p className="text-sm font-bold text-foreground">
+                Crie sua conta e ganhe mais créditos gratuitos!
               </p>
               <div className="flex flex-wrap justify-center gap-2">
                 <Button onClick={() => navigate("/signup/student")}>Criar conta grátis</Button>

@@ -114,7 +114,7 @@ const VideoCard = ({ video, index, onClick, rating, showTrialBadge, watched }: V
           <h3 className="font-display text-sm font-semibold leading-tight line-clamp-2">
             {video.title}
           </h3>
-          {video.instructorHref ? (
+          {video.instructor && video.instructorHref ? (
             <a
               href={video.instructorHref}
               onClick={(e) => e.stopPropagation()}
@@ -122,9 +122,9 @@ const VideoCard = ({ video, index, onClick, rating, showTrialBadge, watched }: V
             >
               {video.instructor}
             </a>
-          ) : (
+          ) : video.instructor ? (
             <p className="text-xs text-muted-foreground">{video.instructor}</p>
-          )}
+          ) : null}
           <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
             {durationLabel && (
               <span className="flex items-center gap-1">

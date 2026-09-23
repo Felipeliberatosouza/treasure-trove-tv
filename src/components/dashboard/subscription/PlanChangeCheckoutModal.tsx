@@ -588,7 +588,7 @@ export default function PlanChangeCheckoutModal({
         </>)}
 
         <div className="px-6 pb-6">
-          <InviteFriendsPanel variant="compact" eyebrow="Economize na próxima cobrança" />
+          <InviteFriendsPanel variant="compact" eyebrow="Indique amigos: Créditos de IA + Cashback" />
         </div>
         </div>
         {/* /Scrollable body */}

@@ -13,6 +13,7 @@ import {
   type BrandingSettings,
   type ContactSettings,
 } from "@/hooks/usePlatformSettings";
+import { REFERRAL_RULES, REFERRAL_TITLE, referralSummary } from "./referralBenefits";
 
 type Variant = "hero" | "compact";
 
@@ -204,13 +205,24 @@ const InviteFriendsPanel = ({ variant = "hero", className, eyebrow }: Props) => 
               : "font-display text-lg font-bold"
           }
         >
-          Convide amigos e ganhe cashback
+          {REFERRAL_TITLE}
         </h2>
         <p className="mx-auto max-w-lg text-sm text-muted-foreground">
-          Compartilhe seu convite da {platformName}. Quando seu amigo fizer a primeira compra, você
-          ganha <strong>{percent}% de cashback</strong> para usar como desconto — e ele começa a
-          estudar com revisões, resumos, simulados e aulas com professores.
+          {referralSummary(percent, platformName)}
         </p>
+      </div>
+
+      <div className="grid gap-2 sm:grid-cols-2">
+        <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 text-left">
+          <p className="text-xs font-semibold text-primary">1. {REFERRAL_RULES[0].title}</p>
+          <p className="text-xs text-muted-foreground">{REFERRAL_RULES[0].text}</p>
+        </div>
+        <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 text-left">
+          <p className="text-xs font-semibold text-primary">2. {REFERRAL_RULES[1].title}</p>
+          <p className="text-xs text-muted-foreground">
+            {REFERRAL_RULES[1].text} Hoje o cashback é de {percent}% da primeira compra.
+          </p>
+        </div>
       </div>
 
       <Button className="w-full gap-2" onClick={() => copy(referralLink, "Link de convite")}>
@@ -349,9 +361,9 @@ const InviteFriendsPanel = ({ variant = "hero", className, eyebrow }: Props) => 
         {!user && (
           <p className="text-xs text-muted-foreground">
             <Link to="/login" className="text-primary underline">
-              Entre na sua conta
+            Entre na sua conta
             </Link>{" "}
-            para gerar o seu código e acompanhar o cashback das indicações.
+            para gerar o seu link e acompanhar os Créditos de IA e o cashback das suas indicações.
           </p>
         )}
       </div>

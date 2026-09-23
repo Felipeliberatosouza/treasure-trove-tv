@@ -4,6 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, ArrowUpCircle, ShoppingCart, Sparkles, Gift } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import InviteFriendsPanel from "@/components/referral/InviteFriendsPanel";
+import { useState } from "react";
+import { useFreeTrial } from "@/hooks/useFreeTrial";
 
 const RESOURCE_LABELS: Record<string, string> = {
   revisao: "Revisão",
@@ -43,6 +45,8 @@ export default function ResourceLimitModal({
 }: Props) {
   const navigate = useNavigate();
   const label = RESOURCE_LABELS[resourceType] || resourceType;
+  const trial = useFreeTrial();
+  const [starting, setStarting] = useState(false);
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
@@ -82,6 +86,40 @@ export default function ResourceLimitModal({
               </p>
             </div>
           )}
+          {/* Teste grátis: processo independente das indicações */}
+          {trial.trialEnabled && !trialAlreadyUsed && !trial.hasActiveTrial && (
+            <div className="space-y-2 rounded-xl border border-accent/30 bg-accent/10 p-4">
+              <p className="text-sm font-medium">
+                <Gift className="mr-1.5 -mt-0.5 inline h-4 w-4 text-accent" />
+                Experimente grátis
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Acesse gratuitamente e descubra como a Revisão Fácil pode te ajudar! O teste grátis
+                é independente dos créditos ganhos por indicação.
+              </p>
+              <Button
+                variant="secondary"
+                className="w-full gap-2"
+                disabled={starting}
+                onClick={async () => {
+                  setStarting(true);
+                  const ok = await trial.startTrial();
+                  setStarting(false);
+                  if (ok) onClose();
+                }}
+              >
+                <Gift className="h-4 w-4" />
+                {starting ? "Ativando..." : "Iniciar Teste Grátis"}
+              </Button>
+            </div>
+          )}
+          {trial.hasActiveTrial && (
+            <div className="rounded-xl border border-accent/30 bg-accent/10 p-3 text-xs text-muted-foreground">
+              Seu <strong>teste grátis</strong> está ativo: use-o para acessar este conteúdo sem
+              gastar créditos.
+            </div>
+          )}
+
           {/* CTA subscription */}
           <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 space-y-3">
             <p className="text-sm font-medium text-foreground">
@@ -129,7 +167,7 @@ export default function ResourceLimitModal({
 
           <InviteFriendsPanel
             variant="compact"
-            eyebrow="Ganhe mais acessos sem pagar"
+            eyebrow="Indique amigos: Créditos de IA + Cashback"
           />
         </div>
       </DialogContent>

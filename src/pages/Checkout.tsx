@@ -428,7 +428,7 @@ const Checkout = () => {
           <InviteFriendsPanel
             variant="compact"
             className="order-3 md:order-3 mt-4"
-            eyebrow="Economize na próxima compra"
+            eyebrow="Indique amigos: Créditos de IA + Cashback"
           />
         </motion.div>
       </div>

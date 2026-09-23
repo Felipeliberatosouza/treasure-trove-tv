@@ -184,7 +184,7 @@ const PaymentSuccess = () => {
             <InviteFriendsPanel
               variant="compact"
               className="mt-8 text-left"
-              eyebrow="Ganhe cashback indicando amigos"
+              eyebrow="Indique amigos: Créditos de IA + Cashback"
             />
           </>
         )}

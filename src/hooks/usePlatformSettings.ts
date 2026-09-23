@@ -1,6 +1,8 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { readCachedSetting, readSettingsCache, writeCachedSetting } from "@/lib/brandingCache";
+import { applyBranding, type BrandingVars } from "@/lib/applyBranding";
 
 export interface BrandingSettings {
   platform_name: string;
@@ -716,7 +718,11 @@ export const DEFAULT_PRODUCT_CONFIG: ProductConfigSettings = {
 };
 
 export function usePlatformSettings<K extends keyof SettingsMap>(key: K) {
-  const [data, setData] = useState<SettingsMap[K] | null>(null);
+  // Começa com o valor guardado no acesso anterior para que logomarca, cores e
+  // textos já apareçam corretos antes da resposta do backend.
+  const [data, setData] = useState<SettingsMap[K] | null>(
+    () => readCachedSetting<SettingsMap[K]>(key as string),
+  );
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
@@ -732,6 +738,7 @@ export function usePlatformSettings<K extends keyof SettingsMap>(key: K) {
       console.error("Error fetching setting", key, error);
     } else if (row) {
       setData(row.value as unknown as SettingsMap[K]);
+      writeCachedSetting(key as string, row.value);
     }
     setLoading(false);
   }, [key]);
@@ -751,6 +758,10 @@ export function usePlatformSettings<K extends keyof SettingsMap>(key: K) {
       return false;
     }
     setData(value);
+    // Atualiza o cache e, no caso da identidade visual, aplica as novas cores
+    // imediatamente — inclusive no próximo acesso ao site publicado.
+    writeCachedSetting(key as string, JSON.parse(JSON.stringify(value)));
+    if (key === "branding") applyBranding(value as unknown as BrandingVars);
     toast({ title: "Salvo", description: "Configuração atualizada com sucesso." });
     return true;
   }, [key, toast]);
@@ -759,7 +770,7 @@ export function usePlatformSettings<K extends keyof SettingsMap>(key: K) {
 }
 
 export function useAllPlatformSettings() {
-  const [settings, setSettings] = useState<Record<string, unknown>>({});
+  const [settings, setSettings] = useState<Record<string, unknown>>(() => readSettingsCache());
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

@@ -1,5 +1,10 @@
 import { useEffect, useState, useRef } from "react";
-import { usePlatformSettings, BrandingSettings } from "@/hooks/usePlatformSettings";
+import {
+  usePlatformSettings,
+  BrandingSettings,
+  type HomeHeadlineAudience,
+  type HomeHeadlines,
+} from "@/hooks/usePlatformSettings";
 import { useStorageUpload } from "@/hooks/useStorageUpload";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";

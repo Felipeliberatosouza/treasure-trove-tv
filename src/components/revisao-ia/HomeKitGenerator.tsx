@@ -201,10 +201,12 @@ const HomeKitGenerator = () => {
   const [notice, setNotice] = useState<string | null>(null);
   const [chatMsg, setChatMsg] = useState("");
   const [messages, setMessages] = useState<string[]>([]);
+  const [tool, setTool] = useState<ToolKey | null>(null);
+  const [headlineIndex, setHeadlineIndex] = useState(0);
   const submittingRef = useRef(false);
   const runIdRef = useRef(0);
   const pendingKeyRef = useRef<string | null>(null);
-  const resultRef = useRef<{ runId: number; canonicalId?: string | null; error?: { kind: string; message?: string } } | null>(null);
+  const resultRef = useRef<{ runId: number; canonicalId?: string | null; workId?: string | null; error?: { kind: string; message?: string } } | null>(null);
 
   const firstName = useMemo(() => (profile?.name || "").trim().split(" ")[0] || "", [profile?.name]);
 
@@ -272,7 +274,8 @@ const HomeKitGenerator = () => {
     } catch {
       /* armazenamento indisponível */
     }
-    if (res.canonicalId) navigate(`/conteudo-ia/${res.canonicalId}`);
+    if (res.workId) navigate(`/trabalho/${res.workId}`);
+    else if (res.canonicalId) navigate(`/conteudo-ia/${res.canonicalId}`);
   }, [step, loading, steps.length, navigate, fast]);
 
   const handleSubmit = async (overridePrompt?: string) => {
@@ -291,6 +294,20 @@ const HomeKitGenerator = () => {
     setErrorMsg(null);
     setNotice(null);
     setBlocked(null);
+    // Documento Word e slides de trabalho seguem por outro fluxo.
+    if (tool === "trabalho") {
+      const { data, error } = await requestWork({
+        tema: stripPrefix(pedido),
+        disciplina: disciplina.trim() || undefined,
+        curso: curso.trim() || undefined,
+        instituicao: instituicao.trim() || undefined,
+        tipo: "ambos",
+      });
+      if (runIdRef.current !== runId) return;
+      resultRef.current = { runId, workId: data?.id, error };
+      setFast(true);
+      return;
+    }
     const idempotencyKey = crypto.randomUUID();
     pendingKeyRef.current = idempotencyKey;
     const { data, error } = await requestKit({

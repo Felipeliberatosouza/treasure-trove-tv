@@ -370,6 +370,14 @@ const HomeKitGenerator = () => {
     return () => window.clearTimeout(id);
   }, [blocked]);
 
+  // Alterna a chamada da página inicial entre prova e trabalho.
+  useEffect(() => {
+    if (loading) return;
+    const t = setInterval(() => setHeadlineIndex((i) => (i + 1) % HEADLINES.length), 5000);
+    return () => clearInterval(t);
+  }, [loading]);
+
+  const activeChip = CHIPS.find((c) => c.key === tool) ?? null;
 
 
   if (blocked) {

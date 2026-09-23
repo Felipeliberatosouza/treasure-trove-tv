@@ -439,9 +439,14 @@ const HomeKitGenerator = () => {
         Seu Kit de Revisão completo em poucos minutos
       </div>
       <h1 id="revision-ai-title" className="font-display text-3xl font-bold md:text-5xl">
-        {headlineIndex === 0 && firstName
-          ? `Qual o assunto da sua próxima prova, ${firstName}?`
-          : HEADLINES[headlineIndex]}
+        {(() => {
+          const frase = headlines[headlineIndex] ?? headlines[0] ?? DEFAULT_HEADLINES[0];
+          // Chama o usuário pelo nome na primeira frase, quando ela termina em pergunta.
+          if (headlineIndex === 0 && firstName && frase.endsWith("?")) {
+            return `${frase.slice(0, -1)}, ${firstName}?`;
+          }
+          return frase;
+        })()}
       </h1>
 
       <form

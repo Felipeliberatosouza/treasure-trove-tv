@@ -43,6 +43,7 @@ const SettingsBranding = () => {
   const fileInputFaviconRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState<BrandingSettings>({
     platform_name: "", slogan: "", logo_url: "",
+    home_headlines: normalizeHeadlines(),
     logo_url_dark_bg: "", logo_url_light_bg: "",
     favicon_url: "",
     default_logo_variant: "dark_bg",

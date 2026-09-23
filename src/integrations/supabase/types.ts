@@ -2607,6 +2607,116 @@ export type Database = {
         }
         Relationships: []
       }
+      support_conversations: {
+        Row: {
+          access_token: string
+          created_at: string
+          email: string | null
+          handoff_at: string | null
+          handoff_reason: string | null
+          id: string
+          phone: string | null
+          status: string
+          updated_at: string
+          user_id: string | null
+          visitor_name: string | null
+        }
+        Insert: {
+          access_token?: string
+          created_at?: string
+          email?: string | null
+          handoff_at?: string | null
+          handoff_reason?: string | null
+          id?: string
+          phone?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+          visitor_name?: string | null
+        }
+        Update: {
+          access_token?: string
+          created_at?: string
+          email?: string | null
+          handoff_at?: string | null
+          handoff_reason?: string | null
+          id?: string
+          phone?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+          visitor_name?: string | null
+        }
+        Relationships: []
+      }
+      support_faqs: {
+        Row: {
+          answer: string
+          category: string
+          created_at: string
+          id: string
+          question: string
+          source: string
+          status: string
+          updated_at: string
+          usage_count: number
+        }
+        Insert: {
+          answer?: string
+          category?: string
+          created_at?: string
+          id?: string
+          question: string
+          source?: string
+          status?: string
+          updated_at?: string
+          usage_count?: number
+        }
+        Update: {
+          answer?: string
+          category?: string
+          created_at?: string
+          id?: string
+          question?: string
+          source?: string
+          status?: string
+          updated_at?: string
+          usage_count?: number
+        }
+        Relationships: []
+      }
+      support_messages: {
+        Row: {
+          content: string
+          conversation_id: string
+          created_at: string
+          id: string
+          role: string
+        }
+        Insert: {
+          content: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          role: string
+        }
+        Update: {
+          content?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "support_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       support_ticket_attachments: {
         Row: {
           created_at: string

@@ -38,10 +38,14 @@ const SupportChat = ({ open, onOpenChange, lead, whatsappHref }: Props) => {
   const [error, setError] = useState<string | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const startedRef = useRef(false);
+  const leadRef = useRef(lead);
+  leadRef.current = lead;
 
   // Inicia ou retoma a conversa
   useEffect(() => {
-    if (!open || conv) return;
+    if (!open || conv || startedRef.current) return;
+    startedRef.current = true;
     (async () => {
       setError(null);
       try {
@@ -57,7 +61,7 @@ const SupportChat = ({ open, onOpenChange, lead, whatsappHref }: Props) => {
           }
         }
         setTyping(true);
-        const d = await invoke({ action: "start", ...lead });
+        const d = await invoke({ action: "start", ...leadRef.current });
         await new Promise((r) => setTimeout(r, 1200));
         const c = { id: d.id!, token: d.token! };
         localStorage.setItem(STORE_KEY, JSON.stringify(c));
@@ -66,12 +70,13 @@ const SupportChat = ({ open, onOpenChange, lead, whatsappHref }: Props) => {
         setStatus(d.status);
         setAgentName(d.agentName);
       } catch {
+        startedRef.current = false;
         setError("Não conseguimos abrir o atendimento agora.");
       } finally {
         setTyping(false);
       }
     })();
-  }, [open, conv, lead]);
+  }, [open, conv]);
 
   // Enquanto aguarda/atende humano, busca novas mensagens
   useEffect(() => {

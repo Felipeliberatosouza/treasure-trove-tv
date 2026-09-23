@@ -29,6 +29,8 @@ interface Props {
   trialAlreadyUsed?: boolean;
   /** true quando o aluno tem créditos de indicação, mas o conteúdo não aceita créditos. */
   referralBlocked?: boolean;
+  /** Chamado após o teste grátis ser ativado, para a tela liberar o acesso na hora. */
+  onTrialStarted?: () => void;
 }
 
 export default function ResourceLimitModal({

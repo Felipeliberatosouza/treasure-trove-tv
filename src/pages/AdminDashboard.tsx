@@ -29,6 +29,7 @@ import AdminSupportTicketsTab from "@/components/admin/AdminSupportTicketsTab";
 import AdminProfileApprovalsTab from "@/components/admin/AdminProfileApprovalsTab";
 import AdminLeadsTab from "@/components/admin/AdminLeadsTab";
 import AdminReferralsTab from "@/components/admin/AdminReferralsTab";
+import AdminWorkDocsTab from "@/components/admin/AdminWorkDocsTab";
 import PersonalDataTab from "@/components/dashboard/PersonalDataTab";
 import LoginDataTab from "@/components/dashboard/LoginDataTab";
 
@@ -40,6 +41,7 @@ const tabs = [
   { id: "leads", label: "Leads do WhatsApp", icon: MessageCircle, hidden: true },
   { id: "usage-history", label: "Histórico de Uso", icon: Activity, hidden: true },
   { id: "referrals", label: "Indicações de Amigos", icon: Gift },
+  { id: "work-docs", label: "Trabalhos (Word e Slides)", icon: FileText },
   { id: "cancellations", label: "Cancelamentos", icon: XCircle },
   { id: "compensation", label: "Pagamento de Professores", icon: DollarSign },
   { id: "security", label: "Segurança", icon: Shield },
@@ -140,6 +142,7 @@ const AdminDashboard = () => {
             {activeTab === "support-tickets" && <AdminSupportTicketsTab />}
             {activeTab === "leads" && <AdminLeadsTab />}
             {activeTab === "referrals" && <AdminReferralsTab />}
+            {activeTab === "work-docs" && <AdminWorkDocsTab />}
             {activeTab === "profile-approvals" && <AdminProfileApprovalsTab />}
             {activeTab === "settings" && <AdminSettingsTab />}
             {activeTab === "personal" && <PersonalDataTab />}

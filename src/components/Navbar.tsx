@@ -62,6 +62,7 @@ const loggedMenuItems: MenuItem[] = [
   { label: "Meus Simulados", shortLabel: "Simulados", href: "/meus-simulados" },
   { label: "Minhas Top Questões de Provas", shortLabel: "Top Questões", href: "/minhas-top-questoes" },
   { label: "Minhas Colinhas", shortLabel: "Colinhas", href: "/minhas-colinhas" },
+  { label: "Meus Trabalhos (Word e Slides)", shortLabel: "Trabalhos", href: "/meus-trabalhos" },
   { label: "Minhas Dúvidas", shortLabel: "Dúvidas", href: "/minhas-duvidas", alertKey: "studentAnsweredDoubts" },
   { label: "Aula Particular: Agende/Acesse", shortLabel: "Aula Particular", href: "/minhas-aulas-agendadas", alertKey: "studentScheduledToday" },
 ];

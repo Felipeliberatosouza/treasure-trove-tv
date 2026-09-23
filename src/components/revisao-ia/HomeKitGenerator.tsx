@@ -18,10 +18,11 @@ const CURSO_OPCOES = [
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Sparkles, Send, Loader2, CheckCircle2, Lock, Plus, SlidersHorizontal,
-  BookOpen, FileQuestion, ListChecks, StickyNote, Square,
+  BookOpen, FileQuestion, ListChecks, StickyNote, Square, FileType2,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { cancelKit, requestKit } from "@/lib/revisionKit";
+import { requestWork } from "@/lib/workDocument";
 import InviteFriendsPanel from "@/components/referral/InviteFriendsPanel";
 
 interface GenPhase {
@@ -89,11 +90,67 @@ const Dots = () => (
   </span>
 );
 
-const CHIPS = [
-  { label: "Criar resumo", icon: BookOpen },
-  { label: "Criar simulado", icon: FileQuestion },
-  { label: "Top Questões", icon: ListChecks },
-  { label: "Criar colinha", icon: StickyNote },
+type ToolKey = "resumo" | "simulado" | "top_questoes" | "colinha" | "trabalho";
+
+interface ToolChip {
+  key: ToolKey;
+  label: string;
+  icon: typeof BookOpen;
+  /** Texto que abre a caixa de digitação quando a ferramenta é escolhida. */
+  prefix: string;
+  placeholder: string;
+}
+
+const CHIPS: ToolChip[] = [
+  {
+    key: "resumo",
+    label: "Criar resumo",
+    icon: BookOpen,
+    prefix: "Criar resumo sobre ",
+    placeholder: "Digite o assunto do resumo que você precisa...",
+  },
+  {
+    key: "simulado",
+    label: "Criar simulado",
+    icon: FileQuestion,
+    prefix: "Criar simulado sobre ",
+    placeholder: "Digite o assunto do simulado que você quer praticar...",
+  },
+  {
+    key: "top_questoes",
+    label: "Top Questões",
+    icon: ListChecks,
+    prefix: "Top Questões sobre ",
+    placeholder: "Digite o assunto das Top Questões que você quer ver...",
+  },
+  {
+    key: "colinha",
+    label: "Criar colinha",
+    icon: StickyNote,
+    prefix: "Criar colinha sobre ",
+    placeholder: "Digite o assunto da colinha de última hora...",
+  },
+  {
+    key: "trabalho",
+    label: "Criar Word e Slides de Trabalho",
+    icon: FileType2,
+    prefix: "Criar documento Word e slides de trabalho sobre ",
+    placeholder: "Digite o tema do trabalho, a disciplina e o que precisa conter...",
+  },
+];
+
+const DEFAULT_PLACEHOLDER =
+  "Digite o assunto, a disciplina ou os tópicos da sua prova ou trabalho que precisa fazer....";
+
+/** Remove o texto de abertura de outra ferramenta antes de aplicar a escolhida. */
+const stripPrefix = (value: string) => {
+  const found = CHIPS.find((c) => value.toLowerCase().startsWith(c.prefix.toLowerCase()));
+  return found ? value.slice(found.prefix.length) : value;
+};
+
+const HEADLINES = [
+  "Qual o assunto da sua próxima prova?",
+  "Quer gerar documento Word e slides para um trabalho?",
 ];
 
 /** Guarda o pedido em andamento para o usuário não perder o que digitou ao fazer login. */
@@ -144,10 +201,12 @@ const HomeKitGenerator = () => {
   const [notice, setNotice] = useState<string | null>(null);
   const [chatMsg, setChatMsg] = useState("");
   const [messages, setMessages] = useState<string[]>([]);
+  const [tool, setTool] = useState<ToolKey | null>(null);
+  const [headlineIndex, setHeadlineIndex] = useState(0);
   const submittingRef = useRef(false);
   const runIdRef = useRef(0);
   const pendingKeyRef = useRef<string | null>(null);
-  const resultRef = useRef<{ runId: number; canonicalId?: string | null; error?: { kind: string; message?: string } } | null>(null);
+  const resultRef = useRef<{ runId: number; canonicalId?: string | null; workId?: string | null; error?: { kind: string; message?: string } } | null>(null);
 
   const firstName = useMemo(() => (profile?.name || "").trim().split(" ")[0] || "", [profile?.name]);
 
@@ -215,7 +274,8 @@ const HomeKitGenerator = () => {
     } catch {
       /* armazenamento indisponível */
     }
-    if (res.canonicalId) navigate(`/conteudo-ia/${res.canonicalId}`);
+    if (res.workId) navigate(`/trabalho/${res.workId}`);
+    else if (res.canonicalId) navigate(`/conteudo-ia/${res.canonicalId}`);
   }, [step, loading, steps.length, navigate, fast]);
 
   const handleSubmit = async (overridePrompt?: string) => {
@@ -234,6 +294,20 @@ const HomeKitGenerator = () => {
     setErrorMsg(null);
     setNotice(null);
     setBlocked(null);
+    // Documento Word e slides de trabalho seguem por outro fluxo.
+    if (tool === "trabalho") {
+      const { data, error } = await requestWork({
+        tema: stripPrefix(pedido),
+        disciplina: disciplina.trim() || undefined,
+        curso: curso.trim() || undefined,
+        instituicao: instituicao.trim() || undefined,
+        tipo: "ambos",
+      });
+      if (runIdRef.current !== runId) return;
+      resultRef.current = { runId, workId: data?.id, error };
+      setFast(true);
+      return;
+    }
     const idempotencyKey = crypto.randomUUID();
     pendingKeyRef.current = idempotencyKey;
     const { data, error } = await requestKit({
@@ -296,6 +370,14 @@ const HomeKitGenerator = () => {
     return () => window.clearTimeout(id);
   }, [blocked]);
 
+  // Alterna a chamada da página inicial entre prova e trabalho.
+  useEffect(() => {
+    if (loading) return;
+    const t = setInterval(() => setHeadlineIndex((i) => (i + 1) % HEADLINES.length), 5000);
+    return () => clearInterval(t);
+  }, [loading]);
+
+  const activeChip = CHIPS.find((c) => c.key === tool) ?? null;
 
 
   if (blocked) {
@@ -343,7 +425,9 @@ const HomeKitGenerator = () => {
         Seu Kit de Revisão completo em poucos minutos
       </div>
       <h1 id="revision-ai-title" className="font-display text-3xl font-bold md:text-5xl">
-        {firstName ? `Qual o assunto da sua próxima prova, ${firstName}?` : "Qual o assunto da sua próxima prova?"}
+        {headlineIndex === 0 && firstName
+          ? `Qual o assunto da sua próxima prova, ${firstName}?`
+          : HEADLINES[headlineIndex]}
       </h1>
 
       <form
@@ -359,7 +443,7 @@ const HomeKitGenerator = () => {
           <Textarea
             value={assunto}
             onChange={(event) => setAssunto(event.target.value)}
-            placeholder="Digite o assunto, a disciplina ou os tópicos da sua prova..."
+            placeholder={activeChip?.placeholder ?? DEFAULT_PLACEHOLDER}
             maxLength={500}
             rows={3}
             readOnly={loading}
@@ -520,18 +604,25 @@ const HomeKitGenerator = () => {
       {errorMsg && <p className="mt-4 text-sm text-destructive">{errorMsg}</p>}
 
       <div className={`mt-6 flex flex-wrap justify-center gap-2 ${loading ? "pointer-events-none opacity-50" : ""}`}>
-        {CHIPS.map(({ label, icon: Icon }) => (
-          <Button
-            key={label}
-            type="button"
-            variant="outline"
-            className="rounded-full bg-background"
-            onClick={() => setAssunto((v) => (v.trim() ? v : `${label} sobre `))}
-          >
-            <Icon className="h-4 w-4" />
-            {label}
-          </Button>
-        ))}
+        {CHIPS.map((chip) => {
+          const Icon = chip.icon;
+          const active = tool === chip.key;
+          return (
+            <Button
+              key={chip.key}
+              type="button"
+              variant={active ? "default" : "outline"}
+              className={active ? "rounded-full" : "rounded-full bg-background"}
+              onClick={() => {
+                setTool(chip.key);
+                setAssunto((v) => `${chip.prefix}${stripPrefix(v).trimStart()}`);
+              }}
+            >
+              <Icon className="h-4 w-4" />
+              {chip.label}
+            </Button>
+          );
+        })}
       </div>
 
       <p className="mt-5 text-xs text-muted-foreground">

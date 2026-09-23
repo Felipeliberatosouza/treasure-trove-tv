@@ -18,10 +18,11 @@ const CURSO_OPCOES = [
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Sparkles, Send, Loader2, CheckCircle2, Lock, Plus, SlidersHorizontal,
-  BookOpen, FileQuestion, ListChecks, StickyNote, Square,
+  BookOpen, FileQuestion, ListChecks, StickyNote, Square, FileType2,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { cancelKit, requestKit } from "@/lib/revisionKit";
+import { requestWork } from "@/lib/workDocument";
 import InviteFriendsPanel from "@/components/referral/InviteFriendsPanel";
 
 interface GenPhase {

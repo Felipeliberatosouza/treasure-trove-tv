@@ -425,7 +425,9 @@ const HomeKitGenerator = () => {
         Seu Kit de Revisão completo em poucos minutos
       </div>
       <h1 id="revision-ai-title" className="font-display text-3xl font-bold md:text-5xl">
-        {firstName ? `Qual o assunto da sua próxima prova, ${firstName}?` : "Qual o assunto da sua próxima prova?"}
+        {headlineIndex === 0 && firstName
+          ? `Qual o assunto da sua próxima prova, ${firstName}?`
+          : HEADLINES[headlineIndex]}
       </h1>
 
       <form
@@ -441,7 +443,7 @@ const HomeKitGenerator = () => {
           <Textarea
             value={assunto}
             onChange={(event) => setAssunto(event.target.value)}
-            placeholder="Digite o assunto, a disciplina ou os tópicos da sua prova..."
+            placeholder={activeChip?.placeholder ?? DEFAULT_PLACEHOLDER}
             maxLength={500}
             rows={3}
             readOnly={loading}

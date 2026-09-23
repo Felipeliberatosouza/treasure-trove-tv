@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { sendTemplateEmail } from "../_shared/transactional-email-templates/send-email.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -209,28 +210,62 @@ Responda em JSON: {"reply": string, "handoff": boolean, "reason": string|null, "
       const target = String(cfg.handoff_whatsapp || contact.whatsapp || "").replace(/\D/g, "");
       const from = String(twilio.whatsapp_from_number || "");
       const TWILIO_API_KEY = Deno.env.get("TWILIO_API_KEY");
-      let notified = false;
+      const last = history.filter((m) => m.role === "customer").slice(-3).map((m) => `• ${m.content}`).join("\n");
+      // WhatsApp: só conta como avisado quando o Twilio confirma a entrega.
+      let waState: "delivered" | "failed" | "pending" | "skipped" = "skipped";
       if (target && from && TWILIO_API_KEY && key) {
-        const last = history.filter((m) => m.role === "customer").slice(-3).map((m) => `• ${m.content}`).join("\n");
         const to = target.startsWith("55") ? target : `55${target}`;
         const msg = `Revisão Fácil – atendimento aguardando você\nCliente: ${conv.visitor_name || "-"}\nCelular: ${conv.phone || "-"}\nE-mail: ${conv.email || "-"}\nMotivo: ${reason}\nÚltimas mensagens:\n${last}\n\nResponda pelo Painel Administrativo > Atendimento Virtual${conv.phone ? ` ou no WhatsApp https://wa.me/55${conv.phone}` : ""}.`;
+        const headers = { Authorization: `Bearer ${key}`, "X-Connection-Api-Key": TWILIO_API_KEY };
         const r = await fetch(`${TWILIO_URL}/Messages.json`, {
           method: "POST",
-          headers: {
-            Authorization: `Bearer ${key}`,
-            "X-Connection-Api-Key": TWILIO_API_KEY,
-            "Content-Type": "application/x-www-form-urlencoded",
-          },
+          headers: { ...headers, "Content-Type": "application/x-www-form-urlencoded" },
           body: new URLSearchParams({ To: `whatsapp:+${to}`, From: `whatsapp:${from}`, Body: msg.slice(0, 1500) }),
         });
-        notified = r.ok;
-        if (!r.ok) console.error("twilio", await r.text());
+        if (!r.ok) {
+          waState = "failed";
+          console.error("twilio", await r.text());
+        } else {
+          const sid = (await r.json().catch(() => ({})))?.sid;
+          waState = "pending";
+          for (let i = 0; sid && i < 6; i++) {
+            await new Promise((res) => setTimeout(res, 2500));
+            const s = await fetch(`${TWILIO_URL}/Messages/${sid}.json`, { headers }).then((x) => x.json()).catch(() => null);
+            const st = String(s?.status || "");
+            if (st === "delivered" || st === "read") { waState = "delivered"; break; }
+            if (st === "failed" || st === "undelivered") { waState = "failed"; console.error("twilio status", st, s?.error_code); break; }
+          }
+        }
       }
-      await admin.from("support_messages").insert({
-        conversation_id: conv.id,
-        role: "system",
-        content: notified ? "Equipe avisada pelo WhatsApp." : "Não foi possível avisar a equipe pelo WhatsApp (verifique o número e a configuração do Twilio).",
-      });
+      const waLabel = { delivered: "entregue", failed: "não entregue", pending: "sem confirmação de entrega", skipped: "não configurado" }[waState];
+
+      // E-mail para a equipe sempre que o WhatsApp não tiver entrega confirmada.
+      let emailed = false;
+      const teamEmail = String(contact.email || "").trim();
+      if (waState !== "delivered" && teamEmail) {
+        try {
+          const site = Deno.env.get("SITE_URL") || "https://revisaofacil.com.br";
+          const res = await sendTemplateEmail("support-handoff-admin", teamEmail, {
+            templateData: {
+              customerName: conv.visitor_name || "", customerPhone: conv.phone || "", customerEmail: conv.email || "",
+              reason, lastMessages: last, whatsappStatus: waLabel, panelUrl: `${site}/admin`,
+            },
+            idempotencyKey: `support-handoff-${conv.id}-${Date.now()}`,
+            replyTo: conv.email || undefined,
+          });
+          emailed = res.sent;
+        } catch (e) {
+          console.error("handoff email", e);
+        }
+      }
+      const parts = [
+        waState === "delivered" ? "Equipe avisada pelo WhatsApp (entrega confirmada)."
+          : waState === "pending" ? "Aviso pelo WhatsApp enviado, mas sem confirmação de entrega."
+          : waState === "failed" ? "O aviso pelo WhatsApp não foi entregue (verifique o número de envio em Verificação Celular)."
+          : "Aviso pelo WhatsApp não configurado.",
+      ];
+      if (waState !== "delivered") parts.push(emailed ? `Equipe avisada por e-mail (${teamEmail}).` : "Não foi possível avisar por e-mail (confira o e-mail em Dados e Contatos).");
+      await admin.from("support_messages").insert({ conversation_id: conv.id, role: "system", content: parts.join(" ") });
       return json({ status: "waiting_human", agentName, messages: await loadMessages(conv.id) });
     }
 

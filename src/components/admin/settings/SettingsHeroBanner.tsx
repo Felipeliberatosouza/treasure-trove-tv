@@ -328,8 +328,17 @@ const SettingsHeroBanner = ({
           <Input
             value={activeSlide.cta_link}
             onChange={(e) => updateActiveSlide({ cta_link: e.target.value })}
-            placeholder="/cadastro/aluno"
+            placeholder="/painel-aluno?tab=cashback ou https://..."
           />
+          <div className="mt-2 flex flex-wrap gap-1">
+            {LINK_SUGGESTIONS.map(([label, href]) => (
+              <button key={href} type="button" onClick={() => updateActiveSlide({ cta_link: href })}
+                className="rounded-full border border-border px-2 py-0.5 text-[11px] text-muted-foreground hover:text-foreground hover:border-primary">
+                {label}
+              </button>
+            ))}
+          </div>
+          <p className="text-xs text-muted-foreground mt-1">Página do site (começando com /) ou endereço externo (https://).</p>
         </div>
 
         {isSecondary && (
@@ -360,6 +369,50 @@ const SettingsHeroBanner = ({
             <p className="text-xs text-muted-foreground mt-2">
               Define a aparência (fundo, texto e botão) deste slide do banner secundário.
             </p>
+          </div>
+        )}
+
+        {isSecondary && (
+          <div className="rounded-md border border-border p-3 space-y-4">
+            <Label className="text-sm font-semibold">Aparência e botão</Label>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs">Etiqueta acima do título</Label>
+                <Input value={activeSlide.badge_text || ""} placeholder="Ex.: Para você" onChange={(e) => updateActiveSlide({ badge_text: e.target.value })} />
+              </div>
+              <OptionSelect label="Layout" value={activeSlide.layout || "center"} onChange={(v) => updateActiveSlide({ layout: v as any })}
+                options={[["center","Centralizado"],["left","Alinhado à esquerda"],["right","Alinhado à direita"],["split","Imagem ao lado do texto"]]} />
+              <OptionSelect label="Altura" value={activeSlide.height || "normal"} onChange={(v) => updateActiveSlide({ height: v as any })}
+                options={[["compact","Baixa"],["normal","Média"],["tall","Alta"]]} />
+              <div>
+                <Label className="text-xs">Visibilidade da imagem de fundo ({activeSlide.image_opacity ?? 15}%)</Label>
+                <input type="range" min={0} max={100} className="w-full" value={activeSlide.image_opacity ?? 15} onChange={(e) => updateActiveSlide({ image_opacity: Number(e.target.value) })} />
+              </div>
+              <OptionSelect label="Tipo de botão" value={activeSlide.button_style || "solid"} onChange={(v) => updateActiveSlide({ button_style: v as any })}
+                options={[["solid","Preenchido"],["outline","Contorno"],["text","Só texto (link)"],["none","Sem botão"]]} />
+              <div className="flex flex-col gap-2 justify-end">
+                <label className="flex items-center gap-2 text-xs"><Switch checked={activeSlide.button_icon !== false} onCheckedChange={(v) => updateActiveSlide({ button_icon: v })} />Mostrar seta no botão</label>
+                <label className="flex items-center gap-2 text-xs"><Switch checked={!!activeSlide.button_new_tab} onCheckedChange={(v) => updateActiveSlide({ button_new_tab: v })} />Abrir link em nova aba</label>
+              </div>
+            </div>
+            <div>
+              <Label className="text-xs">Cores personalizadas (vazio = usa o esquema de cores acima)</Label>
+              <div className="mt-2 grid grid-cols-2 md:grid-cols-5 gap-3">
+                {([
+                  ["bg_color","Fundo"],["title_color","Título"],["subtitle_color","Subtítulo"],["button_bg_color","Botão"],["button_text_color","Texto do botão"],
+                ] as const).map(([k, l]) => (
+                  <div key={k} className="space-y-1">
+                    <span className="text-xs text-muted-foreground">{l}</span>
+                    <div className="flex items-center gap-1">
+                      <input type="color" value={(activeSlide as any)[k] || "#000000"} onChange={(e) => updateActiveSlide({ [k]: e.target.value } as any)} className="h-8 w-10 rounded border border-border bg-transparent" />
+                      {(activeSlide as any)[k] && (
+                        <button type="button" className="text-xs underline text-muted-foreground" onClick={() => updateActiveSlide({ [k]: "" } as any)}>limpar</button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         )}
 
@@ -406,6 +459,27 @@ const SettingsHeroBanner = ({
   );
 };
 
+
+const LINK_SUGGESTIONS: [string, string][] = [
+  ["Indicação de amigos", "/painel-aluno?tab=cashback"],
+  ["Meu painel (aluno)", "/painel-aluno"],
+  ["Painel do professor", "/painel-professor"],
+  ["Cadastro de aluno", "/signup/student"],
+  ["Cadastro de professor", "/signup/teacher"],
+  ["Planos", "/#planos"],
+  ["Créditos de IA", "/creditos-ia"],
+  ["Revisões", "/revisoes"],
+  ["Contato", "/contato"],
+];
+
+const OptionSelect = ({ label, value, onChange, options }: { label: string; value: string; onChange: (v: string) => void; options: [string, string][] }) => (
+  <div>
+    <Label className="text-xs">{label}</Label>
+    <select value={value} onChange={(e) => onChange(e.target.value)} className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm">
+      {options.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+    </select>
+  </div>
+);
 
 const ScheduleBadge = ({ status }: { status: SlideScheduleStatus }) => {
   if (status === "always" || status === "active") return null;

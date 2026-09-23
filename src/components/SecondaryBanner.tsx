@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -140,21 +140,47 @@ const SecondaryBanner = () => {
     },
   };
   const s = schemeStyles[scheme];
+  const layout = slide.layout || "center";
+  const align =
+    layout === "left" ? "items-start text-left" : layout === "right" ? "items-end text-right" : "items-center text-center";
+  const pad = slide.height === "compact" ? "py-10 md:py-12" : slide.height === "tall" ? "py-24 md:py-32" : "py-16 md:py-20";
+  const imgOpacity = typeof slide.image_opacity === "number" ? slide.image_opacity / 100 : undefined;
+  const btnStyle = slide.button_style || "solid";
+  const newTab = slide.button_new_tab ?? isExternal;
+  const showIcon = slide.button_icon !== false;
+  const btnBase = "mt-4 inline-flex items-center gap-2 text-sm font-semibold transition-opacity";
+  const btnClass =
+    btnStyle === "outline"
+      ? `${btnBase} rounded-lg px-8 py-3 border-2 border-current bg-transparent hover:opacity-80 ${s.title}`
+      : btnStyle === "text"
+      ? `${btnBase} underline underline-offset-4 hover:opacity-80 ${s.title}`
+      : `${btnBase} rounded-lg px-8 py-3 shadow-lg ${s.cta}`;
+  const btnInline: React.CSSProperties = {};
+  if (btnStyle === "solid") {
+    if (slide.button_bg_color) btnInline.background = slide.button_bg_color;
+    if (slide.button_text_color) btnInline.color = slide.button_text_color;
+  } else if (slide.button_text_color || slide.button_bg_color) {
+    btnInline.color = slide.button_text_color || slide.button_bg_color;
+  }
+  const badgeText = slide.badge_text?.trim() || active.badge;
+  const isSplit = layout === "split" && !!slide.banner_image_url;
 
   return (
     <section
-      className={`relative w-full py-16 md:py-20 overflow-hidden ${s.section}`}
+      className={`relative w-full ${pad} overflow-hidden ${s.section}`}
+      style={slide.bg_color ? { background: slide.bg_color } : undefined}
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
-      <div
-        className={`absolute inset-0 ${s.overlayOpacity}`}
+      {!isSplit && <div
+        className={`absolute inset-0 ${imgOpacity === undefined ? s.overlayOpacity : ""}`}
         style={{
+          opacity: imgOpacity,
           backgroundImage: `url(${bgImage})`,
           backgroundSize: "cover",
           backgroundPosition: "center",
         }}
-      />
+      />}
       <AnimatePresence mode="wait">
         <motion.div
           key={currentIndex}
@@ -162,42 +188,45 @@ const SecondaryBanner = () => {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -12 }}
           transition={{ duration: 0.4 }}
-          className="relative z-10 flex flex-col items-center justify-center text-center px-6 gap-4 w-full max-w-3xl lg:max-w-5xl xl:max-w-6xl 2xl:max-w-7xl mx-auto min-w-0"
+          className={`relative z-10 px-6 w-full max-w-3xl lg:max-w-5xl xl:max-w-6xl 2xl:max-w-7xl mx-auto min-w-0 ${isSplit ? "grid md:grid-cols-2 gap-8 items-center" : ""}`}
         >
+          {isSplit && (
+            <img src={slide.banner_image_url} alt="" className="w-full max-h-80 object-cover rounded-xl shadow-lg" />
+          )}
+          <div className={`flex flex-col justify-center gap-4 w-full min-w-0 ${isSplit ? "items-start text-left" : align}`}>
           <span className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${s.badge}`}>
-            {active.badge}
+            {badgeText}
           </span>
           {slide.title && (
-            <h2 className={`w-full text-3xl md:text-4xl lg:text-5xl xl:text-5xl 2xl:text-6xl font-display font-bold break-words hyphens-auto [overflow-wrap:anywhere] ${s.title}`}>
+            <h2 className={`w-full text-3xl md:text-4xl lg:text-5xl xl:text-5xl 2xl:text-6xl font-display font-bold break-words hyphens-auto [overflow-wrap:anywhere] ${s.title}`} style={slide.title_color ? { color: slide.title_color } : undefined}>
               {slide.title}
             </h2>
           )}
           {slide.subtitle && (
-            <p className={`w-full text-lg md:text-xl lg:text-2xl max-w-2xl lg:max-w-4xl xl:max-w-5xl break-words hyphens-auto [overflow-wrap:anywhere] ${s.subtitle}`}>
+            <p className={`w-full text-lg md:text-xl lg:text-2xl max-w-2xl lg:max-w-4xl xl:max-w-5xl break-words hyphens-auto [overflow-wrap:anywhere] ${s.subtitle}`} style={slide.subtitle_color ? { color: slide.subtitle_color } : undefined}>
               {slide.subtitle}
             </p>
           )}
-          {slide.cta_text && (
-            isExternal ? (
+          {slide.cta_text && btnStyle !== "none" && (
+            isExternal || newTab ? (
               <a
                 href={ctaLink}
-                target="_blank"
+                target={newTab ? "_blank" : undefined}
                 rel="noopener noreferrer"
-                className={`mt-4 inline-flex items-center gap-2 rounded-lg px-8 py-3 text-sm font-semibold shadow-lg transition-opacity ${s.cta}`}
+                className={btnClass}
+                style={btnInline}
               >
                 {slide.cta_text}
-                <ArrowRight className="h-4 w-4" />
+                {showIcon && <ArrowRight className="h-4 w-4" />}
               </a>
             ) : (
-              <Link
-                to={ctaLink}
-                className={`mt-4 inline-flex items-center gap-2 rounded-lg px-8 py-3 text-sm font-semibold shadow-lg transition-opacity ${s.cta}`}
-              >
+              <Link to={ctaLink} className={btnClass} style={btnInline}>
                 {slide.cta_text}
-                <ArrowRight className="h-4 w-4" />
+                {showIcon && <ArrowRight className="h-4 w-4" />}
               </Link>
             )
           )}
+          </div>
         </motion.div>
       </AnimatePresence>
 

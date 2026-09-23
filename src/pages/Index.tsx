@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import Navbar from "@/components/Navbar";
+import HomeHeroProductsFlow from "@/components/home/HomeHeroProductsFlow";
 import FreeTrialBanner from "@/components/FreeTrialBanner";
 import VideoCarousel from "@/components/VideoCarousel";
 import PricingSection from "@/components/PricingSection";
@@ -388,8 +389,9 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
       <Navbar />
+      {!isTeacher && <HomeHeroProductsFlow />}
       {!isTeacher && (
-        <section className="flex items-center border-b border-border bg-background px-4 pb-12 pt-28 md:px-10 md:pb-16 md:pt-32" aria-labelledby="revision-ai-title">
+        <section className="flex items-center border-b border-border bg-background px-4 py-12 md:px-10 md:py-16" aria-labelledby="revision-ai-title">
           <HomeKitGenerator />
         </section>
       )}

@@ -3537,6 +3537,98 @@ export type Database = {
         }
         Relationships: []
       }
+      work_document_messages: {
+        Row: {
+          content: string
+          created_at: string
+          credits_spent: number
+          document_id: string
+          id: string
+          role: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          credits_spent?: number
+          document_id: string
+          id?: string
+          role: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          credits_spent?: number
+          document_id?: string
+          id?: string
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_document_messages_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "work_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      work_documents: {
+        Row: {
+          cache_key: string
+          content: Json
+          created_at: string
+          credits_spent: number
+          curso: string | null
+          disciplina: string | null
+          id: string
+          instituicao: string | null
+          provider_cost: number
+          reused: boolean
+          status: string
+          tema: string
+          tipo: string
+          titulo: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cache_key: string
+          content: Json
+          created_at?: string
+          credits_spent?: number
+          curso?: string | null
+          disciplina?: string | null
+          id?: string
+          instituicao?: string | null
+          provider_cost?: number
+          reused?: boolean
+          status?: string
+          tema: string
+          tipo?: string
+          titulo: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cache_key?: string
+          content?: Json
+          created_at?: string
+          credits_spent?: number
+          curso?: string | null
+          disciplina?: string | null
+          id?: string
+          instituicao?: string | null
+          provider_cost?: number
+          reused?: boolean
+          status?: string
+          tema?: string
+          tipo?: string
+          titulo?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       teacher_profiles_public: {

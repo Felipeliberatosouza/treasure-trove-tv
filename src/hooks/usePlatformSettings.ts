@@ -757,6 +757,10 @@ export function usePlatformSettings<K extends keyof SettingsMap>(key: K) {
       return false;
     }
     setData(value);
+    // Atualiza o cache e, no caso da identidade visual, aplica as novas cores
+    // imediatamente — inclusive no próximo acesso ao site publicado.
+    writeCachedSetting(key as string, JSON.parse(JSON.stringify(value)));
+    if (key === "branding") applyBranding(value as unknown as BrandingVars);
     toast({ title: "Salvo", description: "Configuração atualizada com sucesso." });
     return true;
   }, [key, toast]);

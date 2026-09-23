@@ -1,5 +1,10 @@
 import { useEffect, useState, useRef } from "react";
-import { usePlatformSettings, BrandingSettings } from "@/hooks/usePlatformSettings";
+import {
+  usePlatformSettings,
+  BrandingSettings,
+  type HomeHeadlineAudience,
+  type HomeHeadlines,
+} from "@/hooks/usePlatformSettings";
 import { useStorageUpload } from "@/hooks/useStorageUpload";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -10,6 +15,25 @@ import { Switch } from "@/components/ui/switch";
 import { Save, Upload, X, Image, Download } from "lucide-react";
 
 
+/** Frases padrão da página inicial (usadas quando nada foi cadastrado). */
+const FRASES_PADRAO = [
+  "Qual o assunto da sua próxima prova?",
+  "Quer gerar documento Word e slides para um trabalho?",
+  "",
+];
+
+const PUBLICOS: { key: HomeHeadlineAudience; label: string; hint: string }[] = [
+  { key: "visitor", label: "Visitante (sem login)", hint: "Quem ainda não entrou na conta." },
+  { key: "student", label: "Aluno", hint: "Quem está logado como aluno." },
+  { key: "teacher", label: "Professor", hint: "Quem está logado como professor." },
+];
+
+const normalizeHeadlines = (value?: HomeHeadlines): HomeHeadlines => ({
+  visitor: [0, 1, 2].map((i) => value?.visitor?.[i] ?? FRASES_PADRAO[i] ?? ""),
+  student: [0, 1, 2].map((i) => value?.student?.[i] ?? FRASES_PADRAO[i] ?? ""),
+  teacher: [0, 1, 2].map((i) => value?.teacher?.[i] ?? FRASES_PADRAO[i] ?? ""),
+});
+
 const SettingsBranding = () => {
   const { data, loading, update } = usePlatformSettings("branding");
   const { upload, uploading } = useStorageUpload("platform-assets");
@@ -19,6 +43,7 @@ const SettingsBranding = () => {
   const fileInputFaviconRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState<BrandingSettings>({
     platform_name: "", slogan: "", logo_url: "",
+    home_headlines: normalizeHeadlines(),
     logo_url_dark_bg: "", logo_url_light_bg: "",
     favicon_url: "",
     default_logo_variant: "dark_bg",
@@ -57,6 +82,7 @@ const SettingsBranding = () => {
     // Backfill legacy installs that don't yet have the 4 explicit button colors.
     setForm({
       ...data,
+      home_headlines: normalizeHeadlines(data.home_headlines),
       logo_url_dark_bg: data.logo_url_dark_bg || "",
       logo_url_light_bg: data.logo_url_light_bg || "",
       favicon_url: data.favicon_url || "",
@@ -172,6 +198,39 @@ const SettingsBranding = () => {
         <p className="mt-1 text-xs text-muted-foreground">
           Endereço divulgado nos vídeos, nos slides e nos demais conteúdos gerados (professores e IA).
         </p>
+      </div>
+
+      {/* ============= Frases da Página Inicial ============= */}
+      <div className="space-y-4 rounded-lg border border-border p-4">
+        <div>
+          <h3 className="text-sm font-semibold">Frases da Página Inicial</h3>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Até 3 frases por público, exibidas em rodízio acima da caixa de digitação (troca a cada 5
+            segundos). Deixe em branco para não usar a frase. Se todas ficarem em branco, as frases
+            padrão são exibidas.
+          </p>
+        </div>
+        {PUBLICOS.map((publico) => (
+          <div key={publico.key} className="space-y-2">
+            <div>
+              <Label>{publico.label}</Label>
+              <p className="text-xs text-muted-foreground">{publico.hint}</p>
+            </div>
+            {[0, 1, 2].map((i) => (
+              <Input
+                key={i}
+                value={form.home_headlines?.[publico.key]?.[i] ?? ""}
+                placeholder={`Frase ${i + 1}`}
+                onChange={(e) => {
+                  const atual = normalizeHeadlines(form.home_headlines);
+                  const lista = [...atual[publico.key]];
+                  lista[i] = e.target.value;
+                  setForm({ ...form, home_headlines: { ...atual, [publico.key]: lista } });
+                }}
+              />
+            ))}
+          </div>
+        ))}
       </div>
       <div>
         <Label>Cor do Slogan</Label>

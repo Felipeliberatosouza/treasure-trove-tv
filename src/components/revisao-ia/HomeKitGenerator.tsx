@@ -21,6 +21,7 @@ import {
   BookOpen, FileQuestion, ListChecks, StickyNote, Square, FileType2,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { usePlatformSettings, type HomeHeadlineAudience } from "@/hooks/usePlatformSettings";
 import { cancelKit, requestKit } from "@/lib/revisionKit";
 import { requestWork } from "@/lib/workDocument";
 import InviteFriendsPanel from "@/components/referral/InviteFriendsPanel";
@@ -148,7 +149,8 @@ const stripPrefix = (value: string) => {
   return found ? value.slice(found.prefix.length) : value;
 };
 
-const HEADLINES = [
+/** Frases padrão da página inicial, usadas quando o administrador não cadastrou as suas. */
+const DEFAULT_HEADLINES = [
   "Qual o assunto da sua próxima prova?",
   "Quer gerar documento Word e slides para um trabalho?",
 ];
@@ -177,7 +179,17 @@ const readDraft = (): Partial<KitDraft> => {
 
 const HomeKitGenerator = () => {
   const navigate = useNavigate();
-  const { profile } = useAuth();
+  const { profile, role } = useAuth();
+  const { data: branding } = usePlatformSettings("branding");
+
+  // Frases da página inicial conforme o público (visitante, aluno ou professor).
+  const headlines = useMemo(() => {
+    const audience: HomeHeadlineAudience = role === "teacher" ? "teacher" : role ? "student" : "visitor";
+    const configured = (branding?.home_headlines?.[audience] || [])
+      .map((frase) => (frase || "").trim())
+      .filter(Boolean);
+    return configured.length ? configured : DEFAULT_HEADLINES;
+  }, [branding, role]);
 
   const draft = useRef<Partial<KitDraft>>(readDraft()).current;
   const [assunto, setAssunto] = useState(draft.assunto || "");
@@ -373,9 +385,11 @@ const HomeKitGenerator = () => {
   // Alterna a chamada da página inicial entre prova e trabalho.
   useEffect(() => {
     if (loading) return;
-    const t = setInterval(() => setHeadlineIndex((i) => (i + 1) % HEADLINES.length), 5000);
+    setHeadlineIndex(0);
+    if (headlines.length < 2) return;
+    const t = setInterval(() => setHeadlineIndex((i) => (i + 1) % headlines.length), 5000);
     return () => clearInterval(t);
-  }, [loading]);
+  }, [loading, headlines]);
 
   const activeChip = CHIPS.find((c) => c.key === tool) ?? null;
 
@@ -425,9 +439,14 @@ const HomeKitGenerator = () => {
         Seu Kit de Revisão completo em poucos minutos
       </div>
       <h1 id="revision-ai-title" className="font-display text-3xl font-bold md:text-5xl">
-        {headlineIndex === 0 && firstName
-          ? `Qual o assunto da sua próxima prova, ${firstName}?`
-          : HEADLINES[headlineIndex]}
+        {(() => {
+          const frase = headlines[headlineIndex] ?? headlines[0] ?? DEFAULT_HEADLINES[0];
+          // Chama o usuário pelo nome na primeira frase, quando ela termina em pergunta.
+          if (headlineIndex === 0 && firstName && frase.endsWith("?")) {
+            return `${frase.slice(0, -1)}, ${firstName}?`;
+          }
+          return frase;
+        })()}
       </h1>
 
       <form

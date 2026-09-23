@@ -4,7 +4,15 @@ import { useToast } from "@/hooks/use-toast";
 import { readCachedSetting, readSettingsCache, writeCachedSetting } from "@/lib/brandingCache";
 import { applyBranding, type BrandingVars } from "@/lib/applyBranding";
 
+/** Públicos que podem ter frases próprias na página inicial. */
+export type HomeHeadlineAudience = "visitor" | "student" | "teacher";
+
+/** Frases da página inicial cadastradas por público (até 3 por público). */
+export type HomeHeadlines = Record<HomeHeadlineAudience, string[]>;
+
 export interface BrandingSettings {
+  /** Frases exibidas em rodízio na página inicial, por público. */
+  home_headlines?: HomeHeadlines;
   platform_name: string;
   slogan: string;
   logo_url: string;

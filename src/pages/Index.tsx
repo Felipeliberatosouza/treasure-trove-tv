@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import Navbar from "@/components/Navbar";
+import HomeHeroProductsFlow from "@/components/home/HomeHeroProductsFlow";
 import FreeTrialBanner from "@/components/FreeTrialBanner";
 import VideoCarousel from "@/components/VideoCarousel";
 import PricingSection from "@/components/PricingSection";

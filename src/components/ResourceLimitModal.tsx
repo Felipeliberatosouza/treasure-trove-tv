@@ -29,6 +29,8 @@ interface Props {
   trialAlreadyUsed?: boolean;
   /** true quando o aluno tem créditos de indicação, mas o conteúdo não aceita créditos. */
   referralBlocked?: boolean;
+  /** Chamado após o teste grátis ser ativado, para a tela liberar o acesso na hora. */
+  onTrialStarted?: () => void;
 }
 
 export default function ResourceLimitModal({
@@ -42,6 +44,7 @@ export default function ResourceLimitModal({
   onBuyIndividual,
   trialAlreadyUsed,
   referralBlocked,
+  onTrialStarted,
 }: Props) {
   const navigate = useNavigate();
   const label = RESOURCE_LABELS[resourceType] || resourceType;
@@ -105,7 +108,10 @@ export default function ResourceLimitModal({
                   setStarting(true);
                   const ok = await trial.startTrial();
                   setStarting(false);
-                  if (ok) onClose();
+                  if (ok) {
+                    onTrialStarted?.();
+                    onClose();
+                  }
                 }}
               >
                 <Gift className="h-4 w-4" />

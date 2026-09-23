@@ -665,6 +665,7 @@ const VideoPage = () => {
           referralBlocked={limitInfo.referralBlocked}
           onBuyIndividual={handleBuyUnit}
           trialAlreadyUsed={!!(trial.trialEnabled && trial.trialRow && !trial.hasActiveTrial)}
+          onTrialStarted={() => { void trial.refetch(); }}
         />
       )}
 

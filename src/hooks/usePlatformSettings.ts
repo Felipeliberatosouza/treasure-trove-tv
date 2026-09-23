@@ -737,6 +737,7 @@ export function usePlatformSettings<K extends keyof SettingsMap>(key: K) {
       console.error("Error fetching setting", key, error);
     } else if (row) {
       setData(row.value as unknown as SettingsMap[K]);
+      writeCachedSetting(key as string, row.value);
     }
     setLoading(false);
   }, [key]);

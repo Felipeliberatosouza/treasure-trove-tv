@@ -148,7 +148,8 @@ const stripPrefix = (value: string) => {
   return found ? value.slice(found.prefix.length) : value;
 };
 
-const HEADLINES = [
+/** Frases padrão da página inicial, usadas quando o administrador não cadastrou as suas. */
+const DEFAULT_HEADLINES = [
   "Qual o assunto da sua próxima prova?",
   "Quer gerar documento Word e slides para um trabalho?",
 ];

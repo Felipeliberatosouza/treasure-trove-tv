@@ -45,6 +45,8 @@ export default function ResourceLimitModal({
 }: Props) {
   const navigate = useNavigate();
   const label = RESOURCE_LABELS[resourceType] || resourceType;
+  const trial = useFreeTrial();
+  const [starting, setStarting] = useState(false);
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>

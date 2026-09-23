@@ -89,11 +89,67 @@ const Dots = () => (
   </span>
 );
 
-const CHIPS = [
-  { label: "Criar resumo", icon: BookOpen },
-  { label: "Criar simulado", icon: FileQuestion },
-  { label: "Top Questões", icon: ListChecks },
-  { label: "Criar colinha", icon: StickyNote },
+type ToolKey = "resumo" | "simulado" | "top_questoes" | "colinha" | "trabalho";
+
+interface ToolChip {
+  key: ToolKey;
+  label: string;
+  icon: typeof BookOpen;
+  /** Texto que abre a caixa de digitação quando a ferramenta é escolhida. */
+  prefix: string;
+  placeholder: string;
+}
+
+const CHIPS: ToolChip[] = [
+  {
+    key: "resumo",
+    label: "Criar resumo",
+    icon: BookOpen,
+    prefix: "Criar resumo sobre ",
+    placeholder: "Digite o assunto do resumo que você precisa...",
+  },
+  {
+    key: "simulado",
+    label: "Criar simulado",
+    icon: FileQuestion,
+    prefix: "Criar simulado sobre ",
+    placeholder: "Digite o assunto do simulado que você quer praticar...",
+  },
+  {
+    key: "top_questoes",
+    label: "Top Questões",
+    icon: ListChecks,
+    prefix: "Top Questões sobre ",
+    placeholder: "Digite o assunto das Top Questões que você quer ver...",
+  },
+  {
+    key: "colinha",
+    label: "Criar colinha",
+    icon: StickyNote,
+    prefix: "Criar colinha sobre ",
+    placeholder: "Digite o assunto da colinha de última hora...",
+  },
+  {
+    key: "trabalho",
+    label: "Criar Word e Slides de Trabalho",
+    icon: FileType2,
+    prefix: "Criar documento Word e slides de trabalho sobre ",
+    placeholder: "Digite o tema do trabalho, a disciplina e o que precisa conter...",
+  },
+];
+
+const DEFAULT_PLACEHOLDER =
+  "Digite o assunto, a disciplina ou os tópicos da sua prova ou trabalho que precisa fazer....";
+
+/** Remove o texto de abertura de outra ferramenta antes de aplicar a escolhida. */
+const stripPrefix = (value: string) => {
+  const found = CHIPS.find((c) => value.toLowerCase().startsWith(c.prefix.toLowerCase()));
+  return found ? value.slice(found.prefix.length) : value;
+};
+
+const HEADLINES = [
+  "Qual o assunto da sua próxima prova?",
+  "Quer gerar documento Word e slides para um trabalho?",
 ];
 
 /** Guarda o pedido em andamento para o usuário não perder o que digitou ao fazer login. */

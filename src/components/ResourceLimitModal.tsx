@@ -44,6 +44,7 @@ export default function ResourceLimitModal({
   onBuyIndividual,
   trialAlreadyUsed,
   referralBlocked,
+  onTrialStarted,
 }: Props) {
   const navigate = useNavigate();
   const label = RESOURCE_LABELS[resourceType] || resourceType;

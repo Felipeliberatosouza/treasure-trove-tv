@@ -129,7 +129,7 @@ export default function ResourceLimitModal({
 
           <InviteFriendsPanel
             variant="compact"
-            eyebrow="Ganhe mais acessos sem pagar"
+            eyebrow="Indique amigos: Créditos de IA + Cashback"
           />
         </div>
       </DialogContent>

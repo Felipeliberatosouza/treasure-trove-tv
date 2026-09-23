@@ -12,7 +12,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAllPlatformSettings, type AlertBoxSettings, DEFAULT_ALERT_BOX_SETTINGS } from "@/hooks/usePlatformSettings";
-import ReferralStatusPanel from "./ReferralStatusPanel";
+import MyReferralsPanel from "@/components/referral/MyReferralsPanel";
 import FreeCreditsPanel from "./FreeCreditsPanel";
 
 const fmt = (n: number) =>
@@ -262,7 +262,7 @@ const StudentCashbackTab = () => {
 
       </Card>
 
-      <ReferralStatusPanel />
+      <MyReferralsPanel />
 
       <FreeCreditsPanel />
 

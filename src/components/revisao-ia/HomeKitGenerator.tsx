@@ -307,8 +307,8 @@ const HomeKitGenerator = () => {
             <>
               <h2 className="text-xl font-bold">Crie sua conta para continuar</h2>
               <p className="text-sm text-muted-foreground">
-                Você já usou sua revisão gratuita. Ao criar a conta você ganha 2 Créditos de IA,
-                sem cartão e sem assinatura.
+                Você já usou seus créditos gratuitos. Crie sua conta e ganhe mais créditos
+                gratuitos, sem cartão e sem assinatura.
               </p>
               <div className="flex flex-wrap justify-center gap-2">
                 <Button onClick={() => navigate("/signup/student")}>Criar conta grátis</Button>
@@ -329,7 +329,7 @@ const HomeKitGenerator = () => {
               </div>
             </>
           )}
-          <InviteFriendsPanel variant="compact" eyebrow="Ganhe cashback indicando amigos" />
+          <InviteFriendsPanel variant="compact" eyebrow="Indique amigos: Créditos de IA + Cashback" />
         </CardContent>
       </Card>
     );

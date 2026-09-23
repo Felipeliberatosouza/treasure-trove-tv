@@ -200,9 +200,7 @@ const FreeTrialBanner = () => {
                 Experimente grátis!
               </h3>
               <p className="mt-1 text-sm text-muted-foreground max-w-md">
-                {trial.trialType === "days"
-                  ? "Teste a plataforma por alguns dias sem compromisso. Acesse revisões, resumos, simulados e muito mais."
-                  : "Acesse gratuitamente alguns conteúdos (revisões, resumos, simulados, top questões e colinhas) e descubra como a Revisão Fácil pode te ajudar."}
+                Acesse gratuitamente e descubra como a Revisão Fácil pode te ajudar!
               </p>
             </div>
           </div>

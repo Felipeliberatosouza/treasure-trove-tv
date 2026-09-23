@@ -141,6 +141,13 @@
       "when": 1790193485584,
       "tag": "0019_support_agent",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1790193668872,
+      "tag": "0020_support_faqs_public_read",
+      "breakpoints": true
     }
   ]
 }

@@ -20,3 +20,6 @@
 - [x] Faixas de desconto por número de indicações (admin Cashback) + aviso ao aluno na tela de convite
 
 - [x] Frases iniciais da home editáveis no admin (até 3) e separadas por público: visitante, aluno e professor
+
+- [x] Atendente virtual (WhatsApp) com transferência para equipe e perguntas editáveis no admin
+- [ ] Link "Dúvidas? Tire suas dúvidas aqui!" na home abrindo pop-up com o FAQ (atualiza com o admin)

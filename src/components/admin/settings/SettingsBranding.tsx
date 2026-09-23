@@ -10,6 +10,25 @@ import { Switch } from "@/components/ui/switch";
 import { Save, Upload, X, Image, Download } from "lucide-react";
 
 
+/** Frases padrão da página inicial (usadas quando nada foi cadastrado). */
+const FRASES_PADRAO = [
+  "Qual o assunto da sua próxima prova?",
+  "Quer gerar documento Word e slides para um trabalho?",
+  "",
+];
+
+const PUBLICOS: { key: HomeHeadlineAudience; label: string; hint: string }[] = [
+  { key: "visitor", label: "Visitante (sem login)", hint: "Quem ainda não entrou na conta." },
+  { key: "student", label: "Aluno", hint: "Quem está logado como aluno." },
+  { key: "teacher", label: "Professor", hint: "Quem está logado como professor." },
+];
+
+const normalizeHeadlines = (value?: HomeHeadlines): HomeHeadlines => ({
+  visitor: [0, 1, 2].map((i) => value?.visitor?.[i] ?? FRASES_PADRAO[i] ?? ""),
+  student: [0, 1, 2].map((i) => value?.student?.[i] ?? FRASES_PADRAO[i] ?? ""),
+  teacher: [0, 1, 2].map((i) => value?.teacher?.[i] ?? FRASES_PADRAO[i] ?? ""),
+});
+
 const SettingsBranding = () => {
   const { data, loading, update } = usePlatformSettings("branding");
   const { upload, uploading } = useStorageUpload("platform-assets");

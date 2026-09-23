@@ -770,7 +770,7 @@ export function usePlatformSettings<K extends keyof SettingsMap>(key: K) {
 }
 
 export function useAllPlatformSettings() {
-  const [settings, setSettings] = useState<Record<string, unknown>>({});
+  const [settings, setSettings] = useState<Record<string, unknown>>(() => readSettingsCache());
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

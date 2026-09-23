@@ -184,7 +184,22 @@ export interface HeroBannerSettings {
   starts_at?: string;
   /** Optional ISO datetime string. When set, the slide stops appearing at this moment. */
   ends_at?: string;
+  /** Secondary banner: full visual customization (all optional). */
+  layout?: BannerLayout;
+  height?: "compact" | "normal" | "tall";
+  badge_text?: string;
+  image_opacity?: number; // 0-100
+  button_style?: "solid" | "outline" | "text" | "none";
+  button_icon?: boolean;
+  button_new_tab?: boolean;
+  bg_color?: string;
+  title_color?: string;
+  subtitle_color?: string;
+  button_bg_color?: string;
+  button_text_color?: string;
 }
+
+export type BannerLayout = "center" | "left" | "right" | "split";
 
 export interface HeroBannerCarouselSettings {
   slides: HeroBannerSettings[];

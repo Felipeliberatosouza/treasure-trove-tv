@@ -82,6 +82,7 @@ const SettingsBranding = () => {
     // Backfill legacy installs that don't yet have the 4 explicit button colors.
     setForm({
       ...data,
+      home_headlines: normalizeHeadlines(data.home_headlines),
       logo_url_dark_bg: data.logo_url_dark_bg || "",
       logo_url_light_bg: data.logo_url_light_bg || "",
       favicon_url: data.favicon_url || "",

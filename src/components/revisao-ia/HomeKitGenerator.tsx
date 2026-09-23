@@ -604,18 +604,25 @@ const HomeKitGenerator = () => {
       {errorMsg && <p className="mt-4 text-sm text-destructive">{errorMsg}</p>}
 
       <div className={`mt-6 flex flex-wrap justify-center gap-2 ${loading ? "pointer-events-none opacity-50" : ""}`}>
-        {CHIPS.map(({ label, icon: Icon }) => (
-          <Button
-            key={label}
-            type="button"
-            variant="outline"
-            className="rounded-full bg-background"
-            onClick={() => setAssunto((v) => (v.trim() ? v : `${label} sobre `))}
-          >
-            <Icon className="h-4 w-4" />
-            {label}
-          </Button>
-        ))}
+        {CHIPS.map((chip) => {
+          const Icon = chip.icon;
+          const active = tool === chip.key;
+          return (
+            <Button
+              key={chip.key}
+              type="button"
+              variant={active ? "default" : "outline"}
+              className={active ? "rounded-full" : "rounded-full bg-background"}
+              onClick={() => {
+                setTool(chip.key);
+                setAssunto((v) => `${chip.prefix}${stripPrefix(v).trimStart()}`);
+              }}
+            >
+              <Icon className="h-4 w-4" />
+              {chip.label}
+            </Button>
+          );
+        })}
       </div>
 
       <p className="mt-5 text-xs text-muted-foreground">

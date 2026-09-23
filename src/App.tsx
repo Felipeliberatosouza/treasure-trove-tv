@@ -29,6 +29,8 @@ import MinhasColinhas from "./pages/MinhasColinhas.tsx";
 import MinhasDuvidas from "./pages/MinhasDuvidas.tsx";
 import MinhasAulasAgendadas from "./pages/MinhasAulasAgendadas.tsx";
 import EstudarIA from "./pages/EstudarIA.tsx";
+import MeusTrabalhos from "./pages/MeusTrabalhos.tsx";
+import TrabalhoIA from "./pages/TrabalhoIA.tsx";
 
 import ConteudoIA from "./pages/ConteudoIA.tsx";
 import ConviteIndicacao from "./pages/ConviteIndicacao.tsx";
@@ -101,6 +103,8 @@ const App = () => (
             <Route path="/revisao-ia" element={<Navigate to="/" replace />} />
             <Route path="/ia" element={<Navigate to="/" replace />} />
             <Route path="/conteudo-ia/:id" element={<ConteudoIA />} />
+            <Route path="/meus-trabalhos" element={<MeusTrabalhos />} />
+            <Route path="/trabalho/:id" element={<TrabalhoIA />} />
             <Route path="/convite/:token" element={<ConviteIndicacao />} />
             <Route path="/estudar-ia" element={<EstudarIA />} />
             <Route path="/video/:id" element={<VideoPage />} />

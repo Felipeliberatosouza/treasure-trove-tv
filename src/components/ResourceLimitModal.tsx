@@ -108,7 +108,10 @@ export default function ResourceLimitModal({
                   setStarting(true);
                   const ok = await trial.startTrial();
                   setStarting(false);
-                  if (ok) onClose();
+                  if (ok) {
+                    onTrialStarted?.();
+                    onClose();
+                  }
                 }}
               >
                 <Gift className="h-4 w-4" />

@@ -178,7 +178,17 @@ const readDraft = (): Partial<KitDraft> => {
 
 const HomeKitGenerator = () => {
   const navigate = useNavigate();
-  const { profile } = useAuth();
+  const { profile, role } = useAuth();
+  const { data: branding } = usePlatformSettings("branding");
+
+  // Frases da página inicial conforme o público (visitante, aluno ou professor).
+  const headlines = useMemo(() => {
+    const audience: HomeHeadlineAudience = role === "teacher" ? "teacher" : role ? "student" : "visitor";
+    const configured = (branding?.home_headlines?.[audience] || [])
+      .map((frase) => (frase || "").trim())
+      .filter(Boolean);
+    return configured.length ? configured : DEFAULT_HEADLINES;
+  }, [branding, role]);
 
   const draft = useRef<Partial<KitDraft>>(readDraft()).current;
   const [assunto, setAssunto] = useState(draft.assunto || "");

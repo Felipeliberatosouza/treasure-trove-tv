@@ -19,4 +19,4 @@
 - [x] Mostrar nome do plano assinado abaixo do nome do usuário no cabeçalho
 - [x] Faixas de desconto por número de indicações (admin Cashback) + aviso ao aluno na tela de convite
 
-- [ ] Frases iniciais da home editáveis no admin (até 3) e separadas por público: visitante, aluno e professor
+- [x] Frases iniciais da home editáveis no admin (até 3) e separadas por público: visitante, aluno e professor

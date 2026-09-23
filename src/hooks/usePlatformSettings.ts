@@ -716,7 +716,11 @@ export const DEFAULT_PRODUCT_CONFIG: ProductConfigSettings = {
 };
 
 export function usePlatformSettings<K extends keyof SettingsMap>(key: K) {
-  const [data, setData] = useState<SettingsMap[K] | null>(null);
+  // Começa com o valor guardado no acesso anterior para que logomarca, cores e
+  // textos já apareçam corretos antes da resposta do backend.
+  const [data, setData] = useState<SettingsMap[K] | null>(
+    () => readCachedSetting<SettingsMap[K]>(key as string),
+  );
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 

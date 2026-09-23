@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { readCachedSetting, readSettingsCache, writeCachedSetting } from "@/lib/brandingCache";
 
 export interface BrandingSettings {
   platform_name: string;

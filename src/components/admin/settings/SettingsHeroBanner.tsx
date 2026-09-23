@@ -466,7 +466,7 @@ const LINK_SUGGESTIONS: [string, string][] = [
   ["Painel do professor", "/painel-professor"],
   ["Cadastro de aluno", "/signup/student"],
   ["Cadastro de professor", "/signup/teacher"],
-  ["Planos", "/#planos"],
+  ["Planos", "/#pricing"],
   ["Créditos de IA", "/creditos-ia"],
   ["Revisões", "/revisoes"],
   ["Contato", "/contato"],

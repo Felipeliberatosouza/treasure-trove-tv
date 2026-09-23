@@ -3,6 +3,7 @@ import Navbar from "@/components/Navbar";
 import FreeTrialBanner from "@/components/FreeTrialBanner";
 import VideoCarousel from "@/components/VideoCarousel";
 import PricingSection from "@/components/PricingSection";
+import FaqLink from "@/components/support/FaqLink";
 import Footer from "@/components/Footer";
 import WhatsAppFloat from "@/components/WhatsAppFloat";
 import SecondaryBanner from "@/components/SecondaryBanner";
@@ -577,6 +578,7 @@ const Index = () => {
       )}
       {!isTeacher && <InviteFriendsPanel />}
       <SecondaryBanner />
+      <FaqLink />
       <Footer />
       <WhatsAppFloat />
     </div>

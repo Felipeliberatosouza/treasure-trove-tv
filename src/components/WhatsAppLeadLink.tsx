@@ -6,6 +6,8 @@ import PhoneInput, { isValidBrazilianPhone } from "@/components/PhoneInput";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { useAllPlatformSettings } from "@/hooks/usePlatformSettings";
+import SupportChat from "@/components/support/SupportChat";
 
 const LEAD_KEY = "rf_whatsapp_lead";
 
@@ -36,7 +38,10 @@ interface WhatsAppLeadLinkProps {
  * pedindo nome, e-mail e celular (gerando um lead) antes de redirecionar.
  */
 const WhatsAppLeadLink = ({ href, className, ariaLabel, children, source = "whatsapp" }: WhatsAppLeadLinkProps) => {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
+  const { settings } = useAllPlatformSettings();
+  const agentEnabled = ((settings as Record<string, unknown>).support_agent as { enabled?: boolean } | undefined)?.enabled !== false;
+  const [chatOpen, setChatOpen] = useState(false);
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -71,8 +76,17 @@ const WhatsAppLeadLink = ({ href, className, ariaLabel, children, source = "what
   };
 
   const handleClick = (e: React.MouseEvent) => {
-    if (user) return; // logado: segue o link normalmente
+    if (user && !agentEnabled) return; // logado sem atendimento: segue o link
     e.preventDefault();
+    if (user) {
+      setChatOpen(true);
+      return;
+    }
+    const stored = readStoredLead();
+    if (agentEnabled && stored.name && stored.email && stored.phone) {
+      setChatOpen(true);
+      return;
+    }
     setOpen(true);
   };
 
@@ -105,7 +119,8 @@ const WhatsAppLeadLink = ({ href, className, ariaLabel, children, source = "what
       /* ignore */
     }
     setOpen(false);
-    openWhatsApp();
+    if (agentEnabled) setChatOpen(true);
+    else openWhatsApp();
   };
 
   return (
@@ -126,7 +141,7 @@ const WhatsAppLeadLink = ({ href, className, ariaLabel, children, source = "what
           <DialogHeader>
             <DialogTitle>Fale com a gente pelo WhatsApp</DialogTitle>
             <DialogDescription>
-              Informe seus dados para continuarmos o atendimento. Em seguida você será levado ao WhatsApp.
+              Informe seus dados para iniciarmos o seu atendimento.
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-3">
@@ -147,11 +162,23 @@ const WhatsAppLeadLink = ({ href, className, ariaLabel, children, source = "what
             />
             <PhoneInput ref={phoneRef} value={phone} onChange={setPhone} placeholder="Celular (WhatsApp) *" required />
             <Button type="submit" className="w-full" disabled={saving}>
-              {saving ? "Enviando..." : "Ir para o WhatsApp"}
+              {saving ? "Enviando..." : agentEnabled ? "Iniciar atendimento" : "Ir para o WhatsApp"}
             </Button>
           </form>
         </DialogContent>
       </Dialog>
+      {chatOpen && (
+        <SupportChat
+          open={chatOpen}
+          onOpenChange={setChatOpen}
+          whatsappHref={href}
+          lead={
+            user
+              ? { name: profile?.name ?? "", email: profile?.email ?? user.email ?? "", phone: profile?.phone ?? "" }
+              : readStoredLead()
+          }
+        />
+      )}
     </>
   );
 };

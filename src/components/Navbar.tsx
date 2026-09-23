@@ -29,6 +29,7 @@ type AlertKey =
   | "adminPendingDoubts"
   | "adminExpiringSubscriptions"
   | "adminPendingProfileChanges"
+  | "adminPendingSupport"
   | "studentAnsweredDoubts"
   | "studentScheduledToday";
 
@@ -81,6 +82,7 @@ const adminMenuItems: MenuItem[] = [
   { label: "Aprovação de Conteúdos", shortLabel: "Ap. Conteúdos", href: "/dashboard/admin?tab=content", alertKey: "adminPendingContent" },
   { label: "Aprovação de Dúvidas", shortLabel: "Ap. Dúvidas", href: "/dashboard/admin?tab=doubts", alertKey: "adminPendingDoubts" },
   { label: "Aprovação de Páginas de Professores", shortLabel: "Ap. Páginas", href: "/dashboard/admin?tab=profile-approvals", alertKey: "adminPendingProfileChanges" },
+  { label: "Atendimento Virtual (novas perguntas)", shortLabel: "Atendimento", href: "/dashboard/admin?tab=support-agent", alertKey: "adminPendingSupport" },
   { label: "Pagamento de Professores", shortLabel: "Pagamentos", href: "/dashboard/admin?tab=compensation" },
   { label: "Vencimento de Assinaturas", shortLabel: "Vencimentos", href: "/dashboard/admin?tab=subscriptions", alertKey: "adminExpiringSubscriptions" },
   { label: "Monitoramento de E-mails", shortLabel: "E-mails", href: "/dashboard/admin?tab=emails" },
@@ -177,6 +179,8 @@ const Navbar = () => {
         return adminAlerts.expiringSubscriptions;
       case "adminPendingProfileChanges":
         return adminAlerts.pendingProfileChanges;
+      case "adminPendingSupport":
+        return adminAlerts.pendingSupport;
       case "studentAnsweredDoubts":
         return studentAlerts.answeredDoubts;
       case "studentScheduledToday":

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { GraduationCap, FileText, Target, Scale, Landmark, ArrowRight, Check } from "lucide-react";
+import { GraduationCap, FileText, Target, Scale, Landmark, ArrowRight, Check, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -41,6 +41,15 @@ const PRODUCTS: Product[] = [
     description: "Estude pelas quatro áreas do exame com foco no que mais cai.",
     items: ["Linguagens, Humanas, Natureza e Matemática", "Simulados por área", "Orientações para a redação"],
     cta: "Estudar para o ENEM",
+  },
+  {
+    key: "vestibulares",
+    label: "Vestibulares",
+    icon: BookOpen,
+    title: "Vestibulares",
+    description: "Revisão para os principais vestibulares do país, com foco no conteúdo que mais cai.",
+    items: ["Fuvest, Unicamp, Unesp e outros", "Questões comentadas de provas anteriores", "Resumos por disciplina"],
+    cta: "Estudar para vestibulares",
   },
   {
     key: "oab",
@@ -123,27 +132,6 @@ export default function HomeHeroProductsFlow() {
             </ul>
           </motion.div>
         </AnimatePresence>
-
-        <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-5">
-          {PRODUCTS.map((p) => {
-            const Icon = p.icon;
-            const selected = p.key === active;
-            return (
-              <button
-                key={p.key}
-                onClick={() => setActive(p.key)}
-                className={cn(
-                  "rounded-xl border p-4 text-left transition-all hover:-translate-y-0.5",
-                  selected ? "border-primary bg-primary/10" : "border-border bg-card hover:border-primary/50",
-                )}
-              >
-                <Icon className="h-5 w-5 text-primary" />
-                <p className="mt-2 font-semibold">{p.label}</p>
-                <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{p.description}</p>
-              </button>
-            );
-          })}
-        </div>
       </div>
     </section>
   );

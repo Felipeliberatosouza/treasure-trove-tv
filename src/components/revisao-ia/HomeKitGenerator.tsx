@@ -441,9 +441,9 @@ const HomeKitGenerator = () => {
       <h1 id="revision-ai-title" className="font-display text-3xl font-bold md:text-5xl">
         {(() => {
           const frase = headlines[headlineIndex] ?? headlines[0] ?? DEFAULT_HEADLINES[0];
-          // Chama o usuário pelo nome na primeira frase, quando ela termina em pergunta.
-          if (headlineIndex === 0 && firstName && frase.endsWith("?")) {
-            return `${frase.slice(0, -1)}, ${firstName}?`;
+          // Usuário logado: chama pelo nome em todas as frases que terminam em pergunta.
+          if (user && firstName && frase.trim().endsWith("?")) {
+            return `${frase.trim().slice(0, -1).replace(/,\s*$/, "")}, ${firstName}?`;
           }
           return frase;
         })()}

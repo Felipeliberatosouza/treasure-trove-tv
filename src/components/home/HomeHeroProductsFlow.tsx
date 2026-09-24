@@ -113,7 +113,7 @@ export default function HomeHeroProductsFlow() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.2 }}
-            className="mt-6 grid gap-6 rounded-2xl border border-border bg-card p-6 md:grid-cols-[1.2fr_1fr] md:p-8"
+            className="mt-6 rounded-2xl border border-border bg-card p-6 md:p-8"
           >
             <div className="text-left">
               <h2 className="font-display text-2xl font-bold md:text-3xl">{current.title}</h2>
@@ -122,14 +122,6 @@ export default function HomeHeroProductsFlow() {
                 {current.cta} <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </div>
-            <ul className="space-y-3 text-left">
-              {current.items.map((item) => (
-                <li key={item} className="flex items-start gap-3 rounded-xl bg-muted/50 p-3 text-sm">
-                  <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                  {item}
-                </li>
-              ))}
-            </ul>
           </motion.div>
         </AnimatePresence>
       </div>

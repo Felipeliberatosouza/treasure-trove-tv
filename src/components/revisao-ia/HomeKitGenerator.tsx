@@ -442,7 +442,7 @@ const HomeKitGenerator = () => {
         {(() => {
           const frase = headlines[headlineIndex] ?? headlines[0] ?? DEFAULT_HEADLINES[0];
           // Usuário logado: chama pelo nome em todas as frases que terminam em pergunta.
-          if (user && firstName && frase.trim().endsWith("?")) {
+          if (profile && firstName && frase.trim().endsWith("?")) {
             return `${frase.trim().slice(0, -1).replace(/,\s*$/, "")}, ${firstName}?`;
           }
           return frase;

@@ -203,31 +203,34 @@ async function handle(req: Request, body: any): Promise<{ status: number; payloa
       };
     }
 
-    let content: any = cached?.content ?? null;
-    let reused = Boolean(content);
-    if (!content) {
-      try {
-        content = await callGateway(
-          SYSTEM,
-          `Produza um trabalho acadêmico completo.
-Tema: ${tema}
+    // Nunca entrega o mesmo texto a dois alunos (evita plágio). Um trabalho anterior
+    // do mesmo tema serve só como referência de pesquisa; a IA escreve uma versão nova.
+    const reused = Boolean(cached?.content);
+    const pedidoBase = `Tema: ${tema}
 Disciplina: ${disciplina || "não informada"}
 Curso/nível: ${curso || "não informado"}
 Instituição: ${instituicao || "não informada"}
 Formato pedido: ${tipo === "word" ? "somente documento" : tipo === "slides" ? "somente slides" : "documento e slides"}
-Produza de 4 a 6 seções no documento e de 7 a 10 slides.`,
-        );
-      } catch (e) {
-        // Estorna o Crédito de IA quando a geração falha.
-        const credits = await ensureCredits();
-        const back = (credits.balance ?? 0) + pricing.credits_generation;
-        await admin.from("ai_revision_credits").update({ balance: back }).eq("user_id", userId!);
-        await admin.from("ai_revision_credit_ledger").insert({
-          user_id: userId!, delta: pricing.credits_generation, reason: "work_refund", balance_after: back,
-        });
-        return { status: 500, payload: { error: (e as Error).message } };
-      }
-      reused = false;
+Produza de 4 a 6 seções no documento e de 7 a 10 slides.`;
+    const prompt = reused
+      ? `Produza um trabalho acadêmico ORIGINAL e exclusivo para este aluno.
+${pedidoBase}
+Abaixo há um material anterior sobre o mesmo tema, apenas como referência de conteúdo.
+Regras obrigatórias: não copie frases; reescreva com palavras, estrutura, título, ordem das seções, exemplos e introdução/conclusão diferentes; nenhum parágrafo pode ser parecido com o da referência.
+Referência (não copiar): ${JSON.stringify(cached!.content).slice(0, 12000)}`
+      : `Produza um trabalho acadêmico completo e original.\n${pedidoBase}`;
+    let content: any = null;
+    try {
+      content = await callGateway(SYSTEM, prompt);
+    } catch (e) {
+      // Estorna o Crédito de IA quando a geração falha.
+      const credits = await ensureCredits();
+      const back = (credits.balance ?? 0) + pricing.credits_generation;
+      await admin.from("ai_revision_credits").update({ balance: back }).eq("user_id", userId!);
+      await admin.from("ai_revision_credit_ledger").insert({
+        user_id: userId!, delta: pricing.credits_generation, reason: "work_refund", balance_after: back,
+      });
+      return { status: 500, payload: { error: (e as Error).message } };
     }
 
     const { data: inserted, error } = await admin
@@ -243,7 +246,7 @@ Produza de 4 a 6 seções no documento e de 7 a 10 slides.`,
         instituicao,
         content,
         credits_spent: pricing.credits_generation,
-        provider_cost: reused ? 0 : pricing.provider_cost_generation,
+        provider_cost: pricing.provider_cost_generation,
         reused,
       })
       .select("id")

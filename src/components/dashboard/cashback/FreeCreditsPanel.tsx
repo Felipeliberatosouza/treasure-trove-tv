@@ -30,7 +30,7 @@ const fmtDate = (d: string | null) =>
 
 /** Detalhe dos créditos gratuitos ganhos por indicação e acompanhamento dos convites. */
 const FreeCreditsPanel = () => {
-  const { rows, aiCredits, aiBreakdown, invites, loading, reload, totalRemaining } =
+  const { rows, aiCredits, aiBreakdown, invites, loading, reload, totalRemaining, bugReportsSent } =
     useReferralCredits();
   const [editing, setEditing] = useState<ReferralInvite | null>(null);
   const [email, setEmail] = useState("");
@@ -133,6 +133,15 @@ const FreeCreditsPanel = () => {
               </div>
               <Badge variant="secondary">{aiBreakdown.purchased}</Badge>
             </div>
+            <div className="flex items-center justify-between rounded-lg border p-3">
+              <div>
+                <p className="text-sm font-medium">Créditos de IA Ganhos por Reporte de Erros</p>
+                <p className="text-xs text-muted-foreground">
+                  Recebidos por avisar erros durante a Versão Beta · {bugReportsSent} reporte(s) enviado(s)
+                </p>
+              </div>
+              <Badge variant="secondary">{aiBreakdown.bugReport}</Badge>
+            </div>
             {aiBreakdown.signup > 0 && (
               <div className="flex items-center justify-between rounded-lg border p-3">
                 <div>
@@ -174,7 +183,7 @@ const FreeCreditsPanel = () => {
               </div>
             )}
             <p className="text-xs text-muted-foreground px-1">
-              Total recebido: {aiBreakdown.referral + aiBreakdown.purchased + aiBreakdown.bonus} • Já
+              Total recebido: {aiBreakdown.referral + aiBreakdown.purchased + aiBreakdown.bonus + aiBreakdown.bugReport} • Já
               utilizados: {aiBreakdown.used} • Saldo atual: {aiCredits}
             </p>
           </div>

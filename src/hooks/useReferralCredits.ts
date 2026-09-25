@@ -42,6 +42,8 @@ export interface AiCreditsBreakdown {
   plan: number;
   admin: number;
   used: number;
+  /** Créditos de IA ganhos por reporte de erros na Versão Beta. */
+  bugReport: number;
 }
 
 export function useReferralCredits() {
@@ -57,7 +59,9 @@ export function useReferralCredits() {
     plan: 0,
     admin: 0,
     used: 0,
+    bugReport: 0,
   });
+  const [bugReportsSent, setBugReportsSent] = useState(0);
   const [invites, setInvites] = useState<ReferralInvite[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -75,7 +79,7 @@ export function useReferralCredits() {
       return;
     }
     setLoading(true);
-    const [credits, ai, inviteRows, ledger] = await Promise.all([
+    const [credits, ai, inviteRows, ledger, bugs] = await Promise.all([
       supabase
         .from("referral_content_credits")
         .select("resource_type, granted, used")
@@ -89,6 +93,11 @@ export function useReferralCredits() {
         .from("ai_revision_credit_ledger")
         .select("delta, reason")
         .eq("user_id", user.id),
+      supabase
+        .from("beta_bug_reports")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", user.id)
+        .eq("origin", "usuario"),
     ]);
 
     setRows(
@@ -112,12 +121,16 @@ export function useReferralCredits() {
       plan: 0,
       admin: 0,
       used: 0,
+      bugReport: 0,
     };
+    setBugReportsSent(bugs.count ?? 0);
     for (const e of ledger.data ?? []) {
       const delta = Number(e.delta ?? 0);
       const reason = String(e.reason ?? "");
       if (delta < 0) {
         bd.used += -delta;
+      } else if (reason.startsWith("bug_report")) {
+        bd.bugReport += delta;
       } else if (reason.startsWith("referral")) {
         bd.referral += delta;
       } else if (reason.startsWith("purchase")) {
@@ -147,5 +160,5 @@ export function useReferralCredits() {
 
   const totalRemaining = rows.reduce((sum, r) => sum + r.remaining, 0);
 
-  return { rows, aiCredits, aiBreakdown, invites, loading, reload, totalRemaining };
+  return { rows, aiCredits, aiBreakdown, invites, loading, reload, totalRemaining, bugReportsSent };
 }

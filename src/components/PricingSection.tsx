@@ -113,7 +113,7 @@ const PricingSection = ({ productKey }: { productKey?: string } = {}) => {
       if (data?.length || productKey) setPlans((data || []) as unknown as PlanData[]);
     };
     fetchPlans();
-  }, [user]);
+  }, [user, productKey]);
 
   const { requireCpf, showCpfModal, setShowCpfModal, onCpfComplete } = useCpfGuard();
 

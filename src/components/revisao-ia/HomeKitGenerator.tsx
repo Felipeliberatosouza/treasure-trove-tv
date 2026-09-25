@@ -23,6 +23,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { usePlatformSettings, type HomeHeadlineAudience } from "@/hooks/usePlatformSettings";
 import { cancelKit, requestKit } from "@/lib/revisionKit";
+import { useProducts, activeSubproducts, type Subproduct } from "@/hooks/useProducts";
 import { requestWork } from "@/lib/workDocument";
 import InviteFriendsPanel from "@/components/referral/InviteFriendsPanel";
 
@@ -413,6 +414,27 @@ const HomeKitGenerator = ({ productKey, productExtra, fixedHeadline, badgeText, 
   }, [loading, headlines]);
 
   const activeChip = CHIPS.find((c) => c.key === tool) ?? null;
+  const allProducts = useProducts();
+  const subChips = activeSubproducts(allProducts.find((p) => p.key === productKey));
+  const [activeSub, setActiveSub] = useState<string | null>(null);
+  const subPrefixRef = useRef("");
+  const pickSub = (sub: Subproduct) => {
+    if (sub.kind === "link") {
+      const href = sub.href || "/";
+      if (href.includes("#")) window.location.href = href;
+      else navigate(href);
+      return;
+    }
+    const prefix = `${sub.name} sobre `;
+    setActiveSub(sub.key);
+    setTool(sub.tool && sub.tool !== "revisao" ? sub.tool : null);
+    setAssunto((v) => {
+      let base = stripPrefix(v);
+      if (subPrefixRef.current && base.startsWith(subPrefixRef.current)) base = base.slice(subPrefixRef.current.length);
+      subPrefixRef.current = prefix;
+      return `${prefix}${base.trimStart()}`;
+    });
+  };
 
 
   if (blocked) {
@@ -644,7 +666,17 @@ const HomeKitGenerator = ({ productKey, productExtra, fixedHeadline, badgeText, 
       {errorMsg && <p className="mt-4 text-sm text-destructive">{errorMsg}</p>}
 
       <div className={`mt-6 flex flex-wrap justify-center gap-2 ${loading ? "pointer-events-none opacity-50" : ""}`}>
-        {CHIPS.map((chip) => {
+        {subChips.length > 0 ? subChips.map((sub) => (
+          <Button
+            key={sub.key}
+            type="button"
+            variant={activeSub === sub.key ? "default" : "outline"}
+            className={activeSub === sub.key ? "rounded-full" : "rounded-full bg-background"}
+            onClick={() => pickSub(sub)}
+          >
+            {sub.name}
+          </Button>
+        )) : CHIPS.map((chip) => {
           const Icon = chip.icon;
           const active = tool === chip.key;
           return (

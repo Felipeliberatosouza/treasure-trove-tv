@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
+import { useProducts } from "@/hooks/useProducts";
 import { useAllPlatformSettings } from "@/hooks/usePlatformSettings";
 import type {
   ContactSettings,
@@ -43,8 +45,14 @@ const Footer = () => {
       ? Math.max(8, Math.min(18, (logoWidth / slogan.length) * 1.7))
       : 11;
 
+  const footerProducts = useProducts();
   return (
     <footer className="border-t border-border px-6 py-10 md:px-12 lg:px-20">
+      <nav aria-label="Produtos" className="mx-auto mb-6 flex max-w-6xl flex-wrap justify-center gap-x-5 gap-y-2 text-sm text-muted-foreground">
+        {footerProducts.map((p) => (
+          <Link key={p.key} to={`/${p.key}`} className="hover:text-foreground">{p.name}</Link>
+        ))}
+      </nav>
       <div className="mx-auto flex max-w-6xl flex-col items-center gap-6 md:flex-row md:justify-between">
         <div className="flex flex-col items-center gap-0 leading-none">
           {(() => {

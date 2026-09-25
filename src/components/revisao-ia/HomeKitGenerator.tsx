@@ -177,7 +177,16 @@ const readDraft = (): Partial<KitDraft> => {
   }
 };
 
-const HomeKitGenerator = () => {
+type HomeKitGeneratorProps = {
+  /** Produto da página (enem, oab…). Ausente = página inicial (Provas). */
+  productKey?: string;
+  /** Contexto extra do produto: área, fase, banca, cargo… */
+  productExtra?: string;
+  /** Título fixo (página de produto), substitui as frases alternadas. */
+  fixedHeadline?: string;
+};
+
+const HomeKitGenerator = ({ productKey, productExtra, fixedHeadline }: HomeKitGeneratorProps = {}) => {
   const navigate = useNavigate();
   const { profile, role } = useAuth();
   const { data: branding } = usePlatformSettings("branding");
@@ -331,6 +340,8 @@ const HomeKitGenerator = () => {
       exam_date: examDate || undefined,
       nivel,
       idempotency_key: idempotencyKey,
+      product_key: productKey,
+      product_extra: productExtra?.trim() || undefined,
     });
     // Pedido cancelado ou substituído por uma nova mensagem: ignora este resultado.
     if (runIdRef.current !== runId) return;
@@ -440,7 +451,7 @@ const HomeKitGenerator = () => {
       </div>
       <h1 id="revision-ai-title" className="font-display text-3xl font-bold md:text-5xl">
         {(() => {
-          const frase = headlines[headlineIndex] ?? headlines[0] ?? DEFAULT_HEADLINES[0];
+          const frase = fixedHeadline || (headlines[headlineIndex] ?? headlines[0] ?? DEFAULT_HEADLINES[0]);
           // Usuário logado: chama pelo nome em todas as frases que terminam em pergunta.
           if (profile && firstName && frase.trim().endsWith("?")) {
             return `${frase.trim().slice(0, -1).replace(/,\s*$/, "")}, ${firstName}?`;

@@ -174,6 +174,8 @@ export async function requestKit(input: {
   exam_date?: string;
   nivel?: "rapido" | "aprofundado";
   idempotency_key: string;
+  product_key?: string;
+  product_extra?: string;
 }): Promise<{ data?: KitResponse; error?: KitError }> {
   const { ok, payload } = await callFn({ action: "generate", ...input });
   if (ok) return { data: payload as KitResponse };

@@ -1861,6 +1861,7 @@ export type Database = {
           name: string
           page_intro: string
           sort_order: number
+          subproducts: Json
           title: string
           updated_at: string
         }
@@ -1876,6 +1877,7 @@ export type Database = {
           name: string
           page_intro?: string
           sort_order?: number
+          subproducts?: Json
           title?: string
           updated_at?: string
         }
@@ -1891,6 +1893,7 @@ export type Database = {
           name?: string
           page_intro?: string
           sort_order?: number
+          subproducts?: Json
           title?: string
           updated_at?: string
         }

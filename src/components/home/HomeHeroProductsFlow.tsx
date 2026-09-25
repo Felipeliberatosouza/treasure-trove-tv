@@ -42,14 +42,14 @@ export default function HomeHeroProductsFlow({ products, activeKey, onSelect, hi
             );
           })}
         </div>
-        <div className="mt-3 text-center">
+        {!hideLink && <div className="mt-3 text-center">
           <Link
             to={`/${current.key}`}
             className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
           >
             {current.cta} <ArrowRight className="h-4 w-4" />
           </Link>
-        </div>
+        </div>}
       </div>
     </section>
   );

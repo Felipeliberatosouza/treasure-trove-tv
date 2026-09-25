@@ -16,13 +16,13 @@ type EndedPlan = { name: string; price: number; stripe_price_id: string | null }
  */
 export default function BetaEndedNotice() {
   const { user, role } = useAuth();
-  const { settings, loading } = useBetaMode() as any;
+  const { beta: betaOn, loaded } = useBetaMode();
+  const loading = !loaded;
   const { isActive, loading: subLoading } = useActiveSubscription();
   const [plan, setPlan] = useState<EndedPlan | null>(null);
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
   const { pathname } = useLocation();
-  const betaOn = !!settings?.enabled;
 
   useEffect(() => {
     if (!user || role !== "student" || loading || betaOn || subLoading || isActive) {

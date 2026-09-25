@@ -82,7 +82,7 @@ const Index = () => {
     const fetchAiKits = async () => {
       const { data } = await supabase
         .from("ai_canonical_contents")
-        .select("id, assunto, disciplina, areas, kit, updated_at")
+        .select("id, assunto, disciplina, areas, kit, updated_at, product_keys")
         .eq("status", "ready")
         .eq("visibility", "public_canonical")
         .order("updated_at", { ascending: false })
@@ -103,6 +103,7 @@ const Index = () => {
           category: ((row.areas as string[] | null) || [])[0] || row.disciplina || "Revisão com IA",
           instructor: aiInstructorLabel(avatar.gender, avatar.name),
           overlayLabel: aiOverlayLabel(avatar.gender, avatar.name),
+          productKeys: ((row as any).product_keys as string[] | null) || [],
           lessons: Array.isArray(kit.slides) ? kit.slides.length : 0,
         };
       });
@@ -285,6 +286,7 @@ const Index = () => {
             category: (l.areas as string[] || [])[0] || "",
             instructor: teacherInstructorLabel(teacher?.name),
             overlayLabel: teacherOverlayLabel(teacher?.name),
+            productKeys: (l.product_keys as string[] | null) || [],
             instructorHref: teacher?.slug ? `/${teacher.slug}` : undefined,
             lessons: 1,
             level: "Iniciante" as const,

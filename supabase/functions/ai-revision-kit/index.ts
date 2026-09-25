@@ -350,7 +350,39 @@ async function handleRequest(req: Request, body: any): Promise<Response> {
       return json({ error: "Descreva o assunto da prova (entre 3 e 500 caracteres)." }, 400);
     }
     const PRODUCT_LABELS: Record<string, string> = { enem: "ENEM", vestibulares: "Vestibular", oab: "Exame da OAB", concursos: "Concurso Público" };
-    const productKey = typeof body.product_key === "string" && /^[a-z_]{2,30}$/.test(body.product_key) ? body.product_key : "provas";
+    let productKey = typeof body.product_key === "string" && /^[a-z_]{2,30}$/.test(body.product_key) ? body.product_key : "provas";
+    // Detecção automática da frente (ENEM, Vestibular, OAB, Concursos) quando o
+    // aluno não escolheu uma: pelo texto do pedido e por conteúdos já existentes.
+    if (productKey === "provas" || productKey === "trabalhos") {
+      const txt = [body.assunto, body.product_extra, body.disciplina, body.curso, body.instituicao]
+        .map((v) => String(v || "")).join(" ").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      const rules: [string, RegExp][] = [
+        ["oab", /\b(oab|ordem dos advogados|exame de ordem|fgv oab)\b/],
+        ["enem", /\b(enem|exame nacional do ensino medio)\b/],
+        ["concursos", /\b(concurso|concursos|concurseiro|cespe|cebraspe|fcc|vunesp|edital|cargo publico)\b/],
+        ["vestibulares", /\b(vestibular|vestibulares|fuvest|unicamp|comvest|vunesp vestibular|ufrgs|uerj)\b/],
+      ];
+      const hit = rules.find(([, re]) => re.test(txt));
+      if (hit) productKey = hit[0];
+      else if (productKey === "provas") {
+        try {
+          const assuntoQ = String(body.assunto || "").trim().slice(0, 120).replace(/[%_,()]/g, " ");
+          if (assuntoQ.length >= 4) {
+            const admin0 = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+            const [a, l] = await Promise.all([
+              admin0.from("ai_canonical_contents").select("product_keys").ilike("assunto", `%${assuntoQ}%`).limit(10),
+              admin0.from("lessons").select("product_keys").ilike("title", `%${assuntoQ}%`).limit(10),
+            ]);
+            const counts: Record<string, number> = {};
+            for (const r of [...(a.data || []), ...(l.data || [])] as { product_keys: string[] | null }[]) {
+              for (const k of r.product_keys || []) if (["oab", "enem", "concursos", "vestibulares"].includes(k)) counts[k] = (counts[k] || 0) + 1;
+            }
+            const best = Object.entries(counts).sort((x, y) => y[1] - x[1])[0];
+            if (best && best[1] >= 2) productKey = best[0];
+          }
+        } catch (_) { /* segue como Provas */ }
+      }
+    }
     const productExtra = String(body.product_extra || "").trim().slice(0, 200);
     const disciplinaRaw = String(body.disciplina || "").trim().slice(0, 120);
     const prodLabel = PRODUCT_LABELS[productKey];

@@ -13,6 +13,7 @@ import { useActiveSubscription } from "@/hooks/useActiveSubscription";
 import PaymentSecurityBadge from "@/components/PaymentSecurityBadge";
 import { useDoubtLimits } from "@/hooks/useDoubtLimits";
 import type { EmbeddedCheckoutState } from "@/pages/Checkout";
+import { usePlatformSettings, ALL_PRODUCTS_KEY } from "@/hooks/usePlatformSettings";
 
 interface PlanData {
   name: string;
@@ -99,21 +100,32 @@ const PricingSection = ({ productKey }: { productKey?: string } = {}) => {
   const { refresh: refreshActiveSub } = useActiveSubscription();
   const { limitForPlan } = useDoubtLimits();
 
+  const { data: plansModeData, loading: plansModeLoading } = usePlatformSettings("plans_mode");
+  const plansMode = plansModeData?.mode || "produto";
+
   useEffect(() => {
+    if (plansModeLoading) return;
     const fetchPlans = async () => {
-      const baseFields = "name, price, features, highlighted, cancel_text, allow_free_cancel, min_commitment_days, service_revisoes, service_revisoes_qty, service_resumos, service_resumos_qty, service_simulados, service_simulados_qty, service_top_questoes, service_top_questoes_qty, service_colinhas, service_colinhas_qty, service_duvidas, service_duvidas_qty, service_aula_particular, service_aula_particular_qty, ai_credits_mode, ai_credits_qty";
+      const baseFields = "name, price, features, highlighted, cancel_text, allow_free_cancel, min_commitment_days, service_revisoes, service_revisoes_qty, service_resumos, service_resumos_qty, service_simulados, service_simulados_qty, service_top_questoes, service_top_questoes_qty, service_colinhas, service_colinhas_qty, service_duvidas, service_duvidas_qty, service_aula_particular, service_aula_particular_qty, ai_credits_mode, ai_credits_qty, product_key";
       // stripe_price_id is restricted to authenticated users at the DB level
       const selectFields = user ? `${baseFields}, stripe_price_id` : baseFields;
+      const own = productKey || "provas";
+      const keys = plansMode === "coletivo" ? [ALL_PRODUCTS_KEY]
+        : plansMode === "ambos" ? (productKey ? [ALL_PRODUCTS_KEY, own] : [ALL_PRODUCTS_KEY])
+        : [own];
       const { data } = await supabase
         .from("subscription_plans")
         .select(selectFields)
         .eq("active", true)
-        .eq("product_key", productKey || "provas")
+        .in("product_key", keys)
         .order("sort_order");
-      if (data?.length || productKey) setPlans((data || []) as unknown as PlanData[]);
+      // Pacote completo primeiro
+      const sorted = ((data || []) as unknown as (PlanData & { product_key?: string })[])
+        .sort((a, b) => Number(b.product_key === ALL_PRODUCTS_KEY) - Number(a.product_key === ALL_PRODUCTS_KEY));
+      if (sorted.length || productKey || plansMode !== "produto") setPlans(sorted);
     };
     fetchPlans();
-  }, [user, productKey]);
+  }, [user, productKey, plansMode, plansModeLoading]);
 
   const { requireCpf, showCpfModal, setShowCpfModal, onCpfComplete } = useCpfGuard();
 

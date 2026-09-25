@@ -9,6 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Card } from "@/components/ui/card";
 import { Save, Plus, Trash2, CreditCard } from "lucide-react";
 import { useProducts } from "@/hooks/useProducts";
+import { usePlatformSettings, ALL_PRODUCTS_KEY, type PlansMode } from "@/hooks/usePlatformSettings";
 
 const SERVICE_KEYS = [
   { key: "revisoes", label: "Revisões (vídeos de aulas)" },
@@ -55,6 +56,8 @@ const AdminPlansTab = () => {
   const [loading, setLoading] = useState(true);
   const productsAll = useProducts(true);
   const [productFilter, setProductFilter] = useState("provas");
+  const { data: plansMode, update: updatePlansMode } = usePlatformSettings("plans_mode");
+  const planGroups = [{ key: ALL_PRODUCTS_KEY, name: "Pacote completo (todos os produtos)" }, ...productsAll.map((p) => ({ key: p.key, name: p.name }))];
   const [saving, setSaving] = useState(false);
   const { toast } = useToast();
 
@@ -153,9 +156,24 @@ const AdminPlansTab = () => {
       <h2 className="font-display text-lg font-semibold mb-4 flex items-center gap-2">
         <CreditCard className="h-5 w-5" /> Planos de Assinatura
       </h2>
-      <p className="text-sm text-muted-foreground mb-3">Cada plano pertence a um produto. Escolha o produto para ver e editar os planos dele.</p>
+      <Card className="p-4 mb-4 space-y-2">
+        <Label>Forma de venda dos planos</Label>
+        <select
+          className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+          value={plansMode?.mode || "produto"}
+          onChange={(e) => updatePlansMode({ mode: e.target.value as PlansMode })}
+        >
+          <option value="produto">Planos por produto (ex.: Plano ENEM, Plano OAB)</option>
+          <option value="coletivo">Pacote completo (um plano com todos os produtos, como antes)</option>
+          <option value="ambos">Os dois (pacote completo e planos por produto)</option>
+        </select>
+        <p className="text-xs text-muted-foreground">
+          Os planos do "Pacote completo" ficam no filtro abaixo com esse nome. A mudança vale na hora no site.
+        </p>
+      </Card>
+      <p className="text-sm text-muted-foreground mb-3">Escolha o produto (ou o Pacote completo) para ver e editar os planos dele.</p>
       <div className="flex flex-wrap gap-2 mb-4">
-        {productsAll.map((p) => {
+        {planGroups.map((p) => {
           const count = plans.filter((pl) => ((pl.product_key as string) || "provas") === p.key).length;
           return (
             <button
@@ -188,7 +206,7 @@ const AdminPlansTab = () => {
                   value={(plan.product_key as string) || "provas"}
                   onChange={(e) => updatePlan(pi, "product_key", e.target.value)}
                 >
-                  {productsAll.map((p) => <option key={p.key} value={p.key}>{p.name}</option>)}
+                  {planGroups.map((p) => <option key={p.key} value={p.key}>{p.name}</option>)}
                 </select>
               </div>
               <div>

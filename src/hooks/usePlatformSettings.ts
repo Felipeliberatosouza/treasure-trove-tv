@@ -409,7 +409,14 @@ export const DEFAULT_FOOTER_SETTINGS: FooterSettings = {
   contact_url: "/contato",
 };
 
+/** Como os planos de assinatura são vendidos: por produto, pacote completo (todos os produtos) ou os dois. */
+export type PlansMode = "produto" | "coletivo" | "ambos";
+export type PlansModeSettings = { mode: PlansMode };
+/** Chave de produto usada pelos planos do pacote completo. */
+export const ALL_PRODUCTS_KEY = "todos";
+
 type SettingsMap = {
+  plans_mode: PlansModeSettings;
   branding: BrandingSettings;
   contact: ContactSettings;
   support: SupportSettings;

@@ -230,6 +230,10 @@ const HomeKitGenerator = ({ productKey, productExtra, fixedHeadline, badgeText, 
   const [messages, setMessages] = useState<string[]>([]);
   const [tool, setTool] = useState<ToolKey | null>(productKey === "trabalhos" ? "trabalho" : null);
   const [headlineIndex, setHeadlineIndex] = useState(0);
+  // Troca de produto na página inicial: Trabalhos já abre a ferramenta de Word e slides.
+  useEffect(() => {
+    setTool(productKey === "trabalhos" ? "trabalho" : null);
+  }, [productKey]);
   const submittingRef = useRef(false);
   const runIdRef = useRef(0);
   const pendingKeyRef = useRef<string | null>(null);

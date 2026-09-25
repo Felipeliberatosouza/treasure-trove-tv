@@ -24,6 +24,7 @@ import HomeKitGenerator from "@/components/revisao-ia/HomeKitGenerator";
 import InviteFriendsPanel from "@/components/referral/InviteFriendsPanel";
 import type { Video } from "@/data/courses";
 import { useAiKitCovers } from "@/hooks/useAiKitCovers";
+import { useProducts } from "@/hooks/useProducts";
 import {
   formatDuration,
   estimateSlidesDuration,
@@ -64,6 +65,9 @@ const Index = () => {
   
 
   const isTeacher = role === "teacher";
+  const products = useProducts();
+  const [productKey, setProductKey] = useState("provas");
+  const activeProduct = products.find((p) => p.key === productKey) ?? products[0];
 
   // Inline search state
   const [inlineSearchOpen, setInlineSearchOpen] = useState(false);
@@ -389,10 +393,17 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
       <Navbar />
-      {!isTeacher && <HomeHeroProductsFlow />}
       {!isTeacher && (
-        <section className="flex items-center border-b border-border bg-background px-4 py-12 md:px-10 md:py-16" aria-labelledby="revision-ai-title">
-          <HomeKitGenerator />
+        <HomeHeroProductsFlow products={products} activeKey={activeProduct?.key ?? "provas"} onSelect={setProductKey} />
+      )}
+      {!isTeacher && (
+        <section className="flex items-center border-b border-border bg-background px-4 py-8 md:px-10 md:py-10" aria-labelledby="revision-ai-title">
+          <HomeKitGenerator
+            productKey={activeProduct && activeProduct.key !== "provas" ? activeProduct.key : undefined}
+            badgeText={activeProduct?.badge}
+            productHeadline={activeProduct?.headline}
+            inputHint={activeProduct?.input_hint}
+          />
         </section>
       )}
       {isTeacher && <div className="pt-20" />}

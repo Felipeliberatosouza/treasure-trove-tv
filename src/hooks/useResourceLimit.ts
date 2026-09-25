@@ -39,6 +39,7 @@ interface LimitResult {
   used: number;
   total: number;
   remaining: number;
+  planNotCovering?: boolean;
   hasSubscription: boolean;
   individualPrice: number | null;
   /** Acessos ganhos por indicação de amigos, ainda não usados. */

@@ -251,7 +251,7 @@ const VideoPage = () => {
       setHasFullAccess(false);
     };
     checkAccess();
-  }, [video, user, trial.loading, trial.hasActiveTrial, trialAccessContentId, teacherId, resourceLimit.loaded, videoType]);
+  }, [video, user, trial.loading, trial.hasActiveTrial, trialAccessContentId, teacherId, resourceLimit.loaded, videoType, contentProducts]);
 
   useEffect(() => {
     if (!video || dbVideo) return;

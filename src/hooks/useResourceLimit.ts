@@ -216,7 +216,7 @@ export function useResourceLimit() {
         referralBlocked,
       };
     },
-    [plan, usageCounts, resourcePrices, referralCredits, canUseReferralCredit]
+    [activeTeacher, plan, usageCounts, resourcePrices, referralCredits, canUseReferralCredit]
   );
 
   /** Consome um acesso ganho por indicação antes de cobrar do aluno. */

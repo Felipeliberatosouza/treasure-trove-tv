@@ -63,7 +63,7 @@ export function useResourceLimit() {
       // Fetch subscription + plan
       const { data: sub } = await supabase
         .from("student_subscriptions")
-        .select("id, plan_id, subscription_plans(id, name, price, service_revisoes, service_revisoes_qty, service_resumos, service_resumos_qty, service_simulados, service_simulados_qty, service_top_questoes, service_top_questoes_qty, service_colinhas, service_colinhas_qty, service_duvidas, service_duvidas_qty, service_aula_particular, service_aula_particular_qty)")
+        .select("id, plan_id, subscription_plans(id, name, price, product_key, service_revisoes, service_revisoes_qty, service_resumos, service_resumos_qty, service_simulados, service_simulados_qty, service_top_questoes, service_top_questoes_qty, service_colinhas, service_colinhas_qty, service_duvidas, service_duvidas_qty, service_aula_particular, service_aula_particular_qty)")
         .eq("user_id", user.id)
         .eq("status", "active")
         .order("created_at", { ascending: false })
@@ -151,19 +151,24 @@ export function useResourceLimit() {
   );
 
   const checkLimit = useCallback(
-    (resourceType: ResourceType, source?: ContentSource): LimitResult => {
+    (resourceType: ResourceType, source?: ContentSource, productKeys?: string[]): LimitResult => {
       const owned = referralCredits[resourceType] || 0;
       const usable = canUseReferralCredit(resourceType, source);
       const bonus = usable ? owned : 0;
       const referralBlocked = owned > 0 && !usable;
 
-      if (!plan) {
+      // Plano por produto só libera conteúdos do seu produto; pacote completo ("todos") libera tudo.
+      const planProduct = ((plan as any)?.product_key as string) || "provas";
+      const content = productKeys && productKeys.length ? productKeys : ["provas"];
+      const covers = !plan || planProduct === "todos" || content.includes(planProduct);
+      if (!plan || !covers) {
         return {
           allowed: bonus > 0,
           used: 0,
           total: bonus,
           remaining: bonus,
           hasSubscription: false,
+          planNotCovering: !!plan && !covers,
           individualPrice: resourcePrices[resourceType] ?? null,
           referralCredits: bonus,
           referralBlocked,
@@ -229,5 +234,6 @@ export function useResourceLimit() {
     loaded,
     subscriptionId,
     planName: (plan?.name as string) || null,
+    planProductKey: plan ? (((plan as any).product_key as string) || "provas") : null,
   };
 }

@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Card } from "@/components/ui/card";
 import { Save, Plus, Trash2, CreditCard } from "lucide-react";
+import { useProducts } from "@/hooks/useProducts";
 
 const SERVICE_KEYS = [
   { key: "revisoes", label: "Revisões (vídeos de aulas)" },
@@ -91,7 +92,7 @@ const AdminPlansTab = () => {
     setPlans(updated);
   };
 
-  const addPlan = () => setPlans([...plans, emptyPlan()]);
+  const addPlan = () => setPlans([...plans, { ...emptyPlan(), product_key: productFilter }]);
 
   const removePlan = async (idx: number) => {
     const plan = plans[idx];
@@ -144,14 +145,31 @@ const AdminPlansTab = () => {
 
   if (loading) return <p className="text-sm text-muted-foreground">Carregando...</p>;
 
+
   return (
     <div>
       <h2 className="font-display text-lg font-semibold mb-4 flex items-center gap-2">
         <CreditCard className="h-5 w-5" /> Planos de Assinatura
       </h2>
+      <p className="text-sm text-muted-foreground mb-3">Cada plano pertence a um produto. Escolha o produto para ver e editar os planos dele.</p>
+      <div className="flex flex-wrap gap-2 mb-4">
+        {productsAll.map((p) => {
+          const count = plans.filter((pl) => ((pl.product_key as string) || "provas") === p.key).length;
+          return (
+            <button
+              key={p.key}
+              type="button"
+              onClick={() => setProductFilter(p.key)}
+              className={`rounded-full border px-3 py-1 text-sm transition-colors ${productFilter === p.key ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card text-muted-foreground hover:border-primary/50"}`}
+            >
+              {p.name} ({count})
+            </button>
+          );
+        })}
+      </div>
 
       <div className="space-y-4">
-        {plans.map((plan, pi) => (
+        {plans.map((plan, pi) => ((plan.product_key as string) || "provas") !== productFilter ? null : (
           <Card key={pi} className={`p-4 space-y-4 ${plan.highlighted ? "border-primary" : ""}`}>
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium">Plano {pi + 1}</span>
@@ -161,6 +179,16 @@ const AdminPlansTab = () => {
             </div>
 
             <div className="grid grid-cols-2 gap-3">
+              <div className="col-span-2">
+                <Label>Produto</Label>
+                <select
+                  className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                  value={(plan.product_key as string) || "provas"}
+                  onChange={(e) => updatePlan(pi, "product_key", e.target.value)}
+                >
+                  {productsAll.map((p) => <option key={p.key} value={p.key}>{p.name}</option>)}
+                </select>
+              </div>
               <div>
                 <Label>Nome</Label>
                 <Input value={plan.name} onChange={(e) => updatePlan(pi, "name", e.target.value)} />

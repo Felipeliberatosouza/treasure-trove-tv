@@ -67,6 +67,45 @@ async function checkRemoteVersion() {
   }
 }
 
+const LAST_MAINT_KEY = "rf_last_maintenance_at";
+const MAINT_INTERVAL_KEY = "rf_maintenance_interval_h";
+PRESERVE.add(LAST_MAINT_KEY);
+PRESERVE.add(MAINT_INTERVAL_KEY);
+
+/** Faxina leve e silenciosa: remove caches temporários, mantendo login e preferências. */
+function periodicMaintenance(): void {
+  try {
+    const hours = Number(localStorage.getItem(MAINT_INTERVAL_KEY)) || 24;
+    const last = Number(localStorage.getItem(LAST_MAINT_KEY)) || 0;
+    if (Date.now() - last < hours * 3600_000) return;
+    const keys: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k) keys.push(k);
+    }
+    keys.forEach((k) => {
+      if (isAuthKey(k) || PRESERVE.has(k) || k === "rf_platform_settings_cache") return;
+      if (k.includes("cache") || k.startsWith("rf_tmp_")) localStorage.removeItem(k);
+    });
+    if (typeof caches !== "undefined") {
+      caches.keys().then((n) => n.forEach((c) => caches.delete(c))).catch(() => {});
+    }
+    localStorage.setItem(LAST_MAINT_KEY, String(Date.now()));
+  } catch {
+    /* ignore */
+  }
+}
+
+async function syncMaintenanceInterval() {
+  try {
+    const { data } = await supabase.from("platform_settings").select("value").eq("key", "maintenance_config").maybeSingle();
+    const h = Number((data?.value as { client_interval_hours?: number } | null)?.client_interval_hours);
+    if (h > 0) localStorage.setItem(MAINT_INTERVAL_KEY, String(h));
+  } catch {
+    /* ignore */
+  }
+}
+
 let started = false;
 export function startCacheManager(): void {
   if (started || typeof window === "undefined") return;
@@ -79,10 +118,32 @@ export function startCacheManager(): void {
     /* ignore */
   }
   // Verifica sem atrasar a primeira tela
-  setTimeout(checkRemoteVersion, 3000);
+  setTimeout(() => {
+    checkRemoteVersion();
+    syncMaintenanceInterval().then(periodicMaintenance);
+  }, 3000);
+  // Sites abertos por muito tempo também recebem a faxina (checa a cada hora)
+  setInterval(periodicMaintenance, 3600_000);
   document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "visible") checkRemoteVersion();
+    if (document.visibilityState === "visible") {
+      checkRemoteVersion();
+      periodicMaintenance();
+    }
   });
+}
+
+export async function saveMaintenanceInterval(hours: number): Promise<void> {
+  const { error } = await supabase
+    .from("platform_settings")
+    .upsert({ key: "maintenance_config", value: { client_interval_hours: hours } } as never, { onConflict: "key" });
+  if (error) throw error;
+  localStorage.setItem(MAINT_INTERVAL_KEY, String(hours));
+}
+
+export async function runServerMaintenance() {
+  const { data, error } = await supabase.rpc("run_platform_maintenance" as never);
+  if (error) throw error;
+  return data as { last_run_at: string; beta_reports_removed: number; login_attempts_removed: number };
 }
 
 /** Admin: força todos os usuários a descartarem o cache local. */

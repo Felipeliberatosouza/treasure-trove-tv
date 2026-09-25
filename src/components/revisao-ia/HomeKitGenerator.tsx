@@ -184,9 +184,15 @@ type HomeKitGeneratorProps = {
   productExtra?: string;
   /** Título fixo (página de produto), substitui as frases alternadas. */
   fixedHeadline?: string;
+  /** Frase de destaque acima da pergunta (por produto). */
+  badgeText?: string;
+  /** Pergunta principal do produto selecionado na página inicial. */
+  productHeadline?: string;
+  /** Frase-guia da caixa de digitação do produto. */
+  inputHint?: string;
 };
 
-const HomeKitGenerator = ({ productKey, productExtra, fixedHeadline }: HomeKitGeneratorProps = {}) => {
+const HomeKitGenerator = ({ productKey, productExtra, fixedHeadline, badgeText, productHeadline, inputHint }: HomeKitGeneratorProps = {}) => {
   const navigate = useNavigate();
   const { profile, role } = useAuth();
   const { data: branding } = usePlatformSettings("branding");
@@ -447,11 +453,11 @@ const HomeKitGenerator = ({ productKey, productExtra, fixedHeadline }: HomeKitGe
     <div className="mx-auto w-full max-w-4xl text-center">
       <div className="mb-8 inline-flex items-center gap-2 rounded-full bg-muted px-4 py-2 text-sm text-muted-foreground">
         <Sparkles className="h-4 w-4 text-primary" />
-        Seu Kit de Revisão completo em poucos minutos
+        {badgeText || "Seu Kit de Revisão completo em poucos minutos"}
       </div>
       <h1 id="revision-ai-title" className="font-display text-3xl font-bold md:text-5xl">
         {(() => {
-          const frase = fixedHeadline || (headlines[headlineIndex] ?? headlines[0] ?? DEFAULT_HEADLINES[0]);
+          const frase = fixedHeadline || productHeadline?.trim() || (headlines[headlineIndex] ?? headlines[0] ?? DEFAULT_HEADLINES[0]);
           // Usuário logado: chama pelo nome em todas as frases que terminam em pergunta.
           if (profile && firstName && frase.trim().endsWith("?")) {
             return `${frase.trim().slice(0, -1).replace(/,\s*$/, "")}, ${firstName}?`;
@@ -473,7 +479,7 @@ const HomeKitGenerator = ({ productKey, productExtra, fixedHeadline }: HomeKitGe
           <Textarea
             value={assunto}
             onChange={(event) => setAssunto(event.target.value)}
-            placeholder={activeChip?.placeholder ?? DEFAULT_PLACEHOLDER}
+            placeholder={activeChip?.placeholder ?? (inputHint?.trim() || DEFAULT_PLACEHOLDER)}
             maxLength={500}
             rows={3}
             readOnly={loading}

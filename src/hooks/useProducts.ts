@@ -10,6 +10,9 @@ export type Product = {
   description: string;
   cta: string;
   page_intro: string;
+  badge?: string;
+  headline?: string;
+  input_hint?: string;
   active: boolean;
   sort_order: number;
 };
@@ -22,8 +25,8 @@ export const productIcon = (name?: string): LucideIcon => PRODUCT_ICONS[name || 
 
 /** Rótulo curto por produto, usado em menus e selos. */
 export const FALLBACK_PRODUCTS: Product[] = [
-  { key: "provas", name: "Provas", icon: "GraduationCap", title: "Provas escolares e da faculdade", description: "Kit de revisão completo do assunto da sua prova, pronto em poucos minutos.", cta: "Estudar para prova", page_intro: "", active: true, sort_order: 1 },
-  { key: "trabalhos", name: "Trabalhos", icon: "FileText", title: "Trabalhos em Word e slides", description: "Documento Word e apresentação em slides prontos para baixar e ajustar.", cta: "Criar trabalho", page_intro: "", active: true, sort_order: 2 },
+  { key: "provas", name: "Provas", icon: "GraduationCap", title: "Provas escolares e da faculdade", description: "Kit de revisão completo do assunto da sua prova, pronto em poucos minutos.", cta: "Estudar para prova", page_intro: "", badge: "Seu Kit de Revisão completo em poucos minutos", headline: "Qual o assunto da sua próxima prova?", input_hint: "Digite o assunto ou tópicos da sua prova (seja detalhista para ter melhores resultados!)", active: true, sort_order: 1 },
+  { key: "trabalhos", name: "Trabalhos", icon: "FileText", title: "Trabalhos em Word e slides", description: "Documento Word e apresentação em slides prontos para baixar e ajustar.", cta: "Criar trabalho", page_intro: "", badge: "Seu trabalho escolar pronto: documento do Word e slides para entrega ao professor e apresentação!", headline: "Quer gerar documento Word e slides para um trabalho?", input_hint: "Digite o assunto ou tópicos do seu trabalho (seja detalhista para ter melhores resultados!)", active: true, sort_order: 2 },
   { key: "enem", name: "ENEM", icon: "Target", title: "Preparação para o ENEM", description: "Estude pelas quatro áreas do exame com foco no que mais cai.", cta: "Estudar para o ENEM", page_intro: "", active: true, sort_order: 3 },
   { key: "vestibulares", name: "Vestibulares", icon: "BookOpen", title: "Vestibulares", description: "Revisão para os principais vestibulares do país, com foco no conteúdo que mais cai.", cta: "Estudar para vestibulares", page_intro: "", active: true, sort_order: 4 },
   { key: "oab", name: "OAB", icon: "Scale", title: "Exame da OAB", description: "Revisão para a 1ª e a 2ª fase do Exame da Ordem.", cta: "Estudar para a OAB", page_intro: "", active: true, sort_order: 5 },

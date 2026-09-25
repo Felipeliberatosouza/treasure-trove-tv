@@ -477,6 +477,75 @@ export type Database = {
         }
         Relationships: []
       }
+      beta_bug_reports: {
+        Row: {
+          admin_notes: string | null
+          browser_info: Json
+          created_at: string
+          description: string | null
+          error_kind: string | null
+          error_message: string | null
+          fingerprint: string | null
+          id: string
+          last_seen_at: string
+          occurrences: number
+          origin: string
+          page_url: string | null
+          reporter_email: string | null
+          reporter_name: string | null
+          reward_credits: number
+          reward_granted_at: string | null
+          stack_trace: string | null
+          status: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          browser_info?: Json
+          created_at?: string
+          description?: string | null
+          error_kind?: string | null
+          error_message?: string | null
+          fingerprint?: string | null
+          id?: string
+          last_seen_at?: string
+          occurrences?: number
+          origin?: string
+          page_url?: string | null
+          reporter_email?: string | null
+          reporter_name?: string | null
+          reward_credits?: number
+          reward_granted_at?: string | null
+          stack_trace?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          browser_info?: Json
+          created_at?: string
+          description?: string | null
+          error_kind?: string | null
+          error_message?: string | null
+          fingerprint?: string | null
+          id?: string
+          last_seen_at?: string
+          occurrences?: number
+          origin?: string
+          page_url?: string | null
+          reporter_email?: string | null
+          reporter_name?: string | null
+          reward_credits?: number
+          reward_granted_at?: string | null
+          stack_trace?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       birthday_email_log: {
         Row: {
           coupon_code: string | null
@@ -3874,6 +3943,16 @@ export type Database = {
         Returns: boolean
       }
       admin_reset_free_trial: { Args: { _user_id: string }; Returns: boolean }
+      beta_simulate_checkout: {
+        Args: {
+          _amount: number
+          _content_id: string
+          _content_type: string
+          _mode: string
+          _price_id: string
+        }
+        Returns: Json
+      }
       can_access_lesson_material: {
         Args: { _lesson_id: string; _material_type: string }
         Returns: boolean
@@ -3948,6 +4027,10 @@ export type Database = {
           content_type: string
           count: number
         }[]
+      }
+      grant_bug_report_reward: {
+        Args: { _credits: number; _report_id: string }
+        Returns: boolean
       }
       has_role: {
         Args: {

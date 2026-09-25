@@ -13,6 +13,7 @@ import CpfInput from "@/components/CpfInput";
 import PaymentSecurityBadge from "@/components/PaymentSecurityBadge";
 import { isValidCPF } from "@/lib/cpfValidator";
 import { ArrowLeft, Check, ChevronDown, CreditCard, Loader2, ShieldCheck, UserRound, Wallet } from "lucide-react";
+import { useBetaMode, BETA_TEST_CARD } from "@/hooks/useBetaMode";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -505,6 +506,7 @@ function CheckoutForm({
   const elements = useElements();
   const navigate = useNavigate();
   const { user, refreshSubscription } = useAuth();
+  const { beta } = useBetaMode();
   const [submitting, setSubmitting] = useState(false);
   // Sticky "we're leaving" flag. Becomes true the moment we commit to
   // navigating away (success, alreadyOwned, alreadySucceededOnRetry,
@@ -616,7 +618,7 @@ function CheckoutForm({
   }, [onReady]);
 
   const handleSubmit = async () => {
-    if (!stripe || !elements) return;
+    if (!beta && (!stripe || !elements)) return;
     // Belt-and-braces: if we've already committed to navigating away,
     // refuse any further submit attempts even if the button somehow
     // received a click (e.g. a keypress queued before the disabled
@@ -631,6 +633,32 @@ function CheckoutForm({
     }
 
     setSubmitting(true);
+    if (beta) {
+      try {
+        const { error: betaErr } = await supabase.rpc("beta_simulate_checkout", {
+          _mode: state.mode,
+          _price_id: state.priceId ?? "",
+          _content_id: (state.contentId ?? null) as any,
+          _content_type: state.contentType ?? "",
+          _amount: Number(state.mode === "subscription" ? state.planPrice ?? 0 : state.unitPrice ?? 0),
+        });
+        if (betaErr) {
+          setError(betaErr.message || "Não foi possível concluir a simulação.");
+          return;
+        }
+        toast.success("Simulação concluída! Nenhuma cobrança foi feita.");
+        setRedirecting(true);
+        if (state.mode === "subscription") {
+          try { await refreshSubscription(); } catch { /* ignore */ }
+          safeNavigate("/dashboard?tab=subscription", { replace: true });
+        } else {
+          safeNavigate(`/aula/${state.contentId}`, { replace: true });
+        }
+      } finally {
+        setSubmitting(false);
+      }
+      return;
+    }
     try {
       // 1. Validate Elements
       const { error: submitError } = await elements.submit();
@@ -894,6 +922,29 @@ function CheckoutForm({
 
       <Card className="p-5 space-y-3">
         <h3 className="font-semibold text-sm">Dados do cartão</h3>
+        {beta ? (
+          <div className="space-y-3">
+            <div role="status" className="rounded-md border border-primary/40 bg-primary/10 px-3 py-2 text-xs text-foreground">
+              <strong>Versão beta:</strong> este é um cartão fictício, usado apenas para simular o uso. Você não pagará nada pelo uso do sistema.
+            </div>
+            <div className="grid gap-3">
+              <div>
+                <Label htmlFor="beta-card">Número do cartão</Label>
+                <Input id="beta-card" value={BETA_TEST_CARD.number} readOnly disabled />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label htmlFor="beta-exp">Validade</Label>
+                  <Input id="beta-exp" value={BETA_TEST_CARD.expiry} readOnly disabled />
+                </div>
+                <div>
+                  <Label htmlFor="beta-cvc">CVC</Label>
+                  <Input id="beta-cvc" value={BETA_TEST_CARD.cvc} readOnly disabled />
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
         <div className="rounded-md border border-border bg-background p-3">
           <PaymentElement
             options={{
@@ -903,6 +954,7 @@ function CheckoutForm({
             }}
           />
         </div>
+        )}
         <p className="text-[11px] text-muted-foreground leading-snug">
           Aceitamos Visa, Mastercard, Elo, American Express, Hipercard e outras bandeiras.
         </p>
@@ -935,7 +987,7 @@ function CheckoutForm({
 
       <Button
         onClick={handleSubmit}
-        disabled={!stripe || submitting || redirecting}
+        disabled={(!beta && !stripe) || submitting || redirecting}
         size="lg"
         className={cn(
           "w-full font-display",

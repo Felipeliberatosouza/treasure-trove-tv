@@ -13,6 +13,8 @@ export interface AdminAlerts {
   pendingProfileChanges: boolean;
   /** Novas perguntas do atendimento ou conversas aguardando a equipe. */
   pendingSupport: boolean;
+  /** Reportes da Versão Beta pendentes. */
+  pendingBeta: boolean;
 }
 
 const EMPTY: AdminAlerts = {
@@ -21,6 +23,7 @@ const EMPTY: AdminAlerts = {
   expiringSubscriptions: false,
   pendingProfileChanges: false,
   pendingSupport: false,
+  pendingBeta: false,
 };
 
 /**
@@ -69,7 +72,8 @@ export const useAdminAlerts = (): AdminAlerts => {
 
       const faqPromise = supabase.from("support_faqs").select("id", { count: "exact", head: true }).eq("status", "pending");
       const waitPromise = supabase.from("support_conversations").select("id", { count: "exact", head: true }).eq("status", "waiting_human");
-      const [lessonsRes, examsRes, doubtsRes, subsRes, profChangesRes, faqRes, waitRes] = await Promise.all([
+      const betaPromise = supabase.from("beta_bug_reports").select("id", { count: "exact", head: true }).eq("status", "pendente");
+      const [lessonsRes, examsRes, doubtsRes, subsRes, profChangesRes, faqRes, waitRes, betaRes] = await Promise.all([
         lessonsPromise,
         examsPromise,
         doubtsPromise,
@@ -77,6 +81,7 @@ export const useAdminAlerts = (): AdminAlerts => {
         profileChangesPromise,
         faqPromise,
         waitPromise,
+        betaPromise,
       ]);
 
       if (cancelled) return;
@@ -87,6 +92,7 @@ export const useAdminAlerts = (): AdminAlerts => {
         expiringSubscriptions: (subsRes.count ?? 0) > 0,
         pendingProfileChanges: (profChangesRes.count ?? 0) > 0,
         pendingSupport: ((faqRes.count ?? 0) + (waitRes.count ?? 0)) > 0,
+        pendingBeta: (betaRes.count ?? 0) > 0,
       });
     };
 

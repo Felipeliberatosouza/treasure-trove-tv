@@ -183,6 +183,13 @@
       "when": 1790340466124,
       "tag": "0025_active_teacher_free_access",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1790341842411,
+      "tag": "0026_beta_mode_bug_reports",
+      "breakpoints": true
     }
   ]
 }

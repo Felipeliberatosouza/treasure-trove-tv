@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import MandatoryMfaGuard from "@/components/MandatoryMfaGuard";
 import { motion } from "framer-motion";
-import { ArrowLeft, Video, DollarSign, Shield, LayoutDashboard, Settings, HelpCircle, Mail, CalendarClock, Megaphone, Users, CreditCard, FileText, ScrollText, Activity, RefreshCcw, Receipt, XCircle, LifeBuoy, UserCog, User, Lock, MessageCircle, Gift , MessageSquare, Boxes } from "lucide-react";
+import { ArrowLeft, Video, DollarSign, Shield, LayoutDashboard, Settings, HelpCircle, Mail, CalendarClock, Megaphone, Users, CreditCard, FileText, ScrollText, Activity, RefreshCcw, Receipt, XCircle, LifeBuoy, UserCog, User, Lock, MessageCircle, Gift , MessageSquare, Boxes, Bug } from "lucide-react";
+import AdminBetaReportsTab from "@/components/admin/AdminBetaReportsTab";
 import { Link, Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
@@ -46,6 +47,7 @@ const tabs = [
   { id: "referrals", label: "Indicações de Amigos", icon: Gift },
   { id: "work-docs", label: "Trabalhos (Word e Slides)", icon: FileText },
   { id: "support-agent", label: "Atendimento Virtual", icon: MessageSquare },
+  { id: "beta-reports", label: "Reportes da Versão Beta", icon: Bug },
   { id: "cancellations", label: "Cancelamentos", icon: XCircle },
   { id: "compensation", label: "Pagamento de Professores", icon: DollarSign },
   { id: "security", label: "Segurança", icon: Shield },
@@ -149,6 +151,7 @@ const AdminDashboard = () => {
             {activeTab === "work-docs" && <AdminWorkDocsTab />}
             {activeTab === "products" && <AdminProductsTab />}
             {activeTab === "support-agent" && <AdminSupportAgentTab />}
+            {activeTab === "beta-reports" && <AdminBetaReportsTab />}
             {activeTab === "profile-approvals" && <AdminProfileApprovalsTab />}
             {activeTab === "settings" && <AdminSettingsTab />}
             {activeTab === "personal" && <PersonalDataTab />}

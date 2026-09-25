@@ -152,15 +152,18 @@ const Navbar = () => {
         children: [{ label: user ? label : `Conhecer ${p.name}`, href: `/${p.key}` }, ...subs],
       };
     });
+  void productMenu;
   const baseMenu = [
     ...(user
       ? role === "admin"
         ? [{ label: "Gestão de Produtos", shortLabel: "Produtos", href: "/dashboard/admin?tab=products" }, ...adminMenuItems]
         : role === "teacher"
           ? teacherMenuItems
-          : loggedMenuItems
+          : [
+              ...(hasActiveSubscription ? [] : [publicMenuItems[0]]),
+              ...loggedMenuItems,
+            ]
       : publicMenuItems),
-    ...productMenu,
   ];
   const teacherSlug = (profile as { slug?: string | null } | null)?.slug ?? "";
   const resolvedBase = baseMenu

@@ -8,6 +8,8 @@ import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Boxes, Save, Loader2, ArrowUp, ArrowDown, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
+import { activeSubproducts, FALLBACK_SUBPRODUCTS, type Subproduct } from "@/hooks/useProducts";
+import { Plus, Trash2 } from "lucide-react";
 import { PRODUCT_ICONS, productIcon, reloadProducts, useProducts, type Product } from "@/hooks/useProducts";
 
 export default function AdminProductsTab() {
@@ -15,7 +17,17 @@ export default function AdminProductsTab() {
   const [items, setItems] = useState<Product[]>([]);
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => { setItems(loaded.map((p) => ({ ...p }))); }, [loaded]);
+  useEffect(() => { setItems(loaded.map((p) => ({ ...p, subproducts: p.subproducts?.length ? p.subproducts : FALLBACK_SUBPRODUCTS[p.key] || [] }))); }, [loaded]);
+  void activeSubproducts;
+  const updSub = (i: number, j: number, patch: Partial<Subproduct> | null) =>
+    setItems((cur) => cur.map((p, idx) => {
+      if (idx !== i) return p;
+      const list = [...(p.subproducts || [])];
+      if (patch === null) list.splice(j, 1); else list[j] = { ...list[j], ...patch };
+      return { ...p, subproducts: list };
+    }));
+  const addSub = (i: number) =>
+    setItems((cur) => cur.map((p, idx) => idx === i ? { ...p, subproducts: [...(p.subproducts || []), { key: `sub_${Date.now()}`, name: "Novo subproduto", kind: "ai", tool: "revisao", active: true }] } : p));
 
   const upd = (i: number, field: keyof Product, value: unknown) =>
     setItems((cur) => cur.map((p, idx) => (idx === i ? { ...p, [field]: value } : p)));
@@ -31,7 +43,7 @@ export default function AdminProductsTab() {
   const save = async () => {
     setSaving(true);
     const rows = items.map((p, i) => ({ ...p, sort_order: i + 1, updated_at: new Date().toISOString() }));
-    const { error } = await supabase.from("products").upsert(rows);
+    const { error } = await supabase.from("products").upsert(rows as never);
     setSaving(false);
     if (error) { toast.error("Não foi possível salvar: " + error.message); return; }
     await reloadProducts();
@@ -84,6 +96,34 @@ export default function AdminProductsTab() {
               <div><Label>Pergunta principal (o nome do usuário logado entra antes do "?")</Label><Input value={p.headline || ""} onChange={(e) => upd(i, "headline", e.target.value)} /></div>
               <div><Label>Frase-guia da caixa de digitação</Label><Input value={p.input_hint || ""} onChange={(e) => upd(i, "input_hint", e.target.value)} /></div>
               <div><Label>Texto da página do produto</Label><Textarea rows={2} value={p.page_intro} onChange={(e) => upd(i, "page_intro", e.target.value)} /></div>
+              <div className="rounded-md border border-border p-3">
+                <div className="mb-2 flex items-center justify-between">
+                  <Label>Subprodutos (aparecem no menu e como atalhos na caixa de digitação)</Label>
+                  <Button size="sm" variant="outline" onClick={() => addSub(i)}><Plus className="mr-1 h-4 w-4" /> Adicionar</Button>
+                </div>
+                <div className="space-y-2">
+                  {(p.subproducts || []).map((s, j) => (
+                    <div key={s.key} className="grid items-center gap-2 sm:grid-cols-[1fr_150px_1fr_auto_auto]">
+                      <Input value={s.name} onChange={(e) => updSub(i, j, { name: e.target.value })} />
+                      <select className="h-10 rounded-md border border-input bg-background px-2 text-sm" value={s.kind === "link" ? "link" : s.tool || "revisao"}
+                        onChange={(e) => { const v = e.target.value; updSub(i, j, v === "link" ? { kind: "link", href: s.href || "/" } : { kind: "ai", tool: v as Subproduct["tool"] }); }}>
+                        <option value="revisao">Gerar revisão</option>
+                        <option value="resumo">Gerar resumo</option>
+                        <option value="simulado">Gerar simulado</option>
+                        <option value="top_questoes">Gerar Top Questões</option>
+                        <option value="colinha">Gerar colinha</option>
+                        <option value="trabalho">Gerar trabalho</option>
+                        <option value="link">Abrir página</option>
+                      </select>
+                      {s.kind === "link"
+                        ? <Input placeholder="Endereço, ex.: /#agendar-aula" value={s.href || ""} onChange={(e) => updSub(i, j, { href: e.target.value })} />
+                        : <span className="text-xs text-muted-foreground">Abre o gerador com esse pedido</span>}
+                      <Switch checked={s.active !== false} onCheckedChange={(v) => updSub(i, j, { active: v })} />
+                      <Button size="icon" variant="ghost" aria-label="Remover" onClick={() => updSub(i, j, null)}><Trash2 className="h-4 w-4" /></Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </Card>
           );
         })}

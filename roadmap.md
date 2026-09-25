@@ -23,3 +23,5 @@
 
 - [x] Atendente virtual (WhatsApp) com transferência para equipe e perguntas editáveis no admin
 - [x] Link "Dúvidas? Tire suas dúvidas aqui!" na home abrindo pop-up com o FAQ (atualiza com o admin)
+
+- [x] Produtos e subprodutos conforme planilha (menu, atalhos, painel, professor ativo)

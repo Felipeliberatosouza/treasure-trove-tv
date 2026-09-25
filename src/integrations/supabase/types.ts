@@ -1861,6 +1861,7 @@ export type Database = {
           name: string
           page_intro: string
           sort_order: number
+          subproducts: Json
           title: string
           updated_at: string
         }
@@ -1876,6 +1877,7 @@ export type Database = {
           name: string
           page_intro?: string
           sort_order?: number
+          subproducts?: Json
           title?: string
           updated_at?: string
         }
@@ -1891,6 +1893,7 @@ export type Database = {
           name?: string
           page_intro?: string
           sort_order?: number
+          subproducts?: Json
           title?: string
           updated_at?: string
         }
@@ -3953,6 +3956,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_active_teacher: { Args: { _user_id: string }; Returns: boolean }
       is_contact_registered: {
         Args: { _email: string; _phone: string }
         Returns: boolean

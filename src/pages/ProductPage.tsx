@@ -31,7 +31,8 @@ const EXTRA_FIELDS: Record<string, ExtraField[]> = {
 type Item = { id: string; title: string; href: string };
 
 export default function ProductPage() {
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
+  const initialSub = new URLSearchParams(search).get("sub");
   const key = pathname.replace(/^\//, "").split("/")[0];
   const products = useProducts();
   const product = products.find((p) => p.key === key);
@@ -114,7 +115,7 @@ export default function ProductPage() {
           )}
         </section>
 
-        <HomeKitGenerator productKey={product.key} productExtra={productExtra} fixedHeadline={product.title + (profile?.name ? `, ${String(profile.name).split(" ")[0]}` : "")} />
+        <HomeKitGenerator productKey={product.key} initialSub={initialSub} productExtra={productExtra} fixedHeadline={product.title + (profile?.name ? `, ${String(profile.name).split(" ")[0]}` : "")} />
 
         {user && (
           <section id="meus" className="px-4 py-8 md:px-10">

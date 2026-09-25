@@ -2,6 +2,47 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { GraduationCap, FileText, Target, Scale, Landmark, BookOpen, type LucideIcon } from "lucide-react";
 
+export type Subproduct = {
+  key: string;
+  name: string;
+  /** "ai" abre o gerador com a ferramenta; "link" leva a uma página. */
+  kind: "ai" | "link";
+  tool?: "revisao" | "resumo" | "simulado" | "top_questoes" | "colinha" | "trabalho";
+  href?: string;
+  active: boolean;
+};
+
+const std = (resolucao: string, resumo: string, simulado: string, top: string): Subproduct[] => [
+  { key: "revisoes", name: "Revisões (Aula)", kind: "ai", tool: "revisao", active: true },
+  { key: "resolucao", name: resolucao, kind: "link", href: "/revisoes", active: true },
+  { key: "resumo", name: resumo, kind: "ai", tool: "resumo", active: true },
+  { key: "simulado", name: simulado, kind: "ai", tool: "simulado", active: true },
+  { key: "top_questoes", name: top, kind: "ai", tool: "top_questoes", active: true },
+  { key: "colinha", name: "Colinha", kind: "ai", tool: "colinha", active: true },
+  { key: "aula_particular", name: "Aula Particular", kind: "link", href: "/#agendar-aula", active: true },
+];
+const EXAM = (top = "Top Questões de Provas Comentadas") =>
+  std("Resolução de Provas (Aula) - Últimos 5 anos", "Resumo de Conteúdos Específicos", "Simulado (Tendência e Últimas 5 provas por área)", top);
+
+export const FALLBACK_SUBPRODUCTS: Record<string, Subproduct[]> = {
+  provas: std("Resolução de Provas (Aula)", "Resumo One Page", "Simulado", "Top Questões de Provas Comentadas"),
+  trabalhos: [
+    { key: "documento", name: "Documento Personalizado para Entrega", kind: "ai", tool: "trabalho", active: true },
+    { key: "slides", name: "Slide Personalizado Apresentação", kind: "ai", tool: "trabalho", active: true },
+    { key: "dicas", name: "Dicas para a apresentação ou aula", kind: "ai", tool: "trabalho", active: true },
+    { key: "perguntas", name: "Perguntas que podem ser feitas na apresentação", kind: "ai", tool: "trabalho", active: true },
+    { key: "aula_particular", name: "Aula Particular", kind: "link", href: "/#agendar-aula", active: true },
+  ],
+  enem: EXAM(), vestibulares: EXAM("Top Questões de Provas"), oab: EXAM(), concursos: EXAM(),
+};
+
+/** Subprodutos ativos de um produto, com a lista padrão da planilha como reserva. */
+export const activeSubproducts = (p?: Product | null): Subproduct[] => {
+  if (!p) return [];
+  const list = Array.isArray(p.subproducts) && p.subproducts.length ? p.subproducts : FALLBACK_SUBPRODUCTS[p.key] || [];
+  return list.filter((s) => s.active !== false);
+};
+
 export type Product = {
   key: string;
   name: string;
@@ -15,6 +56,7 @@ export type Product = {
   input_hint?: string;
   active: boolean;
   sort_order: number;
+  subproducts?: Subproduct[];
 };
 
 export const PRODUCT_ICONS: Record<string, LucideIcon> = {
@@ -38,7 +80,7 @@ const listeners = new Set<(p: Product[]) => void>();
 
 export async function reloadProducts() {
   const { data } = await supabase.from("products").select("*").order("sort_order");
-  cache = (data as Product[] | null)?.length ? (data as Product[]) : FALLBACK_PRODUCTS;
+  cache = (data as unknown as Product[] | null)?.length ? (data as unknown as Product[]) : FALLBACK_PRODUCTS;
   listeners.forEach((l) => l(cache!));
   return cache;
 }

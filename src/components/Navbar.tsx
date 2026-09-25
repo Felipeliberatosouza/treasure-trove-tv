@@ -10,7 +10,7 @@ import ContinueWatchingMenu from "@/components/student/ContinueWatchingMenu";
 import { useAllPlatformSettings } from "@/hooks/usePlatformSettings";
 import type { BrandingSettings } from "@/hooks/usePlatformSettings";
 import { supabase } from "@/integrations/supabase/client";
-import { useProducts } from "@/hooks/useProducts";
+import { useProducts, activeSubproducts } from "@/hooks/useProducts";
 import { useActiveSubscription } from "@/hooks/useActiveSubscription";
 import { useTeacherAlerts } from "@/hooks/useTeacherAlerts";
 import { useAdminAlerts } from "@/hooks/useAdminAlerts";
@@ -132,12 +132,23 @@ const Navbar = () => {
   const studentAlerts = useStudentAlerts();
 
   const productList = useProducts();
-  const productMenu: MenuItem[] = productList.map((p) => {
-    if (!user) return { label: p.title, shortLabel: p.name, href: `/${p.key}` };
-    if (role === "admin") return { label: `Produto: ${p.name}`, shortLabel: p.name, href: `/${p.key}` };
-    if (role === "teacher") return { label: `Minhas aulas de ${p.name}`, shortLabel: p.name, href: `/${p.key}` };
-    return { label: `Meus materiais de ${p.name}`, shortLabel: p.name, href: `/${p.key}` };
-  }).filter((m) => !(role === "teacher" && m.href === "/trabalhos"));
+  // Um item por produto, com seus subprodutos logo abaixo (conforme o perfil).
+  const productMenu: MenuItem[] = productList
+    .filter((p) => !(role === "teacher" && p.key === "trabalhos"))
+    .map((p) => {
+      const label = !user ? p.name
+        : role === "admin" ? `Produto: ${p.name}`
+        : role === "teacher" ? `Minhas aulas de ${p.name}`
+        : `Meus materiais de ${p.name}`;
+      const subs = activeSubproducts(p)
+        .filter((s) => !(role === "teacher" && s.key === "aula_particular"))
+        .map((s) => ({ label: s.name, href: s.kind === "link" && s.href ? s.href : `/${p.key}?sub=${s.key}` }));
+      return {
+        label: p.name,
+        shortLabel: p.name,
+        children: [{ label: user ? label : `Conhecer ${p.name}`, href: `/${p.key}` }, ...subs],
+      };
+    });
   const baseMenu = [
     ...(user
       ? role === "admin"

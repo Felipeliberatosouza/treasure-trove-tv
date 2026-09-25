@@ -4071,6 +4071,7 @@ export type Database = {
         Returns: string
       }
       release_pending_cashback: { Args: never; Returns: number }
+      run_platform_maintenance: { Args: never; Returns: Json }
       set_content_duration: {
         Args: { _content_id: string; _content_type: string; _seconds: number }
         Returns: boolean

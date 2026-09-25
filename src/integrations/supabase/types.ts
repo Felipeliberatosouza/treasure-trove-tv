@@ -3956,6 +3956,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_active_teacher: { Args: { _user_id: string }; Returns: boolean }
       is_contact_registered: {
         Args: { _email: string; _phone: string }
         Returns: boolean

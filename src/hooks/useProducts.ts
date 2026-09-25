@@ -85,6 +85,14 @@ export async function reloadProducts() {
   return cache;
 }
 
+/** Atualiza um produto na memória compartilhada para que todas as telas abertas mostrem o mesmo valor na hora. */
+export function updateProductDraft(key: string, patch: Partial<Product>) {
+  const base = cache || FALLBACK_PRODUCTS;
+  cache = base.map((p) => (p.key === key ? { ...p, ...patch } : p));
+  listeners.forEach((l) => l(cache!));
+}
+
+
 /** Lista de produtos (todos, inclusive inativos, quando includeInactive). */
 export function useProducts(includeInactive = false) {
   const [all, setAll] = useState<Product[]>(cache || FALLBACK_PRODUCTS);

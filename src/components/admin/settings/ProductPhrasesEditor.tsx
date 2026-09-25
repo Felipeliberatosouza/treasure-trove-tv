@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Loader2, Save } from "lucide-react";
 import { toast } from "sonner";
-import { productIcon, reloadProducts, useProducts, type Product } from "@/hooks/useProducts";
+import { productIcon, reloadProducts, updateProductDraft, useProducts, type Product } from "@/hooks/useProducts";
 
 /** Frases da página inicial por produto: destaque, pergunta principal (fixa) e frase-guia. */
 export default function ProductPhrasesEditor() {
@@ -19,6 +19,7 @@ export default function ProductPhrasesEditor() {
   const upd = (key: string, field: "badge" | "headline" | "input_hint", value: string) => {
     setDirty(true);
     setItems((cur) => cur.map((p) => (p.key === key ? { ...p, [field]: value } : p)));
+    updateProductDraft(key, { [field]: value });
   };
 
   const save = async (silent = false) => {

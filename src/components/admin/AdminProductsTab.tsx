@@ -10,14 +10,29 @@ import { Boxes, Save, Loader2, ArrowUp, ArrowDown, ExternalLink } from "lucide-r
 import { toast } from "sonner";
 import { activeSubproducts, FALLBACK_SUBPRODUCTS, type Subproduct } from "@/hooks/useProducts";
 import { Plus, Trash2 } from "lucide-react";
-import { PRODUCT_ICONS, productIcon, reloadProducts, useProducts, type Product } from "@/hooks/useProducts";
+import { PRODUCT_ICONS, productIcon, reloadProducts, updateProductDraft, useProducts, type Product } from "@/hooks/useProducts";
+
+const SHARED_FIELDS = ["badge", "headline", "input_hint"] as const;
 
 export default function AdminProductsTab() {
   const loaded = useProducts(true);
   const [items, setItems] = useState<Product[]>([]);
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => { setItems(loaded.map((p) => ({ ...p, subproducts: p.subproducts?.length ? p.subproducts : FALLBACK_SUBPRODUCTS[p.key] || [] }))); }, [loaded]);
+  // Primeira carga: copia tudo. Depois: só sincroniza as frases compartilhadas com Identidade Visual,
+  // sem perder edições locais (ordem, subprodutos etc.).
+  useEffect(() => {
+    setItems((cur) => {
+      if (!cur.length) return loaded.map((p) => ({ ...p, subproducts: p.subproducts?.length ? p.subproducts : FALLBACK_SUBPRODUCTS[p.key] || [] }));
+      return cur.map((p) => {
+        const src = loaded.find((l) => l.key === p.key);
+        if (!src) return p;
+        const next = { ...p };
+        SHARED_FIELDS.forEach((f) => { (next as any)[f] = src[f]; });
+        return next;
+      });
+    });
+  }, [loaded]);
   void activeSubproducts;
   const updSub = (i: number, j: number, patch: Partial<Subproduct> | null) =>
     setItems((cur) => cur.map((p, idx) => {
@@ -29,8 +44,12 @@ export default function AdminProductsTab() {
   const addSub = (i: number) =>
     setItems((cur) => cur.map((p, idx) => idx === i ? { ...p, subproducts: [...(p.subproducts || []), { key: `sub_${Date.now()}`, name: "Novo subproduto", kind: "ai", tool: "revisao", active: true }] } : p));
 
-  const upd = (i: number, field: keyof Product, value: unknown) =>
+  const upd = (i: number, field: keyof Product, value: unknown) => {
     setItems((cur) => cur.map((p, idx) => (idx === i ? { ...p, [field]: value } : p)));
+    if ((SHARED_FIELDS as readonly string[]).includes(field as string) && items[i]) {
+      updateProductDraft(items[i].key, { [field]: value } as Partial<Product>);
+    }
+  };
 
   const move = (i: number, dir: -1 | 1) => {
     const j = i + dir;

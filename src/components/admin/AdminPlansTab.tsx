@@ -53,6 +53,8 @@ const AI_MODES = [
 const AdminPlansTab = () => {
   const [plans, setPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState(true);
+  const productsAll = useProducts(true);
+  const [productFilter, setProductFilter] = useState("provas");
   const [saving, setSaving] = useState(false);
   const { toast } = useToast();
 

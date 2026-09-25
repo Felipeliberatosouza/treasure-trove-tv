@@ -842,5 +842,11 @@ export function useAllPlatformSettings() {
     fetchAll();
   }, []);
 
+  useEffect(() => {
+    const fn = (k: string, v: unknown) => setSettings((cur) => ({ ...cur, [k]: v }));
+    settingListeners.add(fn);
+    return () => { settingListeners.delete(fn); };
+  }, []);
+
   return { settings, loading };
 }

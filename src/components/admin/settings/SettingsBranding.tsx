@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Save, Upload, X, Image, Download } from "lucide-react";
 import ProductPhrasesEditor from "./ProductPhrasesEditor";
+import CacheControls from "./CacheControls";
 
 
 /** Frases padrão da página inicial (usadas quando nada foi cadastrado). */
@@ -181,6 +182,7 @@ const SettingsBranding = () => {
 
   return (
     <div className="space-y-4 max-w-lg">
+      <CacheControls />
       <div>
         <Label>Nome da Plataforma</Label>
         <Input value={form.platform_name} onChange={(e) => setForm({ ...form, platform_name: e.target.value })} />

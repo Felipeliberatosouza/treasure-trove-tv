@@ -13,6 +13,7 @@ export interface Video {
   videoUrl?: string;
   /** Frase exibida na barra cinza sobre o vídeo. */
   overlayLabel?: string;
+  productKeys?: string[];
   /** Número de visualizações do conteúdo. */
   views?: number;
 }

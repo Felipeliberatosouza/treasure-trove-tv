@@ -99,6 +99,20 @@ const VideoCard = ({ video, index, onClick, rating, showTrialBadge, watched }: V
               {video.overlayLabel}
             </div>
           )}
+          {(() => {
+            const LABELS: Record<string, string> = { enem: "ENEM", vestibulares: "Vestibular", oab: "OAB", concursos: "Concursos" };
+            const tags = (video.productKeys || []).filter((k) => LABELS[k]);
+            if (!tags.length) return null;
+            return (
+              <div className={`absolute left-2 flex flex-wrap gap-1 ${showTrialBadge ? "top-8" : "top-2"}`}>
+                {tags.map((k) => (
+                  <span key={k} className="rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold uppercase text-primary-foreground shadow-md">
+                    {LABELS[k]}
+                  </span>
+                ))}
+              </div>
+            );
+          })()}
           {showTrialBadge && (
             <div className="absolute top-2 left-2 flex items-center gap-1 rounded-full bg-accent px-2 py-0.5 text-[10px] font-bold text-accent-foreground shadow-md">
               <Gift className="h-3 w-3" /> TESTE GRÁTIS

@@ -100,7 +100,7 @@ const SectionCatalog = ({ sectionKey }: Props) => {
         buildQuery("exam_solutions"),
         supabase
           .from("ai_canonical_contents")
-          .select("id, assunto, disciplina, areas, kit, updated_at")
+          .select("id, assunto, disciplina, areas, kit, updated_at, product_keys")
           .eq("status", "ready")
           .eq("visibility", "public_canonical")
           .order("updated_at", { ascending: false })
@@ -209,6 +209,7 @@ const SectionCatalog = ({ sectionKey }: Props) => {
           category: ((r.areas as string[]) || [])[0] || "",
           instructor: teacherInstructorLabel(t?.name),
           overlayLabel: teacherOverlayLabel(t?.name),
+          productKeys: (r.product_keys as string[] | null) || [],
           instructorHref: t?.slug ? `/${t.slug}` : undefined,
           lessons: 1,
           views: viewsMap.get(r.id) || 0,
@@ -266,6 +267,7 @@ const SectionCatalog = ({ sectionKey }: Props) => {
             category: areas[0] || row.disciplina || "",
             instructor: aiInstructorLabel(avatar.gender, avatar.name),
             overlayLabel: aiOverlayLabel(avatar.gender, avatar.name),
+            productKeys: (row.product_keys as string[] | null) || [],
             lessons: total || 1,
             views: viewsMap.get(row.id) || 0,
             _areas: areas,

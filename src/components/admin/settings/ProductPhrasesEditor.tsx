@@ -15,18 +15,34 @@ export default function ProductPhrasesEditor() {
 
   useEffect(() => { setItems(loaded.map((p) => ({ ...p }))); }, [loaded]);
 
-  const upd = (key: string, field: "badge" | "headline" | "input_hint", value: string) =>
+  const [dirty, setDirty] = useState(false);
+  const upd = (key: string, field: "badge" | "headline" | "input_hint", value: string) => {
+    setDirty(true);
     setItems((cur) => cur.map((p) => (p.key === key ? { ...p, [field]: value } : p)));
-
-  const save = async () => {
-    setSaving(true);
-    const rows = items.map((p) => ({ ...p, updated_at: new Date().toISOString() }));
-    const { error } = await supabase.from("products").upsert(rows as any);
-    setSaving(false);
-    if (error) { toast.error("Não foi possível salvar as frases: " + error.message); return; }
-    await reloadProducts();
-    toast.success("Frases dos produtos salvas.");
   };
+
+  const save = async (silent = false) => {
+    setSaving(true);
+    const now = new Date().toISOString();
+    for (const p of items) {
+      const { error } = await supabase.from("products")
+        .update({ badge: p.badge ?? null, headline: p.headline ?? null, input_hint: p.input_hint ?? null, updated_at: now } as any)
+        .eq("key", p.key);
+      if (error) { setSaving(false); toast.error("Não foi possível salvar as frases: " + error.message); return; }
+    }
+    setSaving(false);
+    setDirty(false);
+    await reloadProducts();
+    toast.success(silent ? "Frases dos produtos salvas automaticamente." : "Frases dos produtos salvas.");
+  };
+
+  // Salva sozinho 1,5s depois da última digitação, para não depender do botão.
+  useEffect(() => {
+    if (!dirty) return;
+    const t = setTimeout(() => save(true), 1500);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [items, dirty]);
 
   return (
     <div className="space-y-4 rounded-lg border border-border p-4">

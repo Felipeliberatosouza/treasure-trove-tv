@@ -91,8 +91,8 @@ const defaultPlans: PlanData[] = [
   },
 ];
 
-const PricingSection = () => {
-  const [plans, setPlans] = useState<PlanData[]>(defaultPlans);
+const PricingSection = ({ productKey }: { productKey?: string } = {}) => {
+  const [plans, setPlans] = useState<PlanData[]>(productKey ? [] : defaultPlans);
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -108,8 +108,9 @@ const PricingSection = () => {
         .from("subscription_plans")
         .select(selectFields)
         .eq("active", true)
+        .eq("product_key", productKey || "provas")
         .order("sort_order");
-      if (data?.length) setPlans(data as unknown as PlanData[]);
+      if (data?.length || productKey) setPlans((data || []) as unknown as PlanData[]);
     };
     fetchPlans();
   }, [user]);

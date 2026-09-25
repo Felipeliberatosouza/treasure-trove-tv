@@ -190,6 +190,13 @@
       "when": 1790341842411,
       "tag": "0026_beta_mode_bug_reports",
       "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1790349106321,
+      "tag": "0027_beta_end_requires_card",
+      "breakpoints": true
     }
   ]
 }

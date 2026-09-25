@@ -747,6 +747,13 @@ export const DEFAULT_PRODUCT_CONFIG: ProductConfigSettings = {
   colinhas: { bullet_max: 100, min_bullets: 10 },
 };
 
+// Canal único: toda tela que usa a mesma configuração recebe a mudança na hora,
+// não importa em qual tela ela foi feita.
+const settingListeners = new Set<(key: string, value: unknown) => void>();
+function broadcastSetting(key: string, value: unknown) {
+  settingListeners.forEach((fn) => fn(key, value));
+}
+
 export function usePlatformSettings<K extends keyof SettingsMap>(key: K) {
   // Começa com o valor guardado no acesso anterior para que logomarca, cores e
   // textos já apareçam corretos antes da resposta do backend.
@@ -755,6 +762,12 @@ export function usePlatformSettings<K extends keyof SettingsMap>(key: K) {
   );
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+
+  useEffect(() => {
+    const fn = (k: string, v: unknown) => { if (k === key) setData(v as SettingsMap[K]); };
+    settingListeners.add(fn);
+    return () => { settingListeners.delete(fn); };
+  }, [key]);
 
   const fetch = useCallback(async () => {
     setLoading(true);
@@ -776,10 +789,19 @@ export function usePlatformSettings<K extends keyof SettingsMap>(key: K) {
   useEffect(() => { fetch(); }, [fetch]);
 
   const update = useCallback(async (value: SettingsMap[K]) => {
+    // Junta com o valor mais recente do banco, para não apagar campos que
+    // outra tela tenha salvo enquanto esta estava aberta.
+    const { data: current } = await supabase
+      .from("platform_settings").select("value").eq("key", key).maybeSingle();
+    const base = current?.value;
+    const isObj = (x: unknown) => !!x && typeof x === "object" && !Array.isArray(x);
+    const merged = (isObj(base) && isObj(value)
+      ? { ...(base as object), ...(value as object) }
+      : value) as SettingsMap[K];
     const { error } = await supabase
       .from("platform_settings")
       .upsert(
-        { key, value: JSON.parse(JSON.stringify(value)) },
+        { key, value: JSON.parse(JSON.stringify(merged)) },
         { onConflict: "key" },
       );
 
@@ -787,11 +809,12 @@ export function usePlatformSettings<K extends keyof SettingsMap>(key: K) {
       toast({ title: "Erro", description: "Falha ao salvar configuração.", variant: "destructive" });
       return false;
     }
-    setData(value);
+    setData(merged);
     // Atualiza o cache e, no caso da identidade visual, aplica as novas cores
     // imediatamente — inclusive no próximo acesso ao site publicado.
-    writeCachedSetting(key as string, JSON.parse(JSON.stringify(value)));
-    if (key === "branding") applyBranding(value as unknown as BrandingVars);
+    writeCachedSetting(key as string, JSON.parse(JSON.stringify(merged)));
+    if (key === "branding") applyBranding(merged as unknown as BrandingVars);
+    broadcastSetting(key as string, merged);
     toast({ title: "Salvo", description: "Configuração atualizada com sucesso." });
     return true;
   }, [key, toast]);

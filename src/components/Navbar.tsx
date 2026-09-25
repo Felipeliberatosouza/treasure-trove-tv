@@ -375,14 +375,15 @@ const Navbar = () => {
           )}
         </Link>
 
-        <div className="hidden min-w-0 flex-1 items-center justify-center gap-3 overflow-hidden lg:flex">
+        <div ref={navOuterRef} className="hidden min-w-0 flex-1 items-center justify-center overflow-hidden lg:flex">
+          <div ref={navInnerRef} className="flex w-max items-center" style={{ fontSize: `${navFontPx}px`, gap: "0.85em" }}>
           {menuItems.map((item) => {
             if (item.children && item.children.length > 0) {
               return (
                 <div key={item.label} className="relative group">
                   <button
                     type="button"
-                    className="text-xs text-muted-foreground transition-colors hover:text-foreground whitespace-nowrap"
+                    className="text-[1em] leading-tight text-muted-foreground transition-colors hover:text-foreground whitespace-nowrap"
                   >
                     {item.shortLabel ?? item.label}
                   </button>
@@ -410,7 +411,7 @@ const Navbar = () => {
             const href = item.href ?? "#";
             const hasAlert = alertActive(item.alertKey);
             const className =
-              "relative inline-flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-foreground whitespace-nowrap";
+              "relative inline-flex items-center gap-1 text-[1em] leading-tight text-muted-foreground transition-colors hover:text-foreground whitespace-nowrap";
             const alertBadge = hasAlert ? (
               <span
                 aria-label="Pendência"
@@ -439,6 +440,7 @@ const Navbar = () => {
               </Link>
             );
           })}
+          </div>
         </div>
 
         <div className="flex items-center gap-3">

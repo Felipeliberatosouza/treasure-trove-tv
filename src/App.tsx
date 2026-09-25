@@ -53,6 +53,7 @@ import GlobalRedirectOverlay from "./components/GlobalRedirectOverlay.tsx";
 import OnboardingGuard from "./components/OnboardingGuard.tsx";
 import EmailConfirmationHandler from "./components/EmailConfirmationHandler.tsx";
 import ScrollToTop from "./components/ScrollToTop.tsx";
+import BetaBar from "./components/beta/BetaBar.tsx";
 import SubscriptionUnavailableBanner from "./components/SubscriptionUnavailableBanner.tsx";
 import GlobalContentProtection from "./components/GlobalContentProtection.tsx";
 // Test-only harness route. Lazy import keeps it out of prod chunks unless
@@ -75,6 +76,7 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <ScrollToTop />
+          <BetaBar />
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />

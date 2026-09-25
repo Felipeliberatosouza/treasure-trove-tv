@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import MandatoryMfaGuard from "@/components/MandatoryMfaGuard";
 import { motion } from "framer-motion";
-import { ArrowLeft, Video, DollarSign, Shield, LayoutDashboard, Settings, HelpCircle, Mail, CalendarClock, Megaphone, Users, CreditCard, FileText, ScrollText, Activity, RefreshCcw, Receipt, XCircle, LifeBuoy, UserCog, User, Lock, MessageCircle, Gift , MessageSquare } from "lucide-react";
+import { ArrowLeft, Video, DollarSign, Shield, LayoutDashboard, Settings, HelpCircle, Mail, CalendarClock, Megaphone, Users, CreditCard, FileText, ScrollText, Activity, RefreshCcw, Receipt, XCircle, LifeBuoy, UserCog, User, Lock, MessageCircle, Gift , MessageSquare, Boxes } from "lucide-react";
 import { Link, Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
@@ -30,6 +30,7 @@ import AdminProfileApprovalsTab from "@/components/admin/AdminProfileApprovalsTa
 import AdminLeadsTab from "@/components/admin/AdminLeadsTab";
 import AdminReferralsTab from "@/components/admin/AdminReferralsTab";
 import AdminWorkDocsTab from "@/components/admin/AdminWorkDocsTab";
+import AdminProductsTab from "@/components/admin/AdminProductsTab";
 import AdminSupportAgentTab from "@/components/admin/AdminSupportAgentTab";
 import PersonalDataTab from "@/components/dashboard/PersonalDataTab";
 import LoginDataTab from "@/components/dashboard/LoginDataTab";
@@ -37,6 +38,7 @@ import LoginDataTab from "@/components/dashboard/LoginDataTab";
 const tabs = [
   { id: "overview", label: "Visão Geral", icon: LayoutDashboard },
   { id: "users", label: "Usuários", icon: Users },
+  { id: "products", label: "Produtos", icon: Boxes },
   { id: "plans", label: "Planos", icon: CreditCard },
   { id: "support-tickets", label: "Tickets de Atendimento", icon: LifeBuoy },
   { id: "leads", label: "Leads do WhatsApp", icon: MessageCircle, hidden: true },
@@ -145,6 +147,7 @@ const AdminDashboard = () => {
             {activeTab === "leads" && <AdminLeadsTab />}
             {activeTab === "referrals" && <AdminReferralsTab />}
             {activeTab === "work-docs" && <AdminWorkDocsTab />}
+            {activeTab === "products" && <AdminProductsTab />}
             {activeTab === "support-agent" && <AdminSupportAgentTab />}
             {activeTab === "profile-approvals" && <AdminProfileApprovalsTab />}
             {activeTab === "settings" && <AdminSettingsTab />}

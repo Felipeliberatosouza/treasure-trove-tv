@@ -349,7 +349,12 @@ async function handleRequest(req: Request, body: any): Promise<Response> {
     if (assunto.length < 3 || assunto.length > 500) {
       return json({ error: "Descreva o assunto da prova (entre 3 e 500 caracteres)." }, 400);
     }
-    const disciplina = String(body.disciplina || "").trim().slice(0, 120) || null;
+    const PRODUCT_LABELS: Record<string, string> = { enem: "ENEM", vestibulares: "Vestibular", oab: "Exame da OAB", concursos: "Concurso Público" };
+    const productKey = typeof body.product_key === "string" && /^[a-z_]{2,30}$/.test(body.product_key) ? body.product_key : "provas";
+    const productExtra = String(body.product_extra || "").trim().slice(0, 200);
+    const disciplinaRaw = String(body.disciplina || "").trim().slice(0, 120);
+    const prodLabel = PRODUCT_LABELS[productKey];
+    const disciplina = (prodLabel ? [prodLabel, productExtra, disciplinaRaw].filter(Boolean).join(" - ") : disciplinaRaw).slice(0, 200) || null;
     const cursoBase = String(body.curso || "").trim().slice(0, 120);
     const serie = String(body.serie || "").replace(/\D/g, "").slice(0, 3);
     const curso = [cursoBase, serie ? `${serie}ª série/ano` : ""].filter(Boolean).join(" - ") || null;
@@ -568,6 +573,7 @@ async function handleRequest(req: Request, body: any): Promise<Response> {
         .from("ai_canonical_contents")
         .upsert({
           cache_key: cacheKey,
+          product_keys: [productKey],
           disciplina,
           assunto,
           areas,

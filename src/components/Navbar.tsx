@@ -10,6 +10,7 @@ import ContinueWatchingMenu from "@/components/student/ContinueWatchingMenu";
 import { useAllPlatformSettings } from "@/hooks/usePlatformSettings";
 import type { BrandingSettings } from "@/hooks/usePlatformSettings";
 import { supabase } from "@/integrations/supabase/client";
+import { useProducts } from "@/hooks/useProducts";
 import { useActiveSubscription } from "@/hooks/useActiveSubscription";
 import { useTeacherAlerts } from "@/hooks/useTeacherAlerts";
 import { useAdminAlerts } from "@/hooks/useAdminAlerts";
@@ -130,13 +131,23 @@ const Navbar = () => {
   const adminAlerts = useAdminAlerts();
   const studentAlerts = useStudentAlerts();
 
-  const baseMenu = user
-    ? role === "admin"
-      ? adminMenuItems
-      : role === "teacher"
-        ? teacherMenuItems
-        : loggedMenuItems
-    : publicMenuItems;
+  const productList = useProducts();
+  const productMenu: MenuItem[] = productList.map((p) => {
+    if (!user) return { label: p.title, shortLabel: p.name, href: `/${p.key}` };
+    if (role === "admin") return { label: `Produto: ${p.name}`, shortLabel: p.name, href: `/${p.key}` };
+    if (role === "teacher") return { label: `Minhas aulas de ${p.name}`, shortLabel: p.name, href: `/${p.key}` };
+    return { label: `Meus materiais de ${p.name}`, shortLabel: p.name, href: `/${p.key}` };
+  }).filter((m) => !(role === "teacher" && m.href === "/trabalhos"));
+  const baseMenu = [
+    ...(user
+      ? role === "admin"
+        ? [{ label: "Gestão de Produtos", shortLabel: "Produtos", href: "/dashboard/admin?tab=products" }, ...adminMenuItems]
+        : role === "teacher"
+          ? teacherMenuItems
+          : loggedMenuItems
+      : publicMenuItems),
+    ...productMenu,
+  ];
   const teacherSlug = (profile as { slug?: string | null } | null)?.slug ?? "";
   const resolvedBase = baseMenu
     .map((item) => {

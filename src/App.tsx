@@ -30,6 +30,7 @@ import MinhasDuvidas from "./pages/MinhasDuvidas.tsx";
 import MinhasAulasAgendadas from "./pages/MinhasAulasAgendadas.tsx";
 import EstudarIA from "./pages/EstudarIA.tsx";
 import MeusTrabalhos from "./pages/MeusTrabalhos.tsx";
+import ProductPage from "./pages/ProductPage.tsx";
 import TrabalhoIA from "./pages/TrabalhoIA.tsx";
 
 import ConteudoIA from "./pages/ConteudoIA.tsx";
@@ -104,6 +105,9 @@ const App = () => (
             <Route path="/ia" element={<Navigate to="/" replace />} />
             <Route path="/conteudo-ia/:id" element={<ConteudoIA />} />
             <Route path="/meus-trabalhos" element={<MeusTrabalhos />} />
+            {["provas", "trabalhos", "enem", "vestibulares", "oab", "concursos"].map((k) => (
+              <Route key={k} path={`/${k}`} element={<ProductPage />} />
+            ))}
             <Route path="/trabalho/:id" element={<TrabalhoIA />} />
             <Route path="/convite/:token" element={<ConviteIndicacao />} />
             <Route path="/estudar-ia" element={<EstudarIA />} />

@@ -151,8 +151,18 @@ export function useResourceLimit() {
     [scopeOf]
   );
 
+  // Professor ativo (publicou nos últimos 30 dias) acessa tudo gratuitamente.
+  const [activeTeacher, setActiveTeacher] = useState(false);
+  useEffect(() => {
+    if (!user) { setActiveTeacher(false); return; }
+    supabase.rpc("is_active_teacher", { _user_id: user.id }).then(({ data }) => setActiveTeacher(data === true));
+  }, [user]);
+
   const checkLimit = useCallback(
     (resourceType: ResourceType, source?: ContentSource, productKeys?: string[]): LimitResult => {
+      if (activeTeacher) {
+        return { allowed: true, used: 0, total: 9999, remaining: 9999, hasSubscription: true, individualPrice: null, referralCredits: 0, referralBlocked: false } as LimitResult;
+      }
       const owned = referralCredits[resourceType] || 0;
       const usable = canUseReferralCredit(resourceType, source);
       const bonus = usable ? owned : 0;

@@ -222,7 +222,7 @@ const HomeKitGenerator = ({ productKey, productExtra, fixedHeadline }: HomeKitGe
   const [notice, setNotice] = useState<string | null>(null);
   const [chatMsg, setChatMsg] = useState("");
   const [messages, setMessages] = useState<string[]>([]);
-  const [tool, setTool] = useState<ToolKey | null>(null);
+  const [tool, setTool] = useState<ToolKey | null>(productKey === "trabalhos" ? "trabalho" : null);
   const [headlineIndex, setHeadlineIndex] = useState(0);
   const submittingRef = useRef(false);
   const runIdRef = useRef(0);

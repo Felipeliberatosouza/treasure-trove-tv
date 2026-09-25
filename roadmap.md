@@ -25,3 +25,5 @@
 - [x] Link "Dúvidas? Tire suas dúvidas aqui!" na home abrindo pop-up com o FAQ (atualiza com o admin)
 
 - [x] Produtos e subprodutos conforme planilha (menu, atalhos, painel, professor ativo)
+
+- [x] Versão Beta: flag no admin, barra fixa, reporte simples, detecção automática de erros, Créditos de IA por reporte, cartão de teste fixo

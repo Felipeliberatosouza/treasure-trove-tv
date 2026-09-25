@@ -987,7 +987,7 @@ function CheckoutForm({
 
       <Button
         onClick={handleSubmit}
-        disabled={!stripe || submitting || redirecting}
+        disabled={(!beta && !stripe) || submitting || redirecting}
         size="lg"
         className={cn(
           "w-full font-display",

@@ -506,6 +506,7 @@ function CheckoutForm({
   const elements = useElements();
   const navigate = useNavigate();
   const { user, refreshSubscription } = useAuth();
+  const { beta } = useBetaMode();
   const [submitting, setSubmitting] = useState(false);
   // Sticky "we're leaving" flag. Becomes true the moment we commit to
   // navigating away (success, alreadyOwned, alreadySucceededOnRetry,
@@ -921,6 +922,29 @@ function CheckoutForm({
 
       <Card className="p-5 space-y-3">
         <h3 className="font-semibold text-sm">Dados do cartão</h3>
+        {beta ? (
+          <div className="space-y-3">
+            <div role="status" className="rounded-md border border-primary/40 bg-primary/10 px-3 py-2 text-xs text-foreground">
+              <strong>Versão beta:</strong> este é um cartão fictício, usado apenas para simular o uso. Você não pagará nada pelo uso do sistema.
+            </div>
+            <div className="grid gap-3">
+              <div>
+                <Label htmlFor="beta-card">Número do cartão</Label>
+                <Input id="beta-card" value={BETA_TEST_CARD.number} readOnly disabled />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label htmlFor="beta-exp">Validade</Label>
+                  <Input id="beta-exp" value={BETA_TEST_CARD.expiry} readOnly disabled />
+                </div>
+                <div>
+                  <Label htmlFor="beta-cvc">CVC</Label>
+                  <Input id="beta-cvc" value={BETA_TEST_CARD.cvc} readOnly disabled />
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
         <div className="rounded-md border border-border bg-background p-3">
           <PaymentElement
             options={{
@@ -930,6 +954,7 @@ function CheckoutForm({
             }}
           />
         </div>
+        )}
         <p className="text-[11px] text-muted-foreground leading-snug">
           Aceitamos Visa, Mastercard, Elo, American Express, Hipercard e outras bandeiras.
         </p>

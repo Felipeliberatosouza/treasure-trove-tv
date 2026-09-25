@@ -13,6 +13,7 @@ import CpfInput from "@/components/CpfInput";
 import PaymentSecurityBadge from "@/components/PaymentSecurityBadge";
 import { isValidCPF } from "@/lib/cpfValidator";
 import { ArrowLeft, Check, ChevronDown, CreditCard, Loader2, ShieldCheck, UserRound, Wallet } from "lucide-react";
+import { useBetaMode, BETA_TEST_CARD } from "@/hooks/useBetaMode";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -616,7 +617,7 @@ function CheckoutForm({
   }, [onReady]);
 
   const handleSubmit = async () => {
-    if (!stripe || !elements) return;
+    if (!beta && (!stripe || !elements)) return;
     // Belt-and-braces: if we've already committed to navigating away,
     // refuse any further submit attempts even if the button somehow
     // received a click (e.g. a keypress queued before the disabled
@@ -631,6 +632,32 @@ function CheckoutForm({
     }
 
     setSubmitting(true);
+    if (beta) {
+      try {
+        const { error: betaErr } = await supabase.rpc("beta_simulate_checkout", {
+          _mode: state.mode,
+          _price_id: state.priceId ?? "",
+          _content_id: (state.contentId ?? null) as any,
+          _content_type: state.contentType ?? "",
+          _amount: Number(state.mode === "subscription" ? state.planPrice ?? 0 : state.unitPrice ?? 0),
+        });
+        if (betaErr) {
+          setError(betaErr.message || "Não foi possível concluir a simulação.");
+          return;
+        }
+        toast.success("Simulação concluída! Nenhuma cobrança foi feita.");
+        setRedirecting(true);
+        if (state.mode === "subscription") {
+          try { await refreshSubscription(); } catch { /* ignore */ }
+          safeNavigate("/dashboard?tab=subscription", { replace: true });
+        } else {
+          safeNavigate(`/aula/${state.contentId}`, { replace: true });
+        }
+      } finally {
+        setSubmitting(false);
+      }
+      return;
+    }
     try {
       // 1. Validate Elements
       const { error: submitError } = await elements.submit();

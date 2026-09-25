@@ -101,6 +101,32 @@ const Navbar = () => {
   const [searching, setSearching] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const searchContainerRef = useRef<HTMLDivElement>(null);
+  // Auto-ajuste do menu linear: reduz a fonte até todos os links caberem sem corte.
+  const navOuterRef = useRef<HTMLDivElement>(null);
+  const navInnerRef = useRef<HTMLDivElement>(null);
+  const [navFontPx, setNavFontPx] = useState(12);
+  useEffect(() => {
+    const outer = navOuterRef.current;
+    const inner = navInnerRef.current;
+    if (!outer || !inner) return;
+    const MAX = 12;
+    const MIN = 7;
+    const fit = () => {
+      const avail = outer.clientWidth;
+      if (!avail) return;
+      inner.style.fontSize = `${MAX}px`;
+      const needed = inner.scrollWidth;
+      let size = MAX;
+      if (needed > avail) size = Math.max(MIN, Math.floor((MAX * avail * 0.98) / needed * 10) / 10);
+      inner.style.fontSize = `${size}px`;
+      setNavFontPx(size);
+    };
+    fit();
+    const ro = new ResizeObserver(fit);
+    ro.observe(outer);
+    document.fonts?.ready.then(fit).catch(() => {});
+    return () => ro.disconnect();
+  });
   const navigate = useNavigate();
   const location = useLocation();
   const { user, role, profile, signOut } = useAuth();

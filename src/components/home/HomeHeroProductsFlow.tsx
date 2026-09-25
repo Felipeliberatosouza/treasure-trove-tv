@@ -1,20 +1,21 @@
-import { useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { useProducts, productIcon } from "@/hooks/useProducts";
+import { productIcon, type Product } from "@/hooks/useProducts";
 
-export default function HomeHeroProductsFlow() {
-  const products = useProducts();
-  const navigate = useNavigate();
-  const [active, setActive] = useState<string | null>(null);
-  const current = products.find((p) => p.key === active) ?? products[0];
+type Props = {
+  products: Product[];
+  activeKey: string;
+  onSelect: (key: string) => void;
+};
+
+/** Abas de produtos da página inicial, com o link da página do produto logo abaixo. */
+export default function HomeHeroProductsFlow({ products, activeKey, onSelect }: Props) {
+  const current = products.find((p) => p.key === activeKey) ?? products[0];
   if (!current) return null;
 
   return (
-    <section className="border-b border-border bg-background px-4 pb-10 pt-24 md:px-10 md:pt-28" aria-label="Nossos produtos">
+    <section className="bg-background px-4 pb-2 pt-24 md:px-10 md:pt-28" aria-label="Nossos produtos">
       <div className="mx-auto w-full max-w-6xl">
         <div role="tablist" className="flex gap-2 overflow-x-auto pb-2 md:justify-center">
           {products.map((p) => {
@@ -25,7 +26,7 @@ export default function HomeHeroProductsFlow() {
                 key={p.key}
                 role="tab"
                 aria-selected={selected}
-                onClick={() => setActive(p.key)}
+                onClick={() => onSelect(p.key)}
                 className={cn(
                   "flex shrink-0 items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition-colors",
                   selected
@@ -39,25 +40,14 @@ export default function HomeHeroProductsFlow() {
             );
           })}
         </div>
-
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={current.key}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.2 }}
-            className="mt-6 rounded-2xl border border-border bg-card p-6 md:p-8"
+        <div className="mt-3 text-center">
+          <Link
+            to={`/${current.key}`}
+            className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
           >
-            <div className="text-left">
-              <h2 className="font-display text-2xl font-bold md:text-3xl">{current.title}</h2>
-              <p className="mt-2 text-muted-foreground">{current.description}</p>
-              <Button className="mt-6" onClick={() => navigate(`/${current.key}`)}>
-                {current.cta} <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </div>
-          </motion.div>
-        </AnimatePresence>
+            {current.cta} <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
       </div>
     </section>
   );

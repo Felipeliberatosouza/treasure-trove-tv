@@ -80,6 +80,9 @@ export default function AdminProductsTab() {
               </div>
               <div><Label>Título</Label><Input value={p.title} onChange={(e) => upd(i, "title", e.target.value)} /></div>
               <div><Label>Descrição (página inicial)</Label><Textarea rows={2} value={p.description} onChange={(e) => upd(i, "description", e.target.value)} /></div>
+              <div><Label>Frase de destaque (acima da pergunta na página inicial)</Label><Input value={p.badge || ""} onChange={(e) => upd(i, "badge", e.target.value)} /></div>
+              <div><Label>Pergunta principal (o nome do usuário logado entra antes do "?")</Label><Input value={p.headline || ""} onChange={(e) => upd(i, "headline", e.target.value)} /></div>
+              <div><Label>Frase-guia da caixa de digitação</Label><Input value={p.input_hint || ""} onChange={(e) => upd(i, "input_hint", e.target.value)} /></div>
               <div><Label>Texto da página do produto</Label><Textarea rows={2} value={p.page_intro} onChange={(e) => upd(i, "page_intro", e.target.value)} /></div>
             </Card>
           );

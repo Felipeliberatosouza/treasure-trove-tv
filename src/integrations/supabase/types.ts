@@ -1851,9 +1851,12 @@ export type Database = {
       products: {
         Row: {
           active: boolean
+          badge: string
           cta: string
           description: string
+          headline: string
           icon: string
+          input_hint: string
           key: string
           name: string
           page_intro: string
@@ -1863,9 +1866,12 @@ export type Database = {
         }
         Insert: {
           active?: boolean
+          badge?: string
           cta?: string
           description?: string
+          headline?: string
           icon?: string
+          input_hint?: string
           key: string
           name: string
           page_intro?: string
@@ -1875,9 +1881,12 @@ export type Database = {
         }
         Update: {
           active?: boolean
+          badge?: string
           cta?: string
           description?: string
+          headline?: string
           icon?: string
+          input_hint?: string
           key?: string
           name?: string
           page_intro?: string

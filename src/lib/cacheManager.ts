@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
  * - Invalida quando o admin força atualização global (platform_settings.cache_version).
  */
 const BUILD_VERSION: string =
-  (import.meta.env.VITE_BUILD_ID as string | undefined) ?? String(__BUILD_TIME__);
+  (import.meta.env.VITE_BUILD_ID as string | undefined) ?? (typeof __BUILD_TIME__ !== "undefined" ? String(__BUILD_TIME__) : "dev");
 const LOCAL_BUILD_KEY = "rf_build_version";
 const LOCAL_REMOTE_KEY = "rf_remote_cache_version";
 

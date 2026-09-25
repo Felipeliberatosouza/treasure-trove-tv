@@ -61,7 +61,13 @@ export default function AdminProductsTab() {
 
   const save = async () => {
     setSaving(true);
-    const rows = items.map((p, i) => ({ ...p, sort_order: i + 1, updated_at: new Date().toISOString() }));
+    // As frases vêm sempre do valor mais recente (compartilhado com Identidade Visual).
+    const rows = items.map((p, i) => {
+      const fresh = loaded.find((l) => l.key === p.key);
+      const row: any = { ...p, sort_order: i + 1, updated_at: new Date().toISOString() };
+      if (fresh) SHARED_FIELDS.forEach((f) => { row[f] = (fresh as any)[f]; });
+      return row;
+    });
     const { error } = await supabase.from("products").upsert(rows as never);
     setSaving(false);
     if (error) { toast.error("Não foi possível salvar: " + error.message); return; }

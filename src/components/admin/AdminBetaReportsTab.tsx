@@ -88,7 +88,7 @@ export default function AdminBetaReportsTab() {
     pendAuto: reports.filter((r) => r.origin === "automatico" && r.status === "pendente").length,
   }), [reports]);
 
-  const update = async (r: Report, patch: Partial<Report>) => {
+  const update = async (r: Report, patch: { status?: string; admin_notes?: string | null }) => {
     const { error } = await supabase.from("beta_bug_reports").update(patch).eq("id", r.id);
     if (error) return toast.error("Não foi possível atualizar.");
     setReports((prev) => prev.map((x) => (x.id === r.id ? { ...x, ...patch } : x)));

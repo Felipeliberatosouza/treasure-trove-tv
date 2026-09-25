@@ -9,6 +9,7 @@ import { Progress } from "@/components/ui/progress";
 import { Upload, X, Image as ImageIcon, Video, Camera, CheckCircle2, AlertCircle, Sparkles, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useProducts } from "@/hooks/useProducts";
 import { toast } from "sonner";
 import AreaSelector from "@/components/AreaSelector";
 import VideoRecorder from "./VideoRecorder";
@@ -92,6 +93,10 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
 
   // Core fields
   const [title, setTitle] = useState(editData?.title || "");
+  const productsList = useProducts().filter((p) => p.key !== "trabalhos");
+  const [productKeys, setProductKeys] = useState<string[]>(
+    Array.isArray((editData as any)?.product_keys) && (editData as any).product_keys.length ? (editData as any).product_keys : ["provas"],
+  );
   const [description, setDescription] = useState(editData?.description || "");
   const [selectedAreas, setSelectedAreas] = useState<string[]>(editData?.areas || []);
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
@@ -816,6 +821,8 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
       setPrice("price_top_questoes", topPrice, topOffered);
       setPrice("price_colinhas", colinhaPrice, colinhaOffered);
 
+      contentData.product_keys = productKeys.length ? productKeys : ["provas"];
+
       let lessonId: string;
       if (editData?.id) {
         const { error } = await supabase.from(table).update(contentData).eq("id", editData.id);
@@ -985,6 +992,26 @@ const ContentForm = ({ table, editData, onSaved, onCancel }: ContentFormProps) =
             <SelectItem className="text-accent-foreground" value="resolucao_prova">Resolução de Questões de Prova</SelectItem>
           </SelectContent>
         </Select>
+      </div>
+
+      {/* Produtos */}
+      <div>
+        <label className="text-sm text-muted-foreground mb-1 block">Produto(s) desta aula *</label>
+        <div className="flex flex-wrap gap-2">
+          {productsList.map((p) => {
+            const on = productKeys.includes(p.key);
+            return (
+              <button
+                type="button"
+                key={p.key}
+                onClick={() => setProductKeys((cur) => on ? cur.filter((k) => k !== p.key) : [...cur, p.key])}
+                className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${on ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card text-muted-foreground hover:border-primary/50"}`}
+              >
+                {p.name}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Title */}

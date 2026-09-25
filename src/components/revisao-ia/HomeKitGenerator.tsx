@@ -181,6 +181,8 @@ const readDraft = (): Partial<KitDraft> => {
 type HomeKitGeneratorProps = {
   /** Produto da página (enem, oab…). Ausente = página inicial (Provas). */
   productKey?: string;
+  /** Subproduto que já vem escolhido (ex.: vindo do menu). */
+  initialSub?: string | null;
   /** Contexto extra do produto: área, fase, banca, cargo… */
   productExtra?: string;
   /** Título fixo (página de produto), substitui as frases alternadas. */
@@ -193,7 +195,7 @@ type HomeKitGeneratorProps = {
   inputHint?: string;
 };
 
-const HomeKitGenerator = ({ productKey, productExtra, fixedHeadline, badgeText, productHeadline, inputHint }: HomeKitGeneratorProps = {}) => {
+const HomeKitGenerator = ({ productKey, initialSub, productExtra, fixedHeadline, badgeText, productHeadline, inputHint }: HomeKitGeneratorProps = {}) => {
   const navigate = useNavigate();
   const { profile, role } = useAuth();
   const { data: branding } = usePlatformSettings("branding");
@@ -435,6 +437,12 @@ const HomeKitGenerator = ({ productKey, productExtra, fixedHeadline, badgeText, 
       return `${prefix}${base.trimStart()}`;
     });
   };
+  useEffect(() => {
+    setActiveSub(null);
+    const sub = initialSub ? subChips.find((x) => x.key === initialSub) : null;
+    if (sub && sub.kind === "ai") pickSub(sub);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [productKey, initialSub, subChips.length]);
 
 
   if (blocked) {

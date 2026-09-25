@@ -178,7 +178,6 @@ const Navbar = () => {
         children: [{ label: user ? label : `Conhecer ${p.name}`, href: `/${p.key}` }, ...subs],
       };
     });
-  void productMenu;
   const baseMenu = [
     ...(user
       ? role === "admin"
@@ -597,7 +596,7 @@ const Navbar = () => {
                 <ContinueWatchingMenu onNavigate={() => setMobileOpen(false)} />
               </div>
             )}
-            {menuItems.map((item) => {
+            {[...menuItems, ...productMenu].map((item) => {
               if (item.children && item.children.length > 0) {
                 return (
                   <div key={item.label} className="flex min-w-0 flex-col gap-2 rounded-md border border-border/60 bg-secondary/40 p-4">

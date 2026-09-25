@@ -603,3 +603,4 @@
 @media (prefers-reduced-motion: reduce) {
   .ai-keyword, .ai-board-step, .ai-slide-bullet { animation: none; transition: none; }
 }
+body.beta-active { padding-bottom: 3.5rem; }

@@ -148,6 +148,13 @@
       "when": 1790193668872,
       "tag": "0020_support_faqs_public_read",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1790299394911,
+      "tag": "0021_products_catalog",
+      "breakpoints": true
     }
   ]
 }

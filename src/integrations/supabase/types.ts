@@ -30,6 +30,7 @@ export type Database = {
           kit: Json
           model: string | null
           nivel: string
+          product_keys: string[]
           prompt_version: string
           status: string
           subtopicos: string[] | null
@@ -52,6 +53,7 @@ export type Database = {
           kit?: Json
           model?: string | null
           nivel?: string
+          product_keys?: string[]
           prompt_version?: string
           status?: string
           subtopicos?: string[] | null
@@ -74,6 +76,7 @@ export type Database = {
           kit?: Json
           model?: string | null
           nivel?: string
+          product_keys?: string[]
           prompt_version?: string
           status?: string
           subtopicos?: string[] | null
@@ -1200,6 +1203,7 @@ export type Database = {
           price_revisoes: number | null
           price_simulados: number | null
           price_top_questoes: number | null
+          product_keys: string[]
           published: boolean | null
           resumo_url: string | null
           simulado_url: string | null
@@ -1232,6 +1236,7 @@ export type Database = {
           price_revisoes?: number | null
           price_simulados?: number | null
           price_top_questoes?: number | null
+          product_keys?: string[]
           published?: boolean | null
           resumo_url?: string | null
           simulado_url?: string | null
@@ -1264,6 +1269,7 @@ export type Database = {
           price_revisoes?: number | null
           price_simulados?: number | null
           price_top_questoes?: number | null
+          product_keys?: string[]
           published?: boolean | null
           resumo_url?: string | null
           simulado_url?: string | null
@@ -1564,6 +1570,7 @@ export type Database = {
           price_revisoes: number | null
           price_simulados: number | null
           price_top_questoes: number | null
+          product_keys: string[]
           published: boolean | null
           resumo_url: string | null
           simulado_url: string | null
@@ -1596,6 +1603,7 @@ export type Database = {
           price_revisoes?: number | null
           price_simulados?: number | null
           price_top_questoes?: number | null
+          product_keys?: string[]
           published?: boolean | null
           resumo_url?: string | null
           simulado_url?: string | null
@@ -1628,6 +1636,7 @@ export type Database = {
           price_revisoes?: number | null
           price_simulados?: number | null
           price_top_questoes?: number | null
+          product_keys?: string[]
           published?: boolean | null
           resumo_url?: string | null
           simulado_url?: string | null
@@ -1835,6 +1844,45 @@ export type Database = {
           total_distributed?: number
           total_minutes?: number
           total_unique_accesses?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      products: {
+        Row: {
+          active: boolean
+          cta: string
+          description: string
+          icon: string
+          key: string
+          name: string
+          page_intro: string
+          sort_order: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          cta?: string
+          description?: string
+          icon?: string
+          key: string
+          name: string
+          page_intro?: string
+          sort_order?: number
+          title?: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          cta?: string
+          description?: string
+          icon?: string
+          key?: string
+          name?: string
+          page_intro?: string
+          sort_order?: number
+          title?: string
           updated_at?: string
         }
         Relationships: []
@@ -2523,6 +2571,7 @@ export type Database = {
           min_usage_charge_pct: number
           name: string
           price: number
+          product_key: string
           service_aula_particular: boolean
           service_aula_particular_qty: number
           service_colinhas: boolean
@@ -2555,6 +2604,7 @@ export type Database = {
           min_usage_charge_pct?: number
           name: string
           price?: number
+          product_key?: string
           service_aula_particular?: boolean
           service_aula_particular_qty?: number
           service_colinhas?: boolean
@@ -2587,6 +2637,7 @@ export type Database = {
           min_usage_charge_pct?: number
           name?: string
           price?: number
+          product_key?: string
           service_aula_particular?: boolean
           service_aula_particular_qty?: number
           service_colinhas?: boolean
@@ -3692,6 +3743,7 @@ export type Database = {
           disciplina: string | null
           id: string
           instituicao: string | null
+          product_keys: string[]
           provider_cost: number
           reused: boolean
           status: string
@@ -3710,6 +3762,7 @@ export type Database = {
           disciplina?: string | null
           id?: string
           instituicao?: string | null
+          product_keys?: string[]
           provider_cost?: number
           reused?: boolean
           status?: string
@@ -3728,6 +3781,7 @@ export type Database = {
           disciplina?: string | null
           id?: string
           instituicao?: string | null
+          product_keys?: string[]
           provider_cost?: number
           reused?: boolean
           status?: string

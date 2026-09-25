@@ -14,6 +14,7 @@ import PaymentSecurityBadge from "@/components/PaymentSecurityBadge";
 import { useDoubtLimits } from "@/hooks/useDoubtLimits";
 import type { EmbeddedCheckoutState } from "@/pages/Checkout";
 import { usePlatformSettings, ALL_PRODUCTS_KEY } from "@/hooks/usePlatformSettings";
+import { useBetaMode } from "@/hooks/useBetaMode";
 
 interface PlanData {
   name: string;
@@ -96,6 +97,7 @@ const PricingSection = ({ productKey }: { productKey?: string } = {}) => {
   const [plans, setPlans] = useState<PlanData[]>(productKey ? [] : defaultPlans);
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const { user } = useAuth();
+  const { beta } = useBetaMode();
   const navigate = useNavigate();
   const { refresh: refreshActiveSub } = useActiveSubscription();
   const { limitForPlan } = useDoubtLimits();
@@ -188,6 +190,11 @@ const PricingSection = ({ productKey }: { productKey?: string } = {}) => {
             Assine e tenha acesso completo a todas as revisões dos melhores professores universitários do Brasil e a todo conteúdo de IA
           </p>
         </motion.div>
+        {beta && (
+          <div role="status" className="mx-auto mt-6 max-w-2xl rounded-lg border border-primary/40 bg-primary/10 px-4 py-3 text-sm text-foreground">
+            <strong>Versão beta:</strong> os planos e preços abaixo são os oficiais, mas nesta fase de testes você não pagará nada. O pagamento usa um cartão fictício de simulação.
+          </div>
+        )}
 
         <div className={`mt-12 grid gap-6 ${plans.length === 1 ? "max-w-sm mx-auto" : plans.length === 2 ? "max-w-2xl mx-auto md:grid-cols-2" : "md:grid-cols-3"}`}>
           {plans.map((plan, idx) => (

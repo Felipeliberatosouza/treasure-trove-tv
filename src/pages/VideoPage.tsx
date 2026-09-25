@@ -49,6 +49,7 @@ const VideoPage = () => {
   const { data: videoPricing } = usePlatformSettings("video_pricing");
   const { data: productConfig } = usePlatformSettings("product_config");
   const resourceLimit = useResourceLimit();
+  const [contentProducts, setContentProducts] = useState<string[]>(["provas"]);
   const { requireCpf, showCpfModal, setShowCpfModal, onCpfComplete } = useCpfGuard();
   const [showLimitModal, setShowLimitModal] = useState(false);
   const [limitInfo, setLimitInfo] = useState<{ resourceType: string; used: number; total: number; hasSubscription: boolean; individualPrice: number | null; referralBlocked?: boolean } | null>(null);
@@ -144,6 +145,7 @@ const VideoPage = () => {
           videoUrl: lessonVideoUrl || undefined,
         });
         setTeacherId(lesson.teacher_id);
+        setContentProducts(((lesson as any).product_keys as string[]) || ["provas"]);
         setVideoType(lesson.video_type);
         setUnitPrice(Number(lesson.price) || 0);
         setContentType("lesson");
@@ -172,6 +174,7 @@ const VideoPage = () => {
           videoUrl: examVideoUrl || undefined,
         });
         setTeacherId(exam.teacher_id);
+        setContentProducts(((exam as any).product_keys as string[]) || ["provas"]);
         setVideoType(exam.video_type);
         setUnitPrice(Number(exam.price) || 0);
         setContentType("exam_solution");
@@ -229,7 +232,7 @@ const VideoPage = () => {
       if (resourceLimit.loaded && videoType) {
         const rt = VIDEO_TYPE_TO_RESOURCE[videoType];
         if (rt) {
-          const result = resourceLimit.checkLimit(rt, "professor");
+          const result = resourceLimit.checkLimit(rt, "professor", contentProducts);
           if (result.hasSubscription && result.allowed) {
             setLimitInfo(null);
             setHasFullAccess(true);
@@ -248,7 +251,7 @@ const VideoPage = () => {
       setHasFullAccess(false);
     };
     checkAccess();
-  }, [video, user, trial.loading, trial.hasActiveTrial, trialAccessContentId, teacherId, resourceLimit.loaded, videoType]);
+  }, [video, user, trial.loading, trial.hasActiveTrial, trialAccessContentId, teacherId, resourceLimit.loaded, videoType, contentProducts]);
 
   useEffect(() => {
     if (!video || dbVideo) return;

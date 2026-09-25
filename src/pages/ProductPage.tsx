@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import HomeHeroProductsFlow from "@/components/home/HomeHeroProductsFlow";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import WhatsAppFloat from "@/components/WhatsAppFloat";
@@ -35,6 +36,7 @@ export default function ProductPage() {
   const initialSub = new URLSearchParams(search).get("sub");
   const key = pathname.replace(/^\//, "").split("/")[0];
   const products = useProducts();
+  const navigate = useNavigate();
   const product = products.find((p) => p.key === key);
   const { user, profile } = useAuth() as any;
   const [extra, setExtra] = useState<Record<string, string>>({});
@@ -82,8 +84,9 @@ export default function ProductPage() {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <main className="pt-24">
-        <section className="border-b border-border px-4 pb-8 md:px-10">
+      <main>
+        <HomeHeroProductsFlow products={products} activeKey={product.key} onSelect={(k) => navigate(`/${k}`)} hideLink />
+        <section className="border-b border-border px-4 pb-8 pt-4 md:px-10">
           <div className="mx-auto max-w-4xl text-center">
             <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
               <Icon className="h-6 w-6 text-primary" />

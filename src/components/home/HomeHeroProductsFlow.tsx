@@ -7,10 +7,12 @@ type Props = {
   products: Product[];
   activeKey: string;
   onSelect: (key: string) => void;
+  /** Esconde o link da página do produto (usado dentro da própria página). */
+  hideLink?: boolean;
 };
 
 /** Abas de produtos da página inicial, com o link da página do produto logo abaixo. */
-export default function HomeHeroProductsFlow({ products, activeKey, onSelect }: Props) {
+export default function HomeHeroProductsFlow({ products, activeKey, onSelect, hideLink }: Props) {
   const current = products.find((p) => p.key === activeKey) ?? products[0];
   if (!current) return null;
 
@@ -40,14 +42,14 @@ export default function HomeHeroProductsFlow({ products, activeKey, onSelect }: 
             );
           })}
         </div>
-        <div className="mt-3 text-center">
+        {!hideLink && <div className="mt-3 text-center">
           <Link
             to={`/${current.key}`}
             className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
           >
             {current.cta} <ArrowRight className="h-4 w-4" />
           </Link>
-        </div>
+        </div>}
       </div>
     </section>
   );

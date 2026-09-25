@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useBetaMode } from "@/hooks/useBetaMode";
 import {
   DEFAULT_REFERRAL_ACCESS_SCOPES,
   useCashbackConfig,
@@ -153,6 +154,7 @@ export function useResourceLimit() {
 
   // Professor ativo (publicou nos últimos 30 dias) acessa tudo gratuitamente.
   const [activeTeacher, setActiveTeacher] = useState(false);
+  const { beta } = useBetaMode();
   useEffect(() => {
     if (!user) { setActiveTeacher(false); return; }
     supabase.rpc("is_active_teacher", { _user_id: user.id }).then(({ data }) => setActiveTeacher(data === true));
@@ -160,7 +162,7 @@ export function useResourceLimit() {
 
   const checkLimit = useCallback(
     (resourceType: ResourceType, source?: ContentSource, productKeys?: string[]): LimitResult => {
-      if (activeTeacher) {
+      if (activeTeacher || beta) {
         return { allowed: true, used: 0, total: 9999, remaining: 9999, hasSubscription: true, individualPrice: null, referralCredits: 0, referralBlocked: false } as LimitResult;
       }
       const owned = referralCredits[resourceType] || 0;
@@ -216,7 +218,7 @@ export function useResourceLimit() {
         referralBlocked,
       };
     },
-    [activeTeacher, plan, usageCounts, resourcePrices, referralCredits, canUseReferralCredit]
+    [beta, activeTeacher, plan, usageCounts, resourcePrices, referralCredits, canUseReferralCredit]
   );
 
   /** Consome um acesso ganho por indicação antes de cobrar do aluno. */

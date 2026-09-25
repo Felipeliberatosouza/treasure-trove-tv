@@ -45,10 +45,11 @@ type MenuItem = {
 
 const publicMenuItems: MenuItem[] = [
   { label: "Assine a Revisão Fácil", shortLabel: "Assine", href: "#pricing" },
-  { label: "Revisões", shortLabel: "Revisões", href: "/revisoes" },
+  { label: "Revisões (Aulas)", shortLabel: "Revisões (Aulas)", href: "/revisoes" },
+  { label: "Trabalhos Escolares: Slides e Word", shortLabel: "Trabalhos Escolares: Slides e Word", href: "/trabalhos" },
   { label: "Resumos", shortLabel: "Resumos", href: "/resumos" },
   { label: "Simulados", shortLabel: "Simulados", href: "/simulados" },
-  { label: "Top Questões de Provas", shortLabel: "Top Questões", href: "/top-questoes" },
+  { label: "Top Questões Comentadas", shortLabel: "Top Questões Comentadas", href: "/top-questoes" },
   { label: "Colinhas", shortLabel: "Colinhas", href: "/colinhas" },
   { label: "Agende uma Aula Particular", shortLabel: "Aula Particular", href: "#agendar-aula" },
 ];
@@ -60,14 +61,14 @@ const subscriberMenuItem: MenuItem = {
 };
 
 const loggedMenuItems: MenuItem[] = [
-  { label: "Minhas Revisões", shortLabel: "Revisões", href: "/minhas-revisoes" },
+  { label: "Minhas Revisões (Aulas)", shortLabel: "Revisões (Aulas)", href: "/minhas-revisoes" },
+  { label: "Meus Trabalhos Escolares: Slides e Word", shortLabel: "Trabalhos Escolares: Slides e Word", href: "/meus-trabalhos" },
   { label: "Meus Resumos", shortLabel: "Resumos", href: "/meus-resumos" },
   { label: "Meus Simulados", shortLabel: "Simulados", href: "/meus-simulados" },
-  { label: "Minhas Top Questões de Provas", shortLabel: "Top Questões", href: "/minhas-top-questoes" },
+  { label: "Minhas Top Questões Comentadas", shortLabel: "Top Questões Comentadas", href: "/minhas-top-questoes" },
   { label: "Minhas Colinhas", shortLabel: "Colinhas", href: "/minhas-colinhas" },
-  { label: "Meus Trabalhos (Word e Slides)", shortLabel: "Trabalhos", href: "/meus-trabalhos" },
+  { label: "Minhas Aulas Particulares: Agende/Acesse", shortLabel: "Aula Particular", href: "/minhas-aulas-agendadas", alertKey: "studentScheduledToday" },
   { label: "Minhas Dúvidas", shortLabel: "Dúvidas", href: "/minhas-duvidas", alertKey: "studentAnsweredDoubts" },
-  { label: "Aula Particular: Agende/Acesse", shortLabel: "Aula Particular", href: "/minhas-aulas-agendadas", alertKey: "studentScheduledToday" },
 ];
 
 const teacherMenuItems: MenuItem[] = [

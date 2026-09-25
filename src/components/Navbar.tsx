@@ -101,6 +101,32 @@ const Navbar = () => {
   const [searching, setSearching] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const searchContainerRef = useRef<HTMLDivElement>(null);
+  // Auto-ajuste do menu linear: reduz a fonte até todos os links caberem sem corte.
+  const navOuterRef = useRef<HTMLDivElement>(null);
+  const navInnerRef = useRef<HTMLDivElement>(null);
+  const [navFontPx, setNavFontPx] = useState(12);
+  useEffect(() => {
+    const outer = navOuterRef.current;
+    const inner = navInnerRef.current;
+    if (!outer || !inner) return;
+    const MAX = 12;
+    const MIN = 7;
+    const fit = () => {
+      const avail = outer.clientWidth;
+      if (!avail) return;
+      inner.style.fontSize = `${MAX}px`;
+      const needed = inner.scrollWidth;
+      let size = MAX;
+      if (needed > avail) size = Math.max(MIN, Math.floor((MAX * avail * 0.98) / needed * 10) / 10);
+      inner.style.fontSize = `${size}px`;
+      setNavFontPx(size);
+    };
+    fit();
+    const ro = new ResizeObserver(fit);
+    ro.observe(outer);
+    document.fonts?.ready.then(fit).catch(() => {});
+    return () => ro.disconnect();
+  });
   const navigate = useNavigate();
   const location = useLocation();
   const { user, role, profile, signOut } = useAuth();
@@ -375,14 +401,15 @@ const Navbar = () => {
           )}
         </Link>
 
-        <div className="hidden min-w-0 flex-1 items-center justify-center gap-3 overflow-hidden lg:flex">
+        <div ref={navOuterRef} className="hidden min-w-0 flex-1 items-center justify-center overflow-hidden lg:flex">
+          <div ref={navInnerRef} className="flex w-max items-center" style={{ fontSize: `${navFontPx}px`, gap: "0.85em" }}>
           {menuItems.map((item) => {
             if (item.children && item.children.length > 0) {
               return (
                 <div key={item.label} className="relative group">
                   <button
                     type="button"
-                    className="text-xs text-muted-foreground transition-colors hover:text-foreground whitespace-nowrap"
+                    className="text-[1em] leading-tight text-muted-foreground transition-colors hover:text-foreground whitespace-nowrap"
                   >
                     {item.shortLabel ?? item.label}
                   </button>
@@ -410,7 +437,7 @@ const Navbar = () => {
             const href = item.href ?? "#";
             const hasAlert = alertActive(item.alertKey);
             const className =
-              "relative inline-flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-foreground whitespace-nowrap";
+              "relative inline-flex items-center gap-1 text-[1em] leading-tight text-muted-foreground transition-colors hover:text-foreground whitespace-nowrap";
             const alertBadge = hasAlert ? (
               <span
                 aria-label="Pendência"
@@ -439,6 +466,7 @@ const Navbar = () => {
               </Link>
             );
           })}
+          </div>
         </div>
 
         <div className="flex items-center gap-3">

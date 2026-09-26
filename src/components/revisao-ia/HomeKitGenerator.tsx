@@ -570,14 +570,48 @@ const HomeKitGenerator = ({ productKey, initialSub, productExtra, fixedHeadline,
                 onChange={(e) => setSerie(e.target.value.replace(/\D/g, ""))}
               />
               <Input placeholder="Instituição" value={instituicao} disabled={loading} onChange={(e) => setInstituicao(e.target.value)} />
-              <div className="flex gap-2 sm:col-span-2">
-                <Button type="button" size="sm" disabled={loading} variant={nivel === "rapido" ? "default" : "outline"} onClick={() => setNivel("rapido")}>
-                  Revisão rápida
-                </Button>
-                <Button type="button" size="sm" disabled={loading} variant={nivel === "aprofundado" ? "default" : "outline"} onClick={() => setNivel("aprofundado")}>
-                  Revisão aprofundada
-                </Button>
-              </div>
+              <TooltipProvider delayDuration={150}>
+                <div className="flex gap-2 sm:col-span-2">
+                  {([
+                    {
+                      key: "rapido" as const,
+                      label: "Revisão rápida",
+                      what: "Síntese direta dos conceitos essenciais do assunto.",
+                      benefits: [
+                        "Ideal para a reta final ou véspera da prova",
+                        "Foco no que mais cai em provas",
+                        "Leitura ágil e colinha enxuta",
+                      ],
+                    },
+                    {
+                      key: "aprofundado" as const,
+                      label: "Revisão aprofundada",
+                      what: "Estudo mais completo, com mais teoria e detalhes.",
+                      benefits: [
+                        "Ideal para aprender e fixar a matéria",
+                        "Explica nuances e contexto dos conceitos",
+                        "Resoluções das Top Questões passo a passo",
+                      ],
+                    },
+                  ]).map((opt) => (
+                    <Tooltip key={opt.key}>
+                      <TooltipTrigger asChild>
+                        <Button type="button" size="sm" disabled={loading} variant={nivel === opt.key ? "default" : "outline"} onClick={() => setNivel(opt.key)}>
+                          {opt.label}
+                          <Info className="ml-1 h-3.5 w-3.5 opacity-70" aria-hidden="true" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="top" className="max-w-xs space-y-1.5 p-3 text-left">
+                        <p className="font-semibold">{opt.label}</p>
+                        <p className="text-xs text-muted-foreground">{opt.what}</p>
+                        <ul className="list-disc space-y-0.5 pl-4 text-xs">
+                          {opt.benefits.map((b) => <li key={b}>{b}</li>)}
+                        </ul>
+                      </TooltipContent>
+                    </Tooltip>
+                  ))}
+                </div>
+              </TooltipProvider>
             </div>
           )}
         </div>

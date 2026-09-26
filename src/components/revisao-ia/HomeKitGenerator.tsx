@@ -14,6 +14,10 @@ const CURSO_OPCOES = [
   "Pós-graduação Latu Sensu (Especialização)",
   "Mestrado",
   "Doutorado",
+  "ENEM",
+  "Vestibular",
+  "OAB",
+  "Concursos",
 ];
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -566,7 +570,6 @@ const HomeKitGenerator = ({ productKey, initialSub, productExtra, fixedHeadline,
                 onChange={(e) => setSerie(e.target.value.replace(/\D/g, ""))}
               />
               <Input placeholder="Instituição" value={instituicao} disabled={loading} onChange={(e) => setInstituicao(e.target.value)} />
-              <Input type="date" value={examDate} disabled={loading} onChange={(e) => setExamDate(e.target.value)} />
               <div className="flex gap-2 sm:col-span-2">
                 <Button type="button" size="sm" disabled={loading} variant={nivel === "rapido" ? "default" : "outline"} onClick={() => setNivel("rapido")}>
                   Revisão rápida

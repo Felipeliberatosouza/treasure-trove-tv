@@ -546,36 +546,68 @@ const Index = () => {
                 <span className="text-sm">Carregando conteúdos por área...</span>
               </div>
             ) : (
-              areas.map((area) => {
-                const lessonsForArea = (areaLessons[area.name] || []).map((v) => ({
-                  ...v,
-                  views: statViews[v.id] ?? 0,
-                }));
-                // Vínculo oficial: áreas gravadas no material de IA (classificação automática/admin).
-                const kitsForArea = aiKits
-                  .filter((kit) =>
-                    (aiKitAreas[kit.id] || []).some(
-                      (a) => a.trim().toLowerCase() === area.name.trim().toLowerCase(),
-                    ),
-                  )
-                  .map((kit) => ({
-                    ...kit,
-                    thumbnail: aiCovers[kit.id] || "",
-                    views: statViews[kit.id] ?? 0,
-                  }));
-                if (lessonsForArea.length === 0 && kitsForArea.length === 0) return null;
-                return (
+              (() => {
+                const norm = (s: string) => s.trim().toLowerCase();
+                const selKey = activeProduct?.key;
+                const frontKey = selKey && selKey !== "provas" && selKey !== "trabalhos" ? selKey : null;
+                const interest = new Set(((profile as any)?.areas as string[] | undefined || []).map(norm));
+                const rows = areas
+                  .map((area, idx) => {
+                    const lessonsForArea = (areaLessons[area.name] || []).map((v) => ({
+                      ...v,
+                      views: statViews[v.id] ?? 0,
+                    }));
+                    // Vínculo oficial: áreas gravadas no material de IA (classificação automática/admin).
+                    const kitsForArea = aiKits
+                      .filter((kit) => (aiKitAreas[kit.id] || []).some((a) => norm(a) === norm(area.name)))
+                      .map((kit) => ({
+                        ...kit,
+                        thumbnail: aiCovers[kit.id] || "",
+                        views: statViews[kit.id] ?? 0,
+                      }));
+                    // Ordem dentro da linha: 1) mais procurados (professor real), 2) mais procurados (IA),
+                    // 3) mais bem avaliados (professor real), 4) mais bem avaliados (IA).
+                    const rating = (v: Video) => statRatings[v.id]?.average ?? 0;
+                    const byViews = (a: Video, b: Video) => (b.views ?? 0) - (a.views ?? 0) || rating(b) - rating(a);
+                    const byRating = (a: Video, b: Video) =>
+                      rating(b) - rating(a) || (statRatings[b.id]?.count ?? 0) - (statRatings[a.id]?.count ?? 0);
+                    const all = [...lessonsForArea, ...kitsForArea];
+                    const byFront = (v: Video) => (frontKey && (v.productKeys || []).includes(frontKey) ? 0 : 1);
+                    const realViewed = lessonsForArea.filter((v) => (v.views ?? 0) > 0).sort(byViews);
+                    const aiViewed = kitsForArea.filter((v) => (v.views ?? 0) > 0).sort(byViews);
+                    const realRest = lessonsForArea.filter((v) => !(v.views ?? 0)).sort(byRating);
+                    const aiRest = kitsForArea.filter((v) => !(v.views ?? 0)).sort(byRating);
+                    // Itens da frente selecionada (ex.: OAB) sobem para o início, mantendo a ordem acima.
+                    const ordered = [...realViewed, ...aiViewed, ...realRest, ...aiRest]
+                      .map((v, i) => ({ v, i }))
+                      .sort((a, b) => byFront(a.v) - byFront(b.v) || a.i - b.i)
+                      .map(({ v }) => v);
+                    const frontCount = frontKey ? all.filter((v) => byFront(v) === 0).length : 0;
+                    const totalViews = all.reduce((s, v) => s + (v.views ?? 0), 0);
+                    return { area, idx, videos: ordered, frontCount, isInterest: interest.has(norm(area.name)), totalViews };
+                  })
+                  .filter((r) => r.videos.length > 0)
+                  // Ordem das linhas: 1) seleção do usuário, 2) áreas de interesse, 3) mais procuradas.
+                  .sort(
+                    (a, b) =>
+                      Number(b.frontCount > 0) - Number(a.frontCount > 0) ||
+                      b.frontCount - a.frontCount ||
+                      Number(b.isInterest) - Number(a.isInterest) ||
+                      b.totalViews - a.totalViews ||
+                      a.idx - b.idx,
+                  );
+                return rows.map(({ area, videos }) => (
                   <VideoCarousel
                     key={area.id}
                     title={`📚 ${area.name}`}
-                    videos={[...lessonsForArea, ...kitsForArea]}
+                    videos={videos}
                     onVideoClick={handleVideoClick}
                     ratings={statRatings}
                     showTrialBadge={showTrialBadge}
                     watchedIds={watchedIds}
                   />
-                );
-              })
+                ));
+              })()
             )}
           </>
         )}

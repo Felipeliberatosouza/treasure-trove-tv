@@ -22,8 +22,9 @@ const CURSO_OPCOES = [
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Sparkles, Send, Loader2, CheckCircle2, Lock, Plus, SlidersHorizontal,
-  BookOpen, FileQuestion, ListChecks, StickyNote, Square, FileType2,
+  BookOpen, FileQuestion, ListChecks, StickyNote, Square, FileType2, Info,
 } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePlatformSettings, type HomeHeadlineAudience } from "@/hooks/usePlatformSettings";
 import { cancelKit, requestKit } from "@/lib/revisionKit";

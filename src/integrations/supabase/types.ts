@@ -2085,6 +2085,98 @@ export type Database = {
         }
         Relationships: []
       }
+      real_exam_questions: {
+        Row: {
+          correct: string | null
+          created_at: string
+          exam_id: string
+          explanation: string | null
+          id: string
+          image_url: string | null
+          number: number
+          options: Json
+          statement: string
+          subject: string | null
+          topic: string | null
+        }
+        Insert: {
+          correct?: string | null
+          created_at?: string
+          exam_id: string
+          explanation?: string | null
+          id?: string
+          image_url?: string | null
+          number: number
+          options?: Json
+          statement: string
+          subject?: string | null
+          topic?: string | null
+        }
+        Update: {
+          correct?: string | null
+          created_at?: string
+          exam_id?: string
+          explanation?: string | null
+          id?: string
+          image_url?: string | null
+          number?: number
+          options?: Json
+          statement?: string
+          subject?: string | null
+          topic?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "real_exam_questions_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "real_exams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      real_exams: {
+        Row: {
+          active: boolean
+          answer_key_url: string | null
+          board: string | null
+          created_at: string
+          id: string
+          pdf_url: string | null
+          phase: string | null
+          product_key: string
+          title: string
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          active?: boolean
+          answer_key_url?: string | null
+          board?: string | null
+          created_at?: string
+          id?: string
+          pdf_url?: string | null
+          phase?: string | null
+          product_key: string
+          title: string
+          updated_at?: string
+          year: number
+        }
+        Update: {
+          active?: boolean
+          answer_key_url?: string | null
+          board?: string | null
+          created_at?: string
+          id?: string
+          pdf_url?: string | null
+          phase?: string | null
+          product_key?: string
+          title?: string
+          updated_at?: string
+          year?: number
+        }
+        Relationships: []
+      }
       recompute_runs: {
         Row: {
           buckets_count: number

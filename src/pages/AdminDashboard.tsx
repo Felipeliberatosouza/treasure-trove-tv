@@ -28,6 +28,7 @@ import AdminCancellationsTab from "@/components/admin/AdminCancellationsTab";
 import AdminUsageHistoryTab from "@/components/admin/AdminUsageHistoryTab";
 import AdminSupportTicketsTab from "@/components/admin/AdminSupportTicketsTab";
 import AdminProfileApprovalsTab from "@/components/admin/AdminProfileApprovalsTab";
+import AdminRealExamsTab from "@/components/admin/AdminRealExamsTab";
 import AdminLeadsTab from "@/components/admin/AdminLeadsTab";
 import AdminReferralsTab from "@/components/admin/AdminReferralsTab";
 import AdminWorkDocsTab from "@/components/admin/AdminWorkDocsTab";
@@ -46,6 +47,7 @@ const tabs = [
   { id: "usage-history", label: "Histórico de Uso", icon: Activity, hidden: true },
   { id: "referrals", label: "Indicações de Amigos", icon: Gift },
   { id: "work-docs", label: "Trabalhos (Word e Slides)", icon: FileText },
+  { id: "real-exams", label: "Provas Reais", icon: FileText },
   { id: "support-agent", label: "Atendimento Virtual", icon: MessageSquare },
   { id: "beta-reports", label: "Reportes da Versão Beta", icon: Bug },
   { id: "cancellations", label: "Cancelamentos", icon: XCircle },
@@ -149,6 +151,7 @@ const AdminDashboard = () => {
             {activeTab === "leads" && <AdminLeadsTab />}
             {activeTab === "referrals" && <AdminReferralsTab />}
             {activeTab === "work-docs" && <AdminWorkDocsTab />}
+            {activeTab === "real-exams" && <AdminRealExamsTab />}
             {activeTab === "products" && <AdminProductsTab />}
             {activeTab === "support-agent" && <AdminSupportAgentTab />}
             {activeTab === "beta-reports" && <AdminBetaReportsTab />}

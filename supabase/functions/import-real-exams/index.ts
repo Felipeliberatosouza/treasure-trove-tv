@@ -70,6 +70,6 @@ Deno.serve(async (req) => {
     }
     return json({ ok: true, report });
   } catch (e) {
-    return json({ ok: false, error: e instanceof Error ? e.message : String(e) });
+    return json({ ok: false, error: e instanceof Error ? e.message : JSON.stringify(e) });
   }
 });

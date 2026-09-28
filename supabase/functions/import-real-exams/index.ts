@@ -62,6 +62,8 @@ Deno.serve(async (req) => {
             correct: q.correctAlternative || null,
           };
         });
+      const uniq = Array.from(new Map(rows.map((r) => [r.number, r])).values());
+      rows.length = 0; rows.push(...uniq);
       for (let i = 0; i < rows.length; i += 100) {
         const { error } = await db.from("real_exam_questions").upsert(rows.slice(i, i + 100), { onConflict: "exam_id,number" });
         if (error) throw error;

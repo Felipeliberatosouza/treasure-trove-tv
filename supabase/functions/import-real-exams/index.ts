@@ -28,7 +28,8 @@ Deno.serve(async (req) => {
     for (const year of years) {
       const questions: any[] = [];
       for (let offset = 0; offset < 400; offset += 50) {
-        const r = await fetch(`https://api.enem.dev/v1/exams/${year}/questions?limit=50&offset=${offset}`);
+        let r = await fetch(`https://api.enem.dev/v1/exams/${year}/questions?limit=50&offset=${offset}`);
+        for (let t = 0; t < 3 && !r.ok; t++) { await new Promise((ok) => setTimeout(ok, 3000)); r = await fetch(`https://api.enem.dev/v1/exams/${year}/questions?limit=50&offset=${offset}`); }
         if (!r.ok) break;
         const d = await r.json();
         questions.push(...(d.questions || []));

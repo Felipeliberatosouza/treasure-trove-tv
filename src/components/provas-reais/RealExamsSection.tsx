@@ -20,11 +20,12 @@ export default function RealExamsSection({ productKey, productName }: { productK
   const [answers, setAnswers] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    const minYear = new Date().getFullYear() - 5;
     supabase.from("real_exams").select("id, year, title, board, phase, pdf_url")
-      .eq("product_key", productKey).eq("active", true).gte("year", minYear)
+      .eq("product_key", productKey).eq("active", true)
       .order("year", { ascending: false }).then(({ data }) => {
-        const list = (data || []) as Exam[];
+        const all = (data || []) as Exam[];
+        const keep = Array.from(new Set(all.map((e) => e.year))).slice(0, 5);
+        const list = all.filter((e) => keep.includes(e.year));
         setExams(list);
         setYear(list[0]?.year ?? null);
         setExamId(list[0]?.id ?? "");

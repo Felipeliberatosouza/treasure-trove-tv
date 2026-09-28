@@ -19,3 +19,6 @@ project_id = "uzhajthlokwglujtgmgm"
     verify_jwt = false
   [functions.support-agent]
     verify_jwt = false
+
+[functions.import-real-exams]
+verify_jwt = false

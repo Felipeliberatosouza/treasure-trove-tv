@@ -105,6 +105,7 @@ export default function AdminRealExamsTab() {
         <div className="flex gap-2 sm:col-span-3">
           <Button onClick={create}>Cadastrar prova</Button>
           <Button variant="outline" onClick={downloadModel}>Baixar modelo de planilha</Button>
+          <Button variant="secondary" onClick={async () => { toast.info("Atualizando ENEM, aguarde…"); const { data } = await supabase.functions.invoke("import-real-exams", { body: {} }); if (data?.ok) { toast.success("ENEM atualizado."); load(); } else toast.error("Não foi possível atualizar o ENEM agora."); }}>Atualizar ENEM automaticamente</Button>
         </div>
       </div>
 

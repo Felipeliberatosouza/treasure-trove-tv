@@ -5,6 +5,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import WhatsAppFloat from "@/components/WhatsAppFloat";
 import PricingSection from "@/components/PricingSection";
+import RealExamsSection from "@/components/provas-reais/RealExamsSection";
 import HomeKitGenerator from "@/components/revisao-ia/HomeKitGenerator";
 import NotFound from "@/pages/NotFound";
 import { useProducts, productIcon } from "@/hooks/useProducts";
@@ -119,6 +120,8 @@ export default function ProductPage() {
         </section>
 
         <HomeKitGenerator productKey={product.key} initialSub={initialSub} productExtra={productExtra} fixedHeadline={product.title + (profile?.name ? `, ${String(profile.name).split(" ")[0]}` : "")} />
+
+        {["enem","vestibulares","oab","concursos"].includes(product.key) && <RealExamsSection productKey={product.key} productName={product.name} />}
 
         {user && (
           <section id="meus" className="px-4 py-8 md:px-10">

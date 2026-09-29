@@ -10,7 +10,7 @@ const PRODUCTS = [
   { key: "enem", name: "ENEM" }, { key: "vestibulares", name: "Vestibulares" },
   { key: "oab", name: "OAB" }, { key: "concursos", name: "Concursos" },
 ];
-type Exam = { id: string; product_key: string; year: number; title: string; board: string | null; phase: string | null; pdf_url: string | null; active: boolean };
+type Exam = { id: string; product_key: string; year: number; title: string; board: string | null; phase: string | null; pdf_url: string | null; active: boolean; import_status?: string | null; import_message?: string | null };
 
 // CSV com separador ";" e aspas opcionais
 function parseCsv(text: string): string[][] {
@@ -80,6 +80,30 @@ export default function AdminRealExamsTab() {
     } finally { setImporting(null); }
   };
 
+  const [pdfFor, setPdfFor] = useState<string | null>(null);
+  const [pdfUrl, setPdfUrl] = useState("");
+  const [gabarito, setGabarito] = useState("");
+  const [progress, setProgress] = useState<Record<string, string>>({});
+
+  const importPdf = async (exam: Exam) => {
+    const url = pdfUrl.trim() || exam.pdf_url || "";
+    if (!/^https?:\/\//i.test(url)) return toast.error("Cole o link do PDF oficial.");
+    setImporting(exam.id); setPdfFor(null);
+    let start: number | null = 0;
+    try {
+      while (start !== null) {
+        setProgress((p) => ({ ...p, [exam.id]: start === 0 ? "Lendo o PDF…" : `Lendo a partir da página ${start + 1}…` }));
+        const { data, error } = await supabase.functions.invoke("import-exam-pdf", { body: { exam_id: exam.id, pdf_url: url, gabarito, start } });
+        if (error || !data?.ok) throw new Error(data?.error || "Falha na importação.");
+        setProgress((p) => ({ ...p, [exam.id]: `Páginas ${data.next ?? data.total} de ${data.total} · ${data.saved} questões` }));
+        start = data.next;
+      }
+      toast.success("Importação concluída. Revise as questões antes de mostrar aos alunos.");
+    } catch (e: any) {
+      toast.error(e?.message || "Não foi possível importar o PDF.");
+    } finally { setImporting(null); setPdfUrl(""); setGabarito(""); load(); }
+  };
+
   const downloadModel = () => {
     const url = URL.createObjectURL(new Blob([MODEL], { type: "text/csv;charset=utf-8" }));
     const a = document.createElement("a"); a.href = url; a.download = "modelo-questoes.csv"; a.click(); URL.revokeObjectURL(url);
@@ -121,14 +145,26 @@ export default function AdminRealExamsTab() {
                     <span className="font-medium">{e.year} · {e.title}</span>
                     <span className="text-muted-foreground">{counts[e.id] || 0} questões</span>
                     {!e.active && <span className="text-destructive">oculta</span>}
+                    {(progress[e.id] || e.import_message) && <span className="w-full text-xs text-muted-foreground">{importing === e.id ? progress[e.id] : e.import_message}</span>}
                     <div className="ml-auto flex gap-2">
                       <label className="cursor-pointer rounded-md border border-input px-3 py-1.5 hover:bg-muted">
                         {importing === e.id ? "Importando…" : "Importar questões"}
                         <input type="file" accept=".csv" className="hidden" onChange={(ev) => { const f = ev.target.files?.[0]; if (f) importFile(e, f); ev.target.value = ""; }} />
                       </label>
+                      <Button size="sm" variant="secondary" disabled={!!importing} onClick={() => { setPdfFor(pdfFor === e.id ? null : e.id); setPdfUrl(e.pdf_url || ""); }}>Importar do PDF com IA</Button>
                       <Button size="sm" variant="outline" onClick={() => toggle(e)}>{e.active ? "Ocultar" : "Mostrar"}</Button>
                       <Button size="sm" variant="destructive" onClick={() => remove(e)}>Excluir</Button>
                     </div>
+                    {pdfFor === e.id && (
+                      <div className="grid w-full gap-2 rounded-md bg-muted p-3">
+                        <Label>Link do PDF oficial da prova</Label>
+                        <Input placeholder="https://..." value={pdfUrl} onChange={(ev) => setPdfUrl(ev.target.value)} />
+                        <Label>Gabarito oficial (opcional)</Label>
+                        <Textarea rows={3} placeholder="Ex.: 1-A, 2-C, 3-B …" value={gabarito} onChange={(ev) => setGabarito(ev.target.value)} />
+                        <p className="text-xs text-muted-foreground">A IA transcreve as questões do PDF por partes. Provas longas levam alguns minutos; deixe esta tela aberta. Dica: oculte a prova até revisar.</p>
+                        <Button size="sm" onClick={() => importPdf(e)}>Começar importação</Button>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

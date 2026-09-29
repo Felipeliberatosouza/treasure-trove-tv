@@ -175,7 +175,8 @@ const Navbar = () => {
       return {
         label: p.name,
         shortLabel: p.name,
-        children: [{ label: user ? label : `Conhecer ${p.name}`, href: `/${p.key}` }, ...subs],
+        href: `/${p.key}`,
+        children: user ? [{ label, href: `/${p.key}` }, ...subs] : subs,
       };
     });
   const baseMenu = [

@@ -3,7 +3,7 @@ import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { PDFDocument } from "npm:pdf-lib@1.17.1";
 
 const json = (b: unknown, status = 200) => new Response(JSON.stringify(b), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-const CHUNK_PAGES = 6;
+const CHUNK_PAGES = 4;
 
 async function askAi(pdfB64: string, gabarito: string, key: string): Promise<any[]> {
   const prompt = `Você recebe páginas de uma prova oficial brasileira. Transcreva FIELMENTE cada questão objetiva completa presente nestas páginas, sem inventar nem resumir.
@@ -52,38 +52,32 @@ function toB64(bytes: Uint8Array) {
   return btoa(s);
 }
 
-async function run(db: any, examId: string, pdfUrl: string, gabarito: string, key: string) {
-  const status = (import_status: string, import_message: string) => db.from("real_exams").update({ import_status, import_message }).eq("id", examId);
-  try {
-    const r = await fetch(pdfUrl);
-    if (!r.ok) throw new Error("Não foi possível baixar o PDF (verifique o link).");
-    const src = await PDFDocument.load(new Uint8Array(await r.arrayBuffer()), { ignoreEncryption: true });
-    const total = src.getPageCount();
-    let saved = 0;
-    for (let start = 0; start < total; start += CHUNK_PAGES) {
-      await status("processando", `Lendo páginas ${start + 1}–${Math.min(total, start + CHUNK_PAGES)} de ${total}… (${saved} questões salvas)`);
-      // sobreposição de 1 página para não perder questões que atravessam páginas
-      const from = Math.max(0, start - 1);
-      const doc = await PDFDocument.create();
-      const idx = Array.from({ length: Math.min(total, start + CHUNK_PAGES) - from }, (_, i) => from + i);
-      (await doc.copyPages(src, idx)).forEach((p) => doc.addPage(p));
-      const qs = await askAi(toB64(await doc.save()), gabarito, key);
-      const rows = Array.from(new Map(qs.filter((q) => q.number && q.statement && q.options?.length).map((q) => [q.number, {
-        exam_id: examId, number: Number(q.number), subject: q.subject || null, statement: String(q.statement),
-        options: q.options.map((o: any) => ({ letter: String(o.letter).toUpperCase(), text: String(o.text) })),
-        correct: q.correct ? String(q.correct).toUpperCase().slice(0, 1) : null,
-      }])).values());
-      if (rows.length) {
-        const { error } = await db.from("real_exam_questions").upsert(rows, { onConflict: "exam_id,number" });
-        if (error) throw new Error(error.message);
-        saved += rows.length;
-      }
-    }
-    const { count } = await db.from("real_exam_questions").select("id", { count: "exact", head: true }).eq("exam_id", examId);
-    await status("concluido", `${count ?? saved} questões importadas. Revise antes de mostrar aos alunos.`);
-  } catch (e) {
-    await status("erro", e instanceof Error ? e.message : "Falha na importação.");
+async function runChunk(db: any, examId: string, pdfUrl: string, gabarito: string, key: string, start: number) {
+  const r = await fetch(pdfUrl);
+  if (!r.ok) throw new Error("Não foi possível baixar o PDF (verifique o link).");
+  const src = await PDFDocument.load(new Uint8Array(await r.arrayBuffer()), { ignoreEncryption: true });
+  const total = src.getPageCount();
+  const end = Math.min(total, start + CHUNK_PAGES);
+  const from = Math.max(0, start - 1); // 1 página de sobreposição
+  const doc = await PDFDocument.create();
+  (await doc.copyPages(src, Array.from({ length: end - from }, (_, i) => from + i))).forEach((p) => doc.addPage(p));
+  const qs = await askAi(toB64(await doc.save()), gabarito, key);
+  const rows = Array.from(new Map(qs.filter((q) => q.number && q.statement && q.options?.length).map((q) => [Number(q.number), {
+    exam_id: examId, number: Number(q.number), subject: q.subject || null, statement: String(q.statement),
+    options: q.options.map((o: any) => ({ letter: String(o.letter).toUpperCase(), text: String(o.text) })),
+    correct: q.correct ? String(q.correct).toUpperCase().slice(0, 1) : null,
+  }])).values());
+  if (rows.length) {
+    const { error } = await db.from("real_exam_questions").upsert(rows, { onConflict: "exam_id,number" });
+    if (error) throw new Error(error.message);
   }
+  const { count } = await db.from("real_exam_questions").select("id", { count: "exact", head: true }).eq("exam_id", examId);
+  const done = end >= total;
+  await db.from("real_exams").update({
+    import_status: done ? "concluido" : "processando",
+    import_message: done ? `${count ?? 0} questões importadas. Revise antes de mostrar aos alunos.` : `Páginas ${end} de ${total} lidas · ${count ?? 0} questões salvas`,
+  }).eq("id", examId);
+  return { next: done ? null : end, total, saved: count ?? 0 };
 }
 
 Deno.serve(async (req) => {
@@ -105,8 +99,13 @@ Deno.serve(async (req) => {
   const key = Deno.env.get("LOVABLE_API_KEY");
   if (!key) return json({ ok: false, error: "IA não configurada." }, 500);
 
-  await db.from("real_exams").update({ import_status: "processando", import_message: "Baixando o PDF…", pdf_url: pdfUrl }).eq("id", examId);
-  // @ts-ignore EdgeRuntime existe no ambiente
-  EdgeRuntime.waitUntil(run(db, examId, pdfUrl, gabarito, key));
-  return json({ ok: true });
+  const start = Math.max(0, Number(body.start) || 0);
+  if (start === 0) await db.from("real_exams").update({ import_status: "processando", import_message: "Lendo o PDF…", pdf_url: pdfUrl }).eq("id", examId);
+  try {
+    return json({ ok: true, ...(await runChunk(db, examId, pdfUrl, gabarito, key, start)) });
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "Falha na importação.";
+    await db.from("real_exams").update({ import_status: "erro", import_message: msg }).eq("id", examId);
+    return json({ ok: false, error: msg });
+  }
 });

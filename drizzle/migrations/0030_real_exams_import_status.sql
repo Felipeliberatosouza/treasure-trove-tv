@@ -1,0 +1,1 @@
+ALTER TABLE public.real_exams ADD COLUMN IF NOT EXISTS import_status text, ADD COLUMN IF NOT EXISTS import_message text;

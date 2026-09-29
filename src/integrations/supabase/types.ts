@@ -2142,6 +2142,8 @@ export type Database = {
           board: string | null
           created_at: string
           id: string
+          import_message: string | null
+          import_status: string | null
           pdf_url: string | null
           phase: string | null
           product_key: string
@@ -2155,6 +2157,8 @@ export type Database = {
           board?: string | null
           created_at?: string
           id?: string
+          import_message?: string | null
+          import_status?: string | null
           pdf_url?: string | null
           phase?: string | null
           product_key: string
@@ -2168,6 +2172,8 @@ export type Database = {
           board?: string | null
           created_at?: string
           id?: string
+          import_message?: string | null
+          import_status?: string | null
           pdf_url?: string | null
           phase?: string | null
           product_key?: string

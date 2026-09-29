@@ -7,6 +7,7 @@ import WhatsAppFloat from "@/components/WhatsAppFloat";
 import PricingSection from "@/components/PricingSection";
 import RealExamsSection from "@/components/provas-reais/RealExamsSection";
 import HomeKitGenerator from "@/components/revisao-ia/HomeKitGenerator";
+import ProductContentCarousels from "@/components/products/ProductContentCarousels";
 import NotFound from "@/pages/NotFound";
 import { useProducts, productIcon } from "@/hooks/useProducts";
 import { useAuth } from "@/contexts/AuthContext";
@@ -140,18 +141,7 @@ export default function ProductPage() {
           </section>
         )}
 
-        {lessons.length > 0 && (
-          <section className="px-4 py-8 md:px-10">
-            <div className="mx-auto max-w-6xl">
-              <h2 className="font-display text-xl font-bold">Aulas Gravadas por Professor: {product.name}</h2>
-              <div className="mt-4 grid gap-3 sm:grid-cols-2 md:grid-cols-3">
-                {lessons.map((m) => (
-                  <Link key={m.id} to={m.href} className="rounded-xl border border-border bg-card p-4 text-sm font-medium hover:border-primary/50">{m.title}</Link>
-                ))}
-              </div>
-            </div>
-          </section>
-        )}
+        {product.key !== "trabalhos" && <ProductContentCarousels productKey={product.key} />}
 
         <PricingSection productKey={product.key} />
       </main>

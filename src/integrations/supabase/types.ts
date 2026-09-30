@@ -1250,6 +1250,62 @@ export type Database = {
         }
         Relationships: []
       }
+      exam_attempts: {
+        Row: {
+          answers: Json
+          area: string | null
+          duration_min: number | null
+          essay_result: Json | null
+          essay_text: string | null
+          exam_id: string
+          finished_at: string | null
+          id: string
+          product_key: string
+          score: number | null
+          started_at: string
+          total: number | null
+          user_id: string
+        }
+        Insert: {
+          answers?: Json
+          area?: string | null
+          duration_min?: number | null
+          essay_result?: Json | null
+          essay_text?: string | null
+          exam_id: string
+          finished_at?: string | null
+          id?: string
+          product_key: string
+          score?: number | null
+          started_at?: string
+          total?: number | null
+          user_id: string
+        }
+        Update: {
+          answers?: Json
+          area?: string | null
+          duration_min?: number | null
+          essay_result?: Json | null
+          essay_text?: string | null
+          exam_id?: string
+          finished_at?: string | null
+          id?: string
+          product_key?: string
+          score?: number | null
+          started_at?: string
+          total?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exam_attempts_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "real_exams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       exam_solutions: {
         Row: {
           admin_approved: boolean | null
@@ -1929,6 +1985,8 @@ export type Database = {
           key: string
           name: string
           page_intro: string
+          selector_options: Json
+          simulado_config: Json
           sort_order: number
           subproducts: Json
           title: string
@@ -1945,6 +2003,8 @@ export type Database = {
           key: string
           name: string
           page_intro?: string
+          selector_options?: Json
+          simulado_config?: Json
           sort_order?: number
           subproducts?: Json
           title?: string
@@ -1961,6 +2021,8 @@ export type Database = {
           key?: string
           name?: string
           page_intro?: string
+          selector_options?: Json
+          simulado_config?: Json
           sort_order?: number
           subproducts?: Json
           title?: string
@@ -2139,11 +2201,17 @@ export type Database = {
         Row: {
           active: boolean
           answer_key_url: string | null
+          applied_on: string | null
+          area: string | null
           board: string | null
+          cargo: string | null
           created_at: string
+          disciplina: string | null
+          exam_number: string | null
           id: string
           import_message: string | null
           import_status: string | null
+          institution: string | null
           pdf_url: string | null
           phase: string | null
           product_key: string
@@ -2154,11 +2222,17 @@ export type Database = {
         Insert: {
           active?: boolean
           answer_key_url?: string | null
+          applied_on?: string | null
+          area?: string | null
           board?: string | null
+          cargo?: string | null
           created_at?: string
+          disciplina?: string | null
+          exam_number?: string | null
           id?: string
           import_message?: string | null
           import_status?: string | null
+          institution?: string | null
           pdf_url?: string | null
           phase?: string | null
           product_key: string
@@ -2169,11 +2243,17 @@ export type Database = {
         Update: {
           active?: boolean
           answer_key_url?: string | null
+          applied_on?: string | null
+          area?: string | null
           board?: string | null
+          cargo?: string | null
           created_at?: string
+          disciplina?: string | null
+          exam_number?: string | null
           id?: string
           import_message?: string | null
           import_status?: string | null
+          institution?: string | null
           pdf_url?: string | null
           phase?: string | null
           product_key?: string
@@ -3922,6 +4002,8 @@ export type Database = {
           disciplina: string | null
           id: string
           instituicao: string | null
+          layout_theme: string | null
+          presentation_extras: Json | null
           product_keys: string[]
           provider_cost: number
           reused: boolean
@@ -3941,6 +4023,8 @@ export type Database = {
           disciplina?: string | null
           id?: string
           instituicao?: string | null
+          layout_theme?: string | null
+          presentation_extras?: Json | null
           product_keys?: string[]
           provider_cost?: number
           reused?: boolean
@@ -3960,6 +4044,8 @@ export type Database = {
           disciplina?: string | null
           id?: string
           instituicao?: string | null
+          layout_theme?: string | null
+          presentation_extras?: Json | null
           product_keys?: string[]
           provider_cost?: number
           reused?: boolean

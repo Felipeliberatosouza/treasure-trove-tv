@@ -10,6 +10,16 @@ const corsHeaders = {
 
 const GEN_MODEL = "openai/gpt-6-astra";
 const PROMPT_VERSION = "w1";
+const LAYOUT_THEMES = ["oceano", "terracota", "floresta", "grafite", "vinho", "solar", "lavanda", "petroleo", "areia", "coral", "noturno", "menta"];
+const ANGLES = [
+  "começar por um caso prático e depois explicar a teoria",
+  "linha do tempo histórica até os dias atuais",
+  "comparação entre visões ou abordagens diferentes",
+  "problema, causas, consequências e soluções",
+  "perguntas norteadoras respondidas ao longo das seções",
+  "conceitos fundamentais, aplicações e desafios futuros",
+  "estudo de exemplos do cotidiano brasileiro",
+];
 
 interface Pricing {
   credits_generation: number;
@@ -171,7 +181,36 @@ async function handle(req: Request, body: any): Promise<{ status: number; payloa
     return { ok: true as const, balance: next };
   }
 
-  const action = body.action === "revise" ? "revise" : "generate";
+  const action = body.action === "revise" ? "revise" : body.action === "extras" ? "extras" : "generate";
+
+  if (action === "extras") {
+    const { data: doc } = await admin.from("work_documents").select("id, user_id, tema, content, presentation_extras").eq("id", String(body.document_id || "")).maybeSingle();
+    if (!doc || doc.user_id !== userId) return { status: 404, payload: { error: "Trabalho não encontrado." } };
+    if (doc.presentation_extras && !body.refresh) return { status: 200, payload: { extras: doc.presentation_extras } };
+    const apiKey = Deno.env.get("LOVABLE_API_KEY");
+    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
+      body: JSON.stringify({
+        model: GEN_MODEL, reasoning_effort: "low", response_format: { type: "json_object" },
+        messages: [
+          { role: "system", content: "Você é um professor brasileiro que prepara alunos para apresentar trabalhos. Responda somente JSON em português do Brasil." },
+          { role: "user", content: `Com base EXCLUSIVAMENTE nos slides e no documento abaixo, crie:
+1) "dicas": dicas práticas de apresentação, uma por slide (o que falar, como explicar, tempo sugerido) mais dicas gerais de postura e abertura/fechamento.
+2) "perguntas": 8 a 12 perguntas que a turma ou o professor podem fazer durante a apresentação, cada uma com uma resposta curta e segura.
+Formato: {"dicas_gerais":["..."],"dicas":[{"slide":"título do slide","dica":"...","tempo":"1 min"}],"perguntas":[{"pergunta":"...","resposta":"..."}]}
+Trabalho: ${JSON.stringify(doc.content).slice(0, 40000)}` },
+        ],
+      }),
+    });
+    if (!res.ok) return { status: res.status === 429 ? 429 : 500, payload: { error: "Não foi possível gerar agora. Tente novamente em instantes." } };
+    const p = await res.json();
+    let extras: any;
+    try { extras = JSON.parse(String(p?.choices?.[0]?.message?.content || "").trim().replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "")); }
+    catch { return { status: 500, payload: { error: "A IA retornou um conteúdo inválido. Tente novamente." } }; }
+    await admin.from("work_documents").update({ presentation_extras: extras }).eq("id", doc.id);
+    return { status: 200, payload: { extras } };
+  }
 
   if (action === "generate") {
     const tema = String(body.tema || "").trim();
@@ -185,15 +224,19 @@ async function handle(req: Request, body: any): Promise<{ status: number; payloa
 
     const cacheKey = [normalize(tema), normalize(disciplina || ""), normalize(curso || ""), tipo, PROMPT_VERSION].join("|");
 
-    // Reaproveita conteúdo já produzido (reduz custo de IA); nunca expõe o trabalho de outro aluno.
-    const { data: cached } = await admin
+    // Cada pedido é exclusivo: nenhum texto de outro aluno é enviado à IA.
+    // O visual (tema de layout) nunca repete um já usado para o mesmo assunto enquanto houver opções livres.
+    const { data: used } = await admin
       .from("work_documents")
-      .select("content, titulo")
+      .select("layout_theme, created_at")
       .eq("cache_key", cacheKey)
-      .eq("status", "ready")
       .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
+      .limit(200);
+    const usedThemes = (used || []).map((u: any) => u.layout_theme).filter(Boolean) as string[];
+    const free = LAYOUT_THEMES.filter((t) => !usedThemes.includes(t));
+    const layoutTheme = free.length
+      ? free[Math.floor(Math.random() * free.length)]
+      : LAYOUT_THEMES.find((t) => t !== usedThemes[0]) || LAYOUT_THEMES[0];
 
     const debited = await debit(pricing.credits_generation, "work_generate");
     if (!debited.ok) {
@@ -203,22 +246,17 @@ async function handle(req: Request, body: any): Promise<{ status: number; payloa
       };
     }
 
-    // Nunca entrega o mesmo texto a dois alunos (evita plágio). Um trabalho anterior
-    // do mesmo tema serve só como referência de pesquisa; a IA escreve uma versão nova.
-    const reused = Boolean(cached?.content);
+    const reused = false;
+    const angle = ANGLES[Math.floor(Math.random() * ANGLES.length)];
     const pedidoBase = `Tema: ${tema}
 Disciplina: ${disciplina || "não informada"}
 Curso/nível: ${curso || "não informado"}
 Instituição: ${instituicao || "não informada"}
 Formato pedido: ${tipo === "word" ? "somente documento" : tipo === "slides" ? "somente slides" : "documento e slides"}
-Produza de 4 a 6 seções no documento e de 7 a 10 slides.`;
-    const prompt = reused
-      ? `Produza um trabalho acadêmico ORIGINAL e exclusivo para este aluno.
-${pedidoBase}
-Abaixo há um material anterior sobre o mesmo tema, apenas como referência de conteúdo.
-Regras obrigatórias: não copie frases; reescreva com palavras, estrutura, título, ordem das seções, exemplos e introdução/conclusão diferentes; nenhum parágrafo pode ser parecido com o da referência.
-Referência (não copiar): ${JSON.stringify(cached!.content).slice(0, 12000)}`
-      : `Produza um trabalho acadêmico completo e original.\n${pedidoBase}`;
+Abordagem obrigatória desta versão: ${angle}.
+Código de exclusividade: ${crypto.randomUUID()} (use-o só como semente para escolher título, exemplos e ordem das seções diferentes de qualquer versão comum).
+Produza de ${3 + Math.floor(Math.random() * 4)} a 7 seções no documento e de ${6 + Math.floor(Math.random() * 3)} a 11 slides.`;
+    const prompt = `Produza um trabalho acadêmico completo, ORIGINAL e exclusivo para este aluno. Não use textos prontos nem estruturas genéricas.\n${pedidoBase}`;
     let content: any = null;
     try {
       content = await callGateway(SYSTEM, prompt);
@@ -248,6 +286,7 @@ Referência (não copiar): ${JSON.stringify(cached!.content).slice(0, 12000)}`
         credits_spent: pricing.credits_generation,
         provider_cost: pricing.provider_cost_generation,
         reused,
+        layout_theme: layoutTheme,
       })
       .select("id")
       .single();
@@ -256,7 +295,7 @@ Referência (não copiar): ${JSON.stringify(cached!.content).slice(0, 12000)}`
       return { status: 500, payload: { error: "Não foi possível salvar o trabalho." } };
     }
 
-    return { status: 200, payload: { id: inserted.id, content, reused, balance: debited.balance } };
+    return { status: 200, payload: { id: inserted.id, content, reused, layout_theme: layoutTheme, balance: debited.balance } };
   }
 
   // ------- revisão solicitada pelo aluno -------

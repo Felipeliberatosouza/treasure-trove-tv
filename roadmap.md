@@ -27,3 +27,9 @@
 - [x] Produtos e subprodutos conforme planilha (menu, atalhos, painel, professor ativo)
 
 - [x] Versão Beta: flag no admin, barra fixa, reporte simples, detecção automática de erros, Créditos de IA por reporte, cartão de teste fixo
+
+## Melhorias nas páginas dos produtos (2026-09-29)
+- [x] Etapa 1: menu sem "Conhecer X"; carrosséis Resolução de Provas / Revisões de Conteúdo nas páginas de produto
+- [ ] Etapa 2: Trabalhos exclusivos, visual variado, área de download, Dicas e Perguntas da apresentação
+- [ ] Etapa 3: painel Produtos com listas de seleção, cadastro de provas + PDF, configuração de simulado
+- [ ] Etapa 4: páginas ENEM/OAB/Vestibulares/Concursos com seleções, simulado cronometrado, correção de redação, Resolução Comentada

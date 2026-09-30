@@ -10,6 +10,16 @@ const corsHeaders = {
 
 const GEN_MODEL = "openai/gpt-6-astra";
 const PROMPT_VERSION = "w1";
+const LAYOUT_THEMES = ["oceano", "terracota", "floresta", "grafite", "vinho", "solar", "lavanda", "petroleo", "areia", "coral", "noturno", "menta"];
+const ANGLES = [
+  "começar por um caso prático e depois explicar a teoria",
+  "linha do tempo histórica até os dias atuais",
+  "comparação entre visões ou abordagens diferentes",
+  "problema, causas, consequências e soluções",
+  "perguntas norteadoras respondidas ao longo das seções",
+  "conceitos fundamentais, aplicações e desafios futuros",
+  "estudo de exemplos do cotidiano brasileiro",
+];
 
 interface Pricing {
   credits_generation: number;
@@ -171,7 +181,36 @@ async function handle(req: Request, body: any): Promise<{ status: number; payloa
     return { ok: true as const, balance: next };
   }
 
-  const action = body.action === "revise" ? "revise" : "generate";
+  const action = body.action === "revise" ? "revise" : body.action === "extras" ? "extras" : "generate";
+
+  if (action === "extras") {
+    const { data: doc } = await admin.from("work_documents").select("id, user_id, tema, content, presentation_extras").eq("id", String(body.document_id || "")).maybeSingle();
+    if (!doc || doc.user_id !== userId) return { status: 404, payload: { error: "Trabalho não encontrado." } };
+    if (doc.presentation_extras && !body.refresh) return { status: 200, payload: { extras: doc.presentation_extras } };
+    const apiKey = Deno.env.get("LOVABLE_API_KEY");
+    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
+      body: JSON.stringify({
+        model: GEN_MODEL, reasoning_effort: "low", response_format: { type: "json_object" },
+        messages: [
+          { role: "system", content: "Você é um professor brasileiro que prepara alunos para apresentar trabalhos. Responda somente JSON em português do Brasil." },
+          { role: "user", content: `Com base EXCLUSIVAMENTE nos slides e no documento abaixo, crie:
+1) "dicas": dicas práticas de apresentação, uma por slide (o que falar, como explicar, tempo sugerido) mais dicas gerais de postura e abertura/fechamento.
+2) "perguntas": 8 a 12 perguntas que a turma ou o professor podem fazer durante a apresentação, cada uma com uma resposta curta e segura.
+Formato: {"dicas_gerais":["..."],"dicas":[{"slide":"título do slide","dica":"...","tempo":"1 min"}],"perguntas":[{"pergunta":"...","resposta":"..."}]}
+Trabalho: ${JSON.stringify(doc.content).slice(0, 40000)}` },
+        ],
+      }),
+    });
+    if (!res.ok) return { status: res.status === 429 ? 429 : 500, payload: { error: "Não foi possível gerar agora. Tente novamente em instantes." } };
+    const p = await res.json();
+    let extras: any;
+    try { extras = JSON.parse(String(p?.choices?.[0]?.message?.content || "").trim().replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "")); }
+    catch { return { status: 500, payload: { error: "A IA retornou um conteúdo inválido. Tente novamente." } }; }
+    await admin.from("work_documents").update({ presentation_extras: extras }).eq("id", doc.id);
+    return { status: 200, payload: { extras } };
+  }
 
   if (action === "generate") {
     const tema = String(body.tema || "").trim();
@@ -247,6 +286,7 @@ Produza de ${3 + Math.floor(Math.random() * 4)} a 7 seções no documento e de $
         credits_spent: pricing.credits_generation,
         provider_cost: pricing.provider_cost_generation,
         reused,
+        layout_theme: layoutTheme,
       })
       .select("id")
       .single();
@@ -255,7 +295,7 @@ Produza de ${3 + Math.floor(Math.random() * 4)} a 7 seções no documento e de $
       return { status: 500, payload: { error: "Não foi possível salvar o trabalho." } };
     }
 
-    return { status: 200, payload: { id: inserted.id, content, reused, balance: debited.balance } };
+    return { status: 200, payload: { id: inserted.id, content, reused, layout_theme: layoutTheme, balance: debited.balance } };
   }
 
   // ------- revisão solicitada pelo aluno -------

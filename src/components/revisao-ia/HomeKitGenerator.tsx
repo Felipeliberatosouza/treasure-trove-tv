@@ -313,7 +313,7 @@ const HomeKitGenerator = ({ productKey, initialSub, productExtra, fixedHeadline,
     } catch {
       /* armazenamento indisponível */
     }
-    if (res.workId) navigate(`/trabalho/${res.workId}`);
+    if (res.workId) navigate(`/trabalhos?doc=${res.workId}#resultado-trabalho`);
     else if (res.canonicalId) navigate(`/conteudo-ia/${res.canonicalId}`);
   }, [step, loading, steps.length, navigate, fast]);
 

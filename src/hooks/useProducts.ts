@@ -57,6 +57,8 @@ export type Product = {
   active: boolean;
   sort_order: number;
   subproducts?: Subproduct[];
+  selector_options?: Record<string, string[]> | null;
+  simulado_config?: any;
 };
 
 export const PRODUCT_ICONS: Record<string, LucideIcon> = {

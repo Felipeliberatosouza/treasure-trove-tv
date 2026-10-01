@@ -8,6 +8,7 @@ import PricingSection from "@/components/PricingSection";
 import RealExamsSection from "@/components/provas-reais/RealExamsSection";
 import HomeKitGenerator from "@/components/revisao-ia/HomeKitGenerator";
 import ProductContentCarousels from "@/components/products/ProductContentCarousels";
+import WorkResultPanel from "@/components/trabalhos/WorkResultPanel";
 import NotFound from "@/pages/NotFound";
 import { useProducts, productIcon } from "@/hooks/useProducts";
 import { useAuth } from "@/contexts/AuthContext";
@@ -36,6 +37,7 @@ type Item = { id: string; title: string; href: string };
 export default function ProductPage() {
   const { pathname, search } = useLocation();
   const initialSub = new URLSearchParams(search).get("sub");
+  const resultDoc = new URLSearchParams(search).get("doc");
   const key = pathname.replace(/^\//, "").split("/")[0];
   const products = useProducts();
   const navigate = useNavigate();
@@ -80,7 +82,11 @@ export default function ProductPage() {
   if (!product) return products.length ? <NotFound /> : null;
 
   const Icon = productIcon(product.icon);
-  const fields = EXTRA_FIELDS[product.key] || [];
+  const OPT_KEY: Record<string, string> = { area: "areas", instituicao: "vestibulares", fase: "fases", banca: "bancas", cargo: "cargos", disciplina: "disciplinas" };
+  const fields = (EXTRA_FIELDS[product.key] || []).map((f) => {
+    const opts = product.selector_options?.[OPT_KEY[f.key]];
+    return Array.isArray(opts) && opts.length ? { ...f, options: opts, placeholder: `Escolha: ${f.label.toLowerCase()}` } : f;
+  });
   const productExtra = fields.map((f) => extra[f.key] ? `${f.label}: ${extra[f.key]}` : "").filter(Boolean).join("; ");
 
   return (
@@ -121,6 +127,8 @@ export default function ProductPage() {
         </section>
 
         <HomeKitGenerator productKey={product.key} initialSub={initialSub} productExtra={productExtra} fixedHeadline={product.title + (profile?.name ? `, ${String(profile.name).split(" ")[0]}` : "")} />
+
+        {product.key === "trabalhos" && resultDoc && user && <WorkResultPanel docId={resultDoc} />}
 
         {["enem","vestibulares","oab","concursos"].includes(product.key) && <RealExamsSection productKey={product.key} productName={product.name} />}
 

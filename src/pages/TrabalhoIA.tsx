@@ -1,3 +1,4 @@
+import WorkResultPanel from "@/components/trabalhos/WorkResultPanel";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import Navbar from "@/components/Navbar";
@@ -115,16 +116,9 @@ const TrabalhoIA = () => {
                 </p>
                 <h1 className="font-display text-2xl font-bold md:text-3xl">{titulo}</h1>
               </div>
-              <div className="flex flex-wrap gap-2">
-                <Button onClick={() => void downloadWord(content, footer)}>
-                  <Download className="h-4 w-4" /> Baixar Word
-                </Button>
-                <Button variant="outline" onClick={() => void downloadSlides(content, footer)}>
-                  <Presentation className="h-4 w-4" /> Baixar slides
-                </Button>
-              </div>
             </div>
 
+            {id && <div className="-mx-4 mb-6"><WorkResultPanel docId={id} /></div>}
             <Card className="mb-6">
               <CardContent className="space-y-4 p-6 text-left">
                 <h2 className="flex items-center gap-2 font-display text-lg font-semibold">

@@ -99,7 +99,7 @@ export default function RealExamsSection({ productKey, productName }: { productK
   return (
     <section id="provas-reais" className="px-4 py-8 md:px-10">
       <div className="mx-auto max-w-4xl">
-        <h2 className="font-display text-xl font-bold">Provas reais de {productName} (últimos 5 anos)</h2>
+        <h2 className="font-display text-xl font-bold">Provas reais de {productName}</h2>
         <p className="mt-1 text-sm text-muted-foreground">Escolha as opções abaixo e depois se quer fazer o Simulado ou ver a Resolução Comentada.</p>
 
         <div className="mt-4 grid gap-3 sm:grid-cols-3">

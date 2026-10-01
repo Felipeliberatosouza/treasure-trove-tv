@@ -33,7 +33,8 @@ const MODEL = "\uFEFFnumero;disciplina;assunto;enunciado;A;B;C;D;E;gabarito;come
 export default function AdminRealExamsTab() {
   const [exams, setExams] = useState<Exam[]>([]);
   const [counts, setCounts] = useState<Record<string, number>>({});
-  const [form, setForm] = useState({ product_key: "enem", year: new Date().getFullYear(), title: "", board: "", phase: "", pdf_url: "" });
+  const empty = { title: "", board: "", phase: "", pdf_url: "", exam_number: "", applied_on: "", institution: "", cargo: "", disciplina: "" };
+  const [form, setForm] = useState<any>({ product_key: "enem", year: new Date().getFullYear(), ...empty });
   const [importing, setImporting] = useState<string | null>(null);
 
   const load = async () => {
@@ -46,9 +47,10 @@ export default function AdminRealExamsTab() {
 
   const create = async () => {
     if (!form.title.trim()) return toast.error("Informe o nome da prova.");
-    const { error } = await supabase.from("real_exams").insert({ ...form, board: form.board || null, phase: form.phase || null, pdf_url: form.pdf_url || null });
+    const row: any = { ...form }; Object.keys(empty).forEach((k) => { if (k !== "title") row[k] = row[k] || null; });
+    const { error } = await supabase.from("real_exams").insert(row);
     if (error) return toast.error("Não foi possível salvar a prova.");
-    toast.success("Prova cadastrada."); setForm({ ...form, title: "", board: "", phase: "", pdf_url: "" }); load();
+    toast.success("Prova cadastrada."); setForm({ ...form, ...empty }); load();
   };
 
   const toggle = async (e: Exam) => { await supabase.from("real_exams").update({ active: !e.active }).eq("id", e.id); load(); };
@@ -123,8 +125,13 @@ export default function AdminRealExamsTab() {
           </select></div>
         <div><Label>Ano</Label><Input type="number" value={form.year} onChange={(e) => setForm({ ...form, year: Number(e.target.value) })} /></div>
         <div><Label>Nome da prova</Label><Input placeholder="Ex.: ENEM 2024 – 1º dia (Azul)" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></div>
-        <div><Label>Banca / instituição</Label><Input placeholder="Ex.: FGV, Fuvest, Cebraspe" value={form.board} onChange={(e) => setForm({ ...form, board: e.target.value })} /></div>
-        <div><Label>Fase / edição</Label><Input placeholder="Ex.: 1ª fase, 41º Exame" value={form.phase} onChange={(e) => setForm({ ...form, phase: e.target.value })} /></div>
+        <div><Label>Data de aplicação</Label><Input type="date" value={form.applied_on} onChange={(e) => setForm({ ...form, applied_on: e.target.value })} /></div>
+        {form.product_key === "oab" && <div><Label>Número do exame</Label><Input placeholder="Ex.: 41º Exame" value={form.exam_number} onChange={(e) => setForm({ ...form, exam_number: e.target.value })} /></div>}
+        {form.product_key === "vestibulares" && <div><Label>Instituição (vestibular)</Label><Input placeholder="Ex.: Fuvest" value={form.institution} onChange={(e) => setForm({ ...form, institution: e.target.value })} /></div>}
+        {form.product_key !== "vestibulares" && <div><Label>Banca</Label><Input placeholder="Ex.: FGV, INEP, Cebraspe" value={form.board} onChange={(e) => setForm({ ...form, board: e.target.value })} /></div>}
+        {form.product_key === "concursos" && <div><Label>Cargo</Label><Input placeholder="Ex.: Analista" value={form.cargo} onChange={(e) => setForm({ ...form, cargo: e.target.value })} /></div>}
+        {form.product_key === "concursos" && <div><Label>Disciplina (se a prova for de uma só)</Label><Input value={form.disciplina} onChange={(e) => setForm({ ...form, disciplina: e.target.value })} /></div>}
+        {form.product_key !== "enem" && <div><Label>Fase</Label><Input placeholder="Ex.: 1ª fase" value={form.phase} onChange={(e) => setForm({ ...form, phase: e.target.value })} /></div>}
         <div><Label>Link do caderno oficial (PDF)</Label><Input placeholder="https://..." value={form.pdf_url} onChange={(e) => setForm({ ...form, pdf_url: e.target.value })} /></div>
         <div className="flex gap-2 sm:col-span-3">
           <Button onClick={create}>Cadastrar prova</Button>

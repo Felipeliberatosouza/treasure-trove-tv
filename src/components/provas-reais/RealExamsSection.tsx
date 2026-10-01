@@ -92,7 +92,7 @@ export default function RealExamsSection({ productKey, productName }: { productK
 
   const cfg = product?.simulado_config || {};
   const optionForCfg = productKey === "enem" ? sel.area : sel.fase;
-  const simCfg = { ...(cfg.default || {}), ...((optionForCfg && cfg.by_option?.[optionForCfg]) || {}) } as { duration_min?: number; has_essay?: boolean; instructions?: string };
+  const simCfg = { pass_percent: cfg.pass_percent, ...(cfg.default || {}), ...((optionForCfg && cfg.by_option?.[optionForCfg]) || {}) } as { duration_min?: number; has_essay?: boolean; instructions?: string; pass_percent?: number };
 
   const selCls = "mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm";
 
@@ -205,7 +205,7 @@ function Commented({ exam, subjects, loggedIn }: { exam: Exam; subjects: string[
 }
 
 function Simulado({ exam, subjects, cfg, productKey, option, userId }: {
-  exam: Exam; subjects: string[] | null; cfg: { duration_min?: number; has_essay?: boolean; instructions?: string }; productKey: string; option: string; userId?: string;
+  exam: Exam; subjects: string[] | null; cfg: { duration_min?: number; has_essay?: boolean; instructions?: string; pass_percent?: number }; productKey: string; option: string; userId?: string;
 }) {
   const minutes = cfg.duration_min || 180;
   const [qs, setQs] = useState<Question[]>([]);
@@ -288,7 +288,7 @@ function Simulado({ exam, subjects, cfg, productKey, option, userId }: {
       {done && (
         <div className="mt-4 rounded-xl border border-primary/40 bg-primary/5 p-4">
           <p className="text-lg font-bold">Resultado: {score} de {qs.length} acertos ({qs.length ? Math.round((score / qs.length) * 100) : 0}%)</p>
-          {productKey === "oab" && option !== "2ª fase" && <p className="text-sm">{score >= 40 ? "Você atingiria a nota de corte da 1ª fase (40 acertos)." : "Ainda abaixo da nota de corte da 1ª fase (40 acertos)."}</p>}
+          {cfg.pass_percent && qs.length > 0 && <p className="text-sm">{(score / qs.length) * 100 >= cfg.pass_percent ? `Você atingiria a nota de corte (${cfg.pass_percent}%).` : `Ainda abaixo da nota de corte (${cfg.pass_percent}%).`}</p>}
         </div>
       )}
 

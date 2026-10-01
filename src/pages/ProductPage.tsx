@@ -103,34 +103,13 @@ export default function ProductPage() {
             <p className="mt-2 text-muted-foreground">{product.page_intro || product.description}</p>
           </div>
 
-          {fields.length > 0 && (
-            <div className="mx-auto mt-6 grid max-w-3xl gap-3 sm:grid-cols-3">
-              {fields.map((f) => (
-                <div key={f.key} className="text-left">
-                  <Label className="text-xs">{f.label}</Label>
-                  {f.options ? (
-                    <select
-                      className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
-                      value={extra[f.key] || ""}
-                      onChange={(e) => setExtra((x) => ({ ...x, [f.key]: e.target.value }))}
-                    >
-                      <option value="">{f.placeholder}</option>
-                      {f.options.map((o) => <option key={o} value={o}>{o}</option>)}
-                    </select>
-                  ) : (
-                    <Input className="mt-1" placeholder={f.placeholder} value={extra[f.key] || ""} onChange={(e) => setExtra((x) => ({ ...x, [f.key]: e.target.value }))} />
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
         </section>
+
+        {["enem","vestibulares","oab","concursos"].includes(product.key) && <RealExamsSection productKey={product.key} productName={product.name} />}
 
         <HomeKitGenerator productKey={product.key} initialSub={initialSub} productExtra={productExtra} fixedHeadline={product.title + (profile?.name ? `, ${String(profile.name).split(" ")[0]}` : "")} />
 
         {product.key === "trabalhos" && resultDoc && user && <WorkResultPanel docId={resultDoc} />}
-
-        {["enem","vestibulares","oab","concursos"].includes(product.key) && <RealExamsSection productKey={product.key} productName={product.name} />}
 
         {user && (
           <section id="meus" className="px-4 py-8 md:px-10">

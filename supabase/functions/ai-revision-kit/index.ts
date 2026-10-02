@@ -11,7 +11,6 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-const GEN_MODEL = "openai/gpt-6-astra";
 const TEMPLATE_VERSION = "v5";
 const PROMPT_VERSION = "v6";
 const SIGNUP_CREDITS = 2;

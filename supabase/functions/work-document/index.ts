@@ -9,7 +9,6 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-const GEN_MODEL = "openai/gpt-6-astra";
 const PROMPT_VERSION = "w1";
 const LAYOUT_THEMES = ["oceano", "terracota", "floresta", "grafite", "vinho", "solar", "lavanda", "petroleo", "areia", "coral", "noturno", "menta"];
 const ANGLES = [

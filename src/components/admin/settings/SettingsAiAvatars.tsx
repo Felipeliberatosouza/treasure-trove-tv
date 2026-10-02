@@ -45,6 +45,7 @@ const fromCatalog = (c: CatalogAvatar, currentName: string): Partial<AiAvatarSet
   avatar_id: c.id,
   gender: c.gender,
   voice: defaultVoiceForGender(c.gender),
+  el_voice: undefined,
   role_label: aiRoleLabel(c.gender),
   name: currentName.trim() || `${c.gender === "male" ? "Professor" : "Professora"} ${c.label.replace(" (vídeo)", "")}`,
 });

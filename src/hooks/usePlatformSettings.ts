@@ -481,6 +481,8 @@ export interface AiAvatarSettings {
   role_label: string;
   /** Voz fixa usada em todas as narrações deste avatar. */
   voice?: string;
+  /** Voz ElevenLabs própria deste avatar (usada quando a ElevenLabs está ativa). */
+  el_voice?: string;
   /** Intensidade da animação do avatar durante a narração. */
   animation?: AiAvatarAnimation;
   /** Posição e tamanho do avatar em cada tipo de slide. */

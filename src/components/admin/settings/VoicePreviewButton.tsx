@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 export const VOICE_SAMPLE_TEXT = "Olá! Como vai? Terá prova hoje?";
 
 /** Botão que gera e reproduz um exemplo curto da voz selecionada. */
-const VoicePreviewButton = ({ voice, gender }: { voice: string; gender: "male" | "female" }) => {
+const VoicePreviewButton = ({ voice, gender, elVoice }: { voice: string; gender: "male" | "female"; elVoice?: string }) => {
   const [loading, setLoading] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -32,6 +32,7 @@ const VoicePreviewButton = ({ voice, gender }: { voice: string; gender: "male" |
           body: JSON.stringify({
             texto: VOICE_SAMPLE_TEXT,
             avatar_voice: voice,
+            avatar_el_voice: elVoice,
             avatar_gender: gender,
           }),
         },

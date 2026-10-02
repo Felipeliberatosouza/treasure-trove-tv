@@ -90,7 +90,10 @@ Deno.serve(async (req) => {
     // Configuração de voz do painel.
     const voiceCfg = await loadSetting("ai_voice_config");
     const useEleven = voiceCfg.provider === "elevenlabs" && !!Deno.env.get("ELEVENLABS_API_KEY");
-    const rawElId = String(avatarGender === "male" ? voiceCfg.male_voice_id || "" : voiceCfg.female_voice_id || "");
+    const avatarElId = typeof body.avatar_el_voice === "string" ? body.avatar_el_voice.trim() : "";
+    const rawElId = EL_ID_RE.test(avatarElId)
+      ? avatarElId
+      : String(avatarGender === "male" ? voiceCfg.male_voice_id || "" : voiceCfg.female_voice_id || "");
     const elVoiceId = EL_ID_RE.test(rawElId) ? rawElId : (avatarGender === "male" ? DEFAULT_EL_MALE : DEFAULT_EL_FEMALE);
     const elSettingsSig = [voiceCfg.stability, voiceCfg.similarity, voiceCfg.style, voiceCfg.speed].join("|");
     const voiceKey = useEleven ? `el:${elVoiceId}:${elSettingsSig}` : openaiVoice;

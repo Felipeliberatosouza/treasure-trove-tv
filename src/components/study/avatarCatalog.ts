@@ -1,9 +1,9 @@
-import anaVideo from "@/assets/avatars/video-ana.mp4.asset.json";
-import biaVideo from "@/assets/avatars/video-bia.mp4.asset.json";
-import helenaVideo from "@/assets/avatars/video-helena.mp4.asset.json";
-import lucasVideo from "@/assets/avatars/video-lucas.mp4.asset.json";
-import tiagoVideo from "@/assets/avatars/video-tiago.mp4.asset.json";
-import rafaelVideo from "@/assets/avatars/video-rafael.mp4.asset.json";
+import anaVideo from "@/assets/avatars/lipsync-ana.mp4.asset.json";
+import biaVideo from "@/assets/avatars/lipsync-bia.mp4.asset.json";
+import helenaVideo from "@/assets/avatars/lipsync-helena.mp4.asset.json";
+import lucasVideo from "@/assets/avatars/lipsync-lucas.mp4.asset.json";
+import tiagoVideo from "@/assets/avatars/lipsync-tiago.mp4.asset.json";
+import rafaelVideo from "@/assets/avatars/lipsync-rafael.mp4.asset.json";
 
 export interface RiggedAvatarStyle {
   skin: string;
@@ -19,13 +19,15 @@ export interface CatalogAvatar {
   label: string;
   gender: "female" | "male";
   kind: "ilustrado" | "video";
-  /** Vídeo em looping, quando kind = "video". */
+  /** Vídeo base (boca fechada) em looping, quando kind = "video". */
   videoUrl?: string;
+  /** Chave do mapa de posição da boca usado na sincronia labial. */
+  mouthTrack?: string;
   /** Estilo do personagem ilustrado, quando kind = "ilustrado". */
   style?: RiggedAvatarStyle;
 }
 
-/** Galeria de avatares prontos: 6 ilustrados articulados e 6 em vídeo. */
+/** Galeria de avatares prontos: 6 ilustrados articulados e 6 pessoas reais em vídeo, todos com sincronia labial. */
 export const AVATAR_CATALOG: CatalogAvatar[] = [
   {
     id: "ilu-ana",
@@ -69,12 +71,12 @@ export const AVATAR_CATALOG: CatalogAvatar[] = [
     kind: "ilustrado",
     style: { skin: "#e5bb98", hair: "#8b8b93", outfit: "#4b5563", outfitDark: "#3c4451", hairStyle: "curto" },
   },
-  { id: "vid-ana", label: "Ana (vídeo)", gender: "female", kind: "video", videoUrl: anaVideo.url },
-  { id: "vid-bia", label: "Bia (vídeo)", gender: "female", kind: "video", videoUrl: biaVideo.url },
-  { id: "vid-helena", label: "Helena (vídeo)", gender: "female", kind: "video", videoUrl: helenaVideo.url },
-  { id: "vid-lucas", label: "Lucas (vídeo)", gender: "male", kind: "video", videoUrl: lucasVideo.url },
-  { id: "vid-tiago", label: "Tiago (vídeo)", gender: "male", kind: "video", videoUrl: tiagoVideo.url },
-  { id: "vid-rafael", label: "Rafael (vídeo)", gender: "male", kind: "video", videoUrl: rafaelVideo.url },
+  { id: "vid-ana", label: "Ana (vídeo)", gender: "female", kind: "video", videoUrl: anaVideo.url, mouthTrack: "ana" },
+  { id: "vid-bia", label: "Bia (vídeo)", gender: "female", kind: "video", videoUrl: biaVideo.url, mouthTrack: "bia" },
+  { id: "vid-helena", label: "Helena (vídeo)", gender: "female", kind: "video", videoUrl: helenaVideo.url, mouthTrack: "helena" },
+  { id: "vid-lucas", label: "Lucas (vídeo)", gender: "male", kind: "video", videoUrl: lucasVideo.url, mouthTrack: "lucas" },
+  { id: "vid-tiago", label: "Tiago (vídeo)", gender: "male", kind: "video", videoUrl: tiagoVideo.url, mouthTrack: "tiago" },
+  { id: "vid-rafael", label: "Rafael (vídeo)", gender: "male", kind: "video", videoUrl: rafaelVideo.url, mouthTrack: "rafael" },
 ];
 
 export const findCatalogAvatar = (id?: string): CatalogAvatar | undefined =>

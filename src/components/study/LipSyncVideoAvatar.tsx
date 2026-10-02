@@ -133,7 +133,7 @@ const LipSyncVideoAvatar = ({ url, trackKey, alt, speaking, viseme, phrase }: Pr
       // Lábios fechados: nada é desenhado (sem risco entre os lábios).
       if (open < 0.05) return;
       // A linha entre os lábios fica na altura dos cantos da boca.
-      const cy = cy0;
+      const cy = cy0 - mw * S * 0.035;
       const mouthW = mw * S * 0.98 * sx;
       const hw = mouthW / 2;
       const chinH = chin * S;
@@ -164,13 +164,15 @@ const LipSyncVideoAvatar = ({ url, trackKey, alt, speaking, viseme, phrase }: Pr
       g.addColorStop(1, "#3a1a1c");
       ctx.fillStyle = g;
       ctx.fill();
-      if (open > 0.35) {
+      if (open > 0.3) {
+        // Dentes superiores discretos, saindo de trás do lábio de cima.
         ctx.clip();
-        const tg = ctx.createLinearGradient(0, 0, 0, drop * 0.32);
-        tg.addColorStop(0, "rgba(236,230,220,0.9)");
-        tg.addColorStop(1, "rgba(220,212,200,0)");
-        ctx.fillStyle = tg;
-        ctx.fillRect(-hw * 0.62, 0, hw * 1.24, drop * 0.32);
+        ctx.filter = `blur(${Math.max(0.8, S / 450).toFixed(1)}px)`;
+        ctx.globalAlpha = Math.min(0.7, (open - 0.3) * 1.6);
+        ctx.fillStyle = "#e4ddd2";
+        ctx.beginPath();
+        ctx.ellipse(0, -drop * 0.05, hw * 0.6, drop * 0.3, 0, 0, Math.PI * 2);
+        ctx.fill();
       }
       ctx.restore();
 

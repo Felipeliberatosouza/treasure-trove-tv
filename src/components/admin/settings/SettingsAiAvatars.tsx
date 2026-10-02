@@ -22,7 +22,8 @@ import {
   type AiContentTypeId,
 } from "@/hooks/usePlatformSettings";
 import AvatarGalleryPicker from "./AvatarGalleryPicker";
-import VoicePreviewButton, { VOICE_SAMPLE_TEXT } from "./VoicePreviewButton";
+import { VOICE_SAMPLE_TEXT } from "./VoicePreviewButton";
+import AvatarVoiceField from "./AvatarVoiceField";
 import type { CatalogAvatar } from "@/components/study/avatarCatalog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -222,30 +223,12 @@ const SettingsAiAvatars = () => {
               maxLength={60}
             />
           </div>
-          <div className="space-y-2">
-            <Label>Voz da narração</Label>
-            <Select
-              value={avatar.voice || defaultVoiceForGender(avatar.gender)}
-              onValueChange={(v) => setAvatar({ ...avatar, voice: v })}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {AI_AVATAR_VOICES.map((v) => (
-                  <SelectItem key={v.id} value={v.id}>{v.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <VoicePreviewButton
-              voice={avatar.voice || defaultVoiceForGender(avatar.gender)}
-              gender={avatar.gender}
-            />
-            <p className="text-xs text-muted-foreground">
-              Vale para todas as narrações feitas com este avatar. Legenda: {aiRoleLabel(avatar.gender)}.
-              Frase do exemplo: “{VOICE_SAMPLE_TEXT}”
-            </p>
-          </div>
+          <AvatarVoiceField
+            avatar={avatar}
+            onChange={(changes) => setAvatar({ ...avatar, ...changes })}
+            hint={<>Legenda: {aiRoleLabel(avatar.gender)}. Frase do exemplo: “{VOICE_SAMPLE_TEXT}”</>}
+          />
+
           <AvatarStageFields avatar={avatar} onChange={(changes) => setAvatar({ ...avatar, ...changes })} />
         </div>
       </div>
@@ -296,29 +279,12 @@ const SettingsAiAvatars = () => {
                     onChange={(e) => patch(av.id, { name: e.target.value })}
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label>Voz da narração</Label>
-                  <Select
-                    value={av.voice || defaultVoiceForGender(av.gender)}
-                    onValueChange={(v) => patch(av.id, { voice: v })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {AI_AVATAR_VOICES.map((v) => (
-                        <SelectItem key={v.id} value={v.id}>{v.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <VoicePreviewButton
-                    voice={av.voice || defaultVoiceForGender(av.gender)}
-                    gender={av.gender}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Legenda exibida: {aiRoleLabel(av.gender)}
-                  </p>
-                </div>
+                <AvatarVoiceField
+                  avatar={av}
+                  onChange={(changes) => patch(av.id, changes)}
+                  hint={<>Legenda exibida: {aiRoleLabel(av.gender)}</>}
+                />
+
                 <AvatarStageFields avatar={av} onChange={(changes) => patch(av.id, changes)} />
                 <div className="space-y-2 sm:col-span-2">
                   <Label htmlFor={`disc-${av.id}`}>Disciplinas (separadas por vírgula)</Label>

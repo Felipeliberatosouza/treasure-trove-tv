@@ -64,57 +64,76 @@ const LipSyncVideoAvatar = ({ url, trackKey, alt, speaking, viseme }: Props) => 
       const cx = mx * S;
       // O mapa marca os cantos da boca; a linha entre os lábios fica um pouco abaixo.
       const cy = my * S + mw * S * 0.07;
-      const mouthW = mw * S * 1.1 * sx;
+      const mouthW = mw * S * 0.95 * sx;
+      const hw = mouthW / 2;
       const chinH = chin * S;
-      const drop = open * chinH * 0.3;
-      const jawW = mouthW * 2.6;
-      const jawH = chinH * 1.25;
+      const drop = open * chinH * 0.26;
+      const jawHalf = hw * 2.4;
+      const jawH = chinH * 1.3;
+      // Quanto cada faixa vertical do queixo desce: total no centro da boca,
+      // diminuindo suavemente até as bochechas (sem emendas visíveis).
+      const dropAt = (x: number) => {
+        const u = Math.abs(x) / jawHalf;
+        if (u >= 1) return 0;
+        const k = Math.cos((u * Math.PI) / 2);
+        return drop * k * k;
+      };
 
-      // Interior da boca.
+      // Interior da boca em formato de lente entre os cantos dos lábios.
       ctx.save();
       ctx.translate(cx, cy);
       ctx.rotate(ang);
-      const g = ctx.createLinearGradient(0, 0, 0, drop);
-      g.addColorStop(0, "#3a1418");
-      g.addColorStop(1, "#140507");
-      ctx.fillStyle = g;
       ctx.beginPath();
-      ctx.ellipse(0, drop / 2, mouthW / 2, drop / 2 + 1, 0, 0, Math.PI * 2);
+      ctx.moveTo(-hw, 0);
+      ctx.quadraticCurveTo(0, -drop * 0.08, hw, 0);
+      ctx.quadraticCurveTo(0, dropAt(0) * 2.1, -hw, 0);
+      ctx.closePath();
+      const g = ctx.createLinearGradient(0, 0, 0, drop);
+      g.addColorStop(0, "#2b0d10");
+      g.addColorStop(0.6, "#1a0608");
+      g.addColorStop(1, "#3b1519");
+      ctx.fillStyle = g;
       ctx.fill();
-      if (open > 0.3) {
+      if (open > 0.35) {
         ctx.save();
         ctx.clip();
-        ctx.fillStyle = "rgba(240,236,228,0.92)";
-        ctx.fillRect(-mouthW * 0.32, -1, mouthW * 0.64, Math.min(drop * 0.28, S * 0.012) + 1);
+        const tg = ctx.createLinearGradient(0, 0, 0, drop * 0.3);
+        tg.addColorStop(0, "rgba(232,226,214,0.85)");
+        tg.addColorStop(1, "rgba(200,190,178,0)");
+        ctx.fillStyle = tg;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, hw * 0.55, drop * 0.3, 0, 0, Math.PI);
+        ctx.fill();
         ctx.restore();
       }
       ctx.restore();
 
-      // Queixo real deslocado para baixo, com bordas suavizadas.
+      // Queixo real deslocado em faixas finas, acompanhando a abertura.
       jctx.setTransform(1, 0, 0, 1, 0, 0);
       jctx.globalCompositeOperation = "source-over";
       jctx.clearRect(0, 0, S, S);
       jctx.translate(cx, cy);
       jctx.rotate(ang);
-      jctx.save();
-      jctx.translate(0, drop);
-      jctx.beginPath();
-      jctx.rect(-jawW, 0, jawW * 2, jawH * 2);
-      jctx.clip();
-      jctx.rotate(-ang);
-      jctx.drawImage(video, -cx, -cy, S, S);
-      jctx.restore();
+      const strip = Math.max(2, S / 160);
+      for (let x = -jawHalf; x < jawHalf; x += strip) {
+        const d = dropAt(x + strip / 2);
+        jctx.save();
+        jctx.beginPath();
+        jctx.rect(x, d, strip + 0.6, jawH);
+        jctx.clip();
+        jctx.translate(0, d);
+        jctx.rotate(-ang);
+        jctx.drawImage(video, -cx, -cy, S, S);
+        jctx.restore();
+      }
+      // Suaviza a parte de baixo (pescoço) para não marcar emenda.
       jctx.globalCompositeOperation = "destination-in";
-      jctx.save();
-      jctx.translate(0, drop);
-      jctx.scale(jawW / 2, jawH);
-      const m = jctx.createRadialGradient(0, 0, 0, 0, 0, 1);
+      const m = jctx.createLinearGradient(0, 0, 0, jawH);
       m.addColorStop(0, "rgba(0,0,0,1)");
-      m.addColorStop(0.6, "rgba(0,0,0,1)");
+      m.addColorStop(0.7, "rgba(0,0,0,1)");
       m.addColorStop(1, "rgba(0,0,0,0)");
       jctx.fillStyle = m;
-      jctx.fillRect(-1, -1, 2, 2);
-      jctx.restore();
+      jctx.fillRect(-jawHalf, 0, jawHalf * 2, jawH);
       ctx.drawImage(jaw, 0, 0);
     };
     raf = requestAnimationFrame(draw);

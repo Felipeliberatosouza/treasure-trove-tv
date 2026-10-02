@@ -17,6 +17,8 @@ interface AnimatedAvatarProps {
   size: AiAvatarSize;
   /** Formato da boca sincronizado com a fala (ElevenLabs). */
   viseme?: Viseme | null;
+  /** Frase sendo dita (legenda), usada para expressões como sorriso. */
+  phrase?: string;
 }
 
 const SIZE_CLASS: Record<AiAvatarSize, string> = {
@@ -63,7 +65,7 @@ const PhotoRigAvatar = ({ url, alt, speaking, viseme }: { url: string; alt: stri
  * Professor(a) virtual que fala: personagem ilustrado articulado (boca, cabeça,
  * tronco, braços e mãos), pessoa real articulada ou, por compatibilidade, uma foto animada.
  */
-const AnimatedAvatar = ({ avatarId, src, alt, speaking, animation = "gestos", size, viseme }: AnimatedAvatarProps) => {
+const AnimatedAvatar = ({ avatarId, src, alt, speaking, animation = "gestos", size, viseme, phrase }: AnimatedAvatarProps) => {
   const active = speaking && animation !== "nenhuma";
   const gestures = active && animation === "gestos";
   const catalog = findCatalogAvatar(avatarId);
@@ -72,7 +74,7 @@ const AnimatedAvatar = ({ avatarId, src, alt, speaking, animation = "gestos", si
     return (
       <div className={SIZE_CLASS[size]}>
         {catalog.mouthTrack ? (
-          <LipSyncVideoAvatar url={catalog.videoUrl} trackKey={catalog.mouthTrack} alt={alt} speaking={active} viseme={active ? viseme : null} />
+          <LipSyncVideoAvatar url={catalog.videoUrl} trackKey={catalog.mouthTrack} alt={alt} speaking={active} viseme={active ? viseme : null} phrase={phrase} />
         ) : (
           <PhotoRigAvatar url={catalog.videoUrl} alt={alt} speaking={active} viseme={active ? viseme : null} />
         )}

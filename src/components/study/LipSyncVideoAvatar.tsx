@@ -95,7 +95,7 @@ const LipSyncVideoAvatar = ({ url, trackKey, alt, speaking, viseme, phrase }: Pr
       nod += (onset * (mood.emphasis ? 9 : 5) - nod) * 0.25;
       tilt += ((smile - 0.2) * 2.2 - tilt) * 0.04;
       if (wrapRef.current) {
-        wrapRef.current.style.transform = `translateY(${(nod * 1.6).toFixed(2)}%) rotate(${tilt.toFixed(2)}deg) scale(${(1 + nod * 0.01).toFixed(4)})`;
+        wrapRef.current.style.transform = `translateY(${(nod * 1.6).toFixed(2)}%) rotate(${tilt.toFixed(2)}deg) scale(${(1.05 + nod * 0.01).toFixed(4)})`;
       }
       // Ritmo dos gestos do vídeo base acompanha a energia da fala.
       const rate = speakingRef.current ? 0.85 + Math.min(0.3, open * 0.5) : 0.7;

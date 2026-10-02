@@ -633,8 +633,10 @@ export function resolveAiAvatar(
 ): AiAvatarSettings {
   const list = params?.avatars ?? [];
   if (!list.length) return fallback;
-  const disciplina = (options.disciplina || "").toLowerCase().trim();
-  const areas = (options.areas || []).map((a) => (a || "").toLowerCase().trim()).filter(Boolean);
+  // Comparação sem acentos/maiúsculas: "Farmácia" casa com "farmacia".
+  const norm = (v: string) => (v || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+  const disciplina = norm(options.disciplina || "");
+  const areas = (options.areas || []).map((a) => norm(a || "")).filter(Boolean);
 
   const matches = list.filter((avatar) => {
     if (!avatar.name?.trim()) return false;
@@ -643,19 +645,16 @@ export function resolveAiAvatar(
       !options.contentType ||
       avatar.content_types.includes(options.contentType);
     if (!typeOk) return false;
-    if (!avatar.disciplines?.length) return true;
+    const terms = (avatar.disciplines || []).map(norm).filter(Boolean);
+    if (!terms.length) return true;
     const targets = [disciplina, ...areas].filter(Boolean);
     if (!targets.length) return false;
-    return avatar.disciplines.some((d) => {
-      const term = d.toLowerCase().trim();
-      if (!term) return false;
-      return targets.some((t) => t.includes(term) || term.includes(t));
-    });
+    return terms.some((term) => targets.some((t) => t.includes(term) || term.includes(t)));
   });
 
   if (!matches.length) return fallback;
   // Prioriza o avatar com vínculo específico de disciplina.
-  const specific = matches.find((a) => a.disciplines?.length);
+  const specific = matches.find((a) => (a.disciplines || []).some((d) => d.trim()));
   const chosen = specific || matches[0];
   return {
     name: chosen.name,
@@ -665,6 +664,7 @@ export function resolveAiAvatar(
     image_url: chosen.image_url,
     role_label: aiRoleLabel(chosen.gender),
     voice: chosen.voice || defaultVoiceForGender(chosen.gender),
+    el_voice: chosen.el_voice,
     animation: chosen.animation || fallback.animation || "gestos",
     placements: chosen.placements || fallback.placements,
   };

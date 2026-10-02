@@ -1,5 +1,6 @@
 import type { RiggedAvatarStyle } from "./avatarCatalog";
 import { VISEME_SHAPE, type Viseme } from "@/utils/phonemeLipSync";
+import { useNaturalGestures } from "./useNaturalGestures";
 
 interface RiggedAvatarProps {
   style: RiggedAvatarStyle;
@@ -18,28 +19,31 @@ interface RiggedAvatarProps {
 const RiggedAvatar = ({ style, speaking, gestures = true, viseme }: RiggedAvatarProps) => {
   const shape = viseme ? VISEME_SHAPE[viseme] : null;
   const { skin, hair, outfit, outfitDark, hairStyle } = style;
+  const pose = useNaturalGestures(speaking && gestures, viseme);
+  const ease = "transform 900ms cubic-bezier(.45,.05,.3,1)";
+  const rot = (deg: number, extra = "") => ({ transform: `rotate(${deg}deg)${extra}`, transition: ease });
 
   return (
     <svg
       viewBox="0 0 200 220"
-      className={`rig ${speaking ? "is-speaking" : ""} ${speaking && gestures ? "has-gestures" : ""}`}
+      className={`rig ${speaking ? "is-speaking" : ""}`}
       role="img"
       aria-hidden="true"
     >
       <g className="rig-body">
         {/* Braço esquerdo (do observador) */}
-        <g className="rig-arm rig-arm-l">
+        <g className="rig-arm rig-arm-l" style={rot(pose.armL)}>
           <rect x="44" y="132" width="20" height="44" rx="10" fill={outfit} />
-          <g className="rig-forearm rig-forearm-l">
+          <g className="rig-forearm rig-forearm-l" style={rot(pose.foreL)}>
             <rect x="44" y="168" width="18" height="42" rx="9" fill={outfit} />
             <circle cx="53" cy="208" r="11" fill={skin} />
           </g>
         </g>
 
         {/* Braço direito */}
-        <g className="rig-arm rig-arm-r">
+        <g className="rig-arm rig-arm-r" style={rot(pose.armR)}>
           <rect x="136" y="132" width="20" height="44" rx="10" fill={outfit} />
-          <g className="rig-forearm rig-forearm-r">
+          <g className="rig-forearm rig-forearm-r" style={rot(pose.foreR)}>
             <rect x="138" y="168" width="18" height="42" rx="9" fill={outfit} />
             <circle cx="147" cy="208" r="11" fill={skin} />
           </g>
@@ -53,6 +57,7 @@ const RiggedAvatar = ({ style, speaking, gestures = true, viseme }: RiggedAvatar
         <rect x="90" y="104" width="20" height="26" rx="10" fill={skin} />
 
         {/* Cabeça */}
+        <g className="rig-head-pose" style={{ transformOrigin: "100px 110px", ...rot(pose.head) }}>
         <g className="rig-head">
           {hairStyle === "longo" && <path d="M58 58c0-26 19-44 42-44s42 18 42 44v58c0 8-10 10-14 4V66H72v54c-4 6-14 4-14-4z" fill={hair} />}
           {hairStyle === "cacheado" && (
@@ -97,6 +102,7 @@ const RiggedAvatar = ({ style, speaking, gestures = true, viseme }: RiggedAvatar
           </g>
 
           {hairStyle === "curto" && <path d="M62 66c6-16 22-24 38-24s32 8 38 24c2-30-16-46-38-46S60 36 62 66z" fill={hair} />}
+        </g>
         </g>
       </g>
     </svg>

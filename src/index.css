@@ -397,18 +397,15 @@
   .rig-head { transform-origin: 100px 110px; }
   .rig-mouth { transform-origin: 100px 90px; transform: scaleY(0.35); }
   .rig-eyes { transform-origin: 100px 70px; animation: rig-blink 5.4s ease-in-out infinite; }
-  .rig-arm-l { transform-origin: 54px 138px; transform: rotate(6deg); }
-  .rig-arm-r { transform-origin: 146px 138px; transform: rotate(-6deg); }
+  .rig-arm-l { transform-origin: 54px 138px; }
+  .rig-arm-r { transform-origin: 146px 138px; }
   .rig-forearm-l { transform-origin: 53px 172px; }
   .rig-forearm-r { transform-origin: 147px 172px; }
 
   .rig.is-speaking .rig-mouth { animation: rig-mouth 0.3s ease-in-out infinite; }
+  .rig .rig-head-pose { transform-box: view-box; }
   .rig.is-speaking .rig-body { animation: rig-sway 2.6s ease-in-out infinite; }
   .rig.is-speaking .rig-head { animation: rig-nod 2.1s ease-in-out infinite; }
-  .rig.has-gestures .rig-arm-l { animation: rig-arm-l 2.4s ease-in-out infinite; }
-  .rig.has-gestures .rig-arm-r { animation: rig-arm-r 2.4s ease-in-out infinite 0.5s; }
-  .rig.has-gestures .rig-forearm-l { animation: rig-forearm-l 2.4s ease-in-out infinite; }
-  .rig.has-gestures .rig-forearm-r { animation: rig-forearm-r 2.4s ease-in-out infinite 0.5s; }
 
   @keyframes rig-mouth {
     0%, 100% { transform: scaleY(0.3) scaleX(0.96); }
@@ -455,6 +452,13 @@
     object-fit: cover;
     background: hsl(var(--muted));
   }
+  .photo-rig { position: relative; height: 100%; width: 100%; overflow: hidden; border-radius: 9999px; border: 2px solid hsl(var(--primary)); background: hsl(var(--muted)); }
+  .photo-rig video { position: absolute; inset: 0; height: 100%; width: 100%; object-fit: cover; }
+  .photo-rig-body { position: absolute; inset: 0; transform-origin: center bottom; }
+  .photo-rig.is-speaking { box-shadow: 0 0 0 6px hsl(var(--primary) / 0.32), 0 10px 24px hsl(var(--background) / 0.35); }
+  .photo-rig.is-speaking .photo-rig-body { animation: ai-avatar-sway 3.2s ease-in-out infinite; }
+  .photo-rig-jaw { position: absolute; inset: 0; clip-path: inset(58% 24% 8% 24% round 45%); transform-origin: top center; }
+  .photo-rig.is-speaking.no-timing .photo-rig-jaw { animation: ai-avatar-mouth 0.34s ease-in-out infinite; }
   .rig-video.is-speaking {
     box-shadow: 0 0 0 6px hsl(var(--primary) / 0.32), 0 10px 24px hsl(var(--background) / 0.35);
   }

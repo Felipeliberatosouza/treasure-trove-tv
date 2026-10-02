@@ -24,34 +24,52 @@ const SIZE_CLASS: Record<AiAvatarSize, string> = {
   grande: "h-24 w-24 sm:h-40 sm:w-40 md:h-48 md:w-48",
 };
 
-/** Avatar em vídeo: toca em looping enquanto a narração acontece e congela ao parar. */
-const VideoAvatar = ({ url, alt, speaking }: { url: string; alt: string; speaking: boolean }) => {
-  const ref = useRef<HTMLVideoElement>(null);
+/**
+ * Avatar de pessoa real articulado: usa um quadro fixo do vídeo como rosto e
+ * recorta a região da boca/queixo, que abre e fecha no formato de cada letra
+ * falada (tempos da ElevenLabs). Sem tempos, a boca segue um ritmo de fala.
+ */
+const PhotoRigAvatar = ({ url, alt, speaking, viseme }: { url: string; alt: string; speaking: boolean; viseme?: Viseme | null }) => {
+  const base = useRef<HTMLVideoElement>(null);
+  const jaw = useRef<HTMLVideoElement>(null);
 
+  // Congela os dois vídeos no mesmo quadro neutro (rosto de frente, boca fechada).
   useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    if (speaking) void el.play().catch(() => undefined);
-    else el.pause();
-  }, [speaking]);
+    [base.current, jaw.current].forEach((el) => {
+      if (!el) return;
+      const freeze = () => {
+        el.pause();
+        el.currentTime = 0.05;
+      };
+      if (el.readyState >= 1) freeze();
+      else el.addEventListener("loadedmetadata", freeze, { once: true });
+    });
+  }, [url]);
+
+  const shape = speaking && viseme ? VISEME_SHAPE[viseme] : null;
+  const jawStyle = shape
+    ? {
+        animation: "none",
+        transform: `translateY(${(shape.open * 5).toFixed(1)}%) scaleX(${(0.96 + shape.sx * 0.04).toFixed(3)})`,
+        transition: "transform 70ms ease-out",
+      }
+    : undefined;
 
   return (
-    <video
-      ref={ref}
-      src={url}
-      aria-label={alt}
-      className={`rig-video ${speaking ? "is-speaking" : ""}`}
-      muted
-      loop
-      playsInline
-      preload="auto"
-    />
+    <div className={`photo-rig ${speaking ? "is-speaking" : ""} ${speaking && !viseme ? "no-timing" : ""}`} role="img" aria-label={alt}>
+      <div className="photo-rig-body">
+        <video ref={base} src={url} muted playsInline preload="auto" aria-hidden="true" />
+        <span className="photo-rig-jaw" style={jawStyle} aria-hidden="true">
+          <video ref={jaw} src={url} muted playsInline preload="auto" />
+        </span>
+      </div>
+    </div>
   );
 };
 
 /**
  * Professor(a) virtual que fala: personagem ilustrado articulado (boca, cabeça,
- * tronco, braços e mãos), avatar em vídeo ou, por compatibilidade, uma foto animada.
+ * tronco, braços e mãos), pessoa real articulada ou, por compatibilidade, uma foto animada.
  */
 const AnimatedAvatar = ({ avatarId, src, alt, speaking, animation = "gestos", size, viseme }: AnimatedAvatarProps) => {
   const active = speaking && animation !== "nenhuma";
@@ -61,7 +79,7 @@ const AnimatedAvatar = ({ avatarId, src, alt, speaking, animation = "gestos", si
   if (catalog?.kind === "video" && catalog.videoUrl) {
     return (
       <div className={SIZE_CLASS[size]}>
-        <VideoAvatar url={catalog.videoUrl} alt={alt} speaking={active} />
+        <PhotoRigAvatar url={catalog.videoUrl} alt={alt} speaking={active} viseme={active ? viseme : null} />
       </div>
     );
   }

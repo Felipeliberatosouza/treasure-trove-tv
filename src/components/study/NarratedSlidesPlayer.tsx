@@ -154,8 +154,19 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina, areas, 
         return null;
       }
     },
-    [slides, getToken, canonicalId, avatar.gender, avatar.voice, faixaEtaria],
+    [slides, getToken, canonicalId, avatar.gender, avatar.voice, avatar.el_voice, faixaEtaria],
   );
+
+  // Se o avatar/voz da disciplina mudar no painel, descarta narrações antigas da sessão.
+  const voiceSig = `${avatar.gender}|${avatar.voice}|${avatar.el_voice || ""}`;
+  const voiceSigRef = useRef(voiceSig);
+  useEffect(() => {
+    if (voiceSigRef.current === voiceSig) return;
+    voiceSigRef.current = voiceSig;
+    cacheRef.current.forEach((url) => url.startsWith("blob:") && URL.revokeObjectURL(url));
+    cacheRef.current.clear();
+    alignmentRef.current.clear();
+  }, [voiceSig]);
 
   const prefetch = useCallback(
     (index: number) => {

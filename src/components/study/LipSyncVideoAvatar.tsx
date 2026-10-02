@@ -62,10 +62,11 @@ const LipSyncVideoAvatar = ({ url, trackKey, alt, speaking, viseme }: Props) => 
       const idx = Math.floor(video.currentTime * track.fps) % track.frames.length;
       const [mx, my, mw, chin, ang] = track.frames[idx];
       const cx = mx * S;
-      const cy = my * S;
+      // O mapa marca os cantos da boca; a linha entre os lábios fica um pouco abaixo.
+      const cy = my * S + mw * S * 0.07;
       const mouthW = mw * S * 1.1 * sx;
       const chinH = chin * S;
-      const drop = open * chinH * 0.22;
+      const drop = open * chinH * 0.3;
       const jawW = mouthW * 2.6;
       const jawH = chinH * 1.25;
 
@@ -96,10 +97,10 @@ const LipSyncVideoAvatar = ({ url, trackKey, alt, speaking, viseme }: Props) => 
       jctx.translate(cx, cy);
       jctx.rotate(ang);
       jctx.save();
+      jctx.translate(0, drop);
       jctx.beginPath();
       jctx.rect(-jawW, 0, jawW * 2, jawH * 2);
       jctx.clip();
-      jctx.translate(0, drop);
       jctx.rotate(-ang);
       jctx.drawImage(video, -cx, -cy, S, S);
       jctx.restore();

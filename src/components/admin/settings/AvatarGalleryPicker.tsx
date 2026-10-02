@@ -22,7 +22,7 @@ const Preview = ({ avatar }: { avatar: CatalogAvatar }) => {
 const AvatarGalleryPicker = ({ value, onSelect }: AvatarGalleryPickerProps) => {
   const groups: { title: string; items: CatalogAvatar[] }[] = [
     { title: "Personagens ilustrados (mexem boca, braços e mãos)", items: AVATAR_CATALOG.filter((a) => a.kind === "ilustrado") },
-    { title: "Avatares em vídeo (pessoas reais)", items: AVATAR_CATALOG.filter((a) => a.kind === "video") },
+    { title: "Pessoas reais em vídeo (boca sincronizada com a voz)", items: AVATAR_CATALOG.filter((a) => a.kind === "video") },
   ];
 
   return (

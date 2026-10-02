@@ -1,4 +1,3 @@
-import LipTestTmp from "./pages/LipTestTmp";
 import { lazy, Suspense } from "react";
 import { startCacheManager } from "@/lib/cacheManager";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -158,7 +157,6 @@ const App = () => (
               />
             )}
             <Route path="/:slug" element={<TeacherProfile />} />
-            <Route path="/__test/lip" element={<LipTestTmp />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           </Suspense>

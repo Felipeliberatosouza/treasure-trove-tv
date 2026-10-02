@@ -509,6 +509,7 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina, areas, 
                 alt={`${avatar.name}, ${avatar.role_label.toLowerCase()} da Revisão Fácil`}
                 speaking={speaking}
                 viseme={viseme}
+                phrase={caption}
                 animation={avatar.animation}
                 size={placement.size}
               />
@@ -564,6 +565,7 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina, areas, 
                   alt={`${avatar.name}, ${avatar.role_label.toLowerCase()} da Revisão Fácil`}
                   speaking={speaking}
                   viseme={viseme}
+                  phrase={caption}
                   animation={avatar.animation}
                   size={placement.size}
                 />

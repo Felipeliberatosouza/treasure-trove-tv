@@ -291,9 +291,16 @@ const SettingsAiAvatars = () => {
                   <Label htmlFor={`disc-${av.id}`}>Disciplinas (separadas por vírgula)</Label>
                   <Input
                     id={`disc-${av.id}`}
-                    value={av.disciplines.join(", ")}
+                    value={av.disciplines.join(",")}
                     placeholder="Ex.: Direito, Direito Civil"
                     onChange={(e) => patch(av.id, { disciplines: e.target.value.split(",") })}
+                    onBlur={() =>
+                      patch(av.id, {
+                        disciplines: av.disciplines
+                          .map((d, i) => (i === 0 ? d.trim() : ` ${d.trim()}`))
+                          .filter((d) => d.trim()),
+                      })
+                    }
                   />
                 </div>
               </div>

@@ -67,7 +67,7 @@ const LipSyncVideoAvatar = ({ url, trackKey, alt, speaking, viseme }: Props) => 
       const mouthW = mw * S * 0.95 * sx;
       const hw = mouthW / 2;
       const chinH = chin * S;
-      const drop = open * chinH * 0.26;
+      const drop = open * chinH * 0.22;
       const jawHalf = hw * 2.4;
       const jawH = chinH * 1.3;
       // Quanto cada faixa vertical do queixo desce: total no centro da boca,
@@ -89,9 +89,9 @@ const LipSyncVideoAvatar = ({ url, trackKey, alt, speaking, viseme }: Props) => 
       ctx.quadraticCurveTo(0, dropAt(0) * 2.1, -hw, 0);
       ctx.closePath();
       const g = ctx.createLinearGradient(0, 0, 0, drop);
-      g.addColorStop(0, "#2b0d10");
+      g.addColorStop(0, "#24100f");
       g.addColorStop(0.6, "#1a0608");
-      g.addColorStop(1, "#3b1519");
+      g.addColorStop(1, "#33171a");
       ctx.fillStyle = g;
       ctx.fill();
       if (open > 0.35) {

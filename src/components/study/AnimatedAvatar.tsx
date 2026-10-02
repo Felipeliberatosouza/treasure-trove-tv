@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import type { AiAvatarAnimation, AiAvatarSize } from "@/hooks/usePlatformSettings";
 import { findCatalogAvatar } from "./avatarCatalog";
 import RiggedAvatar from "./RiggedAvatar";
+import { VISEME_SHAPE, type Viseme } from "@/utils/phonemeLipSync";
 
 interface AnimatedAvatarProps {
   /** Avatar escolhido na galeria (Configurações → Gestão de IA). */
@@ -13,6 +14,8 @@ interface AnimatedAvatarProps {
   speaking: boolean;
   animation?: AiAvatarAnimation;
   size: AiAvatarSize;
+  /** Formato da boca sincronizado com a fala (ElevenLabs). */
+  viseme?: Viseme | null;
 }
 
 const SIZE_CLASS: Record<AiAvatarSize, string> = {
@@ -50,7 +53,7 @@ const VideoAvatar = ({ url, alt, speaking }: { url: string; alt: string; speakin
  * Professor(a) virtual que fala: personagem ilustrado articulado (boca, cabeça,
  * tronco, braços e mãos), avatar em vídeo ou, por compatibilidade, uma foto animada.
  */
-const AnimatedAvatar = ({ avatarId, src, alt, speaking, animation = "gestos", size }: AnimatedAvatarProps) => {
+const AnimatedAvatar = ({ avatarId, src, alt, speaking, animation = "gestos", size, viseme }: AnimatedAvatarProps) => {
   const active = speaking && animation !== "nenhuma";
   const gestures = active && animation === "gestos";
   const catalog = findCatalogAvatar(avatarId);
@@ -70,7 +73,7 @@ const AnimatedAvatar = ({ avatarId, src, alt, speaking, animation = "gestos", si
           active ? "shadow-[0_0_0_6px_hsl(var(--primary)/0.3)]" : ""
         }`}
       >
-        <RiggedAvatar style={catalog.style} speaking={active} gestures={gestures} />
+        <RiggedAvatar style={catalog.style} speaking={active} gestures={gestures} viseme={active ? viseme : null} />
       </div>
     );
   }
@@ -79,7 +82,11 @@ const AnimatedAvatar = ({ avatarId, src, alt, speaking, animation = "gestos", si
     <div className={`ai-avatar ${SIZE_CLASS[size]} ${active ? "is-speaking" : ""} ${gestures ? "has-gestures" : ""}`}>
       <div className="ai-avatar-body">
         <img src={src} alt={alt} className="ai-avatar-face" width={1024} height={1024} />
-        <span className="ai-avatar-jaw" aria-hidden="true">
+        <span
+          className="ai-avatar-jaw"
+          aria-hidden="true"
+          style={active && viseme ? { animation: "none", transform: `translateY(${(VISEME_SHAPE[viseme].open * 4).toFixed(1)}%)`, transition: "transform 70ms ease-out" } : undefined}
+        >
           <img src={src} alt="" className="ai-avatar-face" />
         </span>
       </div>

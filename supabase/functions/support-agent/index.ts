@@ -1,3 +1,4 @@
+import { resolveModel } from "../_shared/ai-models.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { sendTemplateEmail } from "../_shared/transactional-email-templates/send-email.ts";
 
@@ -152,7 +153,7 @@ Responda em JSON: {"reply": string, "handoff": boolean, "reason": string|null, "
           method: "POST",
           headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
           body: JSON.stringify({
-            model: "openai/gpt-6-astra",
+            model: await resolveModel("atendente"),
             reasoning_effort: "low",
             response_format: { type: "json_object" },
             messages: [

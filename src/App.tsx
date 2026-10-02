@@ -67,6 +67,7 @@ const CheckoutRetryHarness = lazy(
 const ReferralEmailHarness = lazy(
   () => import("./pages/__test__/ReferralEmailHarness.tsx"),
 );
+const LipHarness = lazy(() => import("./pages/__test__/LipHarness.tsx"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -136,6 +137,9 @@ const App = () => (
             <Route path="/creditos-ia" element={<AiCredits />} />
             <Route path="/email-seguranca" element={<EmailSecurityNotification />} />
             <Route path="/preview/plan-change" element={<PreviewPlanChange />} />
+            {!import.meta.env.PROD && (
+              <Route path="/__test/lip" element={<Suspense fallback={null}><LipHarness /></Suspense>} />
+            )}
             {!import.meta.env.PROD && (
               <Route
                 path="/__test/checkout-retry"

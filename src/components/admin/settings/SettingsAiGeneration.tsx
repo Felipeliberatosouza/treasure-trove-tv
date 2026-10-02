@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { Sparkles, FolderCog } from "lucide-react";
+import { Sparkles, FolderCog, Cpu } from "lucide-react";
 import SettingsAiAvatars from "./SettingsAiAvatars";
 import SettingsAiMaterials from "./SettingsAiMaterials";
+import SettingsAiProviders from "./SettingsAiProviders";
 
-type SubTab = "parametros" | "materiais";
+type SubTab = "parametros" | "provedores" | "materiais";
 
-/** Gestão de IA: parâmetros (avatares) e gestão dos materiais já gerados. */
+/** Gestão de IA: parâmetros (avatares), IA por área/voz e materiais já gerados. */
 const SettingsAiGeneration = () => {
   const [subTab, setSubTab] = useState<SubTab>("parametros");
 
@@ -22,12 +23,17 @@ const SettingsAiGeneration = () => {
         <button onClick={() => setSubTab("parametros")} className={tabClass(subTab === "parametros")}>
           <Sparkles className="h-3.5 w-3.5" /> Parâmetros de IA
         </button>
+        <button onClick={() => setSubTab("provedores")} className={tabClass(subTab === "provedores")}>
+          <Cpu className="h-3.5 w-3.5" /> IA por área e voz
+        </button>
         <button onClick={() => setSubTab("materiais")} className={tabClass(subTab === "materiais")}>
           <FolderCog className="h-3.5 w-3.5" /> Gestão de Materiais de IA
         </button>
       </div>
 
-      {subTab === "parametros" ? <SettingsAiAvatars /> : <SettingsAiMaterials />}
+      {subTab === "parametros" && <SettingsAiAvatars />}
+      {subTab === "provedores" && <SettingsAiProviders />}
+      {subTab === "materiais" && <SettingsAiMaterials />}
     </div>
   );
 };

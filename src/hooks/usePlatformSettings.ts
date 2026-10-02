@@ -415,7 +415,28 @@ export type PlansModeSettings = { mode: PlansMode };
 /** Chave de produto usada pelos planos do pacote completo. */
 export const ALL_PRODUCTS_KEY = "todos";
 
+/** IA de texto escolhida para cada área (Gestão de IA → IA por área e voz). */
+export interface AiModelsConfigSettings {
+  revisoes?: string;
+  trabalhos?: string;
+  atendente?: string;
+  provas_reais?: string;
+}
+
+/** Provedor de voz do professor(a) virtual. */
+export interface AiVoiceConfigSettings {
+  provider?: "openai" | "elevenlabs";
+  female_voice_id?: string;
+  male_voice_id?: string;
+  stability?: number;
+  similarity?: number;
+  style?: number;
+  speed?: number;
+}
+
 type SettingsMap = {
+  ai_models_config: AiModelsConfigSettings;
+  ai_voice_config: AiVoiceConfigSettings;
   plans_mode: PlansModeSettings;
   branding: BrandingSettings;
   contact: ContactSettings;

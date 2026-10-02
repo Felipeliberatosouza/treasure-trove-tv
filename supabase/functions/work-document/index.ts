@@ -1,5 +1,6 @@
 // Trabalhos com IA — gera conteúdo para documento Word e slides de apresentação.
 // Ações (POST): { action: "generate" | "revise" }
+import { resolveModel } from "../_shared/ai-models.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 
 const corsHeaders = {
@@ -8,7 +9,6 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-const GEN_MODEL = "openai/gpt-6-astra";
 const PROMPT_VERSION = "w1";
 const LAYOUT_THEMES = ["oceano", "terracota", "floresta", "grafite", "vinho", "solar", "lavanda", "petroleo", "areia", "coral", "noturno", "menta"];
 const ANGLES = [
@@ -93,7 +93,7 @@ async function callGateway(system: string, user: string) {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
     body: JSON.stringify({
-      model: GEN_MODEL,
+      model: await resolveModel("trabalhos"),
       stream: false,
       reasoning_effort: "low",
       response_format: { type: "json_object" },
@@ -192,7 +192,7 @@ async function handle(req: Request, body: any): Promise<{ status: number; payloa
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
       body: JSON.stringify({
-        model: GEN_MODEL, reasoning_effort: "low", response_format: { type: "json_object" },
+        model: await resolveModel("trabalhos"), reasoning_effort: "low", response_format: { type: "json_object" },
         messages: [
           { role: "system", content: "Você é um professor brasileiro que prepara alunos para apresentar trabalhos. Responda somente JSON em português do Brasil." },
           { role: "user", content: `Com base EXCLUSIVAMENTE nos slides e no documento abaixo, crie:

@@ -1,4 +1,5 @@
 import type { RiggedAvatarStyle } from "./avatarCatalog";
+import { VISEME_SHAPE, type Viseme } from "@/utils/phonemeLipSync";
 
 interface RiggedAvatarProps {
   style: RiggedAvatarStyle;
@@ -6,13 +7,16 @@ interface RiggedAvatarProps {
   speaking: boolean;
   /** Quando falso, o personagem fica parado (apenas piscando). */
   gestures?: boolean;
+  /** Formato da boca sincronizado com a fala (quando há tempos da narração). */
+  viseme?: Viseme | null;
 }
 
 /**
  * Personagem ilustrado articulado: cabeça, boca, tronco, braços, antebraços e mãos
  * são grupos independentes animados por CSS enquanto a narração acontece.
  */
-const RiggedAvatar = ({ style, speaking, gestures = true }: RiggedAvatarProps) => {
+const RiggedAvatar = ({ style, speaking, gestures = true, viseme }: RiggedAvatarProps) => {
+  const shape = viseme ? VISEME_SHAPE[viseme] : null;
   const { skin, hair, outfit, outfitDark, hairStyle } = style;
 
   return (
@@ -84,7 +88,10 @@ const RiggedAvatar = ({ style, speaking, gestures = true }: RiggedAvatarProps) =
           </g>
 
           {/* Boca articulada */}
-          <g className="rig-mouth">
+          <g
+            className="rig-mouth"
+            style={shape ? { animation: "none", transform: `scale(${shape.sx}, ${shape.sy})`, transition: "transform 70ms ease-out" } : undefined}
+          >
             <ellipse cx="100" cy="92" rx="12" ry="8" fill="#8d3b46" />
             <ellipse cx="100" cy="88" rx="9" ry="3" fill="#ffffff" opacity="0.85" />
           </g>

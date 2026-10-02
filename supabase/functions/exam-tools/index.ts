@@ -1,4 +1,5 @@
 // Ferramentas de provas reais: comentários das questões (Resolução Comentada) e correção de redação/discursivas.
+import { resolveModel } from "../_shared/ai-models.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 
 const cors = {
@@ -6,7 +7,6 @@ const cors = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
-const MODEL = "openai/gpt-6-astra";
 const json = (status: number, body: unknown) =>
   new Response(JSON.stringify(body), { status, headers: { ...cors, "Content-Type": "application/json" } });
 
@@ -17,7 +17,7 @@ async function ai(system: string, user: string) {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
     body: JSON.stringify({
-      model: MODEL, reasoning_effort: "low", response_format: { type: "json_object" },
+      model: await resolveModel("provas_reais"), reasoning_effort: "low", response_format: { type: "json_object" },
       messages: [{ role: "system", content: system }, { role: "user", content: user }],
     }),
   });

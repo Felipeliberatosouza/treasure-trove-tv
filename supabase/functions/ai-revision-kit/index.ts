@@ -2,6 +2,7 @@
 // Endpoints (POST):
 //   { action: "status", anon_id }            -> saldo/elegibilidade
 //   { action: "generate", ...campos }        -> entrega kit (cache ou geração)
+import { resolveModel } from "../_shared/ai-models.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 
 const corsHeaders = {
@@ -10,7 +11,6 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-const GEN_MODEL = "openai/gpt-6-astra";
 const TEMPLATE_VERSION = "v5";
 const PROMPT_VERSION = "v6";
 const SIGNUP_CREDITS = 2;
@@ -216,7 +216,7 @@ Se o conteúdo for relevante para mais de uma área, indique todas as que fizere
       Authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      model: GEN_MODEL,
+      model: await resolveModel("revisoes"),
       stream: false,
       // Raciocínio mínimo: reduz muito o tempo de entrega sem perder qualidade didática.
       reasoning_effort: "low",
@@ -613,7 +613,7 @@ async function handleRequest(req: Request, body: any): Promise<Response> {
           nivel,
           faixa_etaria: faixaEtaria,
           confianca_faixa_etaria: confiancaFaixaEtaria,
-          model: GEN_MODEL,
+          model: await resolveModel("revisoes"),
           kit,
           status: "ready",
           visibility: "public_canonical",

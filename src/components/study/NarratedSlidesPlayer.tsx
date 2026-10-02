@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import professoraIa from "@/assets/professora-ia.jpg";
 import { usePlatformSettings, DEFAULT_AI_AVATAR, resolveAiAvatar, resolveLogoForBackground, aiRoleLabel, avatarPlacement, type AiAvatarSlideContext } from "@/hooks/usePlatformSettings";
 import AnimatedAvatar from "./AnimatedAvatar";
+import { visemeAt, spokenCharsAt, type SpeechAlignment, type Viseme } from "@/utils/phonemeLipSync";
 import visualCiencia from "@/assets/slide-visual-ciencia.jpg";
 import visualHumanas from "@/assets/slide-visual-humanas.jpg";
 import visualExatas from "@/assets/slide-visual-exatas.jpg";
@@ -98,6 +99,9 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina, areas, 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const tokenRef = useRef<string>("");
   const cacheRef = useRef<Map<number, string>>(new Map());
+  // Tempos de cada letra da narração (ElevenLabs) para sincronia labial e legenda.
+  const alignmentRef = useRef<Map<number, SpeechAlignment>>(new Map());
+  const [viseme, setViseme] = useState<Viseme | null>(null);
   const requestedImagesRef = useRef<Set<number>>(new Set());
   // Maior progresso já atingido em cada slide: garante que o quadro só preencha, nunca apague.
   const maxProgressRef = useRef<Record<number, number>>({});
@@ -134,6 +138,12 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina, areas, 
         if (canonicalId) {
           const payload = await resp.json();
           url = typeof payload.audio_url === "string" ? payload.audio_url : null;
+          const al = payload.alignment;
+          if (al && typeof al.chars === "string" && Array.isArray(al.starts) && Array.isArray(al.ends)) {
+            alignmentRef.current.set(index, al as SpeechAlignment);
+          } else {
+            alignmentRef.current.delete(index);
+          }
         } else {
           url = URL.createObjectURL(await resp.blob());
         }
@@ -309,7 +319,11 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina, areas, 
     // A legenda acompanha a narração frase a frase: a fala e o texto exibido são o mesmo conteúdo.
     const phrases = splitPhrases(text);
     const totalChars = phrases.reduce((sum, phrase) => sum + phrase.length, 0) || 1;
-    const spoken = progress * totalChars;
+    const al = alignmentRef.current.get(current);
+    // Com os tempos reais da fala, a legenda troca exatamente quando a frase começa.
+    const spoken = al
+      ? (spokenCharsAt(al, audio.currentTime) / Math.max(1, al.chars.length)) * totalChars
+      : progress * totalChars;
     let consumed = 0;
     let active = phrases[phrases.length - 1] ?? "";
     for (const phrase of phrases) {
@@ -321,6 +335,32 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina, areas, 
     }
     setCaption(active);
   }, [current, slides]);
+
+  // Sincronia labial: a cada quadro, a boca assume o formato da letra falada.
+  useEffect(() => {
+    if (!speaking) {
+      setViseme(null);
+      return;
+    }
+    const al = alignmentRef.current.get(current);
+    if (!al) {
+      setViseme(null);
+      return;
+    }
+    let raf = 0;
+    let last: Viseme | null = null;
+    const tick = () => {
+      const audio = audioRef.current;
+      const next = audio ? visemeAt(al, audio.currentTime) : "rest";
+      if (next !== last) {
+        last = next;
+        setViseme(next);
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [speaking, current, audioUrl]);
 
   if (!slides.length) {
     return <div className="flex aspect-video items-center justify-center bg-muted text-sm text-muted-foreground">Aula com professor virtual indisponível.</div>;
@@ -457,6 +497,7 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina, areas, 
                 src={avatarImage}
                 alt={`${avatar.name}, ${avatar.role_label.toLowerCase()} da Revisão Fácil`}
                 speaking={speaking}
+                viseme={viseme}
                 animation={avatar.animation}
                 size={placement.size}
               />
@@ -511,6 +552,7 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina, areas, 
                   src={avatarImage}
                   alt={`${avatar.name}, ${avatar.role_label.toLowerCase()} da Revisão Fácil`}
                   speaking={speaking}
+                  viseme={viseme}
                   animation={avatar.animation}
                   size={placement.size}
                 />

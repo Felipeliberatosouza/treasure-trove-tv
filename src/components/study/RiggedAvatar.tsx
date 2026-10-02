@@ -1,3 +1,4 @@
+import type React from "react";
 import type { RiggedAvatarStyle } from "./avatarCatalog";
 import { VISEME_SHAPE, type Viseme } from "@/utils/phonemeLipSync";
 import { useNaturalGestures } from "./useNaturalGestures";
@@ -21,7 +22,8 @@ const RiggedAvatar = ({ style, speaking, gestures = true, viseme }: RiggedAvatar
   const { skin, hair, outfit, outfitDark, hairStyle } = style;
   const pose = useNaturalGestures(speaking && gestures, viseme);
   const ease = "transform 900ms cubic-bezier(.45,.05,.3,1)";
-  const rot = (deg: number, extra = "") => ({ transform: `rotate(${deg}deg)${extra}`, transition: ease });
+  const rot = (deg: number, cx: number, cy: number) =>
+    ({ transform: `rotate(${deg}deg)`, transformOrigin: `${cx}px ${cy}px`, transformBox: "view-box", transition: ease }) as React.CSSProperties;
 
   return (
     <svg
@@ -31,22 +33,16 @@ const RiggedAvatar = ({ style, speaking, gestures = true, viseme }: RiggedAvatar
       aria-hidden="true"
     >
       <g className="rig-body">
-        {/* Braço esquerdo (do observador) */}
-        <g className="rig-arm rig-arm-l" style={rot(pose.armL)}>
-          <rect x="44" y="132" width="20" height="44" rx="10" fill={outfit} />
-          <g className="rig-forearm rig-forearm-l" style={rot(pose.foreL)}>
-            <rect x="44" y="168" width="18" height="42" rx="9" fill={outfit} />
-            <circle cx="53" cy="208" r="11" fill={skin} />
-          </g>
+        {/* Braço esquerdo — peça única (braço + antebraço + mão) presa ao ombro */}
+        <g style={rot(pose.armL + pose.foreL * 0.5, 54, 138)}>
+          <rect x="44" y="132" width="20" height="78" rx="10" fill={outfit} />
+          <circle cx="54" cy="208" r="11" fill={skin} />
         </g>
 
         {/* Braço direito */}
-        <g className="rig-arm rig-arm-r" style={rot(pose.armR)}>
-          <rect x="136" y="132" width="20" height="44" rx="10" fill={outfit} />
-          <g className="rig-forearm rig-forearm-r" style={rot(pose.foreR)}>
-            <rect x="138" y="168" width="18" height="42" rx="9" fill={outfit} />
-            <circle cx="147" cy="208" r="11" fill={skin} />
-          </g>
+        <g style={rot(pose.armR + pose.foreR * 0.5, 146, 138)}>
+          <rect x="136" y="132" width="20" height="78" rx="10" fill={outfit} />
+          <circle cx="146" cy="208" r="11" fill={skin} />
         </g>
 
         {/* Tronco */}
@@ -57,7 +53,7 @@ const RiggedAvatar = ({ style, speaking, gestures = true, viseme }: RiggedAvatar
         <rect x="90" y="104" width="20" height="26" rx="10" fill={skin} />
 
         {/* Cabeça */}
-        <g className="rig-head-pose" style={{ transformOrigin: "100px 110px", ...rot(pose.head) }}>
+        <g style={rot(pose.head, 100, 110)}>
         <g className="rig-head">
           {hairStyle === "longo" && <path d="M58 58c0-26 19-44 42-44s42 18 42 44v58c0 8-10 10-14 4V66H72v54c-4 6-14 4-14-4z" fill={hair} />}
           {hairStyle === "cacheado" && (
@@ -93,13 +89,17 @@ const RiggedAvatar = ({ style, speaking, gestures = true, viseme }: RiggedAvatar
           </g>
 
           {/* Boca articulada */}
-          <g
-            className="rig-mouth"
-            style={shape ? { animation: "none", transform: `scale(${shape.sx}, ${shape.sy})`, transition: "transform 70ms ease-out" } : undefined}
-          >
-            <ellipse cx="100" cy="92" rx="12" ry="8" fill="#8d3b46" />
-            <ellipse cx="100" cy="88" rx="9" ry="3" fill="#ffffff" opacity="0.85" />
-          </g>
+          {shape ? (
+            <g>
+              <ellipse cx="100" cy="92" rx={(12 * shape.sx).toFixed(2)} ry={Math.max(1, 8 * shape.sy).toFixed(2)} fill="#8d3b46" />
+              {shape.open > 0.3 && <ellipse cx="100" cy={(92 - 8 * shape.sy + 3).toFixed(2)} rx={(9 * shape.sx).toFixed(2)} ry="2.5" fill="#ffffff" opacity="0.85" />}
+            </g>
+          ) : (
+            <g className="rig-mouth">
+              <ellipse cx="100" cy="92" rx="12" ry="8" fill="#8d3b46" />
+              <ellipse cx="100" cy="88" rx="9" ry="3" fill="#ffffff" opacity="0.85" />
+            </g>
+          )}
 
           {hairStyle === "curto" && <path d="M62 66c6-16 22-24 38-24s32 8 38 24c2-30-16-46-38-46S60 36 62 66z" fill={hair} />}
         </g>

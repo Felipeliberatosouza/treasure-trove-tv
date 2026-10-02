@@ -25,43 +25,34 @@ const SIZE_CLASS: Record<AiAvatarSize, string> = {
 };
 
 /**
- * Avatar de pessoa real articulado: usa um quadro fixo do vídeo como rosto e
- * recorta a região da boca/queixo, que abre e fecha no formato de cada letra
- * falada (tempos da ElevenLabs). Sem tempos, a boca segue um ritmo de fala.
+ * Avatar de pessoa real: o vídeo roda com movimento natural enquanto há fala
+ * e pausa nos silêncios (pausas detectadas pelos tempos da ElevenLabs).
  */
 const PhotoRigAvatar = ({ url, alt, speaking, viseme }: { url: string; alt: string; speaking: boolean; viseme?: Viseme | null }) => {
-  const base = useRef<HTMLVideoElement>(null);
-  const jaw = useRef<HTMLVideoElement>(null);
+  const ref = useRef<HTMLVideoElement>(null);
+  const silentSince = useRef<number | null>(null);
 
-  // Congela os dois vídeos no mesmo quadro neutro (rosto de frente, boca fechada).
   useEffect(() => {
-    [base.current, jaw.current].forEach((el) => {
-      if (!el) return;
-      const freeze = () => {
-        el.pause();
-        el.currentTime = 0.05;
-      };
-      if (el.readyState >= 1) freeze();
-      else el.addEventListener("loadedmetadata", freeze, { once: true });
-    });
-  }, [url]);
-
-  const shape = speaking && viseme ? VISEME_SHAPE[viseme] : null;
-  const jawStyle = shape
-    ? {
-        animation: "none",
-        transform: `translateY(${(shape.open * 5).toFixed(1)}%) scaleX(${(0.96 + shape.sx * 0.04).toFixed(3)})`,
-        transition: "transform 70ms ease-out",
-      }
-    : undefined;
+    const el = ref.current;
+    if (!el) return;
+    if (!speaking) {
+      el.pause();
+      silentSince.current = null;
+      return;
+    }
+    if (viseme === "rest") {
+      if (silentSince.current == null) silentSince.current = Date.now();
+      const t = window.setTimeout(() => el.pause(), 350);
+      return () => window.clearTimeout(t);
+    }
+    silentSince.current = null;
+    if (el.paused) el.play().catch(() => {});
+  }, [speaking, viseme]);
 
   return (
-    <div className={`photo-rig ${speaking ? "is-speaking" : ""} ${speaking && !viseme ? "no-timing" : ""}`} role="img" aria-label={alt}>
+    <div className={`photo-rig ${speaking ? "is-speaking" : ""}`} role="img" aria-label={alt}>
       <div className="photo-rig-body">
-        <video ref={base} src={url} muted playsInline preload="auto" aria-hidden="true" />
-        <span className="photo-rig-jaw" style={jawStyle} aria-hidden="true">
-          <video ref={jaw} src={url} muted playsInline preload="auto" />
-        </span>
+        <video ref={ref} src={url} muted loop playsInline preload="auto" aria-hidden="true" />
       </div>
     </div>
   );

@@ -11,6 +11,10 @@ export interface RiggedAvatarStyle {
   outfit: string;
   outfitDark: string;
   hairStyle: "longo" | "curto" | "cacheado" | "coque";
+  gender?: "female" | "male";
+  shirt?: string;
+  glasses?: boolean;
+  beard?: boolean;
 }
 
 export interface CatalogAvatar {
@@ -19,57 +23,57 @@ export interface CatalogAvatar {
   label: string;
   gender: "female" | "male";
   kind: "ilustrado" | "video";
-  /** Vídeo base (boca fechada) em looping, quando kind = "video". */
+  /** Vídeo base em looping, quando kind = "video". */
   videoUrl?: string;
-  /** Chave do mapa de posição da boca usado na sincronia labial. */
+  /** Chave do mapa de posição da boca (legado). */
   mouthTrack?: string;
   /** Estilo do personagem ilustrado, quando kind = "ilustrado". */
   style?: RiggedAvatarStyle;
 }
 
-/** Galeria de avatares prontos: 6 ilustrados articulados e 6 pessoas reais em vídeo, todos com sincronia labial. */
+/** Galeria: 6 professores ilustrados (padrão, boca sincronizada) e 6 pessoas reais em vídeo (uso especial). */
 export const AVATAR_CATALOG: CatalogAvatar[] = [
   {
     id: "ilu-ana",
     label: "Ana",
     gender: "female",
     kind: "ilustrado",
-    style: { skin: "#f2c9a8", hair: "#3b2a22", outfit: "#2f6fb5", outfitDark: "#255a95", hairStyle: "longo" },
+    style: { gender: "female", skin: "#e9bf9f", hair: "#3b2a22", outfit: "#1f3a5f", outfitDark: "#162b47", hairStyle: "longo", glasses: true },
   },
   {
     id: "ilu-bia",
     label: "Bia",
     gender: "female",
     kind: "ilustrado",
-    style: { skin: "#8d5a3b", hair: "#1e1512", outfit: "#c2456b", outfitDark: "#a03557", hairStyle: "cacheado" },
+    style: { gender: "female", skin: "#8d5a3b", hair: "#1e1512", outfit: "#6b2737", outfitDark: "#521c29", hairStyle: "cacheado" },
   },
   {
     id: "ilu-helena",
     label: "Helena",
     gender: "female",
     kind: "ilustrado",
-    style: { skin: "#e8b995", hair: "#6f6f78", outfit: "#2a9d8f", outfitDark: "#218176", hairStyle: "coque" },
+    style: { gender: "female", skin: "#e3b392", hair: "#9a9aa2", outfit: "#2f4f4a", outfitDark: "#233b37", hairStyle: "coque", glasses: true },
   },
   {
     id: "ilu-lucas",
     label: "Lucas",
     gender: "male",
     kind: "ilustrado",
-    style: { skin: "#f0c6a3", hair: "#2c2118", outfit: "#3f4a8a", outfitDark: "#333c72", hairStyle: "curto" },
+    style: { gender: "male", skin: "#ebc2a0", hair: "#3a2c22", outfit: "#2b3445", outfitDark: "#1f2633", hairStyle: "curto", shirt: "#e8eef6", beard: true },
   },
   {
     id: "ilu-tiago",
     label: "Tiago",
     gender: "male",
     kind: "ilustrado",
-    style: { skin: "#7c4b2f", hair: "#17100d", outfit: "#e07a3f", outfitDark: "#c26430", hairStyle: "curto" },
+    style: { gender: "male", skin: "#7c4b2f", hair: "#17100d", outfit: "#4a3b2c", outfitDark: "#382c20", hairStyle: "curto", glasses: true },
   },
   {
     id: "ilu-rafael",
     label: "Rafael",
     gender: "male",
     kind: "ilustrado",
-    style: { skin: "#e5bb98", hair: "#8b8b93", outfit: "#4b5563", outfitDark: "#3c4451", hairStyle: "curto" },
+    style: { gender: "male", skin: "#e2b896", hair: "#a3a3aa", outfit: "#3c4451", outfitDark: "#2c323c", hairStyle: "curto", glasses: true, beard: true },
   },
   { id: "vid-ana", label: "Ana (vídeo)", gender: "female", kind: "video", videoUrl: anaVideo.url, mouthTrack: "ana" },
   { id: "vid-bia", label: "Bia (vídeo)", gender: "female", kind: "video", videoUrl: biaVideo.url, mouthTrack: "bia" },

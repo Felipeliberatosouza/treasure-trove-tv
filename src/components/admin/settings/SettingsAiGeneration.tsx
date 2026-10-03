@@ -3,6 +3,7 @@ import { Sparkles, FolderCog, Cpu } from "lucide-react";
 import SettingsAiAvatars from "./SettingsAiAvatars";
 import SettingsAiMaterials from "./SettingsAiMaterials";
 import SettingsAiProviders from "./SettingsAiProviders";
+import SettingsNeuralVideo from "./SettingsNeuralVideo";
 
 type SubTab = "parametros" | "provedores" | "materiais";
 
@@ -31,7 +32,12 @@ const SettingsAiGeneration = () => {
         </button>
       </div>
 
-      {subTab === "parametros" && <SettingsAiAvatars />}
+      {subTab === "parametros" && (
+        <>
+          <SettingsAiAvatars />
+          <SettingsNeuralVideo />
+        </>
+      )}
       {subTab === "provedores" && <SettingsAiProviders />}
       {subTab === "materiais" && <SettingsAiMaterials />}
     </div>

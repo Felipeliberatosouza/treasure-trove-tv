@@ -2,7 +2,6 @@ import { useEffect, useRef } from "react";
 import type { AiAvatarAnimation, AiAvatarSize } from "@/hooks/usePlatformSettings";
 import { findCatalogAvatar } from "./avatarCatalog";
 import RiggedAvatar from "./RiggedAvatar";
-import LipSyncVideoAvatar from "./LipSyncVideoAvatar";
 import { VISEME_SHAPE, type Viseme } from "@/utils/phonemeLipSync";
 
 interface AnimatedAvatarProps {
@@ -73,11 +72,16 @@ const AnimatedAvatar = ({ avatarId, src, alt, speaking, animation = "gestos", si
   if (catalog?.kind === "video" && catalog.videoUrl) {
     return (
       <div className={SIZE_CLASS[size]}>
-        {catalog.mouthTrack ? (
-          <LipSyncVideoAvatar url={catalog.videoUrl} trackKey={catalog.mouthTrack} alt={alt} speaking={active} viseme={active ? viseme : null} phrase={phrase} />
-        ) : (
-          <PhotoRigAvatar url={catalog.videoUrl} alt={alt} speaking={active} viseme={active ? viseme : null} />
-        )}
+        {/* Vídeo real exibido limpo e natural, sem nenhuma manipulação da boca. */}
+        <video
+          src={catalog.videoUrl}
+          aria-label={alt}
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="h-full w-full rounded-full border-2 border-primary object-cover"
+        />
       </div>
     );
   }

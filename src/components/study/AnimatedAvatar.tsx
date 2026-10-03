@@ -2,7 +2,6 @@ import { useEffect, useRef } from "react";
 import type { AiAvatarAnimation, AiAvatarSize } from "@/hooks/usePlatformSettings";
 import { findCatalogAvatar } from "./avatarCatalog";
 import RiggedAvatar from "./RiggedAvatar";
-import LipSyncVideoAvatar from "./LipSyncVideoAvatar";
 import { VISEME_SHAPE, type Viseme } from "@/utils/phonemeLipSync";
 
 interface AnimatedAvatarProps {

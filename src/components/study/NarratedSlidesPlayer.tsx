@@ -102,6 +102,8 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina, areas, 
   // Tempos de cada letra da narração (ElevenLabs) para sincronia labial e legenda.
   const alignmentRef = useRef<Map<number, SpeechAlignment>>(new Map());
   const [viseme, setViseme] = useState<Viseme | null>(null);
+  const [neuralVideos, setNeuralVideos] = useState<Record<number, string>>({});
+  const neuralRef = useRef<HTMLVideoElement>(null);
   const requestedImagesRef = useRef<Set<number>>(new Set());
   // Maior progresso já atingido em cada slide: garante que o quadro só preencha, nunca apague.
   const maxProgressRef = useRef<Record<number, number>>({});
@@ -347,6 +349,28 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina, areas, 
     setCaption(active);
   }, [current, slides]);
 
+  // Aulas especiais: vídeo neural do professor real, já renderizado com a mesma narração.
+  useEffect(() => {
+    if (!canonicalId) return;
+    let alive = true;
+    import("@/integrations/supabase/client").then(({ supabase }) =>
+      supabase.functions.invoke("neural-avatar-render", { body: { action: "get", canonical_id: canonicalId } }).then(({ data }) => {
+        if (alive && data?.videos) setNeuralVideos(data.videos);
+      }),
+    );
+    return () => { alive = false; };
+  }, [canonicalId]);
+
+  // O vídeo neural segue o áudio: toca, pausa e acompanha o tempo da narração.
+  useEffect(() => {
+    const v = neuralRef.current;
+    const a = audioRef.current;
+    if (!v || !a) return;
+    if (Math.abs(v.currentTime - currentTime) > 0.25) v.currentTime = currentTime;
+    if (speaking && v.paused) v.play().catch(() => {});
+    if (!speaking && !v.paused) v.pause();
+  }, [speaking, currentTime, current]);
+
   // Sincronia labial: a cada quadro, a boca assume o formato da letra falada.
   useEffect(() => {
     if (!speaking) {
@@ -559,16 +583,29 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina, areas, 
                 )}
               </div>
               <div className="shrink-0 text-center">
-                <AnimatedAvatar
-                  avatarId={avatar.avatar_id}
-                  src={avatarImage}
-                  alt={`${avatar.name}, ${avatar.role_label.toLowerCase()} da Revisão Fácil`}
-                  speaking={speaking}
-                  viseme={viseme}
-                  phrase={caption}
-                  animation={avatar.animation}
-                  size={placement.size}
-                />
+                {neuralVideos[current] ? (
+                  <video
+                    ref={neuralRef}
+                    key={neuralVideos[current]}
+                    src={neuralVideos[current]}
+                    muted
+                    playsInline
+                    preload="auto"
+                    aria-label={`${avatar.name} falando`}
+                    className="h-28 w-28 rounded-full border-2 border-primary object-cover sm:h-40 sm:w-40 md:h-48 md:w-48"
+                  />
+                ) : (
+                  <AnimatedAvatar
+                    avatarId={avatar.avatar_id}
+                    src={avatarImage}
+                    alt={`${avatar.name}, ${avatar.role_label.toLowerCase()} da Revisão Fácil`}
+                    speaking={speaking}
+                    viseme={viseme}
+                    phrase={caption}
+                    animation={avatar.animation}
+                    size={placement.size}
+                  />
+                )}
                 <span className="mt-2 block text-[10px] font-medium sm:text-xs">{avatar.name}</span>
                 <span className="hidden text-[10px] text-muted-foreground sm:block">{avatar.role_label}</span>
               </div>

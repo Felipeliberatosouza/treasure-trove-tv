@@ -1,3 +1,4 @@
+import { openBetaSignup } from "@/components/beta/BetaSignupGate";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -305,7 +306,10 @@ const HomeKitGenerator = ({ productKey, initialSub, productExtra, fixedHeadline,
     resultRef.current = null;
     if (res.error) {
       if (res.error.kind === "error") setErrorMsg(res.error.message ?? "Não foi possível gerar agora.");
-      else setBlocked(res.error.kind as "signup_required" | "paywall");
+      else {
+        setBlocked(res.error.kind as "signup_required" | "paywall");
+        if (res.error.kind === "signup_required") openBetaSignup();
+      }
       return;
     }
     try {

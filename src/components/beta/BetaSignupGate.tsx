@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Sparkles } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBetaMode } from "@/hooks/useBetaMode";
@@ -22,8 +22,15 @@ export default function BetaSignupGate() {
   const { beta, loaded } = useBetaMode();
   const { user, loading } = useAuth() as any;
   const navigate = useNavigate();
+  const { pathname } = useLocation();
   const [open, setOpen] = useState(false);
-  const active = beta && loaded && !loading && !user;
+  // Telas de cadastro/login nunca são bloqueadas (evita looping).
+  const onAuthPage = /^\/(login|signup|forgot-password|reset-password|convite)/.test(pathname);
+  const active = beta && loaded && !loading && !user && !onAuthPage;
+
+  useEffect(() => {
+    if (onAuthPage) setOpen(false);
+  }, [onAuthPage]);
 
   useEffect(() => {
     const show = () => setOpen(true);

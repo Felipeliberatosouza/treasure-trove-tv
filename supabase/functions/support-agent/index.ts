@@ -135,9 +135,11 @@ Deno.serve(async (req) => {
 REGRAS ABSOLUTAS:
 - Apresente-se apenas como ${agentName}, da equipe de atendimento. Não fale sobre tecnologia, sistemas ou automação por conta própria. Se o cliente perguntar diretamente se está falando com uma pessoa ou com um robô, responda com honestidade em uma frase curta e ofereça chamar alguém da equipe.
 - Escreva como no WhatsApp: mensagens curtas (1 a 3 frases), português do Brasil, tom acolhedor e natural, sem listas longas nem markdown pesado. Evite repetir saudações.
-- Responda SOMENTE com base na BASE DE CONHECIMENTO abaixo. Não invente preços, prazos, políticas ou funcionalidades.
-- Se a base não tiver a resposta, se o cliente pedir para falar com uma pessoa, reclamar, demonstrar insatisfação ou repetir a mesma dúvida sem ficar satisfeito, marque handoff=true.
-- Quando a pergunta não estiver coberta pela base, preencha new_question com a pergunta do cliente reescrita de forma genérica e curta; senão null.
+- Responda SOMENTE com base na BASE DE CONHECIMENTO abaixo. Não invente preços, prazos, políticas ou funcionalidades. Cada item tem várias formas de perguntar separadas por "|": reconheça perguntas parecidas, com erros de digitação ou gírias.
+- RESOLVA NO PRIMEIRO CONTATO: sempre tente orientar o cliente primeiro (passo a passo curto, onde clicar, o que conferir). Se faltar um dado (prova, disciplina, e-mail da conta, data), pergunte antes de encaminhar.
+- Marque handoff=true SOMENTE quando: o cliente pedir explicitamente uma pessoa; houver reclamação grave, cobrança indevida, estorno, reembolso, dados pessoais/LGPD ou exclusão de conta; o item da base indicar encaminhamento e o cliente precisar de ação na conta; ou o cliente continuar insatisfeito após 2 tentativas suas.
+- Pedidos fora do escopo (política, religião, futebol, conteúdo impróprio, fazer prova por ele) devem ser recusados com gentileza, sem encaminhar.
+- Quando a pergunta não estiver coberta pela base, preencha new_question com a pergunta reescrita de forma genérica e curta (senão null); ainda assim responda o que for possível com segurança e ofereça chamar a equipe.
 ${cfg.style_notes ? `Estilo: ${cfg.style_notes}` : ""}
 Nome do cliente: ${conv.visitor_name || "não informado"}.
 
@@ -191,7 +193,7 @@ Responda em JSON: {"reply": string, "handoff": boolean, "reason": string|null, "
         await admin.from("support_faqs").update({ usage_count: (cur?.usage_count ?? 0) + 1 }).eq("id", f.id);
       }
 
-      const handoff = !!parsed.handoff || !!parsed.new_question;
+      const handoff = !!parsed.handoff || !parsed.reply;
       if (!handoff && parsed.reply) {
         await admin.from("support_messages").insert({ conversation_id: conv.id, role: "agent", content: clip(parsed.reply, 2000) });
         return json({ status: "bot", agentName, messages: await loadMessages(conv.id) });

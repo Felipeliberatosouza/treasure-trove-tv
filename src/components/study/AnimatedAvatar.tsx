@@ -52,10 +52,8 @@ const PhotoRigAvatar = ({ url, alt, speaking, viseme }: { url: string; alt: stri
   }, [speaking, viseme]);
 
   return (
-    <div className={`photo-rig ${speaking ? "is-speaking" : ""}`} role="img" aria-label={alt}>
-      <div className="photo-rig-body">
-        <video ref={ref} src={url} muted loop playsInline preload="auto" aria-hidden="true" />
-      </div>
+    <div className={`h-full w-full ${speaking ? "is-speaking" : ""}`} role="img" aria-label={alt}>
+      <video ref={ref} src={url} muted loop playsInline preload="auto" aria-hidden="true" className="h-full w-full object-cover" />
     </div>
   );
 };

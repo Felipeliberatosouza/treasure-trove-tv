@@ -23,6 +23,25 @@ const SettingsNeuralVideo = () => {
   const [busy, setBusy] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [slides, setSlides] = useState<SlideStatus[]>([]);
+  const [conn, setConn] = useState<{ ok: boolean; msg: string } | null>(null);
+  const [testing, setTesting] = useState(false);
+
+  const testConnection = async () => {
+    setTesting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("neural-avatar-render", { body: { action: "test" } });
+      if (error) throw error;
+      if (data?.ok) {
+        const credits = data.remaining != null ? ` Créditos restantes no D-ID: ${data.remaining}.` : "";
+        setConn({ ok: true, msg: `Conexão com o D-ID funcionando.${credits}` });
+      } else setConn({ ok: false, msg: data?.error ?? "Não foi possível validar a chave." });
+    } catch {
+      setConn({ ok: false, msg: "Não foi possível validar a conexão agora." });
+    } finally {
+      setTesting(false);
+    }
+  };
+
 
   const call = async (action: "start" | "poll") => {
     const canonical_id = extractId(lesson);
@@ -67,6 +86,18 @@ const SettingsNeuralVideo = () => {
             cada minuto tem custo no provedor de vídeo e leva alguns minutos para ficar pronto. As outras aulas continuam com o professor ilustrado.
           </p>
         </div>
+        <div className="space-y-2 rounded-lg border border-border p-3">
+          <Label>Conexão com o D-ID</Label>
+          <p className="text-xs text-muted-foreground">
+            A chave fica guardada com segurança no servidor e nunca aparece nesta tela. Valide a conexão antes de renderizar.
+          </p>
+          <Button variant="outline" size="sm" onClick={testConnection} disabled={testing}>
+            {testing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />} Validar conexão
+          </Button>
+          {conn && (
+            <p className={`text-xs ${conn.ok ? "text-primary" : "text-destructive"}`}>{conn.msg}</p>
+          )}
+        </div>
         <div className="space-y-1.5">
           <Label>Link ou código da aula</Label>
           <Input value={lesson} onChange={(e) => setLesson(e.target.value)} placeholder="https://revisaofacil.com.br/conteudo-ia/..." />
@@ -85,7 +116,7 @@ const SettingsNeuralVideo = () => {
           {portrait && <img src={portrait} alt="Retrato escolhido" className="mt-2 h-24 w-24 rounded-lg object-cover" />}
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button onClick={() => call("start")} disabled={busy || !portrait}>
+          <Button onClick={() => call("start")} disabled={busy || !portrait || !conn?.ok}>
             {busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Film className="mr-2 h-4 w-4" />} Renderizar aula
           </Button>
           <Button variant="outline" onClick={() => call("poll")} disabled={busy}>

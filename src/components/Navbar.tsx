@@ -403,7 +403,7 @@ const Navbar = () => {
 
         <div ref={navOuterRef} className="hidden min-w-0 flex-1 items-center justify-center overflow-hidden lg:flex">
           <div ref={navInnerRef} className="flex w-max items-center" style={{ fontSize: `${navFontPx}px`, gap: "0.85em" }}>
-          {menuItems.map((item) => {
+          {[...menuItems, ...productMenu.map(({ children: _c, ...p }) => p as MenuItem)].map((item) => {
             if (item.children && item.children.length > 0) {
               return (
                 <div key={item.label} className="relative group">

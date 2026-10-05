@@ -199,6 +199,7 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina, areas, 
     setCurrent((c) => {
       const next = c + 1;
       if (next < slides.length) {
+        setCurrentTime(0);
         void playFrom(next);
         return next;
       }
@@ -366,7 +367,9 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina, areas, 
     const v = neuralRef.current;
     const a = audioRef.current;
     if (!v || !a) return;
-    if (Math.abs(v.currentTime - currentTime) > 0.25) v.currentTime = currentTime;
+    // Usa o tempo real do áudio do slide atual (o estado pode ainda ser do slide anterior).
+    const t = a.currentTime || 0;
+    if (Math.abs(v.currentTime - t) > 0.25) v.currentTime = t;
     if (speaking && v.paused) v.play().catch(() => {});
     if (!speaking && !v.paused) v.pause();
   }, [speaking, currentTime, current]);
@@ -379,8 +382,13 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina, areas, 
     }
     const al = alignmentRef.current.get(current);
     if (!al) {
-      setViseme(null);
-      return;
+      // Sem tempos por letra (voz OpenAI/fallback): boca alterna formas no ritmo da fala.
+      const cycle: Viseme[] = ["A", "E", "MBP", "O", "E", "rest", "A", "FV"];
+      let i = 0;
+      const id = window.setInterval(() => {
+        setViseme(cycle[i++ % cycle.length]);
+      }, 110);
+      return () => window.clearInterval(id);
     }
     let raf = 0;
     let last: Viseme | null = null;
@@ -396,6 +404,7 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina, areas, 
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
   }, [speaking, current, audioUrl]);
+
 
   if (!slides.length) {
     return <div className="flex aspect-video items-center justify-center bg-muted text-sm text-muted-foreground">Aula com professor virtual indisponível.</div>;
@@ -422,6 +431,34 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina, areas, 
         ? "lousa"
         : "conteudo";
   const placement = avatarPlacement(avatar, slideContext);
+  const NEURAL_SIZE: Record<string, string> = {
+    pequeno: "h-12 w-12 sm:h-16 sm:w-16 md:h-20 md:w-20",
+    medio: "h-16 w-16 sm:h-24 sm:w-24 md:h-28 md:w-28",
+    grande: "h-24 w-24 sm:h-40 sm:w-40 md:h-48 md:w-48",
+  };
+  const teacherAvatar = neuralVideos[current] ? (
+    <video
+      ref={neuralRef}
+      key={neuralVideos[current]}
+      src={neuralVideos[current]}
+      muted
+      playsInline
+      preload="auto"
+      aria-label={`${avatar.name} falando`}
+      className={`${NEURAL_SIZE[placement.size] ?? NEURAL_SIZE.grande} rounded-full border-2 border-primary object-cover`}
+    />
+  ) : (
+    <AnimatedAvatar
+      avatarId={avatar.avatar_id}
+      src={avatarImage}
+      alt={`${avatar.name}, ${avatar.role_label.toLowerCase()} da Revisão Fácil`}
+      speaking={speaking}
+      viseme={viseme}
+      phrase={caption}
+      animation={avatar.animation}
+      size={placement.size}
+    />
+  );
   const highlightLastStep = faixaEtaria === "criancas_0_9";
   // Tópicos entram um a um, acompanhando a narração.
   const allBullets = (slide?.bullets ?? []).slice(0, 4);
@@ -527,16 +564,7 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina, areas, 
                     : "items-center text-center"
               }`}
             >
-              <AnimatedAvatar
-                avatarId={avatar.avatar_id}
-                src={avatarImage}
-                alt={`${avatar.name}, ${avatar.role_label.toLowerCase()} da Revisão Fácil`}
-                speaking={speaking}
-                viseme={viseme}
-                phrase={caption}
-                animation={avatar.animation}
-                size={placement.size}
-              />
+              {teacherAvatar}
               <span className="text-xs font-semibold sm:text-sm">{avatar.name}</span>
               <span className="text-[10px] text-muted-foreground sm:text-xs">{avatar.role_label}</span>
               <h2 className="max-w-2xl font-display text-base font-bold leading-tight sm:text-2xl md:text-3xl">{slide?.titulo}</h2>
@@ -583,29 +611,7 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina, areas, 
                 )}
               </div>
               <div className="shrink-0 text-center">
-                {neuralVideos[current] ? (
-                  <video
-                    ref={neuralRef}
-                    key={neuralVideos[current]}
-                    src={neuralVideos[current]}
-                    muted
-                    playsInline
-                    preload="auto"
-                    aria-label={`${avatar.name} falando`}
-                    className="h-28 w-28 rounded-full border-2 border-primary object-cover sm:h-40 sm:w-40 md:h-48 md:w-48"
-                  />
-                ) : (
-                  <AnimatedAvatar
-                    avatarId={avatar.avatar_id}
-                    src={avatarImage}
-                    alt={`${avatar.name}, ${avatar.role_label.toLowerCase()} da Revisão Fácil`}
-                    speaking={speaking}
-                    viseme={viseme}
-                    phrase={caption}
-                    animation={avatar.animation}
-                    size={placement.size}
-                  />
-                )}
+                {teacherAvatar}
                 <span className="mt-2 block text-[10px] font-medium sm:text-xs">{avatar.name}</span>
                 <span className="hidden text-[10px] text-muted-foreground sm:block">{avatar.role_label}</span>
               </div>

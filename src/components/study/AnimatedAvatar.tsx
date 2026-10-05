@@ -52,10 +52,8 @@ const PhotoRigAvatar = ({ url, alt, speaking, viseme }: { url: string; alt: stri
   }, [speaking, viseme]);
 
   return (
-    <div className={`photo-rig ${speaking ? "is-speaking" : ""}`} role="img" aria-label={alt}>
-      <div className="photo-rig-body">
-        <video ref={ref} src={url} muted loop playsInline preload="auto" aria-hidden="true" />
-      </div>
+    <div className={`h-full w-full ${speaking ? "is-speaking" : ""}`} role="img" aria-label={alt}>
+      <video ref={ref} src={url} muted loop playsInline preload="auto" aria-hidden="true" className="h-full w-full object-cover" />
     </div>
   );
 };
@@ -71,17 +69,9 @@ const AnimatedAvatar = ({ avatarId, src, alt, speaking, animation = "gestos", si
 
   if (catalog?.kind === "video" && catalog.videoUrl) {
     return (
-      <div className={SIZE_CLASS[size]}>
-        {/* Vídeo real exibido limpo e natural, sem nenhuma manipulação da boca. */}
-        <video
-          src={catalog.videoUrl}
-          aria-label={alt}
-          autoPlay
-          loop
-          muted
-          playsInline
-          className="h-full w-full rounded-full border-2 border-primary object-cover"
-        />
+      <div className={`${SIZE_CLASS[size]} overflow-hidden rounded-full border-2 border-primary`}>
+        {/* Vídeo real limpo: toca só durante a fala e respeita "sem animação". */}
+        <PhotoRigAvatar url={catalog.videoUrl} alt={alt} speaking={active} viseme={viseme} />
       </div>
     );
   }

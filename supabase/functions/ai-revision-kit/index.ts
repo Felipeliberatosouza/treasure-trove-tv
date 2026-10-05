@@ -509,8 +509,10 @@ async function handleRequest(req: Request, body: any): Promise<Response> {
       }
     } else {
       await ensureCredits(userId);
+      // Versão beta: tudo gratuito, sem gastar Créditos de IA nem teste grátis.
+      if (await isBetaOn(admin)) planUnlimited = true;
       // Créditos de IA do plano assinado (ilimitado ou cota mensal inclusa).
-      const { data: planClaim } = await admin.rpc("claim_plan_ai_credits", { _user_id: userId });
+      const { data: planClaim } = planUnlimited ? { data: { unlimited: true } } : await admin.rpc("claim_plan_ai_credits", { _user_id: userId });
       planUnlimited = Boolean((planClaim as { unlimited?: boolean } | null)?.unlimited);
       if (!planUnlimited) {
         const credits = await ensureCredits(userId);
@@ -730,3 +732,8 @@ Deno.serve(async (req) => {
   });
 });
 
+
+async function isBetaOn(db: any): Promise<boolean> {
+  const { data } = await db.from("platform_settings").select("value").eq("key", "beta_mode").maybeSingle();
+  return Boolean((data?.value as { enabled?: boolean } | null)?.enabled);
+}

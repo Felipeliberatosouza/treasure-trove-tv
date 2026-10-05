@@ -201,7 +201,7 @@ Deno.serve(async (req) => {
       const used: number = doubt.interactions_used || 0
       let paidWithCredits = false
 
-      if (limit !== null && used >= limit) {
+      if (limit !== null && used >= limit && !(await isBetaOn(admin))) {
         const cost = Math.max(0, cfg.credit_cost_per_interaction)
         if (!body.useCredits) {
           return json({ needsCredits: true, cost, error: 'Limite de interações atingido.' })
@@ -327,3 +327,8 @@ Deno.serve(async (req) => {
     return json({ error: 'Erro inesperado. Tente novamente.' }, 500)
   }
 })
+
+async function isBetaOn(db: any): Promise<boolean> {
+  const { data } = await db.from("platform_settings").select("value").eq("key", "beta_mode").maybeSingle();
+  return Boolean((data?.value as { enabled?: boolean } | null)?.enabled);
+}

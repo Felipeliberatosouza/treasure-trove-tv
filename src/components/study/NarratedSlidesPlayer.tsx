@@ -405,6 +405,35 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina, areas, 
     return () => cancelAnimationFrame(raf);
   }, [speaking, current, audioUrl]);
 
+  const NEURAL_SIZE: Record<string, string> = {
+    pequeno: "h-12 w-12 sm:h-16 sm:w-16 md:h-20 md:w-20",
+    medio: "h-16 w-16 sm:h-24 sm:w-24 md:h-28 md:w-28",
+    grande: "h-24 w-24 sm:h-40 sm:w-40 md:h-48 md:w-48",
+  };
+  const teacherAvatar = neuralVideos[current] ? (
+    <video
+      ref={neuralRef}
+      key={neuralVideos[current]}
+      src={neuralVideos[current]}
+      muted
+      playsInline
+      preload="auto"
+      aria-label={`${avatar.name} falando`}
+      className={`${NEURAL_SIZE[placement.size] ?? NEURAL_SIZE.grande} rounded-full border-2 border-primary object-cover`}
+    />
+  ) : (
+    <AnimatedAvatar
+      avatarId={avatar.avatar_id}
+      src={avatarImage}
+      alt={`${avatar.name}, ${avatar.role_label.toLowerCase()} da Revisão Fácil`}
+      speaking={speaking}
+      viseme={viseme}
+      phrase={caption}
+      animation={avatar.animation}
+      size={placement.size}
+    />
+  );
+
   if (!slides.length) {
     return <div className="flex aspect-video items-center justify-center bg-muted text-sm text-muted-foreground">Aula com professor virtual indisponível.</div>;
   }
@@ -535,16 +564,7 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina, areas, 
                     : "items-center text-center"
               }`}
             >
-              <AnimatedAvatar
-                avatarId={avatar.avatar_id}
-                src={avatarImage}
-                alt={`${avatar.name}, ${avatar.role_label.toLowerCase()} da Revisão Fácil`}
-                speaking={speaking}
-                viseme={viseme}
-                phrase={caption}
-                animation={avatar.animation}
-                size={placement.size}
-              />
+              {teacherAvatar}
               <span className="text-xs font-semibold sm:text-sm">{avatar.name}</span>
               <span className="text-[10px] text-muted-foreground sm:text-xs">{avatar.role_label}</span>
               <h2 className="max-w-2xl font-display text-base font-bold leading-tight sm:text-2xl md:text-3xl">{slide?.titulo}</h2>
@@ -591,29 +611,7 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina, areas, 
                 )}
               </div>
               <div className="shrink-0 text-center">
-                {neuralVideos[current] ? (
-                  <video
-                    ref={neuralRef}
-                    key={neuralVideos[current]}
-                    src={neuralVideos[current]}
-                    muted
-                    playsInline
-                    preload="auto"
-                    aria-label={`${avatar.name} falando`}
-                    className="h-28 w-28 rounded-full border-2 border-primary object-cover sm:h-40 sm:w-40 md:h-48 md:w-48"
-                  />
-                ) : (
-                  <AnimatedAvatar
-                    avatarId={avatar.avatar_id}
-                    src={avatarImage}
-                    alt={`${avatar.name}, ${avatar.role_label.toLowerCase()} da Revisão Fácil`}
-                    speaking={speaking}
-                    viseme={viseme}
-                    phrase={caption}
-                    animation={avatar.animation}
-                    size={placement.size}
-                  />
-                )}
+                {teacherAvatar}
                 <span className="mt-2 block text-[10px] font-medium sm:text-xs">{avatar.name}</span>
                 <span className="hidden text-[10px] text-muted-foreground sm:block">{avatar.role_label}</span>
               </div>

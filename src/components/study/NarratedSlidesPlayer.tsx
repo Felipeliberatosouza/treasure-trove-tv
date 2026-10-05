@@ -405,6 +405,32 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina, areas, 
     return () => cancelAnimationFrame(raf);
   }, [speaking, current, audioUrl]);
 
+
+  if (!slides.length) {
+    return <div className="flex aspect-video items-center justify-center bg-muted text-sm text-muted-foreground">Aula com professor virtual indisponível.</div>;
+  }
+
+  const isIntro = current === 0;
+  const isOutro = current === slides.length - 1 && slides.length > 1;
+  const avatarOnly = isIntro || isOutro;
+  const keywords = slide?.palavras_chave ?? [];
+  const activeKeyword = keywords
+    .map((item, index) => ({ ...item, at: anchorProgress(slide?.narracao || "", item.ancora, (index + 1) / (keywords.length + 1)) }))
+    .filter((item) => slideProgress >= item.at)
+    .at(-1)?.termo;
+  const visibleBoardSteps = (slide?.lousa_passos ?? []).filter((step, index, list) =>
+    slideProgress >= anchorProgress(slide?.narracao || "", step.ancora, (index + 1) / (list.length + 1)),
+  );
+  const boardMode = slide?.modo_visual === "lousa" && (slide.lousa_passos?.length ?? 0) > 0;
+  // Posição/tamanho do avatar vêm do cadastro administrativo, por tipo de slide.
+  const slideContext: AiAvatarSlideContext = isIntro
+    ? "abertura"
+    : isOutro
+      ? "encerramento"
+      : boardMode
+        ? "lousa"
+        : "conteudo";
+  const placement = avatarPlacement(avatar, slideContext);
   const NEURAL_SIZE: Record<string, string> = {
     pequeno: "h-12 w-12 sm:h-16 sm:w-16 md:h-20 md:w-20",
     medio: "h-16 w-16 sm:h-24 sm:w-24 md:h-28 md:w-28",
@@ -433,32 +459,6 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina, areas, 
       size={placement.size}
     />
   );
-
-  if (!slides.length) {
-    return <div className="flex aspect-video items-center justify-center bg-muted text-sm text-muted-foreground">Aula com professor virtual indisponível.</div>;
-  }
-
-  const isIntro = current === 0;
-  const isOutro = current === slides.length - 1 && slides.length > 1;
-  const avatarOnly = isIntro || isOutro;
-  const keywords = slide?.palavras_chave ?? [];
-  const activeKeyword = keywords
-    .map((item, index) => ({ ...item, at: anchorProgress(slide?.narracao || "", item.ancora, (index + 1) / (keywords.length + 1)) }))
-    .filter((item) => slideProgress >= item.at)
-    .at(-1)?.termo;
-  const visibleBoardSteps = (slide?.lousa_passos ?? []).filter((step, index, list) =>
-    slideProgress >= anchorProgress(slide?.narracao || "", step.ancora, (index + 1) / (list.length + 1)),
-  );
-  const boardMode = slide?.modo_visual === "lousa" && (slide.lousa_passos?.length ?? 0) > 0;
-  // Posição/tamanho do avatar vêm do cadastro administrativo, por tipo de slide.
-  const slideContext: AiAvatarSlideContext = isIntro
-    ? "abertura"
-    : isOutro
-      ? "encerramento"
-      : boardMode
-        ? "lousa"
-        : "conteudo";
-  const placement = avatarPlacement(avatar, slideContext);
   const highlightLastStep = faixaEtaria === "criancas_0_9";
   // Tópicos entram um a um, acompanhando a narração.
   const allBullets = (slide?.bullets ?? []).slice(0, 4);

@@ -1,3 +1,4 @@
+import AvatarCheckTmp from "./pages/__AvatarCheck";
 import { lazy, Suspense } from "react";
 import { startCacheManager } from "@/lib/cacheManager";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -157,6 +158,7 @@ const App = () => (
               />
             )}
             <Route path="/:slug" element={<TeacherProfile />} />
+            <Route path="/__avatar-check" element={<AvatarCheckTmp />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           </Suspense>

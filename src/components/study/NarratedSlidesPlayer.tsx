@@ -199,6 +199,7 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina, areas, 
     setCurrent((c) => {
       const next = c + 1;
       if (next < slides.length) {
+        setCurrentTime(0);
         void playFrom(next);
         return next;
       }
@@ -366,7 +367,9 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina, areas, 
     const v = neuralRef.current;
     const a = audioRef.current;
     if (!v || !a) return;
-    if (Math.abs(v.currentTime - currentTime) > 0.25) v.currentTime = currentTime;
+    // Usa o tempo real do áudio do slide atual (o estado pode ainda ser do slide anterior).
+    const t = a.currentTime || 0;
+    if (Math.abs(v.currentTime - t) > 0.25) v.currentTime = t;
     if (speaking && v.paused) v.play().catch(() => {});
     if (!speaking && !v.paused) v.pause();
   }, [speaking, currentTime, current]);
@@ -379,8 +382,13 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina, areas, 
     }
     const al = alignmentRef.current.get(current);
     if (!al) {
-      setViseme(null);
-      return;
+      // Sem tempos por letra (voz OpenAI/fallback): boca alterna formas no ritmo da fala.
+      const cycle: Viseme[] = ["A", "E", "MBP", "O", "E", "rest", "A", "FV"];
+      let i = 0;
+      const id = window.setInterval(() => {
+        setViseme(cycle[i++ % cycle.length]);
+      }, 110);
+      return () => window.clearInterval(id);
     }
     let raf = 0;
     let last: Viseme | null = null;

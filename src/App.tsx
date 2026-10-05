@@ -57,6 +57,7 @@ import EmailConfirmationHandler from "./components/EmailConfirmationHandler.tsx"
 import ScrollToTop from "./components/ScrollToTop.tsx";
 import BetaBar from "./components/beta/BetaBar.tsx";
 import BetaEndedNotice from "./components/beta/BetaEndedNotice.tsx";
+import BetaSignupGate from "./components/beta/BetaSignupGate.tsx";
 import SubscriptionUnavailableBanner from "./components/SubscriptionUnavailableBanner.tsx";
 import GlobalContentProtection from "./components/GlobalContentProtection.tsx";
 // Test-only harness route. Lazy import keeps it out of prod chunks unless
@@ -92,6 +93,7 @@ const App = () => (
           <ScrollToTop />
           <BetaBar />
           <BetaEndedNotice />
+          <BetaSignupGate />
           <Suspense fallback={<PageFallback />}>
           <Routes>
             <Route path="/" element={<Index />} />

@@ -19,8 +19,8 @@ const json = (body: unknown, status = 200) =>
 const BUCKET = "ai-revision-media";
 const TYPE = "neural_video";
 const Body = z.object({
-  action: z.enum(["start", "poll", "get"]),
-  canonical_id: z.string().uuid(),
+  action: z.enum(["start", "poll", "get", "test"]),
+  canonical_id: z.string().uuid().optional(),
   portrait_url: z.string().url().max(1000).optional(),
 });
 
@@ -59,6 +59,17 @@ Deno.serve(async (req) => {
     if (!u?.user) return json({ error: "Não autenticado." }, 401);
     const { data: isAdmin } = await admin.rpc("has_role", { _user_id: u.user.id, _role: "admin" });
     if (!isAdmin) return json({ error: "Apenas administradores." }, 403);
+
+    if (action === "test") {
+      if (!Deno.env.get("DID_API_KEY")) return json({ ok: false, error: "Chave do D-ID ainda não cadastrada." });
+      const r = await fetch("https://api.d-id.com/credits", { headers: didHeaders() });
+      const body = await r.json().catch(() => ({}));
+      if (r.status === 401 || r.status === 403) return json({ ok: false, error: "Chave do D-ID recusada. Confira se copiou a chave inteira." });
+      if (!r.ok) return json({ ok: false, error: `O D-ID respondeu com erro (${r.status}). Tente de novo em instantes.` });
+      return json({ ok: true, remaining: body?.remaining ?? null, total: body?.total ?? null });
+    }
+
+    if (!canonical_id) return json({ error: "Informe a aula." }, 400);
 
     if (action === "start") {
       if (!portrait_url) return json({ error: "Envie o retrato do professor." }, 400);

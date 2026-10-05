@@ -1,4 +1,6 @@
 import { openBetaSignup } from "@/components/beta/BetaSignupGate";
+import { Camera } from "lucide-react";
+import { PhotoButton, PhotoResultPanel, usePhotoAnalyzer } from "@/components/revisao-ia/PhotoAnalyzer";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -247,6 +249,7 @@ const HomeKitGenerator = ({ productKey, initialSub, productExtra, fixedHeadline,
   const runIdRef = useRef(0);
   const pendingKeyRef = useRef<string | null>(null);
   const resultRef = useRef<{ runId: number; canonicalId?: string | null; workId?: string | null; error?: { kind: string; message?: string } } | null>(null);
+  const photo = usePhotoAnalyzer();
 
   const firstName = useMemo(() => (profile?.name || "").trim().split(" ")[0] || "", [profile?.name]);
 
@@ -545,6 +548,16 @@ const HomeKitGenerator = ({ productKey, initialSub, productExtra, fixedHeadline,
                 <SlidersHorizontal className="h-4 w-4" />
                 Personalizar
               </Button>
+              <PhotoButton
+                disabled={loading || photo.analyzing}
+                onFile={async (f) => {
+                  const r = await photo.analyze(f, assunto.trim());
+                  if (r?.tipo === "tema" && r.tema) {
+                    setAssunto(r.tema);
+                    void handleSubmit(r.tema);
+                  }
+                }}
+              />
             </div>
             <Button type="submit" size="icon" className="rounded-full" disabled={loading || assunto.trim().length < 3} aria-label="Gerar Kit de Revisão" title="Gerar Kit de Revisão">
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
@@ -620,7 +633,20 @@ const HomeKitGenerator = ({ productKey, initialSub, productExtra, fixedHeadline,
             </div>
           )}
         </div>
+        <p className="mt-2 flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
+          <Camera className="h-3.5 w-3.5" aria-hidden="true" />
+          Dica: tire uma foto de uma questão de prova para ver a resolução comentada, ou de um tema que você quer revisar para receber os slides.
+        </p>
       </form>
+
+      <PhotoResultPanel
+        analyzing={photo.analyzing}
+        preview={photo.preview}
+        result={photo.result}
+        error={photo.error}
+        onClose={photo.clear}
+        onMakeSlides={(tema) => { photo.clear(); setAssunto(tema); void handleSubmit(tema); }}
+      />
 
       {loading && (
         <div className="mx-auto mt-6 max-w-3xl space-y-4 text-left">

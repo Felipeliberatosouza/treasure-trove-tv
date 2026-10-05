@@ -79,7 +79,7 @@ export function useFreeTrial() {
   let videosRemaining = 0;
   let expiresAt: Date | null = null;
 
-  if (trialRow && trialRow.active) {
+  if (!beta && trialRow && trialRow.active) {
     if (trialRow.trial_type === "days") {
       const started = new Date(trialRow.started_at).getTime();
       const now = Date.now();

@@ -224,7 +224,7 @@ export function useResourceLimit() {
   /** Consome um acesso ganho por indicação antes de cobrar do aluno. */
   const consumeReferralCredit = useCallback(
     async (resourceType: ResourceType, source?: ContentSource): Promise<boolean> => {
-      if (!user || (referralCredits[resourceType] || 0) <= 0) return false;
+      if (!user || beta || (referralCredits[resourceType] || 0) <= 0) return false;
       if (!canUseReferralCredit(resourceType, source)) return false;
       const { data, error } = await supabase.rpc("consume_referral_content_credit", {
         _resource_type: resourceType,
@@ -236,7 +236,7 @@ export function useResourceLimit() {
       }));
       return true;
     },
-    [user, referralCredits, canUseReferralCredit]
+    [user, beta, referralCredits, canUseReferralCredit]
   );
 
   return {

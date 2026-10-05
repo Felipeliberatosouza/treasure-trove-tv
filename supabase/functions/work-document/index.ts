@@ -171,6 +171,7 @@ async function handle(req: Request, body: any): Promise<{ status: number; payloa
 
   async function debit(amount: number, reason: string) {
     if (amount <= 0) return { ok: true as const, balance: null };
+    if (await isBetaOn(admin)) return { ok: true as const, balance: null };
     const credits = await ensureCredits();
     if ((credits.balance ?? 0) < amount) return { ok: false as const, balance: credits.balance ?? 0 };
     const next = credits.balance - amount;
@@ -394,3 +395,8 @@ Deno.serve(async (req) => {
     headers: { ...corsHeaders, "Content-Type": "application/x-ndjson" },
   });
 });
+
+async function isBetaOn(db: any): Promise<boolean> {
+  const { data } = await db.from("platform_settings").select("value").eq("key", "beta_mode").maybeSingle();
+  return Boolean((data?.value as { enabled?: boolean } | null)?.enabled);
+}

@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
+import { useBetaMode } from "@/hooks/useBetaMode";
 
 export interface TrialStatus {
   hasActiveTrial: boolean;
@@ -19,6 +20,8 @@ export function useFreeTrial() {
   const { data: trialSettings, loading: settingsLoading } = usePlatformSettings("free_trial");
   const [trialRow, setTrialRow] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  // Versão beta pausa o teste grátis: nada é iniciado nem consumido.
+  const { beta } = useBetaMode();
 
   const fetchTrial = useCallback(async () => {
     if (!user) {
@@ -45,7 +48,7 @@ export function useFreeTrial() {
 
   /** Start a free trial for the current user using admin-configured settings */
   const startTrial = useCallback(async () => {
-    if (!user || !trialSettings?.enabled) return false;
+    if (!user || beta || !trialSettings?.enabled) return false;
     const { data, error } = await supabase.rpc("start_free_trial" as any);
     if (error || data !== true) {
       console.error("Error starting trial", error);
@@ -53,11 +56,11 @@ export function useFreeTrial() {
     }
     await fetchTrial();
     return true;
-  }, [user, trialSettings, fetchTrial]);
+  }, [user, beta, trialSettings, fetchTrial]);
 
   /** Increment videos_watched counter. Call after any content is accessed during trial (revisões, resumos, simulados, top questões, colinhas). */
   const recordContentAccess = useCallback(async () => {
-    if (!user || !trialRow) return false;
+    if (!user || beta || !trialRow) return false;
     const { data, error } = await supabase.rpc("record_free_trial_content_access" as any);
     if (error || data !== true) {
       console.error("Erro ao registrar acesso do teste grátis", error);
@@ -65,10 +68,10 @@ export function useFreeTrial() {
     }
     await fetchTrial();
     return true;
-  }, [user, trialRow, fetchTrial]);
+  }, [user, beta, trialRow, fetchTrial]);
 
   // Compute status
-  const trialEnabled = trialSettings?.enabled ?? false;
+  const trialEnabled = !beta && (trialSettings?.enabled ?? false);
   const trialType = (trialSettings?.trial_type ?? "days") as "days" | "videos";
 
   let hasActiveTrial = false;
@@ -76,7 +79,7 @@ export function useFreeTrial() {
   let videosRemaining = 0;
   let expiresAt: Date | null = null;
 
-  if (trialRow && trialRow.active) {
+  if (!beta && trialRow && trialRow.active) {
     if (trialRow.trial_type === "days") {
       const started = new Date(trialRow.started_at).getTime();
       const now = Date.now();

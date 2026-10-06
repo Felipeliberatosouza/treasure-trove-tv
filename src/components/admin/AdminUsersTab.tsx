@@ -131,7 +131,7 @@ const AdminUsersTab = () => {
 
   const fetchUsers = async () => {
     setLoading(true);
-    const { data: profiles } = (await supabase.from("profiles").select("user_id, name, email, created_at, referral_code, active, accepts_marketing, birth_date, cpf, phone, phone_verified, areas, address, terms_accepted_at") as any;
+    const { data: profiles } = (await supabase.from("profiles").select("user_id, name, email, created_at, referral_code, active, accepts_marketing, birth_date, cpf, phone, phone_verified, areas, address, terms_accepted_at")) as any;
     const { data: roles } = await supabase.from("user_roles").select("user_id, role");
     const { data: contracts } = await supabase.from("teacher_contracts" as any).select("teacher_id, signed_at, expires_at, status, contract_text, signature_name, signature_cpf").eq("status", "active");
     const { data: trials } = await supabase

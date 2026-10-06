@@ -552,6 +552,10 @@ const Navbar = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
+          data-beta-allow
+          role="dialog"
+          aria-modal="true"
+          aria-label="Menu"
           className="fixed inset-0 z-[9999] flex flex-col bg-background/95 backdrop-blur-xl"
         >
           <div className="flex shrink-0 items-center justify-between border-b border-border/60 px-4 py-3 md:px-8">

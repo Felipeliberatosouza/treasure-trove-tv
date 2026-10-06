@@ -159,7 +159,6 @@ const App = () => (
               />
             )}
             <Route path="/:slug" element={<TeacherProfile />} />
-            <Route path="/:slug" element={<ConteudoIA />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           </Suspense>

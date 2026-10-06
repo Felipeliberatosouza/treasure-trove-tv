@@ -152,16 +152,16 @@ export default function PricingStrategy() {
       </div>
 
       <div className="overflow-x-auto rounded-lg border border-border">
-        <Table>
+        <Table className="min-w-[900px]">
           <TableHeader>
             <TableRow>
-              <TableHead>Recurso</TableHead>
+              <TableHead className="min-w-[180px]">Recurso</TableHead>
               <TableHead>Fornecedor ativo</TableHead>
-              <TableHead className="w-28">Custo base IA (R$)</TableHead>
-              <TableHead className="w-24">Créditos</TableHead>
-              <TableHead className="w-28">Custo atual</TableHead>
-              <TableHead className="w-28">Preço (R$)</TableHead>
-              <TableHead className="w-36">Margem</TableHead>
+              <TableHead className="min-w-[130px]">Custo de referência da IA (GPT-6 Astra)</TableHead>
+              <TableHead className="min-w-[110px]">Custo real por uso (com a IA ativa)</TableHead>
+              <TableHead className="min-w-[90px]">Créditos cobrados do aluno</TableHead>
+              <TableHead className="min-w-[130px]">Preço de venda ao aluno</TableHead>
+              <TableHead className="min-w-[140px]">Margem por uso</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -169,28 +169,33 @@ export default function PricingStrategy() {
               <TableRow key={r.key}>
                 <TableCell className="text-sm">{r.name}</TableCell>
                 <TableCell><Badge variant="secondary" className="whitespace-nowrap text-xs">{r.supplier}</Badge></TableCell>
-                <TableCell>{r.text ? <CurrencyInput className="h-9" value={r.baseText} onValueChange={(v) => setF(r.key, { text: v })} /> : <span className="text-xs text-muted-foreground">—</span>}</TableCell>
-                <TableCell><Input type="number" min={0} className="h-9" value={r.credits} onChange={(e) => setF(r.key, { credits: parseInt(e.target.value, 10) || 0 })} /></TableCell>
-                <TableCell className="text-sm">{money(r.cost)}</TableCell>
-                <TableCell><CurrencyInput className="h-9" value={r.price} onValueChange={(v) => setF(r.key, { price: v })} /></TableCell>
-                <TableCell className="text-sm">{marginCell(r.margin, r.pct)}</TableCell>
+                <TableCell>{r.text ? <CurrencyInput prefix="R$" className="h-9 min-w-[110px]" value={r.baseText} onValueChange={(v) => setF(r.key, { text: v })} /> : <span className="text-sm text-muted-foreground">R$ 0</span>}</TableCell>
+                <TableCell className="whitespace-nowrap text-sm font-medium">{money(r.cost)}</TableCell>
+                <TableCell><Input type="number" min={0} className="h-9 min-w-[70px]" value={r.credits} onChange={(e) => setF(r.key, { credits: parseInt(e.target.value, 10) || 0 })} /></TableCell>
+                <TableCell><CurrencyInput prefix="R$" className="h-9 min-w-[110px]" value={r.price} onValueChange={(v) => setF(r.key, { price: v })} /></TableCell>
+                <TableCell className="whitespace-nowrap text-sm">{marginCell(r.margin, r.pct)}</TableCell>
               </TableRow>
             ))}
             {teacherRows.map((t) => (
               <TableRow key={t.name}>
                 <TableCell className="text-sm">{t.name}</TableCell>
                 <TableCell><Badge variant="outline" className="text-xs">Repasse ao professor</Badge></TableCell>
-                <TableCell className="text-xs text-muted-foreground">—</TableCell>
-                <TableCell className="text-xs text-muted-foreground">—</TableCell>
-                <TableCell className="text-sm">{money(t.cost)}</TableCell>
-                <TableCell className="text-sm">{money(t.price)}</TableCell>
-                <TableCell className="text-sm">{marginCell(t.margin, t.pct)}</TableCell>
+                <TableCell className="text-sm text-muted-foreground">—</TableCell>
+                <TableCell className="whitespace-nowrap text-sm font-medium">{money(t.cost)}</TableCell>
+                <TableCell className="text-sm text-muted-foreground">—</TableCell>
+                <TableCell className="whitespace-nowrap text-sm">{money(t.price)}</TableCell>
+                <TableCell className="whitespace-nowrap text-sm">{marginCell(t.margin, t.pct)}</TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </div>
-      <p className="text-xs text-muted-foreground">"Custo base IA" é o custo com o GPT-6 Astra; com outra IA o custo atual é recalculado. Preços e repasses dos professores são editados na tabela de professores abaixo.</p>
+      <div className="space-y-1 text-xs text-muted-foreground">
+        <p><strong>Custo de referência da IA:</strong> quanto custa o texto gerado por uso com o GPT-6 Astra. É o número que você ajusta.</p>
+        <p><strong>Custo real por uso:</strong> o que a plataforma paga de fato hoje, já somando a IA ativa da área, a voz e imagens/vídeo. Se a IA ativa for mais barata, este valor cai sozinho.</p>
+        <p><strong>Créditos cobrados do aluno:</strong> quantos Créditos de IA o aluno gasta por uso. Não multiplica o custo — o custo é sempre por uso.</p>
+        <p>Todos os valores já estão em reais (R$).</p>
+      </div>
 
       <div>
         <h3 className="mb-1 flex items-center gap-2 font-display text-base font-semibold"><Calculator className="h-4 w-4" /> Custos e despesas do negócio e ponto de equilíbrio</h3>

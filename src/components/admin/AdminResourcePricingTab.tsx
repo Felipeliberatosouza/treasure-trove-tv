@@ -105,17 +105,17 @@ const AdminResourcePricingTab = () => {
         <DollarSign className="h-5 w-5" /> Preço de Recursos Individuais
       </h2>
       <p className="text-sm text-muted-foreground mb-4">
-        Defina o <strong>preço mínimo</strong> e o <strong>preço padrão</strong> de cada recurso, além do
+        Defina o <strong>preço mínimo</strong> e o <strong>preço de venda padrão</strong> (o valor cobrado do aluno) de cada recurso, além do
         percentual da venda destinado à plataforma. O restante (<em>100% − % plataforma</em>) é repassado ao professor.
       </p>
 
       <div className="rounded-lg border border-border overflow-x-auto">
-        <Table>
+        <Table className="min-w-[680px]">
           <TableHeader>
             <TableRow>
               <TableHead>Recurso</TableHead>
-              <TableHead className="w-32">Preço Mínimo (R$)</TableHead>
-              <TableHead className="w-32">Preço Padrão (R$)</TableHead>
+              <TableHead className="min-w-[130px]">Preço de Venda Mínimo (R$)</TableHead>
+              <TableHead className="min-w-[130px]">Preço de Venda Padrão (R$)</TableHead>
               <TableHead className="w-28">% Plataforma</TableHead>
               <TableHead className="w-28">% Professor</TableHead>
             </TableRow>
@@ -127,15 +127,15 @@ const AdminResourcePricingTab = () => {
                   {RESOURCE_LABELS[p.resource_type] || p.resource_type}
                 </TableCell>
                 <TableCell>
-                  <CurrencyInput
-                    className="h-9"
+                  <CurrencyInput prefix="R$"
+                    className="h-9 min-w-[100px]"
                     value={p.min_price}
                     onValueChange={(v) => updateField(i, "min_price", v)}
                   />
                 </TableCell>
                 <TableCell>
-                  <CurrencyInput
-                    className="h-9"
+                  <CurrencyInput prefix="R$"
+                    className="h-9 min-w-[100px]"
                     value={p.price}
                     onValueChange={(v) => updateField(i, "price", v)}
                   />
@@ -146,7 +146,7 @@ const AdminResourcePricingTab = () => {
                     step="1"
                     min={0}
                     max={100}
-                    className="h-9"
+                    className="h-9 min-w-[100px]"
                     value={p.platform_percentage}
                     onChange={(e) =>
                       updateField(i, "platform_percentage", parseFloat(e.target.value) || 0)

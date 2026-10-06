@@ -8,16 +8,12 @@ export interface CurrencyInputProps
   onValueChange: (value: number) => void;
   /** Number of decimal places. Default 2. */
   decimals?: number;
+  /** Optional fixed prefix shown inside the field, e.g. "R$". */
+  prefix?: string;
 }
 
-/**
- * Brazilian-style currency input.
- * - Displays values with comma as decimal separator and 2 fixed decimal places when blurred.
- * - While focused, lets the user type freely (digits, comma or dot).
- * - Emits a JS number via onValueChange.
- */
 const CurrencyInput = React.forwardRef<HTMLInputElement, CurrencyInputProps>(
-  ({ value, onValueChange, decimals = 2, onBlur, onFocus, className, ...props }, ref) => {
+  ({ value, onValueChange, decimals = 2, prefix, onBlur, onFocus, className, ...props }, ref) => {
     const formatBR = React.useCallback(
       (n: number) =>
         n.toLocaleString("pt-BR", {
@@ -48,13 +44,13 @@ const CurrencyInput = React.forwardRef<HTMLInputElement, CurrencyInputProps>(
       return isNaN(n) ? 0 : n;
     };
 
-    return (
+    const input = (
       <Input
         {...props}
         ref={ref}
         type="text"
         inputMode="decimal"
-        className={cn(className)}
+        className={cn(prefix && "pl-9", className)}
         value={draft}
         onFocus={(e) => {
           setFocused(true);
@@ -62,7 +58,6 @@ const CurrencyInput = React.forwardRef<HTMLInputElement, CurrencyInputProps>(
         }}
         onChange={(e) => {
           const raw = e.target.value;
-          // Allow only digits, comma and dot during typing.
           const sanitized = raw.replace(/[^\d.,]/g, "");
           setDraft(sanitized);
           onValueChange(parseBR(sanitized));
@@ -75,6 +70,13 @@ const CurrencyInput = React.forwardRef<HTMLInputElement, CurrencyInputProps>(
           onBlur?.(e);
         }}
       />
+    );
+    if (!prefix) return input;
+    return (
+      <div className="relative">
+        <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">{prefix}</span>
+        {input}
+      </div>
     );
   },
 );

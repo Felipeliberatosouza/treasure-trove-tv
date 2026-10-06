@@ -1,4 +1,5 @@
 import ProductExamSettings from "@/components/admin/ProductExamSettings";
+import AdminRealExamsTab from "@/components/admin/AdminRealExamsTab";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
@@ -159,6 +160,7 @@ export default function AdminProductsTab() {
         {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />} Salvar produtos
       </Button>
       <div className="mt-10"><ProductExamSettings /></div>
+      <div className="mt-10 border-t border-border pt-8"><AdminRealExamsTab /></div>
     </div>
   );
 }

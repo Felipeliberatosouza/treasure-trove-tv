@@ -45,7 +45,7 @@ interface DocRow {
   content: WorkContent;
 }
 
-const AdminWorkDocsTab = () => {
+const AdminWorkDocsTab = ({ historyOnly = false }: { historyOnly?: boolean }) => {
   const { toast } = useToast();
   const [pricing, setPricing] = useState<Pricing>(DEFAULT_PRICING);
   const [saving, setSaving] = useState(false);
@@ -131,7 +131,7 @@ const AdminWorkDocsTab = () => {
 
   return (
     <div className="space-y-8">
-      <div>
+      <div className={historyOnly ? "hidden" : undefined}>
         <h2 className="mb-4 flex items-center gap-2 font-display text-lg font-semibold">
           <DollarSign className="h-5 w-5" /> Custo e preço dos Trabalhos com IA
         </h2>

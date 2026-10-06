@@ -25,6 +25,8 @@ import {
   Stamp,
 } from "lucide-react";
 import AdminResourcePricingTab from "@/components/admin/AdminResourcePricingTab";
+import AdminWorkDocsTab from "@/components/admin/AdminWorkDocsTab";
+import PricingStrategy from "./PricingStrategy";
 
 type SubSection = "general" | "pricing" | "limits" | "minimums";
 
@@ -62,7 +64,7 @@ const SettingsProductConfig = () => {
 
   const subTabs: { id: SubSection; label: string; icon: any }[] = [
     { id: "general", label: "Geral", icon: SettingsIcon },
-    { id: "pricing", label: "Preços de Recursos", icon: Tag },
+    { id: "pricing", label: "Estratégia de Preços", icon: Tag },
     { id: "limits", label: "Limites de Texto", icon: Type },
     { id: "minimums", label: "Quantidades Mínimas", icon: ListChecks },
   ];
@@ -86,7 +88,13 @@ const SettingsProductConfig = () => {
         ))}
       </div>
 
-      {section === "pricing" && <AdminResourcePricingTab />}
+      {section === "pricing" && (
+        <div className="space-y-10">
+          <PricingStrategy />
+          <AdminResourcePricingTab />
+          <AdminWorkDocsTab historyOnly />
+        </div>
+      )}
 
       {section === "general" && (
         <div className="space-y-6 max-w-lg">

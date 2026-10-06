@@ -239,6 +239,13 @@
       "when": 1791291702787,
       "tag": "0033_pricing_realtime",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1791303539590,
+      "tag": "0034_profiles_terms_accepted",
+      "breakpoints": true
     }
   ]
 }

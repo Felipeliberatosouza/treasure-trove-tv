@@ -2072,6 +2072,7 @@ export type Database = {
           receives_doubt_emails: boolean
           referral_code: number | null
           slug: string | null
+          terms_accepted_at: string | null
           updated_at: string
           user_id: string
         }
@@ -2101,6 +2102,7 @@ export type Database = {
           receives_doubt_emails?: boolean
           referral_code?: number | null
           slug?: string | null
+          terms_accepted_at?: string | null
           updated_at?: string
           user_id: string
         }
@@ -2130,6 +2132,7 @@ export type Database = {
           receives_doubt_emails?: boolean
           referral_code?: number | null
           slug?: string | null
+          terms_accepted_at?: string | null
           updated_at?: string
           user_id?: string
         }

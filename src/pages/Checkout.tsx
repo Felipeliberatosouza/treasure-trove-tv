@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js";
 import { getStripe } from "@/lib/stripe";
+import { Checkbox } from "@/components/ui/checkbox";
+import AreaSelector from "@/components/AreaSelector";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -505,7 +507,33 @@ function CheckoutForm({
   const stripe = useStripe();
   const elements = useElements();
   const navigate = useNavigate();
-  const { user, refreshSubscription } = useAuth();
+  const { user, profile, refreshSubscription, refreshProfile } = useAuth();
+  const [termsAcceptedAt, setTermsAcceptedAt] = useState<string | null | undefined>(undefined);
+  useEffect(() => {
+    if (!user) return;
+    supabase.from("profiles").select("terms_accepted_at").eq("user_id", user.id).maybeSingle()
+      .then(({ data }) => setTermsAcceptedAt((data as any)?.terms_accepted_at ?? null));
+  }, [user]);
+  const needTerms = termsAcceptedAt === null;
+  const needBirth = !profile?.birth_date;
+  const needPhone = !profile?.phone;
+  const needAreas = !profile?.areas?.length;
+  const [extra, setExtra] = useState({ birth_date: "", phone: "", areas: [] as string[], terms: false });
+  const formatPhone = (raw: string) => {
+    const d = raw.replace(/\D/g, "").slice(0, 11);
+    if (d.length <= 2) return d.length ? `(${d}` : "";
+    if (d.length <= 7) return `(${d.slice(0, 2)}) ${d.slice(2)}`;
+    return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
+  };
+  const validateExtra = (): string | null => {
+    if (needBirth && !extra.birth_date) return "Informe sua data de nascimento.";
+    if (needPhone) {
+      const d = extra.phone.replace(/\D/g, "");
+      if (d.length !== 11 || d[2] !== "9") return "Informe um celular válido: (XX) 9XXXX-XXXX.";
+    }
+    if (needTerms && !extra.terms) return "Aceite os Termos de Uso para continuar.";
+    return null;
+  };
   const { beta } = useBetaMode();
   const [submitting, setSubmitting] = useState(false);
   // Sticky "we're leaving" flag. Becomes true the moment we commit to
@@ -626,13 +654,34 @@ function CheckoutForm({
     if (redirecting) return;
     setError(null);
 
-    const billingError = validateBilling();
+    const billingError = validateBilling() || validateExtra();
     if (billingError) {
       setError(billingError);
       return;
     }
 
     setSubmitting(true);
+    // Completa o cadastro (ex.: quem entrou pelo Google) com os dados que faltavam.
+    if (user) {
+      const upd: Record<string, unknown> = {};
+      const fullName = billing.name.trim();
+      if (!profile?.name || !profile.name.trim().includes(" ")) upd.name = fullName;
+      if (!profile?.cpf) upd.cpf = billing.cpf.replace(/\D/g, "");
+      if (!profile?.birth_date && extra.birth_date) upd.birth_date = extra.birth_date;
+      if (!profile?.phone && extra.phone) upd.phone = extra.phone.replace(/\D/g, "");
+      if (!profile?.areas?.length && extra.areas.length) upd.areas = extra.areas;
+      if (!profile?.address) upd.address = [billing.line1, billing.line2, billing.city, billing.state, formatCep(billing.postal_code)].filter(Boolean).join(", ");
+      if (needTerms && extra.terms) upd.terms_accepted_at = new Date().toISOString();
+      if (Object.keys(upd).length) {
+        const { error: pErr } = await supabase.from("profiles").update(upd as any).eq("user_id", user.id);
+        if (pErr) {
+          setSubmitting(false);
+          setError(/cpf/i.test(pErr.message) ? "CPF já cadastrado na plataforma." : "Não foi possível salvar seus dados de cadastro.");
+          return;
+        }
+        void refreshProfile();
+      }
+    }
     if (beta) {
       try {
         const { error: betaErr } = await supabase.rpc("beta_simulate_checkout", {
@@ -839,6 +888,43 @@ function CheckoutForm({
 
   return (
     <div className="space-y-6">
+      {(needBirth || needPhone || needAreas || needTerms) && (
+        <Card className="p-5 space-y-4">
+          <div>
+            <h3 className="font-semibold text-sm">Complete seu cadastro</h3>
+            <p className="text-xs text-muted-foreground">Alguns dados não vieram do seu acesso pelo Google. Preencha para concluir.</p>
+          </div>
+          <div className="grid gap-3">
+            {needBirth && (
+              <div>
+                <Label htmlFor="xb">Data de nascimento *</Label>
+                <Input id="xb" type="date" value={extra.birth_date} onChange={(e) => setExtra((x) => ({ ...x, birth_date: e.target.value }))} />
+              </div>
+            )}
+            {needPhone && (
+              <div>
+                <Label htmlFor="xp">Celular *</Label>
+                <Input id="xp" inputMode="tel" placeholder="(XX) XXXXX-XXXX" value={formatPhone(extra.phone)} onChange={(e) => setExtra((x) => ({ ...x, phone: e.target.value }))} />
+              </div>
+            )}
+            {needAreas && (
+              <div>
+                <Label>Áreas de interesse (opcional)</Label>
+                <AreaSelector selected={extra.areas} onChange={(a: string[]) => setExtra((x) => ({ ...x, areas: a }))} max={3} />
+              </div>
+            )}
+            {needTerms && (
+              <div className="flex items-start gap-2">
+                <Checkbox id="xt" checked={extra.terms} onCheckedChange={(v) => setExtra((x) => ({ ...x, terms: v === true }))} className="mt-0.5" />
+                <label htmlFor="xt" className="text-sm text-muted-foreground leading-tight">
+                  Li e concordo com os{" "}
+                  <Link to="/termos?tipo=alunos" target="_blank" className="text-primary hover:underline font-medium">Termos de Uso</Link> *
+                </label>
+              </div>
+            )}
+          </div>
+        </Card>
+      )}
       <Card className="p-5 space-y-4">
         <h3 className="font-semibold text-sm">Dados de cobrança</h3>
         <div className="grid gap-3">

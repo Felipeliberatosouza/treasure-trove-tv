@@ -35,6 +35,11 @@ interface UserWithRole {
   accepts_marketing: boolean;
   birth_date?: string | null;
   cpf?: string | null;
+  phone?: string | null;
+  phone_verified?: boolean | null;
+  areas?: string[] | null;
+  address?: string | null;
+  terms_accepted_at?: string | null;
   contract_signed_at?: string | null;
   contract_expires_at?: string | null;
   contract_status?: string | null;
@@ -126,7 +131,7 @@ const AdminUsersTab = () => {
 
   const fetchUsers = async () => {
     setLoading(true);
-    const { data: profiles } = await supabase.from("profiles").select("user_id, name, email, created_at, referral_code, active, accepts_marketing, birth_date, cpf");
+    const { data: profiles } = (await supabase.from("profiles").select("user_id, name, email, created_at, referral_code, active, accepts_marketing, birth_date, cpf, phone, phone_verified, areas, address, terms_accepted_at")) as any;
     const { data: roles } = await supabase.from("user_roles").select("user_id, role");
     const { data: contracts } = await supabase.from("teacher_contracts" as any).select("teacher_id, signed_at, expires_at, status, contract_text, signature_name, signature_cpf").eq("status", "active");
     const { data: trials } = await supabase
@@ -384,7 +389,7 @@ const AdminUsersTab = () => {
         <p className="text-sm text-muted-foreground">Carregando...</p>
       ) : (
         <div className="rounded-lg border border-border overflow-x-scroll overflow-y-scroll max-h-[70vh] scrollbar-always">
-          <Table>
+          <table className="w-full caption-bottom text-sm">
             <TableHeader>
               <TableRow>
                 <TableHead>Código</TableHead>
@@ -393,7 +398,11 @@ const AdminUsersTab = () => {
                 <TableHead>CPF</TableHead>
                 <TableHead>Papel</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Aceita e-mails</TableHead>
+                <TableHead>Celular</TableHead>
+                <TableHead>Áreas de interesse</TableHead>
+                <TableHead>Endereço</TableHead>
+                <TableHead>Aceite dos Termos de Uso</TableHead>
+                <TableHead>Aceite de E-mail</TableHead>
                 <TableHead>Contrato</TableHead>
                 <TableHead>Teste Grátis</TableHead>
                 <TableHead className="text-right">Créditos de IA usados</TableHead>
@@ -417,6 +426,16 @@ const AdminUsersTab = () => {
                       <Badge variant="outline" className="border-green-500/30 text-green-500">Ativo</Badge>
                     ) : (
                       <Badge variant="outline" className="border-destructive/30 text-destructive">Inativo</Badge>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-xs whitespace-nowrap">{u.phone ? <>{u.phone.replace(/\D/g, "").replace(/^(\d{2})(\d{5})(\d{4})$/, "($1) $2-$3")}{u.phone_verified ? "" : " (não verificado)"}</> : "—"}</TableCell>
+                  <TableCell className="text-xs min-w-[180px]">{u.areas?.length ? u.areas.join(", ") : "—"}</TableCell>
+                  <TableCell className="text-xs min-w-[200px]">{u.address || "—"}</TableCell>
+                  <TableCell>
+                    {u.terms_accepted_at ? (
+                      <Badge variant="outline" className="border-green-500/30 text-green-500 whitespace-nowrap">Sim · {new Date(u.terms_accepted_at).toLocaleDateString("pt-BR")}</Badge>
+                    ) : (
+                      <Badge variant="outline" className="border-muted-foreground/30 text-muted-foreground">Não</Badge>
                     )}
                   </TableCell>
                   <TableCell>
@@ -571,13 +590,13 @@ const AdminUsersTab = () => {
               ))}
               {filtered.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={11} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={19} className="text-center text-muted-foreground py-8">
                     Nenhum usuário encontrado.
                   </TableCell>
                 </TableRow>
               )}
             </TableBody>
-          </Table>
+          </table>
         </div>
       )}
 

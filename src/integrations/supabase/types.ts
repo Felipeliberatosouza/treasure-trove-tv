@@ -488,6 +488,7 @@ export type Database = {
           fingerprint: string | null
           id: string
           last_seen_at: string
+          lovable_prompt: string | null
           occurrences: number
           origin: string
           page_url: string | null
@@ -497,6 +498,10 @@ export type Database = {
           reward_granted_at: string | null
           stack_trace: string | null
           status: string
+          triage_category: string | null
+          triage_decision: string | null
+          triage_summary: string | null
+          triaged_at: string | null
           updated_at: string
           user_id: string | null
         }
@@ -510,6 +515,7 @@ export type Database = {
           fingerprint?: string | null
           id?: string
           last_seen_at?: string
+          lovable_prompt?: string | null
           occurrences?: number
           origin?: string
           page_url?: string | null
@@ -519,6 +525,10 @@ export type Database = {
           reward_granted_at?: string | null
           stack_trace?: string | null
           status?: string
+          triage_category?: string | null
+          triage_decision?: string | null
+          triage_summary?: string | null
+          triaged_at?: string | null
           updated_at?: string
           user_id?: string | null
         }
@@ -532,6 +542,7 @@ export type Database = {
           fingerprint?: string | null
           id?: string
           last_seen_at?: string
+          lovable_prompt?: string | null
           occurrences?: number
           origin?: string
           page_url?: string | null
@@ -541,6 +552,10 @@ export type Database = {
           reward_granted_at?: string | null
           stack_trace?: string | null
           status?: string
+          triage_category?: string | null
+          triage_decision?: string | null
+          triage_summary?: string | null
+          triaged_at?: string | null
           updated_at?: string
           user_id?: string | null
         }

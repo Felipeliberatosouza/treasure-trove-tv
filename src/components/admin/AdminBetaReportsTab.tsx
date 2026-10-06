@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Bug, Bot, User, Loader2, Gift, RefreshCw, Download } from "lucide-react";
+import { Bug, Bot, User, Loader2, Gift, RefreshCw, Download, Wand2, Scale, Wrench } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useBetaMode, saveBetaMode } from "@/hooks/useBetaMode";
@@ -28,7 +28,14 @@ type Report = {
   reward_credits: number;
   reward_granted_at: string | null;
   created_at: string;
+  triage_category: string | null;
+  triage_summary: string | null;
+  triage_decision: string | null;
+  lovable_prompt: string | null;
 };
+
+const LOVABLE_PROJECT_URL = "https://lovable.dev/projects/68436f82-f702-4899-a1d3-852ff42b3ad3";
+const CAT: Record<string, string> = { negocio: "Decisão de negócio", tecnico: "Técnico", auto_resolvido: "Resolvido automaticamente", descartar: "Descartado pela IA" };
 
 const STATUS: Record<string, string> = {
   pendente: "Pendente",
@@ -51,6 +58,8 @@ export default function AdminBetaReportsTab() {
   const [loading, setLoading] = useState(true);
   const [origin, setOrigin] = useState<"todos" | "usuario" | "automatico">("todos");
   const [status, setStatus] = useState<string>("pendente");
+  const [cat, setCat] = useState<"negocio" | "tecnico" | "todos">("negocio");
+  const [triaging, setTriaging] = useState(false);
   const [open, setOpen] = useState<string | null>(null);
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [grant, setGrant] = useState<Record<string, number>>({});
@@ -70,7 +79,22 @@ export default function AdminBetaReportsTab() {
     setReports((data ?? []) as Report[]);
     setLoading(false);
   }, []);
-  useEffect(() => { void load(); }, [load]);
+  const triage = useCallback(async (silent = false) => {
+    setTriaging(true);
+    const { data, error } = await supabase.functions.invoke("triage-bug-reports", { body: {} });
+    setTriaging(false);
+    if (error || data?.error) { if (!silent) toast.error(data?.error ?? "Não foi possível analisar os reportes."); return; }
+    if (data?.done) { await load(); if (!silent) toast.success(`${data.done} reporte(s) analisado(s).`); }
+  }, [load]);
+  useEffect(() => { void load().then(() => triage(true)); }, [load, triage]);
+
+  const solveWithLovable = async (r: Report) => {
+    const text = r.lovable_prompt ?? `Corrija o problema reportado: ${r.description ?? r.error_message ?? ""} (página ${r.page_url ?? ""})`;
+    try { await navigator.clipboard.writeText(text); toast.success("Instrução copiada. Cole no chat do Lovable e envie."); }
+    catch { toast.message("Copie a instrução abaixo e cole no chat do Lovable."); setOpen(r.id); }
+    window.open(LOVABLE_PROJECT_URL, "_blank", "noopener");
+    if (r.status === "pendente") void update(r, { status: "em_analise" });
+  };
 
   const saveFlag = async (next: boolean) => {
     setEnabled(next);
@@ -80,8 +104,9 @@ export default function AdminBetaReportsTab() {
   };
 
   const filtered = useMemo(
-    () => reports.filter((r) => (origin === "todos" || r.origin === origin) && (status === "todos" || r.status === status)),
-    [reports, origin, status],
+    () => reports.filter((r) => (origin === "todos" || r.origin === origin) && (status === "todos" || r.status === status)
+      && (cat === "todos" || (cat === "negocio" ? r.triage_category === "negocio" : r.triage_category !== "negocio"))),
+    [reports, origin, status, cat],
   );
   const counts = useMemo(() => ({
     pendUser: reports.filter((r) => r.origin === "usuario" && r.status === "pendente").length,
@@ -150,6 +175,15 @@ export default function AdminBetaReportsTab() {
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
+        <Button size="sm" variant={cat === "negocio" ? "default" : "outline"} onClick={() => setCat("negocio")}><Scale className="h-4 w-4 mr-1" />Precisam da sua decisão</Button>
+        <Button size="sm" variant={cat === "tecnico" ? "default" : "outline"} onClick={() => setCat("tecnico")}><Wrench className="h-4 w-4 mr-1" />Técnicos para corrigir</Button>
+        <Button size="sm" variant={cat === "todos" ? "default" : "outline"} onClick={() => setCat("todos")}>Todos</Button>
+        <Button size="sm" variant="outline" disabled={triaging} onClick={() => triage(false)}>
+          {triaging ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Wand2 className="h-4 w-4 mr-1" />}Analisar com IA
+        </Button>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2">
         {(["todos", "usuario", "automatico"] as const).map((o) => (
           <Button key={o} size="sm" variant={origin === o ? "default" : "outline"} onClick={() => setOrigin(o)}>
             {o === "todos" ? "Todas as origens" : o === "usuario" ? "Usuários" : "Automáticos"}
@@ -188,8 +222,16 @@ export default function AdminBetaReportsTab() {
                   </div>
                   <p className="mt-1 truncate text-sm font-medium">{r.description || r.error_message}</p>
                   <p className="truncate text-xs text-muted-foreground">{r.page_url}</p>
+                  {r.triage_category && <Badge variant="secondary" className="mt-1">{CAT[r.triage_category] ?? r.triage_category}</Badge>}
+                  {r.triage_summary && <p className="mt-1 text-xs">{r.triage_summary}</p>}
+                  {r.triage_decision && <p className="mt-1 text-xs font-medium text-primary">Decisão: {r.triage_decision}</p>}
                 </div>
               </button>
+              {r.status !== "resolvido" && r.status !== "descartado" && r.triage_category !== "auto_resolvido" && (
+                <Button size="sm" className="mt-3 w-full sm:w-auto" onClick={() => solveWithLovable(r)}>
+                  <Wand2 className="h-4 w-4 mr-1" />Resolver com o Lovable
+                </Button>
+              )}
 
               {open === r.id && (
                 <div className="mt-4 space-y-3 border-t pt-4 text-sm">
@@ -200,6 +242,10 @@ export default function AdminBetaReportsTab() {
                     {r.description && <div className="sm:col-span-2"><dt className="text-xs text-muted-foreground">Relato do usuário</dt><dd className="whitespace-pre-wrap">{r.description}</dd></div>}
                     {r.error_message && <div className="sm:col-span-2"><dt className="text-xs text-muted-foreground">Mensagem de erro</dt><dd className="font-mono text-xs break-all">{r.error_message}</dd></div>}
                   </dl>
+                  {r.lovable_prompt && (
+                    <div><p className="text-xs text-muted-foreground">Instrução para o Lovable</p>
+                      <pre className="max-h-64 overflow-auto whitespace-pre-wrap rounded bg-muted p-3 text-xs">{r.lovable_prompt}</pre></div>
+                  )}
                   {r.stack_trace && (
                     <div><p className="text-xs text-muted-foreground">Rastreamento técnico</p>
                       <pre className="max-h-64 overflow-auto rounded bg-muted p-3 text-xs">{r.stack_trace}</pre></div>

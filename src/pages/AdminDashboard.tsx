@@ -46,8 +46,9 @@ const tabs = [
   { id: "leads", label: "Leads do WhatsApp", icon: MessageCircle, hidden: true },
   { id: "usage-history", label: "Histórico de Uso", icon: Activity, hidden: true },
   { id: "referrals", label: "Indicações de Amigos", icon: Gift },
-  { id: "work-docs", label: "Trabalhos (Word e Slides)", icon: FileText },
-  { id: "real-exams", label: "Provas Reais", icon: FileText },
+  // Agora em Configurações → Config. de Produtos → Estratégia de Preços e em Produtos → Provas Reais
+  { id: "work-docs", label: "Trabalhos (Word e Slides)", icon: FileText, hidden: true },
+  { id: "real-exams", label: "Provas Reais", icon: FileText, hidden: true },
   { id: "support-agent", label: "Atendimento Virtual", icon: MessageSquare },
   { id: "beta-reports", label: "Reportes da Versão Beta", icon: Bug },
   { id: "cancellations", label: "Cancelamentos", icon: XCircle },

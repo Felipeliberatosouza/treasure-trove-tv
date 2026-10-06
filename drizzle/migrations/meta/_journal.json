@@ -225,6 +225,13 @@
       "when": 1790732402569,
       "tag": "0031_product_exam_tools",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1791290069438,
+      "tag": "0032_bug_report_triage",
+      "breakpoints": true
     }
   ]
 }

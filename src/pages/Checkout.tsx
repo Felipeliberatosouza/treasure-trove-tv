@@ -886,6 +886,43 @@ function CheckoutForm({
 
   return (
     <div className="space-y-6">
+      {(needBirth || needPhone || needAreas || needTerms) && (
+        <Card className="p-5 space-y-4">
+          <div>
+            <h3 className="font-semibold text-sm">Complete seu cadastro</h3>
+            <p className="text-xs text-muted-foreground">Alguns dados não vieram do seu acesso pelo Google. Preencha para concluir.</p>
+          </div>
+          <div className="grid gap-3">
+            {needBirth && (
+              <div>
+                <Label htmlFor="xb">Data de nascimento *</Label>
+                <Input id="xb" type="date" value={extra.birth_date} onChange={(e) => setExtra((x) => ({ ...x, birth_date: e.target.value }))} />
+              </div>
+            )}
+            {needPhone && (
+              <div>
+                <Label htmlFor="xp">Celular *</Label>
+                <Input id="xp" inputMode="tel" placeholder="(XX) XXXXX-XXXX" value={formatPhone(extra.phone)} onChange={(e) => setExtra((x) => ({ ...x, phone: e.target.value }))} />
+              </div>
+            )}
+            {needAreas && (
+              <div>
+                <Label>Áreas de interesse (opcional)</Label>
+                <AreaSelector selected={extra.areas} onChange={(a: string[]) => setExtra((x) => ({ ...x, areas: a }))} max={3} />
+              </div>
+            )}
+            {needTerms && (
+              <div className="flex items-start gap-2">
+                <Checkbox id="xt" checked={extra.terms} onCheckedChange={(v) => setExtra((x) => ({ ...x, terms: v === true }))} className="mt-0.5" />
+                <label htmlFor="xt" className="text-sm text-muted-foreground leading-tight">
+                  Li e concordo com os{" "}
+                  <Link to="/termos?tipo=alunos" target="_blank" className="text-primary hover:underline font-medium">Termos de Uso</Link> *
+                </label>
+              </div>
+            )}
+          </div>
+        </Card>
+      )}
       <Card className="p-5 space-y-4">
         <h3 className="font-semibold text-sm">Dados de cobrança</h3>
         <div className="grid gap-3">

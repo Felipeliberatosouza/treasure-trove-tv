@@ -246,6 +246,13 @@
       "when": 1791303539590,
       "tag": "0034_profiles_terms_accepted",
       "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1791312056257,
+      "tag": "0035_ai_content_slugs",
+      "breakpoints": true
     }
   ]
 }

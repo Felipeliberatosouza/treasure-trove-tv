@@ -10,7 +10,8 @@ import { Button } from "@/components/ui/button";
 import { fetchKitById, type KitResponse } from "@/lib/revisionKit";
 
 const ConteudoIA = () => {
-  const { id } = useParams<{ id: string }>();
+  const { id: idParam, slug } = useParams<{ id?: string; slug?: string }>();
+  const id = idParam ?? slug;
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [result, setResult] = useState<KitResponse | null>(null);
@@ -24,10 +25,18 @@ const ConteudoIA = () => {
       return;
     }
     void fetchKitById(id).then((data) => {
+      if (!data && slug && !idParam) {
+        navigate("/", { replace: true });
+        return;
+      }
       setResult(data);
       setLoading(false);
+      // Endereço curto e comercial: /nome_do_assunto
+      if (data?.slug && data.slug !== slug) {
+        navigate(`/${data.slug}${window.location.search}`, { replace: true });
+      }
     });
-  }, [id]);
+  }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">

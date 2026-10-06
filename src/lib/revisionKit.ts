@@ -146,11 +146,13 @@ export async function fetchKitStatus(): Promise<KitStatus> {
   return payload as KitStatus;
 }
 
-export async function fetchKitById(canonicalId: string): Promise<KitResponse | null> {
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export async function fetchKitById(idOrSlug: string): Promise<(KitResponse & { slug?: string | null }) | null> {
   const { data, error } = await supabase
     .from("ai_canonical_contents")
-    .select("id, kit, areas")
-    .eq("id", canonicalId)
+    .select("id, kit, areas, slug")
+    .eq(UUID_RE.test(idOrSlug) ? "id" : "slug", idOrSlug)
     .eq("status", "ready")
     .eq("visibility", "public_canonical")
     .maybeSingle();
@@ -158,6 +160,7 @@ export async function fetchKitById(canonicalId: string): Promise<KitResponse | n
   return {
     source: "cache",
     canonical_id: data.id,
+    slug: (data as { slug?: string | null }).slug ?? null,
     areas: ((data as { areas?: string[] | null }).areas ?? []) as string[],
     kit: data.kit as unknown as RevisionKit,
   };

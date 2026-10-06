@@ -32,6 +32,7 @@ export type Database = {
           nivel: string
           product_keys: string[]
           prompt_version: string
+          slug: string | null
           status: string
           subtopicos: string[] | null
           template_version: string
@@ -55,6 +56,7 @@ export type Database = {
           nivel?: string
           product_keys?: string[]
           prompt_version?: string
+          slug?: string | null
           status?: string
           subtopicos?: string[] | null
           template_version?: string
@@ -78,6 +80,7 @@ export type Database = {
           nivel?: string
           product_keys?: string[]
           prompt_version?: string
+          slug?: string | null
           status?: string
           subtopicos?: string[] | null
           template_version?: string
@@ -4263,6 +4266,7 @@ export type Database = {
       is_login_blocked: { Args: { check_email: string }; Returns: boolean }
       is_teacher: { Args: { _user_id: string }; Returns: boolean }
       is_user_blocked: { Args: { _user_id: string }; Returns: boolean }
+      make_content_slug: { Args: { _txt: string }; Returns: string }
       preview_cashback_usage: {
         Args: { _cart_amount: number; _user_id: string }
         Returns: Json

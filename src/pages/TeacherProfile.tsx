@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import ConteudoIA from "@/pages/ConteudoIA";
 import { Video, Star, ArrowLeft, Eye, Pencil, Save, X, Upload, Loader2, Plus, Trash2, Briefcase, GraduationCap, Clock, GripVertical, ArrowUpDown, Search, MessageCircle, CalendarDays } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -250,6 +251,9 @@ const TeacherProfile = () => {
       </div>
     );
   }
+
+  // Sem professor com esse endereço: tenta abrir um material pelo nome do assunto.
+  if (notFound) return <ConteudoIA />;
 
   if (notFound || !teacher) {
     return (

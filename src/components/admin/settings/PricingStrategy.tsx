@@ -96,7 +96,7 @@ export default function PricingStrategy() {
   }, [loadLive]);
 
   const rows = useMemo(() => FEATURES.map((f) => {
-    const real = wdp && (f.key === "trabalho_geracao" || f.key === "trabalho_interacao")
+    const real: { credits?: number; price?: number } = wdp && (f.key === "trabalho_geracao" || f.key === "trabalho_interacao")
       ? (f.key === "trabalho_geracao"
         ? { credits: wdp.credits_generation, price: wdp.price_generation }
         : { credits: wdp.credits_interaction, price: wdp.price_interaction })

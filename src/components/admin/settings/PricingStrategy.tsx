@@ -60,6 +60,8 @@ export default function PricingStrategy() {
   const [teacher, setTeacher] = useState<{ resource_type: string; price: number; platform_percentage: number }[]>([]);
   const [st, setSt] = useState<Strategy>({ features: {}, expenses: {} });
   const [saving, setSaving] = useState(false);
+  // Valores reais cobrados hoje nos Trabalhos (lidos pela cobrança em work-document).
+  const [wdp, setWdp] = useState<Record<string, number> | null>(null);
 
   const loadLive = useCallback(async () => {
     const [{ data: s }, { data: rp }] = await Promise.all([
@@ -78,6 +80,9 @@ export default function PricingStrategy() {
     supabase.from("platform_settings").select("value").eq("key", "pricing_strategy").maybeSingle().then(({ data }) => {
       if (data?.value) setSt({ features: {}, expenses: {}, ...(data.value as any) });
     });
+    supabase.from("platform_settings").select("value").eq("key", "work_documents_pricing").maybeSingle().then(({ data }) => {
+      setWdp((data?.value as any) || {});
+    });
     // Atualização automática quando fornecedores de IA, voz ou repasses de professores mudam.
     const ch = supabase
       .channel("pricing-strategy")
@@ -91,6 +96,12 @@ export default function PricingStrategy() {
   }, [loadLive]);
 
   const rows = useMemo(() => FEATURES.map((f) => {
+    const real = wdp && (f.key === "trabalho_geracao" || f.key === "trabalho_interacao")
+      ? (f.key === "trabalho_geracao"
+        ? { credits: wdp.credits_generation, price: wdp.price_generation }
+        : { credits: wdp.credits_interaction, price: wdp.price_interaction })
+      : {};
+    const base = { ...f, credits: Number(real.credits ?? f.credits), price: Number(real.price ?? f.price) };
     const o = st.features[f.key] || {};
     const modelId = models[f.area] || DEFAULT_MODEL;
     const m = MODEL_FACTOR[modelId] || { label: modelId, f: 1 };
@@ -99,11 +110,11 @@ export default function PricingStrategy() {
     const voice = f.voice ? (eleven ? (o.voice ?? f.voice) : f.voiceFallback) : 0;
     const extra = o.extra ?? f.extra;
     const cost = text + voice + extra;
-    const price = o.price ?? f.price;
+    const price = o.price ?? base.price;
     const margin = price - cost;
     const supplier = [f.text ? m.label : null, f.voice ? (eleven ? "ElevenLabs" : "Voz OpenAI") : null, f.extraLabel || null].filter(Boolean).join(" + ");
-    return { ...f, supplier, baseText: o.text ?? f.text, cost, price, credits: o.credits ?? f.credits, margin, pct: price > 0 ? (margin / price) * 100 : 0 };
-  }), [st, models, voiceProvider]);
+    return { ...f, supplier, baseText: o.text ?? f.text, cost, price, credits: o.credits ?? base.credits, margin, pct: price > 0 ? (margin / price) * 100 : 0 };
+  }), [st, models, voiceProvider, wdp]);
 
   const teacherRows = teacher.map((t) => {
     const platform = (Number(t.price) * Number(t.platform_percentage)) / 100;
@@ -122,6 +133,7 @@ export default function PricingStrategy() {
   });
 
   const save = async () => {
+    if (!wdp) { toast.error("Aguarde carregar os preços atuais dos Trabalhos."); return; }
     setSaving(true);
     const w = (k: string) => rows.find((r) => r.key === k)!;
     const g = w("trabalho_geracao"), it = w("trabalho_interacao");
@@ -129,6 +141,7 @@ export default function PricingStrategy() {
       supabase.from("platform_settings").upsert({ key: "pricing_strategy", value: st as any }, { onConflict: "key" }),
       // Mantém a cobrança real dos Trabalhos alinhada com esta tela.
       supabase.from("platform_settings").upsert({ key: "work_documents_pricing", value: {
+        ...wdp,
         credits_generation: g.credits, credits_interaction: it.credits,
         provider_cost_generation: Number(g.cost.toFixed(2)), provider_cost_interaction: Number(it.cost.toFixed(2)),
         price_generation: g.price, price_interaction: it.price,
@@ -194,6 +207,7 @@ export default function PricingStrategy() {
         <p><strong>Custo de referência da IA:</strong> quanto custa o texto gerado por uso com o GPT-6 Astra. É o número que você ajusta.</p>
         <p><strong>Custo real por uso:</strong> o que a plataforma paga de fato hoje, já somando a IA ativa da área, a voz e imagens/vídeo. Se a IA ativa for mais barata, este valor cai sozinho.</p>
         <p><strong>Créditos cobrados do aluno:</strong> quantos Créditos de IA o aluno gasta por uso. Não multiplica o custo — o custo é sempre por uso.</p>
+        <p><strong>Atenção:</strong> só os créditos e preços dos Trabalhos são cobrados de fato a partir desta tela. Nos demais recursos, créditos e preço são uma simulação para planejamento — o preço real das aulas fica em "Preço de Recursos Individuais" logo abaixo.</p>
         <p>Todos os valores já estão em reais (R$).</p>
       </div>
 

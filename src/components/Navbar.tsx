@@ -215,6 +215,24 @@ const Navbar = () => {
   if (user) {
     menuItems = [meuPainelItem, ...menuItems];
   }
+  // Linha de menu do topo (alunos, professores e visitantes): itens fixos.
+  const linearMenuItems: MenuItem[] = [
+    publicMenuItems[0],
+    ...(user
+      ? [
+          { label: "Revisões (Aulas)", shortLabel: "Revisões (Aulas)", href: "/minhas-revisoes" },
+          { label: "Resumos", shortLabel: "Resumos", href: "/meus-resumos" },
+          { label: "Simulados", shortLabel: "Simulados", href: "/meus-simulados" },
+          { label: "Top Questões Comentadas", shortLabel: "Top Questões Comentadas", href: "/minhas-top-questoes" },
+          { label: "Colinhas", shortLabel: "Colinhas", href: "/minhas-colinhas" },
+          { label: "Aula Particular", shortLabel: "Aula Particular", href: "/minhas-aulas-agendadas" },
+          { label: "Dúvidas", shortLabel: "Dúvidas", href: role === "teacher" ? "/dashboard/teacher?tab=doubts" : "/minhas-duvidas" },
+        ]
+      : [
+          publicMenuItems[1], publicMenuItems[3], publicMenuItems[4], publicMenuItems[5], publicMenuItems[6], publicMenuItems[7],
+          { label: "Dúvidas", shortLabel: "Dúvidas", href: "/minhas-duvidas" },
+        ]),
+  ];
 
   const alertActive = (key?: AlertKey) => {
     if (!key) return false;
@@ -403,7 +421,10 @@ const Navbar = () => {
 
         <div ref={navOuterRef} className="hidden min-w-0 flex-1 items-center justify-center overflow-hidden lg:flex">
           <div ref={navInnerRef} className="flex w-max items-center" style={{ fontSize: `${navFontPx}px`, gap: "0.85em" }}>
-          {[...menuItems, ...productMenu.map(({ children: _c, ...p }) => p as MenuItem)].map((item) => {
+          {(role === "admin"
+            ? [...menuItems, ...productMenu.map(({ children: _c, ...p }) => p as MenuItem)]
+            : linearMenuItems
+          ).map((item) => {
             if (item.children && item.children.length > 0) {
               return (
                 <div key={item.label} className="relative group">

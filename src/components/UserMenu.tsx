@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, forwardRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { User, LogOut, LayoutDashboard, ChevronDown, Sparkles } from "lucide-react";
+import { User, LogOut, LayoutDashboard, ChevronDown, Sparkles, CreditCard } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePlatformSettings, BrandingSettings } from "@/hooks/usePlatformSettings";
 import { useReferralCredits } from "@/hooks/useReferralCredits";
@@ -71,7 +71,16 @@ const UserMenu = forwardRef<HTMLDivElement>((_, forwardedRef) => {
           >
             <LayoutDashboard className="h-4 w-4" /> {role === "admin" ? "Painel Administrativo" : "Meu Painel"}
           </Link>
-          {role === "student" && (
+          {role !== "admin" && (
+            <Link
+              to="/#pricing"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-foreground hover:bg-secondary transition-colors"
+            >
+              <CreditCard className="h-4 w-4" /> Assine
+            </Link>
+          )}
+          {role !== "admin" && (
             <Link
               to="/creditos-ia"
               onClick={() => setOpen(false)}

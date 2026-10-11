@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { ShieldCheck as TrustShield, Zap as TrustZap, Lock as TrustUndo } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js";
 import { getStripe } from "@/lib/stripe";
@@ -265,6 +266,19 @@ const Checkout = () => {
             </p>
 
             <CheckoutStepper current={step} />
+
+            <ul className="mb-4 grid grid-cols-3 gap-2 text-center text-[11px] text-muted-foreground" aria-label="Garantias da compra">
+              <li className="flex flex-col items-center gap-1 rounded-lg border border-border bg-card p-2">
+                <TrustShield className="h-4 w-4 text-primary" /> Pagamento protegido
+              </li>
+              <li className="flex flex-col items-center gap-1 rounded-lg border border-border bg-card p-2">
+                <TrustZap className="h-4 w-4 text-primary" /> Acesso liberado na hora
+              </li>
+              <li className="flex flex-col items-center gap-1 rounded-lg border border-border bg-card p-2">
+                <TrustUndo className="h-4 w-4 text-primary" />
+                Dados criptografados
+              </li>
+            </ul>
 
             <Elements
               stripe={stripePromise}

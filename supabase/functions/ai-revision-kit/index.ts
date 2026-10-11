@@ -135,7 +135,7 @@ const KIT_TOOL = {
         },
         slides: {
           type: "array",
-          description: "Exatamente 7 slides: introdução, 2 slides de conceitos, 3 slides de Top Questões e encerramento.",
+          description: "7 a 10 slides: introdução, 2 a 5 slides de conceitos cobrindo TODOS os itens do assunto, 3 slides de Top Questões e encerramento.",
           items: {
             type: "object",
             properties: {
@@ -226,7 +226,7 @@ Se o conteúdo for relevante para mais de uma área, indique todas as que fizere
       model: await resolveModel("revisoes"),
       stream: false,
       // Raciocínio mínimo: reduz muito o tempo de entrega sem perder qualidade didática.
-      reasoning_effort: "low",
+      reasoning_effort: "medium",
       response_format: { type: "json_object" },
       messages: [
         { role: "system", content: system },

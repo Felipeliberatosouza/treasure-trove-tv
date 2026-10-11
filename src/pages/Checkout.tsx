@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { ShieldCheck as TrustShield, Zap as TrustZap, Lock as TrustUndo } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js";
 import { getStripe } from "@/lib/stripe";

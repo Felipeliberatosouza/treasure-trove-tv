@@ -266,6 +266,19 @@ const Checkout = () => {
 
             <CheckoutStepper current={step} />
 
+            <ul className="mb-4 grid grid-cols-3 gap-2 text-center text-[11px] text-muted-foreground" aria-label="Garantias da compra">
+              <li className="flex flex-col items-center gap-1 rounded-lg border border-border bg-card p-2">
+                <TrustShield className="h-4 w-4 text-primary" /> Pagamento protegido
+              </li>
+              <li className="flex flex-col items-center gap-1 rounded-lg border border-border bg-card p-2">
+                <TrustZap className="h-4 w-4 text-primary" /> Acesso liberado na hora
+              </li>
+              <li className="flex flex-col items-center gap-1 rounded-lg border border-border bg-card p-2">
+                <TrustUndo className="h-4 w-4 text-primary" />
+                {state.mode === "subscription" ? "Cancele quando quiser" : "Sem mensalidade"}
+              </li>
+            </ul>
+
             <Elements
               stripe={stripePromise}
               options={{

@@ -637,7 +637,7 @@ const HomeKitGenerator = ({ productKey, initialSub, productExtra, fixedHeadline,
         </div>
         <p className="mt-2 flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
           <Camera className="h-3.5 w-3.5" aria-hidden="true" />
-          Dica: tire uma foto de uma questão de prova para ver a resolução comentada, ou de um tema que você quer revisar para receber os slides.
+          Dica: tire uma foto de uma questão de prova para ver a resolução comentada, ou de um tema para gerar aula com slides, simulado, resumo, colinha, Top Questões ou trabalho.
         </p>
       </form>
 

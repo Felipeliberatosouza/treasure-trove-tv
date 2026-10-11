@@ -436,7 +436,8 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina, areas, 
     medio: "h-16 w-16 sm:h-24 sm:w-24 md:h-28 md:w-28",
     grande: "h-24 w-24 sm:h-40 sm:w-40 md:h-48 md:w-48",
   };
-  const teacherAvatar = neuralVideos[current] ? (
+  const showAvatarImage = (avatarSettings as { show_image?: boolean } | null)?.show_image === true;
+  const teacherAvatar = !showAvatarImage ? null : neuralVideos[current] ? (
     <video
       ref={neuralRef}
       key={neuralVideos[current]}
@@ -517,14 +518,16 @@ const NarratedSlidesPlayer = ({ topico, slides, canonicalId, disciplina, areas, 
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-background/30" />
         {brandOverlay}
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-2 p-4 text-center sm:gap-3 sm:p-6">
-          <AnimatedAvatar
-            avatarId={avatar.avatar_id}
-            src={avatarImage}
-            alt={`${avatar.name}, ${avatar.role_label.toLowerCase()} da Revisão Fácil`}
-            speaking={false}
-            animation={avatar.animation}
-            size="medio"
-          />
+          {showAvatarImage && (
+            <AnimatedAvatar
+              avatarId={avatar.avatar_id}
+              src={avatarImage}
+              alt={`${avatar.name}, ${avatar.role_label.toLowerCase()} da Revisão Fácil`}
+              speaking={false}
+              animation={avatar.animation}
+              size="medio"
+            />
+          )}
           <div>
             <p className="text-xs font-semibold sm:text-sm">{avatar.name}</p>
             <p className="text-[10px] text-muted-foreground sm:text-xs">{avatar.role_label}</p>

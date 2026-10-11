@@ -487,6 +487,8 @@ export interface AiAvatarSettings {
   animation?: AiAvatarAnimation;
   /** Posição e tamanho do avatar em cada tipo de slide. */
   placements?: Partial<Record<AiAvatarSlideContext, AiAvatarPlacement>>;
+  /** Se falso, os materiais mantêm só a voz do avatar, sem a imagem. Vale para todos os materiais. */
+  show_image?: boolean;
 }
 
 /** Intensidade do movimento do avatar enquanto narra. */

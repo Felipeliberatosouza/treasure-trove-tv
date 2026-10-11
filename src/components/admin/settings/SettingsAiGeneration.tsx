@@ -4,6 +4,7 @@ import SettingsAiAvatars from "./SettingsAiAvatars";
 import SettingsAiMaterials from "./SettingsAiMaterials";
 import SettingsAiProviders from "./SettingsAiProviders";
 import SettingsNeuralVideo from "./SettingsNeuralVideo";
+import SettingsAvatarVisibility from "./SettingsAvatarVisibility";
 
 type SubTab = "parametros" | "provedores" | "materiais";
 
@@ -34,6 +35,7 @@ const SettingsAiGeneration = () => {
 
       {subTab === "parametros" && (
         <>
+          <SettingsAvatarVisibility />
           <SettingsAiAvatars />
           <SettingsNeuralVideo />
         </>

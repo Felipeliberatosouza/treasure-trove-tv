@@ -554,10 +554,7 @@ const HomeKitGenerator = ({ productKey, initialSub, productExtra, fixedHeadline,
                 disabled={loading || photo.analyzing}
                 onFile={async (f) => {
                   const r = await photo.analyze(f, assunto.trim());
-                  if (r?.tipo === "tema" && r.tema) {
-                    setAssunto(r.tema);
-                    void handleSubmit(r.tema);
-                  }
+                  if (r?.tipo === "tema" && r.tema) setAssunto(r.tema);
                 }}
               />
             </div>

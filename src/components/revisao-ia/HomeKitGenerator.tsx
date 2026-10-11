@@ -324,8 +324,10 @@ const HomeKitGenerator = ({ productKey, initialSub, productExtra, fixedHeadline,
     else if (res.canonicalId) navigate(`/conteudo-ia/${res.canonicalId}`);
   }, [step, loading, steps.length, navigate, fast]);
 
-  const handleSubmit = async (overridePrompt?: string) => {
+  const handleSubmit = async (overridePrompt?: string, overrideTool?: ToolKey | null, overrideProduct?: string) => {
     const pedido = (overridePrompt ?? assunto).trim();
+    const currentTool = overrideTool !== undefined ? overrideTool : tool;
+    const currentProduct = overrideProduct ?? productKey;
     if (pedido.length < 3) return;
     const runId = runIdRef.current + 1;
     runIdRef.current = runId;
@@ -341,7 +343,7 @@ const HomeKitGenerator = ({ productKey, initialSub, productExtra, fixedHeadline,
     setNotice(null);
     setBlocked(null);
     // Documento Word e slides de trabalho seguem por outro fluxo.
-    if (tool === "trabalho") {
+    if (currentTool === "trabalho") {
       const { data, error } = await requestWork({
         tema: stripPrefix(pedido),
         disciplina: disciplina.trim() || undefined,
@@ -365,7 +367,7 @@ const HomeKitGenerator = ({ productKey, initialSub, productExtra, fixedHeadline,
       exam_date: examDate || undefined,
       nivel,
       idempotency_key: idempotencyKey,
-      product_key: productKey,
+      product_key: currentProduct,
       product_extra: productExtra?.trim() || undefined,
     });
     // Pedido cancelado ou substituído por uma nova mensagem: ignora este resultado.
@@ -645,7 +647,16 @@ const HomeKitGenerator = ({ productKey, initialSub, productExtra, fixedHeadline,
         result={photo.result}
         error={photo.error}
         onClose={photo.clear}
-        onMakeSlides={(tema) => { photo.clear(); setAssunto(tema); void handleSubmit(tema); }}
+        products={allProducts.filter((p) => p.active !== false).map((p) => ({ key: p.key, name: p.name }))}
+        defaultProduct={productKey}
+        onMake={(tema, fmt, prod) => {
+          photo.clear();
+          const chip = CHIPS.find((c) => c.key === fmt);
+          const pedido = chip ? `${chip.prefix}${tema}` : tema;
+          setTool(fmt === "revisao" ? null : (fmt as ToolKey));
+          setAssunto(pedido);
+          void handleSubmit(pedido, fmt === "revisao" ? null : (fmt as ToolKey), prod);
+        }}
       />
 
       {loading && (

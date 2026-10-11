@@ -275,7 +275,7 @@ const Checkout = () => {
               </li>
               <li className="flex flex-col items-center gap-1 rounded-lg border border-border bg-card p-2">
                 <TrustUndo className="h-4 w-4 text-primary" />
-                {state.mode === "subscription" ? "Cancele quando quiser" : "Sem mensalidade"}
+                Dados criptografados
               </li>
             </ul>
 

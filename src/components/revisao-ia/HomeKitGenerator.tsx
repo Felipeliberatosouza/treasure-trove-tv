@@ -555,12 +555,19 @@ const HomeKitGenerator = ({ productKey, initialSub, productExtra, fixedHeadline,
                 onFile={async (f) => {
                   window.setTimeout(() => document.getElementById("photo-result-panel")?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
                   const r = await photo.analyze(f, assunto.trim());
+                  const autoTool: ToolKey | null = productKey === "trabalhos" ? "trabalho" : null;
                   if (r?.tipo === "tema" && r.tema) {
-                    // Foto de conteúdo: gera o Kit Completo imediatamente.
+                    // Foto de conteúdo: gera o conteúdo completo do produto imediatamente.
                     photo.clear();
-                    setTool(null);
+                    setTool(autoTool);
                     setAssunto(r.tema);
-                    void handleSubmit(r.tema, null, productKey);
+                    void handleSubmit(r.tema, autoTool, productKey);
+                  } else if (r?.tipo === "questao" && r.tema && productKey) {
+                    // Dentro de um produto: mostra a resolução e já gera o conteúdo completo do assunto.
+                    setTool(autoTool);
+                    setAssunto(r.tema);
+                    void handleSubmit(r.tema, autoTool, productKey);
+                    window.setTimeout(() => document.getElementById("photo-result-panel")?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
                   } else {
                     window.setTimeout(() => document.getElementById("photo-result-panel")?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
                   }
@@ -653,7 +660,7 @@ const HomeKitGenerator = ({ productKey, initialSub, productExtra, fixedHeadline,
         result={photo.result}
         error={photo.error}
         onClose={photo.clear}
-        products={allProducts.filter((p) => p.active !== false).map((p) => ({ key: p.key, name: p.name }))}
+        products={productKey ? [] : allProducts.filter((p) => p.active !== false).map((p) => ({ key: p.key, name: p.name }))}
         defaultProduct={productKey}
         onMake={(tema, fmt, prod) => {
           photo.clear();

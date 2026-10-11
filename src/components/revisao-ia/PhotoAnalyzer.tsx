@@ -1,7 +1,7 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { Camera, Loader2, X, CheckCircle2, Presentation } from "lucide-react";
+import { Camera, Loader2, X, CheckCircle2, Presentation, BookOpen, FileQuestion, ListChecks, StickyNote, FileType2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
@@ -86,11 +86,54 @@ export function PhotoButton({ disabled, onFile }: { disabled?: boolean; onFile: 
   );
 }
 
+export type PhotoFormat = "revisao" | "resumo" | "simulado" | "top_questoes" | "colinha" | "trabalho";
+
+const FORMATS: { key: PhotoFormat; label: string; icon: typeof Presentation }[] = [
+  { key: "revisao", label: "Aula com slides", icon: Presentation },
+  { key: "simulado", label: "Simulado", icon: FileQuestion },
+  { key: "resumo", label: "Resumo", icon: BookOpen },
+  { key: "colinha", label: "Colinha", icon: StickyNote },
+  { key: "top_questoes", label: "Top Questões", icon: ListChecks },
+  { key: "trabalho", label: "Trabalho (Word e Slides)", icon: FileType2 },
+];
+
+function MakeChooser({ tema, products, defaultProduct, onMake }: {
+  tema: string; products: { key: string; name: string }[]; defaultProduct?: string;
+  onMake: (tema: string, fmt: PhotoFormat, product?: string) => void;
+}) {
+  const [prod, setProd] = useState<string>(defaultProduct || "");
+  useEffect(() => { setProd(defaultProduct || ""); }, [defaultProduct]);
+  return (
+    <div className="space-y-3 rounded-lg border border-border p-3">
+      <p className="text-sm font-semibold">O que você quer gerar sobre <span className="text-primary">{tema}</span>?</p>
+      {products.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-xs text-muted-foreground">Para:</span>
+          {products.map((p) => (
+            <Button key={p.key} type="button" size="sm" variant={prod === p.key ? "default" : "outline"} onClick={() => setProd(p.key)}>
+              {p.name}
+            </Button>
+          ))}
+        </div>
+      )}
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+        {FORMATS.map((f) => (
+          <Button key={f.key} type="button" variant="secondary" className="h-auto justify-start py-2.5 text-left"
+            onClick={() => onMake(tema, f.key, f.key === "trabalho" ? "trabalhos" : prod || undefined)}>
+            <f.icon className="h-4 w-4 shrink-0" /> <span className="whitespace-normal">{f.label}</span>
+          </Button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function PhotoResultPanel({
-  analyzing, preview, result, error, onClose, onMakeSlides,
+  analyzing, preview, result, error, onClose, onMake, products = [], defaultProduct,
 }: {
   analyzing: boolean; preview: string | null; result: PhotoResult | null; error: string | null;
-  onClose: () => void; onMakeSlides: (tema: string) => void;
+  onClose: () => void; onMake: (tema: string, fmt: PhotoFormat, product?: string) => void;
+  products?: { key: string; name: string }[]; defaultProduct?: string;
 }) {
   if (!analyzing && !result && !error) return null;
   return (
@@ -131,17 +174,13 @@ export function PhotoResultPanel({
               <div className="prose prose-sm max-w-none dark:prose-invert">
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>{result.solucao}</ReactMarkdown>
               </div>
-              {result.tema && (
-                <Button type="button" variant="outline" onClick={() => onMakeSlides(result.tema)}>
-                  <Presentation className="h-4 w-4" /> Gerar revisão em slides deste assunto
-                </Button>
-              )}
+              {result.tema && <MakeChooser tema={result.tema} products={products} defaultProduct={defaultProduct} onMake={onMake} />}
               <p className="text-xs text-muted-foreground">Conteúdo gerado com apoio de IA. Confira com seu material.</p>
             </div>
           )}
 
           {result?.tipo === "tema" && (
-            <p className="text-sm">Assunto: <strong>{result.tema}</strong>. Gerando os slides de revisão…</p>
+            <MakeChooser tema={result.tema} products={products} defaultProduct={defaultProduct} onMake={onMake} />
           )}
 
           {result?.tipo === "ilegivel" && <p className="text-sm text-muted-foreground">{result.solucao}</p>}

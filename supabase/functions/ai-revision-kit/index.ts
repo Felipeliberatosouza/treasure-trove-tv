@@ -12,7 +12,7 @@ const corsHeaders = {
 };
 
 const TEMPLATE_VERSION = "v5";
-const PROMPT_VERSION = "v6";
+const PROMPT_VERSION = "v7";
 const SIGNUP_CREDITS = 2;
 const ANON_FREE_USES = 1;
 
@@ -135,7 +135,7 @@ const KIT_TOOL = {
         },
         slides: {
           type: "array",
-          description: "Exatamente 7 slides: introdução, 2 slides de conceitos, 3 slides de Top Questões e encerramento.",
+          description: "7 a 10 slides: introdução, 2 a 5 slides de conceitos cobrindo TODOS os itens do assunto, 3 slides de Top Questões e encerramento.",
           items: {
             type: "object",
             properties: {
@@ -193,7 +193,14 @@ RECURSOS DIDÁTICOS (obrigatórios):
 - Use modo_visual "lousa" quando houver conta, fórmula, sequência, comparação ou raciocínio passo a passo; use "avatar" na introdução e encerramento; use "conteudo" nos demais.
 - Na lousa, use somente os tipos texto, operacao, seta, linha, circulo ou desenho. Cada passo deve ter conteúdo curto, uma ancora literal da narração e destaque. Não gere HTML, SVG ou código.
 - A imagem_prompt deve refletir o assunto e a faixa etária. Para crianças, use ilustração educativa amigável e lúdica; para adultos, visual didático mais sóbrio.
-- Não use lousa apenas como decoração: o que surge na lousa deve acompanhar a explicação falada.`;
+- Não use lousa apenas como decoração: o que surge na lousa deve acompanhar a explicação falada.
+
+REGRA DE COMPLETUDE DIDÁTICA (rigorosa, acima de qualquer limite de tamanho):
+- Antes de escrever, identifique mentalmente a estrutura canônica completa do assunto: listas de princípios, leis, etapas, fases, pilares, tipos, forças ou passos (ex.: os 5 princípios de Effectuation, as 3 leis de Newton, as 4 fases da mitose, as 5 forças de Porter).
+- TODOS os itens dessa lista devem aparecer nomeados e explicados, cada um com destaque equivalente: um bullet próprio no slide (nome do item + explicação curta), menção na narração e presença no resumo, na colinha e nos conceitos_chave. É proibido detalhar só alguns e citar os outros de passagem.
+- Distribua itens numerosos entre os slides de conceitos (no máximo 3 itens por slide), criando slides de conceitos adicionais quando necessário.
+- Use os nomes consagrados dos itens (com o termo original entre parênteses quando for estrangeiro) e confira, antes de responder, se a quantidade de itens bate com a estrutura canônica.
+- Conteúdo precisa ser correto e atual; prefira precisão a frases genéricas.`;
   const user = `Monte um Kit de Revisão completo.
 Assunto informado pelo aluno: ${params.assunto}
 Disciplina: ${params.disciplina || "não informada"}
@@ -201,7 +208,7 @@ Curso: ${params.curso || "não informado"}
 Instituição: ${params.instituicao || "não informada"}
 Profundidade: ${params.nivel === "aprofundado" ? "aprofundada" : "revisão rápida"}
 Público detectado: ${AGE_GUIDANCE[params.faixaEtaria]} (confiança ${Math.round(params.confiancaFaixaEtaria * 100)}%).
-  Gere exatamente 7 slides, com narração de no máximo 450 caracteres por slide: 1 introdução, 2 slides de conceitos-chave com exemplos do dia a dia e dicas de prova, 3 slides de Top Questões (uma questão por slide, com enunciado e resolução comentada) e 1 encerramento.
+  Gere de 7 a 10 slides, com narração de no máximo 600 caracteres por slide: 1 introdução, de 2 a 5 slides de conceitos-chave (quantos forem necessários para cobrir TODOS os itens do assunto, no máximo 3 itens por slide) com exemplos do dia a dia e dicas de prova, 3 slides de Top Questões (uma questão por slide, com enunciado e resolução comentada) e 1 encerramento.
 Em cada slide, escreva uma narração fluida em português brasileiro informal e uma direção de imagem didática diretamente relacionada ao tópico (no primeiro e no último slide a imagem é apenas de ambiente, sem conteúdo escrito).
 
 CLASSIFICAÇÃO POR ÁREA (obrigatória): no campo "areas", escolha entre 1 e 3 áreas desta lista de áreas de curso cadastradas na plataforma, copiando o nome EXATAMENTE como aparece:
@@ -219,7 +226,7 @@ Se o conteúdo for relevante para mais de uma área, indique todas as que fizere
       model: await resolveModel("revisoes"),
       stream: false,
       // Raciocínio mínimo: reduz muito o tempo de entrega sem perder qualidade didática.
-      reasoning_effort: "low",
+      reasoning_effort: "medium",
       response_format: { type: "json_object" },
       messages: [
         { role: "system", content: system },

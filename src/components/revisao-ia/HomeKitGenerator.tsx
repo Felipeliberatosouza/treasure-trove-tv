@@ -553,8 +553,17 @@ const HomeKitGenerator = ({ productKey, initialSub, productExtra, fixedHeadline,
               <PhotoButton
                 disabled={loading || photo.analyzing}
                 onFile={async (f) => {
+                  window.setTimeout(() => document.getElementById("photo-result-panel")?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
                   const r = await photo.analyze(f, assunto.trim());
-                  if (r?.tipo === "tema" && r.tema) setAssunto(r.tema);
+                  if (r?.tipo === "tema" && r.tema) {
+                    // Foto de conteúdo: gera o Kit Completo imediatamente.
+                    photo.clear();
+                    setTool(null);
+                    setAssunto(r.tema);
+                    void handleSubmit(r.tema, null, productKey);
+                  } else {
+                    window.setTimeout(() => document.getElementById("photo-result-panel")?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
+                  }
                 }}
               />
             </div>

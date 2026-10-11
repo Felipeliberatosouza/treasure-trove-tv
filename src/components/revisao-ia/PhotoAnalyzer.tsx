@@ -137,7 +137,7 @@ export function PhotoResultPanel({
 }) {
   if (!analyzing && !result && !error) return null;
   return (
-    <div className="mx-auto mt-6 max-w-3xl text-left">
+    <div id="photo-result-panel" className="mx-auto mt-6 max-w-3xl scroll-mt-24 text-left">
       <Card>
         <CardContent className="space-y-4 p-5">
           <div className="flex items-start justify-between gap-3">
@@ -183,7 +183,12 @@ export function PhotoResultPanel({
             <MakeChooser tema={result.tema} products={products} defaultProduct={defaultProduct} onMake={onMake} />
           )}
 
-          {result?.tipo === "ilegivel" && <p className="text-sm text-muted-foreground">{result.solucao}</p>}
+          {result?.tipo === "ilegivel" && (
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">{result.solucao}</p>
+              <p className="text-sm font-medium">Toque em <strong>Foto</strong> para enviar outra imagem.</p>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

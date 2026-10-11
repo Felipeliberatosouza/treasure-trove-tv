@@ -225,10 +225,51 @@ const InviteFriendsPanel = ({ variant = "hero", className, eyebrow }: Props) => 
         </div>
       </div>
 
-      <Button className="w-full gap-2" onClick={() => copy(referralLink, "Link de convite")}>
-        <Copy className="h-4 w-4" />
-        Copiar link de convite
-      </Button>
+      {user && (
+        <div className="grid grid-cols-3 gap-2 text-center">
+          <div className="rounded-lg border border-border bg-card p-2">
+            <p className="text-lg font-bold">{invites.length}</p>
+            <p className="text-[11px] text-muted-foreground">Convites recentes</p>
+          </div>
+          <div className="rounded-lg border border-border bg-card p-2">
+            <p className="text-lg font-bold text-primary">{rewardedCount}</p>
+            <p className="text-[11px] text-muted-foreground">Amigos premiados</p>
+          </div>
+          <div className="rounded-lg border border-border bg-card p-2">
+            <p className="text-lg font-bold">{percent}%</p>
+            <p className="text-[11px] text-muted-foreground">Cashback por amigo</p>
+          </div>
+        </div>
+      )}
+
+      <div className="grid gap-2 sm:grid-cols-2">
+        <Button asChild size="lg" className="w-full gap-2">
+          <a href={`https://wa.me/?text=${encodeURIComponent(shareText)}`} target="_blank" rel="noopener noreferrer">
+            <Send className="h-4 w-4" />
+            Convidar pelo WhatsApp
+          </a>
+        </Button>
+        <Button
+          size="lg"
+          variant="outline"
+          className="w-full gap-2"
+          onClick={async () => {
+            if (typeof navigator !== "undefined" && "share" in navigator) {
+              try {
+                await navigator.share({ title: platformName, text: shareText, url: referralLink });
+                return;
+              } catch {
+                /* cancelado: cai para copiar */
+              }
+            }
+            copy(referralLink, "Link de convite");
+          }}
+        >
+          <Copy className="h-4 w-4" />
+          Compartilhar ou copiar link
+        </Button>
+      </div>
+      <p className="text-center text-[11px] text-muted-foreground">A mensagem já vai pronta com o seu link. É só escolher o amigo e enviar.</p>
 
       {account?.referral_code && (
         <button

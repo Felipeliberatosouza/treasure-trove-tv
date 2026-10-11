@@ -102,7 +102,21 @@ export default function ProductPage() {
             <p className="text-sm font-medium uppercase tracking-wide text-primary">{product.name}</p>
             <p className="mt-2 text-muted-foreground">{product.page_intro || product.description}</p>
           </div>
-
+          <ol className="mx-auto mt-6 grid max-w-4xl gap-3 sm:grid-cols-3" aria-label="Como funciona">
+            {[
+              { t: "Diga o assunto", d: "Digite o tema ou envie uma foto da questão." },
+              { t: "Escolha o formato", d: product.key === "trabalhos" ? "Documento Word, slides ou os dois." : "Aula com slides, simulado, resumo, colinha ou Top Questões." },
+              { t: "Estude na hora", d: "Seu material fica pronto em poucos minutos e salvo na sua conta." },
+            ].map((s, i) => (
+              <li key={s.t} className="flex items-start gap-3 rounded-xl border border-border bg-card p-4 text-left">
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">{i + 1}</span>
+                <span>
+                  <span className="block text-sm font-semibold">{s.t}</span>
+                  <span className="block text-xs text-muted-foreground">{s.d}</span>
+                </span>
+              </li>
+            ))}
+          </ol>
         </section>
 
         {["enem","vestibulares","oab","concursos"].includes(product.key) && <RealExamsSection productKey={product.key} productName={product.name} />}
@@ -116,7 +130,12 @@ export default function ProductPage() {
             <div className="mx-auto max-w-6xl">
               <h2 className="font-display text-xl font-bold">Meus materiais de {product.name}</h2>
               {mine.length === 0 ? (
-                <p className="mt-2 text-sm text-muted-foreground">Você ainda não tem materiais de {product.name}.</p>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Você ainda não tem materiais de {product.name}.{" "}
+                  <button type="button" className="font-medium text-primary underline" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
+                    Crie o primeiro agora
+                  </button>
+                </p>
               ) : (
                 <div className="mt-4 grid gap-3 sm:grid-cols-2 md:grid-cols-3">
                   {mine.map((m) => (

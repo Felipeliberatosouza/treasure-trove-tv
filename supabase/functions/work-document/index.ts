@@ -121,13 +121,18 @@ async function callGateway(system: string, user: string) {
   }
 }
 
-const SYSTEM = `Você é um redator acadêmico brasileiro que produz trabalhos escolares e universitários em português do Brasil.
+const SYSTEM = `Você é um redator acadêmico brasileiro sênior que produz trabalhos escolares e universitários de alta qualidade em português do Brasil.
+Antes de escrever, planeje internamente: identifique TODOS os conceitos, princípios, etapas, tipos ou itens que o tema exige (ex.: se o tema tem 5 princípios, os 5 devem aparecer) e distribua-os nas seções e slides.
 Regras:
-- Escreva conteúdo original, claro e bem estruturado, adequado ao nível informado.
+- Escreva conteúdo original, claro, aprofundado e bem estruturado, adequado ao nível informado. Nada de respostas superficiais ou genéricas.
+- Cobertura completa: nenhum item de uma lista/enumeração do tema pode ficar de fora ou apenas citado; cada um recebe definição, explicação e exemplo concreto.
+- Estrutura acadêmica (padrão ABNT): introdução com contextualização, problema e objetivos; desenvolvimento em 4 a 7 seções; conclusão retomando objetivos; referências.
+- Cada seção do Word deve ter de 3 a 5 parágrafos desenvolvidos (4 a 7 frases cada), com exemplos e conexões entre ideias.
 - Nunca cite pessoas físicas ou empresas reais de forma polêmica; evite religião, política partidária e futebol.
-- Não invente dados estatísticos específicos nem referências falsas: nas referências, indique apenas obras e fontes amplamente conhecidas ou oriente a consulta ao material da disciplina.
-- O documento Word deve ter seções completas com parágrafos desenvolvidos.
-- Os slides devem ser objetivos: 3 a 5 bullets curtos por slide e uma nota do apresentador.`;
+- Não invente dados estatísticos específicos nem referências falsas: nas referências, indique apenas obras e autores reais e amplamente reconhecidos no tema.
+- Slides: 10 a 14 slides (capa, introdução, um slide por conceito/item principal, exemplos, síntese e conclusão). Quando um conceito tiver vários itens, crie um slide por item ou um slide que mostre TODOS com o mesmo destaque.
+- Cada slide tem 3 a 5 bullets informativos (frases curtas e completas, não palavras soltas) e uma nota do apresentador explicativa.
+- Revise antes de responder: confira se todos os itens do tema foram cobertos com o mesmo nível de detalhe.`;
 
 async function handle(req: Request, body: any): Promise<{ status: number; payload: unknown }> {
   const admin = createClient(

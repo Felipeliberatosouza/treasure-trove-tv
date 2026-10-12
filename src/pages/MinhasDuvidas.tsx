@@ -345,7 +345,7 @@ const MinhasDuvidas = () => {
             <div className="rounded-xl border border-border bg-card p-10 text-center space-y-4">
               <HelpCircle className="mx-auto h-12 w-12 text-muted-foreground/40" />
               <p className="text-muted-foreground">
-                Você ainda não enviou nenhuma dúvida. Abra uma aula e toque em "Tirar dúvida" para falar com o professor.
+                Você ainda não enviou nenhuma dúvida. Abra uma aula e toque em "Tire suas Dúvidas" para falar com o professor.
               </p>
               <div className="flex flex-wrap justify-center gap-2">
                 <a href="/revisoes" className="rounded-full border border-border px-4 py-2 text-sm font-medium hover:border-primary/60 hover:text-primary">Aulas mais acessadas</a>

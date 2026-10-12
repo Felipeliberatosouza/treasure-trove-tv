@@ -308,6 +308,7 @@ const SectionCatalog = ({ sectionKey }: Props) => {
   const aiIds = useMemo(() => items.filter((i) => i._origin === "ai").map((i) => i.id), [items]);
   const aiCovers = useAiKitCovers(aiIds);
 
+  // Ordem padrão: mais acessados, depois mais bem avaliados, depois mais recentes.
   const filtered = useMemo(() => {
     const term = normalize(query.trim());
     const base = term.length === 0
@@ -320,23 +321,41 @@ const SectionCatalog = ({ sectionKey }: Props) => {
     return [...base]
       .map((i) => (aiCovers[i.id] ? { ...i, thumbnail: aiCovers[i.id] } : i))
       .sort((a, b) => {
-        const aw = watchedIds.has(a.id) ? 1 : 0;
-        const bw = watchedIds.has(b.id) ? 1 : 0;
-        if (aw !== bw) return aw - bw;
         if (b._views !== a._views) return b._views - a._views;
+        const ra = ratings[a.id]?.average || 0;
+        const rb = ratings[b.id]?.average || 0;
+        if (rb !== ra) return rb - ra;
         return b._createdAt - a._createdAt;
       });
-  }, [items, query, watchedIds, aiCovers]);
+  }, [items, query, aiCovers, ratings]);
 
   const hasAreas = !!user && studentAreas.length > 0;
+  // 1º criados pelo usuário, 2º acessados, 3º nas áreas de interesse, depois o restante.
+  const created = useMemo(
+    () => (user ? filtered.filter((i) => createdIds.has(i.id)) : []),
+    [filtered, user, createdIds],
+  );
+  const accessed = useMemo(
+    () => (user ? filtered.filter((i) => !createdIds.has(i.id) && accessedIds.has(i.id)) : []),
+    [filtered, user, createdIds, accessedIds],
+  );
   const inAreas = useMemo(
-    () => (hasAreas ? filtered.filter((i) => i._areas.some((a) => studentAreas.includes(a))) : []),
-    [filtered, hasAreas, studentAreas],
+    () =>
+      hasAreas
+        ? filtered.filter(
+            (i) =>
+              !createdIds.has(i.id) &&
+              !accessedIds.has(i.id) &&
+              i._areas.some((a) => studentAreas.includes(a)),
+          )
+        : [],
+    [filtered, hasAreas, studentAreas, createdIds, accessedIds],
   );
-  const suggestions = useMemo(
-    () => (hasAreas ? filtered.filter((i) => !inAreas.includes(i)) : filtered),
-    [filtered, hasAreas, inAreas],
-  );
+  const suggestions = useMemo(() => {
+    if (!user) return filtered;
+    const used = new Set([...created, ...accessed, ...inAreas].map((i) => i.id));
+    return filtered.filter((i) => !used.has(i.id));
+  }, [filtered, user, created, accessed, inAreas]);
 
   const openItem = (item: Item | undefined, id: string) => {
     const found = item || items.find((i) => i.id === id);
@@ -418,10 +437,19 @@ const SectionCatalog = ({ sectionKey }: Props) => {
             </div>
           ) : (
             <>
-              {!query && continueWatching.length > 0 && (
+              {created.length > 0 && (
                 <VideoCarousel
-                  title="Continuar assistindo"
-                  videos={continueWatching}
+                  title={`Criados por você (${created.length})`}
+                  videos={created}
+                  onVideoClick={onVideoClick}
+                  ratings={ratings}
+                  watchedIds={watchedIds}
+                />
+              )}
+              {accessed.length > 0 && (
+                <VideoCarousel
+                  title={`Acessados por você (${accessed.length})`}
+                  videos={accessed}
                   onVideoClick={onVideoClick}
                   ratings={ratings}
                   watchedIds={watchedIds}
@@ -429,7 +457,7 @@ const SectionCatalog = ({ sectionKey }: Props) => {
               )}
               {inAreas.length > 0 && (
                 <VideoCarousel
-                  title={`${section.label} nas suas áreas de interesse (${inAreas.length})`}
+                  title={`Nas suas áreas de interesse (${inAreas.length})`}
                   videos={inAreas}
                   onVideoClick={onVideoClick}
                   ratings={ratings}
@@ -438,11 +466,7 @@ const SectionCatalog = ({ sectionKey }: Props) => {
               )}
               {suggestions.length > 0 && (
                 <VideoCarousel
-                  title={
-                    hasAreas
-                      ? `Sugestões para você (${suggestions.length})`
-                      : `Todos os conteúdos (${suggestions.length})`
-                  }
+                  title={`Mais acessados e bem avaliados (${suggestions.length})`}
                   videos={suggestions}
                   onVideoClick={onVideoClick}
                   ratings={ratings}

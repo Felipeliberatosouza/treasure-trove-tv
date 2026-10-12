@@ -69,6 +69,8 @@ const SectionCatalog = ({ sectionKey }: Props) => {
   const [watchedIds, setWatchedIds] = useState<Set<string>>(new Set());
   const [continueWatching, setContinueWatching] = useState<Item[]>([]);
   const [ratings, setRatings] = useState<Record<string, { average: number; count: number }>>({});
+  const [createdIds, setCreatedIds] = useState<Set<string>>(new Set());
+  const [accessedIds, setAccessedIds] = useState<Set<string>>(new Set());
 
   const studentAreas = useMemo<string[]>(
     () => ((profile as any)?.areas as string[] | undefined) ?? [],
@@ -315,6 +317,15 @@ const SectionCatalog = ({ sectionKey }: Props) => {
       setItems(all);
       setRatings(ratingsMap);
       setWatchedIds(watched);
+      const createdSet = new Set<string>();
+      if (user) {
+        [...lessonRows, ...examRows].forEach((r) => { if (r.teacher_id === user.id) createdSet.add(r.id); });
+        (aiRes.data as any[]).forEach((r) => { if (r.created_by === user.id) createdSet.add(r.id); });
+      }
+      const accessedSet = new Set<string>(progressMap.keys());
+      (((accessLogRes as any).data || []) as any[]).forEach((r) => r.lesson_id && accessedSet.add(r.lesson_id));
+      setCreatedIds(createdSet);
+      setAccessedIds(accessedSet);
       setContinueWatching(
         all
           .filter((i) => {

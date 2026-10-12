@@ -95,19 +95,47 @@ const SectionCatalog = ({ sectionKey }: Props) => {
         return q;
       };
 
-      const [lessonsRes, examsRes, aiRes] = await Promise.all([
+      const aiCols = "id, assunto, disciplina, areas, kit, updated_at, product_keys, created_by";
+      const [lessonsRes, examsRes, aiPublicRes, aiOwnRes, accessLogRes] = await Promise.all([
         buildQuery("lessons"),
         buildQuery("exam_solutions"),
         supabase
           .from("ai_canonical_contents")
-          .select("id, assunto, disciplina, areas, kit, updated_at, product_keys")
+          .select(aiCols)
           .eq("status", "ready")
           .eq("visibility", "public_canonical")
           .order("updated_at", { ascending: false })
           .limit(120),
+        user
+          ? supabase
+              .from("ai_canonical_contents")
+              .select(aiCols)
+              .eq("status", "ready")
+              .eq("created_by", user.id)
+              .order("updated_at", { ascending: false })
+              .limit(60)
+          : Promise.resolve({ data: [] as any[] }),
+        user
+          ? (() => {
+              let q: any = supabase
+                .from("material_access_log")
+                .select("lesson_id")
+                .eq("user_id", user.id)
+                .limit(500);
+              if (section.metaType) q = q.eq("material_type", section.metaType);
+              return q;
+            })()
+          : Promise.resolve({ data: [] as any[] }),
       ]);
 
       if (cancelled) return;
+
+      // Une conteúdos públicos com os criados pelo próprio usuário (sem duplicar).
+      const aiMap = new Map<string, any>();
+      [...(((aiOwnRes as any).data || []) as any[]), ...((aiPublicRes.data as any[]) || [])].forEach(
+        (r) => { if (!aiMap.has(r.id)) aiMap.set(r.id, r); },
+      );
+      const aiRes = { data: Array.from(aiMap.values()) };
 
       let lessonRows: any[] = lessonsRes.data || [];
       const examRows: any[] = examsRes.data || [];

@@ -1,3 +1,4 @@
+import "../_shared/cors-guard.ts";
 // Imagem didática persistente para cada slide de um material canônico.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 

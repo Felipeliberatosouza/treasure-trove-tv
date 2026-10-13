@@ -1,3 +1,4 @@
+import "../_shared/cors-guard.ts";
 // Recompute teacher_payments from real video_purchases
 // Aggregates per teacher + period (month) using per-resource prices and platform_percentage
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";

@@ -1,3 +1,4 @@
+import "../_shared/cors-guard.ts";
 import { resolveModel } from "../_shared/ai-models.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { sendTemplateEmail } from "../_shared/transactional-email-templates/send-email.ts";

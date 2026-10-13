@@ -1,3 +1,4 @@
+import "../_shared/cors-guard.ts";
 // Narração por IA. Kits canônicos recebem áudio persistente e reutilizável;
 // o modo legado de "Estudar com IA" continua aceitando texto autenticado.
 // Provedor de voz definido em Gestão de IA (platform_settings.ai_voice_config):

@@ -1,3 +1,4 @@
+import "../_shared/cors-guard.ts";
 // Triagem automática dos reportes da versão beta: separa problema técnico de
 // decisão de negócio e prepara a instrução pronta para corrigir no Lovable.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";

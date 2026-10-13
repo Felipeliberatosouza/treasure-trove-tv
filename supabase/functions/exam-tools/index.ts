@@ -1,3 +1,4 @@
+import "../_shared/cors-guard.ts";
 // Ferramentas de provas reais: comentários das questões (Resolução Comentada) e correção de redação/discursivas.
 import { resolveModel } from "../_shared/ai-models.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";

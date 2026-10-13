@@ -1,3 +1,4 @@
+import "../_shared/cors-guard.ts";
 // Trabalhos com IA — gera conteúdo para documento Word e slides de apresentação.
 // Ações (POST): { action: "generate" | "revise" }
 import { resolveModel } from "../_shared/ai-models.ts";
@@ -388,7 +389,7 @@ Deno.serve(async (req) => {
         result = await handle(req, body);
       } catch (e) {
         console.error("work-document error", e);
-        result = { status: 500, payload: { error: (e as Error).message || "Erro inesperado." } };
+        result = { status: 500, payload: { error: "Erro inesperado ao gerar o trabalho. Tente novamente." } };
       }
       clearInterval(ping);
       controller.enqueue(enc.encode(JSON.stringify({ type: "result", ...result }) + "\n"));

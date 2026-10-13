@@ -1,3 +1,4 @@
+import "../_shared/cors-guard.ts";
 // Edge Function: gera link de recuperação de senha via Admin API e
 // dispara o template `password_recovery` em PT-BR através do
 // pipeline de e-mails transacionais (sender e configurações vindas do banco).
@@ -42,6 +43,32 @@ Deno.serve(async (req) => {
   }
 
   const admin = createClient(supabaseUrl, serviceRole)
+
+  // Limite de envios: 5 por IP a cada 15 min (memória) e 3 por e-mail a cada 15 min (banco)
+  const neutral = () => new Response(
+    JSON.stringify({ success: true }),
+    { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+  )
+  const ip = (req.headers.get('cf-connecting-ip') || req.headers.get('x-forwarded-for') || '').split(',')[0].trim()
+  if (ip) {
+    const now = Date.now()
+    const hits = (ipHits.get(ip) || []).filter((t) => now - t < WINDOW_MS)
+    if (hits.length >= 5) return neutral()
+    hits.push(now)
+    ipHits.set(ip, hits)
+  }
+  try {
+    const since = new Date(Date.now() - WINDOW_MS).toISOString()
+    const { count } = await admin
+      .from('email_send_log')
+      .select('id', { count: 'exact', head: true })
+      .eq('template_name', 'password_recovery')
+      .eq('recipient_email', email)
+      .gte('created_at', since)
+    if ((count ?? 0) >= 3) return neutral()
+  } catch (e) {
+    console.error('rate limit check failed', e)
+  }
 
   // Verifica se o e-mail está cadastrado (em profiles)
   try {
@@ -99,7 +126,7 @@ Deno.serve(async (req) => {
       const notFound = msg.includes('not found') || msg.includes('user_not_found')
       if (notFound) {
         return new Response(
-          JSON.stringify({ success: false, exists: false, error: 'user_not_found' }),
+          JSON.stringify({ success: true }),
           { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
         )
       }

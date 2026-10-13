@@ -1,3 +1,4 @@
+import "../_shared/cors-guard.ts";
 // Edge Function: enforce-content-protection
 //
 // Registra detecções de violação de proteção de conteúdo e — se um usuário

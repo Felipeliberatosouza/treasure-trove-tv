@@ -7,6 +7,11 @@ export function useStorageUpload(bucket: string) {
   const { toast } = useToast();
 
   const upload = async (file: File, path: string): Promise<string | null> => {
+    const allowed = /^(image\/(png|jpe?g|webp|gif|svg\+xml|x-icon|vnd\.microsoft\.icon)|video\/(mp4|webm|quicktime)|application\/pdf|audio\/(mpeg|mp4|wav|webm))$/i;
+    if (file.type && !allowed.test(file.type)) {
+      toast({ title: "Tipo de arquivo não permitido", description: "Envie imagem, vídeo, áudio ou PDF.", variant: "destructive" });
+      return null;
+    }
     setUploading(true);
     try {
       const { error } = await supabase.storage

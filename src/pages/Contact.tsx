@@ -104,6 +104,7 @@ const Contact = () => {
     }
 
     setLoading(false);
+    localStorage.setItem("rf_contact_last", String(Date.now()));
     toast.success("Mensagem enviada com sucesso! Responderemos em breve.");
     setForm({ name: "", email: "", subject: "", message: "" });
   };

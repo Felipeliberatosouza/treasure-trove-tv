@@ -13,6 +13,9 @@ const corsHeaders = {
     'authorization, x-client-info, apikey, content-type',
 }
 
+const WINDOW_MS = 15 * 60 * 1000
+const ipHits = new Map<string, number[]>()
+
 serveWithCors(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })

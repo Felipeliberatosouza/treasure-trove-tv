@@ -50,12 +50,11 @@ const ForgotPassword = () => {
 
     if (error) {
       toast.error(translateAuthError(error.message));
-    } else if (data && (data as any).exists === false) {
-      toast.error("E-mail não cadastrado. Verifique o endereço informado ou crie uma conta.");
     } else {
+      void data;
       setSent(true);
       setTimeLeft(30 * 60);
-      toast.success("E-mail de recuperação enviado!");
+      toast.success("Se este e-mail estiver cadastrado, você receberá o link de recuperação.");
     }
     setLoading(false);
   };

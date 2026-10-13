@@ -52,7 +52,7 @@ Deno.serve(async (req) => {
       .maybeSingle()
     if (!existingProfile) {
       return new Response(
-        JSON.stringify({ success: false, exists: false, error: 'user_not_found' }),
+        JSON.stringify({ success: true }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
       )
     }

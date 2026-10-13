@@ -52,9 +52,23 @@ function toB64(bytes: Uint8Array) {
   return btoa(s);
 }
 
+function isSafePublicUrl(raw: string) {
+  let u: URL;
+  try { u = new URL(raw); } catch { return false; }
+  if (u.protocol !== "https:" && u.protocol !== "http:") return false;
+  const h = u.hostname.toLowerCase().replace(/^\[|\]$/g, "");
+  if (h === "localhost" || h.endsWith(".local") || h.endsWith(".internal") || h === "metadata.google.internal") return false;
+  if (/^(127\.|10\.|0\.|169\.254\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|100\.(6[4-9]|[7-9]\d|1[01]\d|12[0-7])\.)/.test(h)) return false;
+  if (h.includes(":") && (h === "::1" || h.startsWith("fc") || h.startsWith("fd") || h.startsWith("fe80") || h.startsWith("::ffff:"))) return false;
+  return true;
+}
+
 async function runChunk(db: any, examId: string, pdfUrl: string, gabarito: string, key: string, start: number) {
-  const r = await fetch(pdfUrl);
+  if (!isSafePublicUrl(pdfUrl)) throw new Error("Link do PDF não permitido. Use um endereço público.");
+  const r = await fetch(pdfUrl, { redirect: "manual" });
+  if (r.status >= 300 && r.status < 400) throw new Error("O link do PDF redireciona para outro endereço. Use o link direto do arquivo.");
   if (!r.ok) throw new Error("Não foi possível baixar o PDF (verifique o link).");
+  if (Number(r.headers.get("content-length") || 0) > 60 * 1024 * 1024) throw new Error("PDF muito grande (máximo 60 MB).");
   const src = await PDFDocument.load(new Uint8Array(await r.arrayBuffer()), { ignoreEncryption: true });
   const total = src.getPageCount();
   const end = Math.min(total, start + CHUNK_PAGES);

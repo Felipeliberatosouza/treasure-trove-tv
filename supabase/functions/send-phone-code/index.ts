@@ -63,10 +63,19 @@ Deno.serve(async (req) => {
       .eq("phone", e164Phone)
       .gte("created_at", tenMinutesAgo);
 
-    if ((count ?? 0) >= 3) {
+    const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const { count: dayCount } = await supabase
+      .from("phone_verifications")
+      .select("*", { count: "exact", head: true })
+      .eq("phone", e164Phone)
+      .gte("created_at", dayAgo);
+
+    if ((count ?? 0) >= 3 || (dayCount ?? 0) >= 10) {
       return respond({
         ok: false,
-        error: "Muitas tentativas. Aguarde alguns minutos.",
+        error: (dayCount ?? 0) >= 10
+          ? "Limite diário de códigos atingido para este número. Tente amanhã."
+          : "Muitas tentativas. Aguarde alguns minutos.",
         diagnostics: { rateLimit: true },
       });
     }

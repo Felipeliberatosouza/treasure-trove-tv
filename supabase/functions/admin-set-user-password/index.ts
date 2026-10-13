@@ -34,7 +34,8 @@ Deno.serve(async (req) => {
     const adminClient = createClient(supabaseUrl, serviceRoleKey);
     const { error } = await adminClient.auth.admin.updateUserById(user_id, { password: new_password });
     if (error) {
-      return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      console.error("admin-set-user-password failed", error);
+      return new Response(JSON.stringify({ error: "Não foi possível alterar a senha." }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     // Audit log
@@ -48,6 +49,7 @@ Deno.serve(async (req) => {
 
     return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e) {
-    return new Response(JSON.stringify({ error: (e as Error).message }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    console.error("admin-set-user-password error", e);
+    return new Response(JSON.stringify({ error: "Erro interno ao processar a operação." }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });

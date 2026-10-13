@@ -56,11 +56,13 @@ Deno.serve(async (req) => {
     const { error } = await adminClient.auth.admin.deleteUser(user_id);
 
     if (error) {
-      return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      console.error("delete-user failed", error);
+      return new Response(JSON.stringify({ error: "Não foi possível excluir o usuário." }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e) {
-    return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    console.error("delete-user error", e);
+    return new Response(JSON.stringify({ error: "Erro interno ao processar a operação." }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });

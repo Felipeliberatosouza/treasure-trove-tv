@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Save, Upload, X, Eye, Mail, Shield, Copy, Tag, Sparkles } from "lucide-react";
 import { toast } from "sonner";
+import DOMPurify from "dompurify";
 import { buildEmailLogoHtml, resolveEmailLogoUrl } from "../../../../supabase/functions/_shared/email-logo";
 
 interface EmailTemplate {
@@ -1280,7 +1281,7 @@ const SettingsEmailTemplates = () => {
               </div>
               <div
                 className="bg-white p-4"
-                dangerouslySetInnerHTML={{ __html: buildPreviewHtml() }}
+                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(buildPreviewHtml()) }}
               />
             </div>
           )}

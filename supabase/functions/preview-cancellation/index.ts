@@ -1,5 +1,4 @@
 import { serveWithCors } from "../_shared/cors-guard.ts";
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 
@@ -30,7 +29,7 @@ const log = (s: string, d?: unknown) =>
  * The pro-rata uses Stripe's clock, not the local DB's started_at, so the
  * value matches what Stripe will actually invoice on cancellation.
  */
-serve(async (req) => {
+serveWithCors(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {

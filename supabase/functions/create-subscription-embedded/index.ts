@@ -1,5 +1,4 @@
 import { serveWithCors } from "../_shared/cors-guard.ts";
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 
@@ -37,7 +36,7 @@ interface BillingDetails {
  * Body: { priceId: string, paymentMethodId: string, billing: BillingDetails }
  * Returns: { ok, clientSecret?, subscriptionId?, status?, error? }
  */
-serve(async (req) => {
+serveWithCors(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {

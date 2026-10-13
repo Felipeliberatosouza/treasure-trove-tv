@@ -1,6 +1,6 @@
 // Restringe o CORS das Edge Functions às origens oficiais do site.
-// Importar no topo de cada função: `import "../_shared/cors-guard.ts";`
-// Envolve Deno.serve e reescreve Access-Control-Allow-Origin conforme a
+// Uso: `serveWithCors(handler)` no lugar de `Deno.serve(handler)`.
+// Envolve o handler e reescreve Access-Control-Allow-Origin conforme a
 // origem da requisição. Chamadas servidor-a-servidor (webhooks, cron) não
 // enviam Origin e não são afetadas.
 const ALLOWED_EXACT = new Set([
@@ -45,18 +45,13 @@ function wrap(handler: Handler): Handler {
   };
 }
 
-const g = globalThis as unknown as { __corsGuardInstalled?: boolean };
-if (!g.__corsGuardInstalled) {
-  g.__corsGuardInstalled = true;
+// Use no lugar de Deno.serve (o namespace Deno é congelado e não pode ser alterado).
+// deno-lint-ignore no-explicit-any
+export function serveWithCors(...args: any[]) {
   // deno-lint-ignore no-explicit-any
-  const original = (Deno.serve as any).bind(Deno);
-  // deno-lint-ignore no-explicit-any
-  (Deno as any).serve = (...args: any[]) => {
-    if (typeof args[0] === "function") return original(wrap(args[0]));
-    if (typeof args[1] === "function") return original(args[0], wrap(args[1]));
-    if (args[0] && typeof args[0].handler === "function") {
-      return original({ ...args[0], handler: wrap(args[0].handler) });
-    }
-    return original(...args);
-  };
+  const serve = Deno.serve as any;
+  if (typeof args[0] === "function") return serve(wrap(args[0]));
+  if (typeof args[1] === "function") return serve(args[0], wrap(args[1]));
+  if (args[0] && typeof args[0].handler === "function") return serve({ ...args[0], handler: wrap(args[0].handler) });
+  return serve(...args);
 }

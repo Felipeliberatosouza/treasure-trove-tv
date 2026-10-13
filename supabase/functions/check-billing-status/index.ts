@@ -1,4 +1,4 @@
-import "../_shared/cors-guard.ts";
+import { serveWithCors } from "../_shared/cors-guard.ts";
 // Reports the current billing health for the logged-in student so the dashboard
 // can display a "past due" alert when the latest charge failed.
 //

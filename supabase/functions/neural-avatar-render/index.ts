@@ -1,4 +1,4 @@
-import "../_shared/cors-guard.ts";
+import { serveWithCors } from "../_shared/cors-guard.ts";
 // Renderização neural (frame a frame) do avatar para AULAS ESPECIAIS.
 // Usa o retrato do professor + o áudio ElevenLabs já salvo de cada slide e envia
 // ao provedor de vídeo neural (D-ID). O MP4 gerado fica salvo e o player o usa
@@ -31,7 +31,7 @@ const didHeaders = () => {
   return { Authorization: `Basic ${key}`, "Content-Type": "application/json", accept: "application/json" };
 };
 
-Deno.serve(async (req) => {
+serveWithCors(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   try {
     const url = Deno.env.get("SUPABASE_URL")!;

@@ -1,4 +1,4 @@
-import "../_shared/cors-guard.ts";
+import { serveWithCors } from "../_shared/cors-guard.ts";
 // Generate draft lesson material (simulado / top_questoes / colinha) using Lovable AI Gateway.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 const corsHeaders = {
@@ -206,7 +206,7 @@ const SINGLE_SYSTEM_PROMPTS: Record<Exclude<MaterialKind, "description">, string
     "Você é um professor brasileiro especialista. Gere UM bullet curto adicional (máx. 100 caracteres) que complemente os bullets já existentes. NÃO repita ou parafraseie nenhum bullet existente.",
 };
 
-Deno.serve(async (req) => {
+serveWithCors(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   try {
     // Require authenticated teacher or admin

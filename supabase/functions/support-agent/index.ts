@@ -1,4 +1,4 @@
-import "../_shared/cors-guard.ts";
+import { serveWithCors } from "../_shared/cors-guard.ts";
 import { resolveModel } from "../_shared/ai-models.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { sendTemplateEmail } from "../_shared/transactional-email-templates/send-email.ts";
@@ -23,7 +23,7 @@ interface AgentConfig {
 
 const clip = (s: unknown, n: number) => String(s ?? "").trim().slice(0, n);
 
-Deno.serve(async (req) => {
+serveWithCors(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 

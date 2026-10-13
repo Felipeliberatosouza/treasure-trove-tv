@@ -1,4 +1,4 @@
-import "../_shared/cors-guard.ts";
+import { serveWithCors } from "../_shared/cors-guard.ts";
 // Narração por IA. Kits canônicos recebem áudio persistente e reutilizável;
 // o modo legado de "Estudar com IA" continua aceitando texto autenticado.
 // Provedor de voz definido em Gestão de IA (platform_settings.ai_voice_config):
@@ -69,7 +69,7 @@ async function elevenLabsSpeech(text: string, voiceId: string, cfg: Record<strin
   return { audio, alignment };
 }
 
-Deno.serve(async (req) => {
+serveWithCors(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;

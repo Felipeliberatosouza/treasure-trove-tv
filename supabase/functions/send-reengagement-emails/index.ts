@@ -1,4 +1,4 @@
-import "../_shared/cors-guard.ts";
+import { serveWithCors } from "../_shared/cors-guard.ts";
 // Reengajamento: dispara e-mails para alunos (14d sem assistir vídeo) e
 // professores (30d sem postar conteúdo). Reenvio mínimo a cada 30d (configurável
 // em platform_settings.reengagement_config). Idempotência via reengagement_email_log.
@@ -24,7 +24,7 @@ const DEFAULTS: ReengagementConfig = {
   enabled: true,
 }
 
-Deno.serve(async (req: Request) => {
+serveWithCors(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
   try {

@@ -1,4 +1,4 @@
-import "../_shared/cors-guard.ts";
+import { serveWithCors } from "../_shared/cors-guard.ts";
 // "Estudar com IA" — agente conversacional que gera resumo, simulado e slides
 // narrados a partir do pedido do aluno. Streaming via AI SDK + Lovable AI Gateway.
 import { streamText, tool, stepCountIs, convertToModelMessages } from "npm:ai";
@@ -139,7 +139,7 @@ const SLIDES_TOOL: ToolDef = {
   },
 };
 
-Deno.serve(async (req) => {
+serveWithCors(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   try {
     // ---- Auth ----

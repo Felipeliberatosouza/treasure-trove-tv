@@ -1,4 +1,4 @@
-import "../_shared/cors-guard.ts";
+import { serveWithCors } from "../_shared/cors-guard.ts";
 // Ferramentas de provas reais: comentários das questões (Resolução Comentada) e correção de redação/discursivas.
 import { resolveModel } from "../_shared/ai-models.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
@@ -33,7 +33,7 @@ async function ai(system: string, user: string) {
   return JSON.parse(t);
 }
 
-Deno.serve(async (req) => {
+serveWithCors(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   try {
     const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, { auth: { persistSession: false } });

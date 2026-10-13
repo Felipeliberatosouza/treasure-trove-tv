@@ -1,4 +1,4 @@
-import "../_shared/cors-guard.ts";
+import { serveWithCors } from "../_shared/cors-guard.ts";
 // Edge Function: gera link de recuperação de senha via Admin API e
 // dispara o template `password_recovery` em PT-BR através do
 // pipeline de e-mails transacionais (sender e configurações vindas do banco).
@@ -13,7 +13,7 @@ const corsHeaders = {
     'authorization, x-client-info, apikey, content-type',
 }
 
-Deno.serve(async (req) => {
+serveWithCors(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }

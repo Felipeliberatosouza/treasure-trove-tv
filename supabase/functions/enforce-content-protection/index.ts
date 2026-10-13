@@ -1,4 +1,4 @@
-import "../_shared/cors-guard.ts";
+import { serveWithCors } from "../_shared/cors-guard.ts";
 // Edge Function: enforce-content-protection
 //
 // Registra detecções de violação de proteção de conteúdo e — se um usuário
@@ -41,7 +41,7 @@ const DEFAULT_POLICY: Policy = {
   ],
 };
 
-Deno.serve(async (req) => {
+serveWithCors(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }

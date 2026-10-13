@@ -1,4 +1,4 @@
-import "../_shared/cors-guard.ts";
+import { serveWithCors } from "../_shared/cors-guard.ts";
 // Trabalhos com IA — gera conteúdo para documento Word e slides de apresentação.
 // Ações (POST): { action: "generate" | "revise" }
 import { resolveModel } from "../_shared/ai-models.ts";
@@ -366,7 +366,7 @@ ${JSON.stringify(doc.content).slice(0, 60000)}`,
   return { status: 200, payload: { id: doc.id, content, balance: debited.balance } };
 }
 
-Deno.serve(async (req) => {
+serveWithCors(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   let body: any = {};
   try {

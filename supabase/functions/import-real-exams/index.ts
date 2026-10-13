@@ -1,4 +1,4 @@
-import "../_shared/cors-guard.ts";
+import { serveWithCors } from "../_shared/cors-guard.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const cors = {
@@ -16,7 +16,7 @@ const SUBJECTS: Record<string, string> = {
 
 // Importa questões oficiais do ENEM (fonte aberta api.enem.dev, transcrição das provas do INEP).
 // Idempotente: reimportar apenas atualiza as questões existentes.
-Deno.serve(async (req) => {
+serveWithCors(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
   try {
     const body = await req.json().catch(() => ({}));

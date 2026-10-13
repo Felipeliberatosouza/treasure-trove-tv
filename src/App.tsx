@@ -55,6 +55,7 @@ import GlobalRedirectOverlay from "./components/GlobalRedirectOverlay.tsx";
 import OnboardingGuard from "./components/OnboardingGuard.tsx";
 import EmailConfirmationHandler from "./components/EmailConfirmationHandler.tsx";
 import ScrollToTop from "./components/ScrollToTop.tsx";
+import RouteSeo from "./components/RouteSeo.tsx";
 import BetaBar from "./components/beta/BetaBar.tsx";
 import BetaEndedNotice from "./components/beta/BetaEndedNotice.tsx";
 import BetaSignupGate from "./components/beta/BetaSignupGate.tsx";
@@ -91,6 +92,7 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <ScrollToTop />
+          <RouteSeo />
           <BetaBar />
           <BetaEndedNotice />
           <BetaSignupGate />

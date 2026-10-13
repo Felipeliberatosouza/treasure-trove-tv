@@ -1,0 +1,35 @@
+# Revisão Fácil
+
+> Plataforma brasileira de estudos que combina aulas gravadas por professores e Professor Virtual com inteligência artificial. Gera, em minutos, kits de revisão completos (aula em slides narrada, resumo, simulado, colinha e top questões comentadas) e trabalhos escolares em Word e slides.
+
+Site: https://revisaofacil.com.br — idioma: português (Brasil).
+
+## Produtos
+
+- [Provas](https://revisaofacil.com.br/provas): kit de revisão para provas escolares e da faculdade.
+- [Trabalhos](https://revisaofacil.com.br/trabalhos): documento Word (ABNT) e apresentação em slides exclusivos.
+- [ENEM](https://revisaofacil.com.br/enem): preparação pelas quatro áreas do exame, com provas anteriores oficiais.
+- [Vestibulares](https://revisaofacil.com.br/vestibulares): revisão para os principais vestibulares do país.
+- [OAB](https://revisaofacil.com.br/oab): 1ª e 2ª fase do Exame da Ordem.
+- [Concursos](https://revisaofacil.com.br/concursos): revisão por banca, cargo e disciplina do edital.
+
+## Conteúdos
+
+- [Revisões (Aulas)](https://revisaofacil.com.br/revisoes)
+- [Resumos](https://revisaofacil.com.br/resumos)
+- [Simulados](https://revisaofacil.com.br/simulados): cronômetro, folha de respostas, nota e correção.
+- [Top Questões Comentadas](https://revisaofacil.com.br/top-questoes)
+- [Colinhas](https://revisaofacil.com.br/colinhas)
+
+## Recursos
+
+- Foto de questão: o aluno fotografa uma questão e recebe a resolução comentada.
+- Foto de tema: a plataforma identifica o assunto e gera o material completo.
+- Aula particular com professores reais e tira-dúvidas.
+
+## Institucional
+
+- [Sobre nós](https://revisaofacil.com.br/sobre)
+- [Contato](https://revisaofacil.com.br/contato)
+- [Termos de Uso](https://revisaofacil.com.br/termos)
+- [Política de Privacidade](https://revisaofacil.com.br/privacidade)

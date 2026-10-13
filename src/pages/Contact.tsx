@@ -14,6 +14,8 @@ import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 const Contact = () => {
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", subject: "", message: "" });
+  const [honeypot, setHoneypot] = useState("");
+  const [openedAt] = useState(() => Date.now());
   const { data: contact } = usePlatformSettings("contact");
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -22,6 +24,18 @@ const Contact = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading) return;
+
+    // Robôs preenchem o campo oculto ou enviam em menos de 3s: fingimos sucesso e descartamos.
+    if (honeypot || Date.now() - openedAt < 3000) {
+      toast.success("Mensagem enviada com sucesso! Responderemos em breve.");
+      return;
+    }
+    const last = Number(localStorage.getItem("rf_contact_last") || 0);
+    if (Date.now() - last < 60_000) {
+      toast.error("Aguarde um minuto antes de enviar outra mensagem.");
+      return;
+    }
 
     if (!form.name.trim() || !form.email.trim() || !form.subject.trim() || !form.message.trim()) {
       toast.error("Preencha todos os campos.");
@@ -112,6 +126,10 @@ const Contact = () => {
 
         <div className="grid gap-10 md:grid-cols-5">
           <form onSubmit={handleSubmit} className="space-y-5 md:col-span-3">
+            <div aria-hidden="true" style={{ position: "absolute", left: "-10000px", width: 1, height: 1, overflow: "hidden" }}>
+              <label htmlFor="website">Não preencha</label>
+              <input id="website" name="website" type="text" tabIndex={-1} autoComplete="off" value={honeypot} onChange={(e) => setHoneypot(e.target.value)} />
+            </div>
             <div className="space-y-2">
               <Label htmlFor="name">Nome</Label>
               <Input id="name" name="name" placeholder="Seu nome completo" value={form.name} onChange={handleChange} maxLength={100} />

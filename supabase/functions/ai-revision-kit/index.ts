@@ -1,4 +1,4 @@
-import "../_shared/cors-guard.ts";
+import { serveWithCors } from "../_shared/cors-guard.ts";
 // Kit de Revisão com IA — cache canônico + créditos server-side + geração.
 // Endpoints (POST):
 //   { action: "status", anon_id }            -> saldo/elegibilidade
@@ -698,7 +698,7 @@ async function handleRequest(req: Request, body: any): Promise<Response> {
 
 // Geração pode levar vários minutos: enviamos "pings" periódicos para o
 // proxy não encerrar a conexão por inatividade (idle timeout de 150s).
-Deno.serve(async (req) => {
+serveWithCors(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   const body = await req.json().catch(() => ({}));

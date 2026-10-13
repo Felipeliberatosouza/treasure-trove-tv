@@ -1,4 +1,4 @@
-import "../_shared/cors-guard.ts";
+import { serveWithCors } from "../_shared/cors-guard.ts";
 // Triagem automática dos reportes da versão beta: separa problema técnico de
 // decisão de negócio e prepara a instrução pronta para corrigir no Lovable.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
@@ -16,7 +16,7 @@ Classifique cada reporte:
 - "descartar": spam, teste, sem informação útil ou ruído de navegador/extensão.
 Responda SOMENTE JSON: {"categoria":"tecnico|negocio|descartar","resumo":"1 frase simples","decisao":"pergunta objetiva ao dono (só se negocio, senão vazio)","instrucao":"instrução completa em português para o Lovable corrigir, citando página, mensagem de erro e comportamento esperado"}`;
 
-Deno.serve(async (req) => {
+serveWithCors(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
   try {
     const url = Deno.env.get("SUPABASE_URL")!;

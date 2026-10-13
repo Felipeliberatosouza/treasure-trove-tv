@@ -1,4 +1,4 @@
-import "../_shared/cors-guard.ts";
+import { serveWithCors } from "../_shared/cors-guard.ts";
 import * as React from 'npm:react@18.3.1'
 import { renderAsync } from 'npm:@react-email/components@0.0.22'
 import { createAuthEmailHandler } from 'npm:@lovable.dev/email-js@0.1.0'
@@ -183,7 +183,7 @@ const handler = createAuthEmailHandler({
   },
 })
 
-Deno.serve(async (req) => {
+serveWithCors(async (req) => {
   const url = new URL(req.url)
 
   // Handle CORS preflight for main endpoint

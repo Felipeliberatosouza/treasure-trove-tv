@@ -1,4 +1,4 @@
-import "../_shared/cors-guard.ts";
+import { serveWithCors } from "../_shared/cors-guard.ts";
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -7,7 +7,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.101.1'
 import { buildEmailLogoHtml, resolveEmailLogoUrl } from '../_shared/email-logo.ts'
 import { fetchImageDimensions, type ImageDimensions } from '../_shared/image-dimensions.ts'
 
-Deno.serve(async (req: Request) => {
+serveWithCors(async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }

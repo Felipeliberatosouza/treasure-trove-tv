@@ -1,4 +1,4 @@
-import "../_shared/cors-guard.ts";
+import { serveWithCors } from "../_shared/cors-guard.ts";
 // Recompute teacher_payments from real video_purchases
 // Aggregates per teacher + period (month) using per-resource prices and platform_percentage
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
@@ -38,7 +38,7 @@ function monthBounds(ym: string): { start: string; end: string } {
   return { start: fmt(start), end: fmt(end) };
 }
 
-Deno.serve(async (req) => {
+serveWithCors(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   const startedAt = Date.now();

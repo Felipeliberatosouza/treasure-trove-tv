@@ -1,5 +1,4 @@
-import "../_shared/cors-guard.ts";
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { serveWithCors } from "../_shared/cors-guard.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 
@@ -14,7 +13,7 @@ const logStep = (step: string, details?: unknown) => {
   console.log(`[CHECK-SUBSCRIPTION] ${step}${d}`);
 };
 
-serve(async (req) => {
+serveWithCors(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }

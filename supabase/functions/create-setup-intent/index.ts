@@ -1,5 +1,4 @@
-import "../_shared/cors-guard.ts";
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { serveWithCors } from "../_shared/cors-guard.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 
@@ -12,7 +11,7 @@ const corsHeaders = {
 const log = (s: string, d?: unknown) =>
   console.log(`[CREATE-SETUP-INTENT] ${s}${d ? ` - ${JSON.stringify(d)}` : ""}`);
 
-serve(async (req) => {
+serveWithCors(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {

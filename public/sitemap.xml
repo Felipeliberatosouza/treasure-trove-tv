@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://revisaofacil.com.br/</loc><changefreq>daily</changefreq><priority>1.0</priority></url>
+  <url><loc>https://revisaofacil.com.br/provas</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://revisaofacil.com.br/trabalhos</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://revisaofacil.com.br/enem</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://revisaofacil.com.br/vestibulares</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://revisaofacil.com.br/oab</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://revisaofacil.com.br/concursos</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://revisaofacil.com.br/revisoes</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://revisaofacil.com.br/resumos</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://revisaofacil.com.br/simulados</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://revisaofacil.com.br/top-questoes</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://revisaofacil.com.br/colinhas</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://revisaofacil.com.br/signup/student</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://revisaofacil.com.br/signup/teacher</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://revisaofacil.com.br/sobre</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://revisaofacil.com.br/contato</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://revisaofacil.com.br/termos</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
+  <url><loc>https://revisaofacil.com.br/privacidade</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
+</urlset>

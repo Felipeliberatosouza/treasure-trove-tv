@@ -10,5 +10,27 @@ Allow: /
 User-agent: facebookexternalhit
 Allow: /
 
+User-agent: GPTBot
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
 User-agent: *
 Allow: /
+Disallow: /dashboard/
+Disallow: /checkout
+Disallow: /reset-password
+Disallow: /payment-success
+Disallow: /payment-canceled
+Disallow: /preview/
+Disallow: /email-seguranca
+Disallow: /__test/
+
+Sitemap: https://revisaofacil.com.br/sitemap.xml

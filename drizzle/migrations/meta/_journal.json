@@ -253,6 +253,13 @@
       "when": 1791312056257,
       "tag": "0035_ai_content_slugs",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1791901815552,
+      "tag": "0036_security_hardening_rpcs",
+      "breakpoints": true
     }
   ]
 }

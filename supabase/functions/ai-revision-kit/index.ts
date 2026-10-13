@@ -1,3 +1,4 @@
+import "../_shared/cors-guard.ts";
 // Kit de Revisão com IA — cache canônico + créditos server-side + geração.
 // Endpoints (POST):
 //   { action: "status", anon_id }            -> saldo/elegibilidade

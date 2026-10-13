@@ -1,3 +1,4 @@
+import "../_shared/cors-guard.ts";
 // Trabalhos com IA — gera conteúdo para documento Word e slides de apresentação.
 // Ações (POST): { action: "generate" | "revise" }
 import { resolveModel } from "../_shared/ai-models.ts";

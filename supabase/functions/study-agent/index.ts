@@ -1,3 +1,4 @@
+import "../_shared/cors-guard.ts";
 // "Estudar com IA" — agente conversacional que gera resumo, simulado e slides
 // narrados a partir do pedido do aluno. Streaming via AI SDK + Lovable AI Gateway.
 import { streamText, tool, stepCountIs, convertToModelMessages } from "npm:ai";

@@ -1,3 +1,4 @@
+import "../_shared/cors-guard.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 
 const corsHeaders = {

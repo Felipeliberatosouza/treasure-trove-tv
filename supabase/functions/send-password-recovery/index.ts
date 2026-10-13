@@ -1,3 +1,4 @@
+import "../_shared/cors-guard.ts";
 // Edge Function: gera link de recuperação de senha via Admin API e
 // dispara o template `password_recovery` em PT-BR através do
 // pipeline de e-mails transacionais (sender e configurações vindas do banco).

@@ -1,3 +1,4 @@
+import "../_shared/cors-guard.ts";
 // Reengajamento: dispara e-mails para alunos (14d sem assistir vídeo) e
 // professores (30d sem postar conteúdo). Reenvio mínimo a cada 30d (configurável
 // em platform_settings.reengagement_config). Idempotência via reengagement_email_log.

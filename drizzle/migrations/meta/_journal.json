@@ -267,6 +267,13 @@
       "when": 1791916527013,
       "tag": "0037_storage_file_type_restrictions",
       "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1792068844518,
+      "tag": "0038_storage_allow_vtt_thumbnails_svg_assets",
+      "breakpoints": true
     }
   ]
 }

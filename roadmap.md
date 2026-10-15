@@ -9,5 +9,5 @@
 - [x] Estratégia de Preços unificada (custo/preço/margem de todos os produtos, atualização automática por fornecedor e repasse)
 - [x] Custos e despesas por produto com ponto de equilíbrio
 
-- [ ] Curadoria oficial (NotebookLM): cadastro admin, aula fixa com selo nos produtos
-- [ ] Estratégia de Preços: incluir conteúdo curado
+- [x] Curadoria oficial (NotebookLM): cadastro admin, aula fixa com selo nos produtos
+- [x] Estratégia de Preços: incluir conteúdo curado

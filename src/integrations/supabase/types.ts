@@ -923,6 +923,48 @@ export type Database = {
         }
         Relationships: []
       }
+      curated_lessons: {
+        Row: {
+          audio_path: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          product_key: string
+          published: boolean
+          script: string
+          sources: string | null
+          summary: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          audio_path?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          product_key: string
+          published?: boolean
+          script: string
+          sources?: string | null
+          summary?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          audio_path?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          product_key?: string
+          published?: boolean
+          script?: string
+          sources?: string | null
+          summary?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       doubt_area_invites: {
         Row: {
           created_at: string

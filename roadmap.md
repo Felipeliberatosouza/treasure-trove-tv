@@ -8,3 +8,6 @@
 - [x] Painel admin: Trabalhos em Config. de Produtos e Provas Reais dentro de Produtos
 - [x] Estratégia de Preços unificada (custo/preço/margem de todos os produtos, atualização automática por fornecedor e repasse)
 - [x] Custos e despesas por produto com ponto de equilíbrio
+
+- [x] Curadoria oficial (NotebookLM): cadastro admin, aula fixa com selo nos produtos
+- [x] Estratégia de Preços: incluir conteúdo curado

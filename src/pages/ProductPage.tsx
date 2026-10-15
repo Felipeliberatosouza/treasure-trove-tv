@@ -8,6 +8,7 @@ import PricingSection from "@/components/PricingSection";
 import RealExamsSection from "@/components/provas-reais/RealExamsSection";
 import HomeKitGenerator from "@/components/revisao-ia/HomeKitGenerator";
 import ProductContentCarousels from "@/components/products/ProductContentCarousels";
+import CuratedLessonsSection from "@/components/products/CuratedLessonsSection";
 import WorkResultPanel from "@/components/trabalhos/WorkResultPanel";
 import NotFound from "@/pages/NotFound";
 import { useProducts, productIcon } from "@/hooks/useProducts";
@@ -120,6 +121,8 @@ export default function ProductPage() {
         </section>
 
         {["enem","vestibulares","oab","concursos"].includes(product.key) && <RealExamsSection productKey={product.key} productName={product.name} />}
+
+        {product.key !== "trabalhos" && <CuratedLessonsSection productKey={product.key} />}
 
         <HomeKitGenerator productKey={product.key} initialSub={initialSub} productExtra={productExtra} fixedHeadline={product.title + (profile?.name ? `, ${String(profile.name).split(" ")[0]}` : "")} />
 

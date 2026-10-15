@@ -34,6 +34,7 @@ import AdminReferralsTab from "@/components/admin/AdminReferralsTab";
 import AdminWorkDocsTab from "@/components/admin/AdminWorkDocsTab";
 import AdminProductsTab from "@/components/admin/AdminProductsTab";
 import AdminSupportAgentTab from "@/components/admin/AdminSupportAgentTab";
+import AdminCuratedLessonsTab from "@/components/admin/AdminCuratedLessonsTab";
 import PersonalDataTab from "@/components/dashboard/PersonalDataTab";
 import LoginDataTab from "@/components/dashboard/LoginDataTab";
 
@@ -49,6 +50,7 @@ const tabs = [
   // Agora em Configurações → Config. de Produtos → Estratégia de Preços e em Produtos → Provas Reais
   { id: "work-docs", label: "Trabalhos (Word e Slides)", icon: FileText, hidden: true },
   { id: "real-exams", label: "Provas Reais", icon: FileText, hidden: true },
+  { id: "curated", label: "Curadoria Oficial", icon: FileText },
   { id: "support-agent", label: "Atendimento Virtual", icon: MessageSquare },
   { id: "beta-reports", label: "Reportes da Versão Beta", icon: Bug },
   { id: "cancellations", label: "Cancelamentos", icon: XCircle },
@@ -155,6 +157,7 @@ const AdminDashboard = () => {
             {activeTab === "real-exams" && <AdminRealExamsTab />}
             {activeTab === "products" && <AdminProductsTab />}
             {activeTab === "support-agent" && <AdminSupportAgentTab />}
+            {activeTab === "curated" && <AdminCuratedLessonsTab />}
             {activeTab === "beta-reports" && <AdminBetaReportsTab />}
             {activeTab === "profile-approvals" && <AdminProfileApprovalsTab />}
             {activeTab === "settings" && <AdminSettingsTab />}

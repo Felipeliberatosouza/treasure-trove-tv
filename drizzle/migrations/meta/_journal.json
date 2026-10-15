@@ -274,6 +274,13 @@
       "when": 1792068844518,
       "tag": "0038_storage_allow_vtt_thumbnails_svg_assets",
       "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1792069005542,
+      "tag": "0039_curated_lessons",
+      "breakpoints": true
     }
   ]
 }

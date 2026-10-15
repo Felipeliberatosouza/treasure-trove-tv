@@ -42,6 +42,8 @@ const FEATURES: Feature[] = [
   { key: "colinha", name: "Colinhas", area: "revisoes", products: ALL_EXAM, text: 0.08, voice: 0, voiceFallback: 0, extra: 0, credits: 1, price: 2.9 },
   { key: "foto", name: "Análise de foto (questão ou tema)", area: "revisoes", products: ALL_EXAM, text: 0.14, voice: 0, voiceFallback: 0, extra: 0, credits: 1, price: 2.9 },
   { key: "duvida_ia", name: "Dúvidas com Professor Virtual", area: "atendente", products: [...ALL_EXAM, "trabalhos"], text: 0.06, voice: 0, voiceFallback: 0, extra: 0, credits: 1, price: 1.5 },
+  // Conteúdo curado (NotebookLM): feito fora do site pela equipe, sem custo de IA por aluno; só armazenamento/entrega do áudio. Incluído no plano.
+  { key: "curadoria_oficial", name: "Conteúdo oficial curado (NotebookLM) — por acesso", area: "revisoes", products: ["oab", "concursos", "enem"], text: 0, voice: 0, voiceFallback: 0, extra: 0.02, extraLabel: "armazenamento e entrega do áudio", credits: 0, price: 0 },
 ];
 
 const PRODUCTS = [

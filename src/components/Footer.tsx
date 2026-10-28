@@ -1,3 +1,4 @@
+import { useEffectiveLightTheme } from "@/hooks/useEffectiveLightTheme";
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useProducts } from "@/hooks/useProducts";
@@ -11,6 +12,7 @@ import { DEFAULT_FOOTER_SETTINGS } from "@/hooks/usePlatformSettings";
 import WhatsAppLeadLink from "@/components/WhatsAppLeadLink";
 
 const Footer = () => {
+  const effectiveLight = useEffectiveLightTheme();
   const { settings } = useAllPlatformSettings();
   const contact = settings.contact as ContactSettings | undefined;
   const branding = settings.branding as BrandingSettings | undefined;
@@ -56,8 +58,7 @@ const Footer = () => {
       <div className="mx-auto flex max-w-6xl flex-col items-center gap-6 md:flex-row md:justify-between">
         <div className="flex flex-col items-center gap-0 leading-none">
           {(() => {
-            const isLightBg = typeof document !== "undefined" &&
-              document.documentElement.getAttribute("data-theme") === "light";
+            const isLightBg = effectiveLight;
             const preferred = isLightBg ? branding?.logo_url_light_bg : branding?.logo_url_dark_bg;
             const fallback = isLightBg ? branding?.logo_url_dark_bg : branding?.logo_url_light_bg;
             const logoSrc = preferred || fallback || branding?.logo_url;

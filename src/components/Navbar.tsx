@@ -1,3 +1,4 @@
+import { useEffectiveLightTheme } from "@/hooks/useEffectiveLightTheme";
 import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -94,6 +95,7 @@ const adminMenuItems: MenuItem[] = [
 ];
 
 const Navbar = () => {
+  const effectiveLight = useEffectiveLightTheme();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -386,8 +388,7 @@ const Navbar = () => {
             // Escolhe a variante da logomarca de acordo com o plano de fundo
             // configurado em Identidade Visual: fundo claro -> logo escura;
             // fundo escuro -> logo clara. Cai para a logo legada se faltar.
-            const isLightBg = typeof document !== "undefined" &&
-              document.documentElement.getAttribute("data-theme") === "light";
+            const isLightBg = effectiveLight;
             const preferred = isLightBg ? branding?.logo_url_light_bg : branding?.logo_url_dark_bg;
             const fallback = isLightBg ? branding?.logo_url_dark_bg : branding?.logo_url_light_bg;
             const logoSrc = preferred || fallback || branding?.logo_url;
@@ -587,8 +588,7 @@ const Navbar = () => {
             >
               {(() => {
                 const isLightBg =
-                  typeof document !== "undefined" &&
-                  document.documentElement.getAttribute("data-theme") === "light";
+                  effectiveLight;
                 const preferred = isLightBg ? branding?.logo_url_light_bg : branding?.logo_url_dark_bg;
                 const fallback = isLightBg ? branding?.logo_url_dark_bg : branding?.logo_url_light_bg;
                 const menuLogo = preferred || fallback || branding?.logo_url;

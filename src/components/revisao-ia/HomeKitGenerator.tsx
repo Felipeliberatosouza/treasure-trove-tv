@@ -522,7 +522,7 @@ const HomeKitGenerator = ({ productKey, initialSub, productExtra, fixedHeadline,
         }}
       >
         <div
-          className={`rounded-2xl border border-border bg-white p-3 text-left text-foreground shadow-lg transition-shadow focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 focus-within:ring-offset-background md:p-4 ${loading ? "opacity-90" : ""}`}
+          className={`rounded-2xl border border-border bg-card p-3 text-left text-foreground shadow-lg transition-shadow focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 focus-within:ring-offset-background md:p-4 ${loading ? "opacity-90" : ""}`}
         >
           <Textarea
             value={assunto}
@@ -722,7 +722,7 @@ const HomeKitGenerator = ({ productKey, initialSub, productExtra, fixedHeadline,
             </ul>
           )}
 
-          <div className="rounded-2xl border border-border bg-white p-3 text-foreground shadow-sm">
+          <div className="rounded-2xl border border-border bg-card p-3 text-foreground shadow-sm">
             <div className="flex items-center gap-2">
               <input
                 value={chatMsg}

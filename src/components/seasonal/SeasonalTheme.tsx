@@ -61,15 +61,15 @@ const SeasonalTheme = () => {
     setOn(saved != null ? saved === "1" : config.mode === "on");
   }, [event?.id, config.mode]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Troca claro/escuro durante o tema festivo com paleta completa (fundo e
-  // texto sempre em contraste), restaurando as cores originais ao desligar.
+  // Troca claro/escuro durante o tema festivo. As cores vão numa folha de estilo
+  // com !important para não serem desfeitas pela identidade visual do site, e a
+  // direção é sempre o oposto do tema base (lido do atributo data-theme).
+  const [seasonalMode, setSeasonalMode] = useState<"light" | "dark" | null>(null);
   useEffect(() => {
-    if (!event?.dark_mode || !on) return;
     const root = document.documentElement;
-    const original = root.getAttribute("data-theme");
-    const toLight = original !== "light";
+    if (!event?.dark_mode || !on) { root.removeAttribute("data-seasonal"); setSeasonalMode(null); return; }
     const fgLight = "0 0% 96%", fgDark = "222 47% 11%";
-    const palette: Record<string, string> = toLight ? {
+    const light: Record<string, string> = {
       "--background": "0 0% 100%", "--foreground": fgDark,
       "--card": "0 0% 100%", "--card-foreground": fgDark,
       "--popover": "0 0% 100%", "--popover-foreground": fgDark,
@@ -79,7 +79,8 @@ const SeasonalTheme = () => {
       "--sidebar-background": "0 0% 100%", "--sidebar-foreground": fgDark,
       "--sidebar-accent": "210 20% 94%", "--sidebar-accent-foreground": fgDark,
       "--selection-btn-bg": "#e5e9f0", "--selection-btn-text": "#111827",
-    } : {
+    };
+    const dark: Record<string, string> = {
       "--background": "210 30% 8%", "--foreground": fgLight,
       "--card": "210 25% 12%", "--card-foreground": fgLight,
       "--popover": "210 25% 12%", "--popover-foreground": fgLight,
@@ -90,14 +91,28 @@ const SeasonalTheme = () => {
       "--sidebar-accent": "210 20% 18%", "--sidebar-accent-foreground": fgLight,
       "--selection-btn-bg": "#1f2937", "--selection-btn-text": "#ffffff",
     };
-    const saved: Record<string, string> = {};
-    Object.entries(palette).forEach(([k, v]) => { saved[k] = root.style.getPropertyValue(k); root.style.setProperty(k, v); });
-    root.setAttribute("data-theme", toLight ? "light" : "dark");
-    return () => {
-      Object.entries(saved).forEach(([k, v]) => v ? root.style.setProperty(k, v) : root.style.removeProperty(k));
-      if (original) root.setAttribute("data-theme", original); else root.removeAttribute("data-theme");
+    const css = (sel: string, p: Record<string, string>) =>
+      `${sel}{${Object.entries(p).map(([k, v]) => `${k}:${v} !important;`).join("")}}`;
+    let tag = document.getElementById("seasonal-palette") as HTMLStyleElement | null;
+    if (!tag) { tag = document.createElement("style"); tag.id = "seasonal-palette"; document.head.appendChild(tag); }
+    tag.textContent = css(':root[data-seasonal="light"]', light) + css(':root[data-seasonal="dark"]', dark);
+    const apply = () => {
+      const mode = root.getAttribute("data-theme") === "light" ? "dark" : "light";
+      root.setAttribute("data-seasonal", mode);
+      setSeasonalMode(mode);
     };
+    apply();
+    const obs = new MutationObserver(apply);
+    obs.observe(root, { attributes: true, attributeFilter: ["data-theme"] });
+    return () => { obs.disconnect(); root.removeAttribute("data-seasonal"); setSeasonalMode(null); };
   }, [on, event?.dark_mode]);
+
+  // No celular não há "passar o mouse": ao tocar, a mensagem aparece por 3 s.
+  useEffect(() => {
+    if (!hover) return;
+    const t = setTimeout(() => setHover(false), 3000);
+    return () => clearTimeout(t);
+  }, [hover, on]);
 
   if (pathname.startsWith("/admin") || pathname.startsWith("/dashboard/admin")) return null;
 

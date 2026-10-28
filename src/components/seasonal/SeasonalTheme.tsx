@@ -93,9 +93,17 @@ const SeasonalTheme = () => {
     };
     const css = (sel: string, p: Record<string, string>) =>
       `${sel}{${Object.entries(p).map(([k, v]) => `${k}:${v} !important;`).join("")}}`;
+    // Campos de texto também acompanham o tema (a identidade visual fixa cores com !important).
+    const fields = (mode: string, bg: string, fg: string, border: string, ph: string) => {
+      const s = `:root[data-seasonal="${mode}"]`;
+      return `${s} input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="file"]),${s} textarea{background-color:${bg} !important;color:${fg} !important;border-color:${border} !important;}`
+        + `${s} input::placeholder,${s} textarea::placeholder{color:${ph} !important;opacity:1 !important;}`;
+    };
     let tag = document.getElementById("seasonal-palette") as HTMLStyleElement | null;
     if (!tag) { tag = document.createElement("style"); tag.id = "seasonal-palette"; document.head.appendChild(tag); }
-    tag.textContent = css(':root[data-seasonal="light"]', light) + css(':root[data-seasonal="dark"]', dark);
+    tag.textContent = css(':root[data-seasonal="light"]', light) + css(':root[data-seasonal="dark"]', dark)
+      + fields("dark", "#1e293b", "#f8fafc", "#334155", "#94a3b8")
+      + fields("light", "#ffffff", "#111827", "#cbd5e1", "#64748b");
     const apply = () => {
       const mode = root.getAttribute("data-theme") === "light" ? "dark" : "light";
       root.setAttribute("data-seasonal", mode);
@@ -127,8 +135,12 @@ const SeasonalTheme = () => {
     localStorage.setItem(storeKey, next ? "1" : "0");
   };
 
-  // Tela efetiva: modo do evento (se invertido) ou tema base do site.
-  const pageLight = (seasonalMode ?? (document.documentElement.getAttribute("data-theme") === "light" ? "light" : "dark")) === "light";
+  // Cor real do fundo da página no momento da exibição (vale para ligado e desligado).
+  void seasonalMode;
+  const pageLight = (() => {
+    const c = getComputedStyle(document.body).backgroundColor.match(/\d+(\.\d+)?/g)?.map(Number) || [0, 0, 0];
+    return (0.299 * c[0] + 0.587 * c[1] + 0.114 * c[2]) / 255 > 0.5;
+  })();
 
   return (
     <>
@@ -144,7 +156,7 @@ const SeasonalTheme = () => {
           {event.effect === "spider" && (
             <span aria-hidden className="seasonal-spider" data-down={on || hover ? "1" : "0"}>🕷️</span>
           )}
-          {on && (hover || flash) && event.message && (
+          {(hover || flash) && event.message && (
             <span role="status" className="absolute bottom-14 left-0 whitespace-nowrap rounded-md border-2 px-3 py-1.5 text-xs font-semibold shadow-lg"
               style={{ borderColor: event.primary_color, backgroundColor: pageLight ? "#111827" : "#ffffff", color: pageLight ? "#ffffff" : "#111827" }}>
               {event.message}

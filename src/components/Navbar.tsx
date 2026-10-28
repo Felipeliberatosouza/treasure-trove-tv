@@ -95,7 +95,7 @@ const adminMenuItems: MenuItem[] = [
 ];
 
 const Navbar = () => {
-  const effectiveLight = useEffectiveLightTheme();
+  const effectiveLight = useEffectiveLightTheme(); // tema efetivo (festivo ou base)
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");

@@ -281,6 +281,13 @@
       "when": 1792069005542,
       "tag": "0039_curated_lessons",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1793200343975,
+      "tag": "0040_seasonal_events",
+      "breakpoints": true
     }
   ]
 }

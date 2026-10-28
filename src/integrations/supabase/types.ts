@@ -2726,6 +2726,51 @@ export type Database = {
         }
         Relationships: []
       }
+      seasonal_events: {
+        Row: {
+          active: boolean
+          created_at: string
+          dark_mode: boolean
+          effect: string
+          end_md: string
+          icon: string
+          id: string
+          message: string | null
+          name: string
+          primary_color: string
+          priority: number
+          start_md: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          dark_mode?: boolean
+          effect?: string
+          end_md: string
+          icon?: string
+          id?: string
+          message?: string | null
+          name: string
+          primary_color?: string
+          priority?: number
+          start_md: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          dark_mode?: boolean
+          effect?: string
+          end_md?: string
+          icon?: string
+          id?: string
+          message?: string | null
+          name?: string
+          primary_color?: string
+          priority?: number
+          start_md?: string
+        }
+        Relationships: []
+      }
       security_notifications: {
         Row: {
           created_at: string

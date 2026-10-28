@@ -608,3 +608,14 @@
   .ai-keyword, .ai-board-step, .ai-slide-bullet { animation: none; transition: none; }
 }
 body.beta-active { padding-bottom: 3.5rem; }
+
+/* Eventos sazonais */
+.seasonal-fall, .seasonal-rise { position: absolute; font-size: 1.25rem; opacity: .85; animation-name: seasonal-fall; animation-timing-function: linear; animation-iteration-count: infinite; top: -2rem; }
+.seasonal-rise { top: auto; bottom: -2rem; animation-name: seasonal-rise; }
+@keyframes seasonal-fall { to { transform: translateY(110vh) rotate(360deg); } }
+@keyframes seasonal-rise { to { transform: translateY(-110vh); } }
+.seasonal-spider { position: absolute; top: 2.5rem; font-size: 1.25rem; transform: translateY(-1.5rem) scale(.3); opacity: 0; transition: transform .6s cubic-bezier(.3,1.6,.5,1), opacity .4s; pointer-events: none; }
+.seasonal-spider::before { content: ""; position: absolute; left: 50%; bottom: 100%; width: 1px; height: 1.5rem; background: hsl(var(--muted-foreground)); }
+.seasonal-spider[data-down="1"] { transform: translateY(0) scale(1); opacity: 1; animation: seasonal-swing 2s ease-in-out .6s infinite; }
+@keyframes seasonal-swing { 50% { transform: translateY(4px) rotate(8deg); } }
+@media (prefers-reduced-motion: reduce) { .seasonal-fall, .seasonal-rise, .seasonal-spider { animation: none !important; } .seasonal-fall, .seasonal-rise { display: none; } }

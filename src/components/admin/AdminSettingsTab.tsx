@@ -21,6 +21,7 @@ import SettingsFooter from "./settings/SettingsFooter";
 import SettingsAlertBox from "./settings/SettingsAlertBox";
 import SettingsAiGeneration from "./settings/SettingsAiGeneration";
 import SettingsDoubts from "./settings/SettingsDoubts";
+import SettingsSeasonal from "./settings/SettingsSeasonal";
 
 const SECTIONS_RAW = [
   { id: "ai_generation", label: "Gestão de IA", icon: Sparkles },
@@ -36,6 +37,7 @@ const SECTIONS_RAW = [
   { id: "contact", label: "Dados e Contatos", icon: Phone },
   { id: "doubts", label: "Dúvidas", icon: Headset },
   { id: "emails", label: "E-mails", icon: Mail },
+  { id: "seasonal", label: "Eventos Temáticos", icon: Sparkles },
   { id: "branding", label: "Identidade Visual", icon: Palette },
   { id: "teacher_goal", label: "Metas do Professor", icon: Target },
   { id: "pages", label: "Páginas Institucionais", icon: FileText },
@@ -80,6 +82,7 @@ const AdminSettingsTab = () => {
       </div>
 
       {activeSection === "branding" && <SettingsBranding />}
+      {activeSection === "seasonal" && <SettingsSeasonal />}
       {activeSection === "contact" && <SettingsContact />}
       {activeSection === "emails" && <SettingsEmailTemplates />}
       {activeSection === "footer" && <SettingsFooter />}

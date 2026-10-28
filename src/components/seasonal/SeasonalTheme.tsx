@@ -61,13 +61,42 @@ const SeasonalTheme = () => {
     setOn(saved != null ? saved === "1" : config.mode === "on");
   }, [event?.id, config.mode]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Troca claro/escuro durante o tema festivo, restaurando ao desligar.
+  // Troca claro/escuro durante o tema festivo com paleta completa (fundo e
+  // texto sempre em contraste), restaurando as cores originais ao desligar.
   useEffect(() => {
-    if (!event?.dark_mode) return;
+    if (!event?.dark_mode || !on) return;
     const root = document.documentElement;
     const original = root.getAttribute("data-theme");
-    if (on) { if (original === "light") root.removeAttribute("data-theme"); else root.setAttribute("data-theme", "light"); }
-    return () => { if (original) root.setAttribute("data-theme", original); else root.removeAttribute("data-theme"); };
+    const toLight = original !== "light";
+    const fgLight = "0 0% 96%", fgDark = "222 47% 11%";
+    const palette: Record<string, string> = toLight ? {
+      "--background": "0 0% 100%", "--foreground": fgDark,
+      "--card": "0 0% 100%", "--card-foreground": fgDark,
+      "--popover": "0 0% 100%", "--popover-foreground": fgDark,
+      "--muted": "210 20% 94%", "--muted-foreground": "215 16% 35%",
+      "--secondary": "210 20% 92%", "--secondary-foreground": fgDark,
+      "--border": "214 20% 86%", "--input": "214 20% 86%",
+      "--sidebar-background": "0 0% 100%", "--sidebar-foreground": fgDark,
+      "--sidebar-accent": "210 20% 94%", "--sidebar-accent-foreground": fgDark,
+      "--selection-btn-bg": "#e5e9f0", "--selection-btn-text": "#111827",
+    } : {
+      "--background": "210 30% 8%", "--foreground": fgLight,
+      "--card": "210 25% 12%", "--card-foreground": fgLight,
+      "--popover": "210 25% 12%", "--popover-foreground": fgLight,
+      "--muted": "210 15% 20%", "--muted-foreground": "210 10% 72%",
+      "--secondary": "210 20% 18%", "--secondary-foreground": fgLight,
+      "--border": "210 15% 24%", "--input": "210 15% 24%",
+      "--sidebar-background": "210 30% 8%", "--sidebar-foreground": fgLight,
+      "--sidebar-accent": "210 20% 18%", "--sidebar-accent-foreground": fgLight,
+      "--selection-btn-bg": "#1f2937", "--selection-btn-text": "#ffffff",
+    };
+    const saved: Record<string, string> = {};
+    Object.entries(palette).forEach(([k, v]) => { saved[k] = root.style.getPropertyValue(k); root.style.setProperty(k, v); });
+    root.setAttribute("data-theme", toLight ? "light" : "dark");
+    return () => {
+      Object.entries(saved).forEach(([k, v]) => v ? root.style.setProperty(k, v) : root.style.removeProperty(k));
+      if (original) root.setAttribute("data-theme", original); else root.removeAttribute("data-theme");
+    };
   }, [on, event?.dark_mode]);
 
   if (pathname.startsWith("/admin") || pathname.startsWith("/dashboard/admin")) return null;

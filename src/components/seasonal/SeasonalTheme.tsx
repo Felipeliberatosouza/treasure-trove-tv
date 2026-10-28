@@ -131,7 +131,7 @@ const SeasonalTheme = () => {
   const toggle = () => {
     const next = !on;
     setOn(next);
-    setFlash(next);
+    setFlash(true);
     localStorage.setItem(storeKey, next ? "1" : "0");
   };
 

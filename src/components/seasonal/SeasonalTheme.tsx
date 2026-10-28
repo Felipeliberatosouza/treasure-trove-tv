@@ -125,7 +125,8 @@ const SeasonalTheme = () => {
             <span aria-hidden className="seasonal-spider" data-down={on || hover ? "1" : "0"}>🕷️</span>
           )}
           {on && hover && event.message && (
-            <span className="absolute bottom-14 left-0 whitespace-nowrap rounded-md bg-card px-2 py-1 text-xs text-foreground shadow">
+            <span className="absolute bottom-14 left-0 whitespace-nowrap rounded-md border-2 bg-foreground px-3 py-1.5 text-xs font-semibold text-background shadow-lg"
+              style={{ borderColor: event.primary_color }}>
               {event.message}
             </span>
           )}

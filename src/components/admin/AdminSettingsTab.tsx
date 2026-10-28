@@ -38,7 +38,6 @@ const SECTIONS_RAW = [
   { id: "doubts", label: "Dúvidas", icon: Headset },
   { id: "emails", label: "E-mails", icon: Mail },
   { id: "seasonal", label: "Eventos Temáticos", icon: Sparkles },
-  { id: "seasonal", label: "Eventos Temáticos", icon: Sparkles },
   { id: "branding", label: "Identidade Visual", icon: Palette },
   { id: "teacher_goal", label: "Metas do Professor", icon: Target },
   { id: "pages", label: "Páginas Institucionais", icon: FileText },

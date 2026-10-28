@@ -59,6 +59,7 @@ import RouteSeo from "./components/RouteSeo.tsx";
 import BetaBar from "./components/beta/BetaBar.tsx";
 import BetaEndedNotice from "./components/beta/BetaEndedNotice.tsx";
 import BetaSignupGate from "./components/beta/BetaSignupGate.tsx";
+import SeasonalTheme from "./components/seasonal/SeasonalTheme.tsx";
 import SubscriptionUnavailableBanner from "./components/SubscriptionUnavailableBanner.tsx";
 import GlobalContentProtection from "./components/GlobalContentProtection.tsx";
 // Test-only harness route. Lazy import keeps it out of prod chunks unless
@@ -96,6 +97,7 @@ const App = () => (
           <BetaBar />
           <BetaEndedNotice />
           <BetaSignupGate />
+          <SeasonalTheme />
           <Suspense fallback={<PageFallback />}>
           <Routes>
             <Route path="/" element={<Index />} />

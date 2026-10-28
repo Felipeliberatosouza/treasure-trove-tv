@@ -84,7 +84,7 @@ const SeasonalTheme = () => {
   return (
     <>
       {event && (
-        <div className="fixed bottom-4 left-4 z-[70] flex flex-col items-center" data-beta-allow
+        <div className="fixed bottom-24 left-4 z-[70] flex flex-col items-center" data-beta-allow
           onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}>
           <button type="button" onClick={toggle} title={`${event.name}: ${on ? "desligar" : "ligar"} tema`}
             aria-pressed={!!on} aria-label={`Tema ${event.name} ${on ? "ligado" : "desligado"}`}

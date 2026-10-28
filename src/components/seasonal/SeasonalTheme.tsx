@@ -133,7 +133,8 @@ const SeasonalTheme = () => {
               style={{ borderColor: event.primary_color, backgroundColor: pageLight ? "#111827" : "#ffffff", color: pageLight ? "#ffffff" : "#111827" }}>
               {event.message}
             </span>
-          )}
+            );
+          })()}
         </div>
       )}
       {event && on && <Particles kind={event.effect} />}

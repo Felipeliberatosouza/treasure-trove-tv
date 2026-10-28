@@ -66,7 +66,7 @@ const SeasonalTheme = () => {
     if (!event?.dark_mode) return;
     const root = document.documentElement;
     const original = root.getAttribute("data-theme");
-    if (on) root.setAttribute("data-theme", original === "light" ? "dark-festive" : "light");
+    if (on) { if (original === "light") root.removeAttribute("data-theme"); else root.setAttribute("data-theme", "light"); }
     return () => { if (original) root.setAttribute("data-theme", original); else root.removeAttribute("data-theme"); };
   }, [on, event?.dark_mode]);
 

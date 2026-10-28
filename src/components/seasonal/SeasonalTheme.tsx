@@ -124,9 +124,13 @@ const SeasonalTheme = () => {
           {event.effect === "spider" && (
             <span aria-hidden className="seasonal-spider" data-down={on || hover ? "1" : "0"}>🕷️</span>
           )}
-          {on && hover && event.message && (
-            <span className="absolute bottom-14 left-0 whitespace-nowrap rounded-md border-2 bg-foreground px-3 py-1.5 text-xs font-semibold text-background shadow-lg"
-              style={{ borderColor: event.primary_color }}>
+          {on && hover && event.message && (() => {
+            // Cor contrária à do fundo real da página (lida no momento da exibição).
+            const bg = getComputedStyle(document.body).backgroundColor.match(/\d+/g)?.map(Number) || [0, 0, 0];
+            const pageLight = (0.299 * bg[0] + 0.587 * bg[1] + 0.114 * bg[2]) / 255 > 0.5;
+            return (
+            <span className="absolute bottom-14 left-0 whitespace-nowrap rounded-md border-2 px-3 py-1.5 text-xs font-semibold shadow-lg"
+              style={{ borderColor: event.primary_color, backgroundColor: pageLight ? "#111827" : "#ffffff", color: pageLight ? "#ffffff" : "#111827" }}>
               {event.message}
             </span>
           )}

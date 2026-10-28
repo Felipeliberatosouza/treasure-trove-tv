@@ -108,11 +108,12 @@ const SeasonalTheme = () => {
   }, [on, event?.dark_mode]);
 
   // No celular não há "passar o mouse": ao tocar, a mensagem aparece por 3 s.
+  const [flash, setFlash] = useState(false);
   useEffect(() => {
-    if (!hover) return;
-    const t = setTimeout(() => setHover(false), 3000);
+    if (!flash) return;
+    const t = setTimeout(() => setFlash(false), 3000);
     return () => clearTimeout(t);
-  }, [hover, on]);
+  }, [flash]);
 
   if (pathname.startsWith("/admin") || pathname.startsWith("/dashboard/admin")) return null;
 
@@ -122,8 +123,12 @@ const SeasonalTheme = () => {
   const toggle = () => {
     const next = !on;
     setOn(next);
+    setFlash(next);
     localStorage.setItem(storeKey, next ? "1" : "0");
   };
+
+  // Tela efetiva: modo do evento (se invertido) ou tema base do site.
+  const pageLight = (seasonalMode ?? (document.documentElement.getAttribute("data-theme") === "light" ? "light" : "dark")) === "light";
 
   return (
     <>
@@ -139,17 +144,12 @@ const SeasonalTheme = () => {
           {event.effect === "spider" && (
             <span aria-hidden className="seasonal-spider" data-down={on || hover ? "1" : "0"}>🕷️</span>
           )}
-          {on && hover && event.message && (() => {
-            // Cor contrária à do fundo real da página (lida no momento da exibição).
-            const bg = getComputedStyle(document.body).backgroundColor.match(/\d+/g)?.map(Number) || [0, 0, 0];
-            const pageLight = (0.299 * bg[0] + 0.587 * bg[1] + 0.114 * bg[2]) / 255 > 0.5;
-            return (
-            <span className="absolute bottom-14 left-0 whitespace-nowrap rounded-md border-2 px-3 py-1.5 text-xs font-semibold shadow-lg"
+          {on && (hover || flash) && event.message && (
+            <span role="status" className="absolute bottom-14 left-0 whitespace-nowrap rounded-md border-2 px-3 py-1.5 text-xs font-semibold shadow-lg"
               style={{ borderColor: event.primary_color, backgroundColor: pageLight ? "#111827" : "#ffffff", color: pageLight ? "#ffffff" : "#111827" }}>
               {event.message}
             </span>
-            );
-          })()}
+          )}
         </div>
       )}
       {event && on && <Particles kind={event.effect} />}

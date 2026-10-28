@@ -1,3 +1,4 @@
+import { useEffectiveLightTheme } from "@/hooks/useEffectiveLightTheme";
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useProducts } from "@/hooks/useProducts";
@@ -11,6 +12,7 @@ import { DEFAULT_FOOTER_SETTINGS } from "@/hooks/usePlatformSettings";
 import WhatsAppLeadLink from "@/components/WhatsAppLeadLink";
 
 const Footer = () => {
+  const effectiveLight = useEffectiveLightTheme();
   const { settings } = useAllPlatformSettings();
   const contact = settings.contact as ContactSettings | undefined;
   const branding = settings.branding as BrandingSettings | undefined;
